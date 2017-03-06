@@ -1,0 +1,13 @@
+[package]
+name = "nvml"
+version = "0.1.0"
+authors = ["cldfire"]
+
+[dependencies]
+error-chain = "0.10"
+nvml-sys = { path = "../nvml-sys" }
+
+[features]
+default = []
+test = []
+test-local = []
