@@ -84,14 +84,13 @@ impl<'nvml> Device<'nvml> {
     pub fn is_api_restricted(&self, api: RestrictedApi) -> Result<bool> {
         unsafe {
             let mut restricted_state: nvmlEnableState_t = mem::zeroed();
-            match nvml_try(nvmlDeviceGetAPIRestriction(self.device, api.eq_c_variant(), &mut restricted_state)) {
-                Ok(()) => match restricted_state {
-                    nvmlEnableState_enum::NVML_FEATURE_ENABLED
-                        => Ok(true),
-                    nvmlEnableState_enum::NVML_FEATURE_DISABLED
-                        => Ok(false),
-                },
-                Err(e) => Err(e),
+            nvml_try(nvmlDeviceGetAPIRestriction(self.device, api.eq_c_variant(), &mut restricted_state))?;
+
+            match restricted_state {
+                nvmlEnableState_enum::NVML_FEATURE_ENABLED
+                    => Ok(true),
+                nvmlEnableState_enum::NVML_FEATURE_DISABLED
+                    => Ok(false),
             }
         }
     }
@@ -117,10 +116,9 @@ impl<'nvml> Device<'nvml> {
     pub fn applications_clock(&self, clock_type: ClockType) -> Result<u32> {
         unsafe {
             let mut clock: c_uint = mem::zeroed();
-            match nvml_try(nvmlDeviceGetApplicationsClock(self.device, clock_type.eq_c_variant(), &mut clock)) {
-                Ok(()) => Ok(clock as u32),
-                Err(e) => Err(e),
-            }
+            nvml_try(nvmlDeviceGetApplicationsClock(self.device, clock_type.eq_c_variant(), &mut clock))?;
+
+            Ok(clock as u32)
         }
     }
 
@@ -149,26 +147,23 @@ impl<'nvml> Device<'nvml> {
         unsafe {
             let mut is_enabled: nvmlEnableState_t = mem::zeroed();
             let mut is_enabled_default: nvmlEnableState_t = mem::zeroed();
-            match nvml_try(nvmlDeviceGetAutoBoostedClocksEnabled(self.device, &mut is_enabled, &mut is_enabled_default)) {
-                Ok(()) => {
-                    let is_enabled = match is_enabled {
-                        nvmlEnableState_enum::NVML_FEATURE_ENABLED
-                            => true,
-                        nvmlEnableState_enum::NVML_FEATURE_DISABLED
-                            => false,
-                    };
+            nvml_try(nvmlDeviceGetAutoBoostedClocksEnabled(self.device, &mut is_enabled, &mut is_enabled_default))?;
 
-                    let is_enabled_default = match is_enabled_default {
-                        nvmlEnableState_enum::NVML_FEATURE_ENABLED
-                            => true,
-                        nvmlEnableState_enum::NVML_FEATURE_DISABLED
-                            => false,
-                    };
+            let is_enabled = match is_enabled {
+                nvmlEnableState_enum::NVML_FEATURE_ENABLED
+                    => true,
+                nvmlEnableState_enum::NVML_FEATURE_DISABLED
+                    => false,
+            };
 
-                    Ok(AutoBoostClocksEnabledInfo{ is_enabled: is_enabled, is_enabled_default: is_enabled_default })
-                },
-                Err(e) => Err(e),
-            }
+            let is_enabled_default = match is_enabled_default {
+                nvmlEnableState_enum::NVML_FEATURE_ENABLED
+                    => true,
+                nvmlEnableState_enum::NVML_FEATURE_DISABLED
+                    => false,
+            };
+
+            Ok(AutoBoostClocksEnabledInfo{ is_enabled: is_enabled, is_enabled_default: is_enabled_default })
         }
     }
 
@@ -186,20 +181,17 @@ impl<'nvml> Device<'nvml> {
     pub fn pci_info(&self) -> Result<PciInfo> {
         unsafe {
             let mut pci_info: nvmlPciInfo_t = mem::zeroed();
-            match nvml_try(nvmlDeviceGetPciInfo_v2(self.device, &mut pci_info)) {
-                Ok(()) => {
-                    let bus_id_raw = CStr::from_ptr(pci_info.busId.as_ptr());
-                    Ok(PciInfo {
-                        bus: pci_info.bus as u32,
-                        bus_id: bus_id_raw.to_str()?.into(),
-                        device: pci_info.device as u32,
-                        domain: pci_info.domain as u32,
-                        pci_device_id: pci_info.pciDeviceId as u32,
-                        pci_sub_system_id: pci_info.pciSubSystemId as u32,
-                    })
-                },
-                Err(e) => Err(e)
-            }
+            nvml_try(nvmlDeviceGetPciInfo_v2(self.device, &mut pci_info))?;
+
+            let bus_id_raw = CStr::from_ptr(pci_info.busId.as_ptr());
+            Ok(PciInfo {
+                bus: pci_info.bus as u32,
+                bus_id: bus_id_raw.to_str()?.into(),
+                device: pci_info.device as u32,
+                domain: pci_info.domain as u32,
+                pci_device_id: pci_info.pciDeviceId as u32,
+                pci_sub_system_id: pci_info.pciSubSystemId as u32,
+            })
         }
     }
 
@@ -217,10 +209,9 @@ impl<'nvml> Device<'nvml> {
     pub fn index(&self) -> Result<u32> {
         unsafe {
             let mut index: c_uint = mem::zeroed();
-            match nvml_try(nvmlDeviceGetIndex(self.device, &mut index)) {
-                Ok(()) => Ok(index as u32),
-                Err(e) => Err(e),
-            }
+            nvml_try(nvmlDeviceGetIndex(self.device, &mut index))?;
+
+            Ok(index as u32)
         }
     }
 
@@ -238,13 +229,10 @@ impl<'nvml> Device<'nvml> {
     pub fn name(&self) -> Result<String> {
         unsafe {
             let mut name_vec = Vec::with_capacity(NVML_DEVICE_NAME_BUFFER_SIZE as usize);
-            match nvml_try(nvmlDeviceGetName(self.device, name_vec.as_mut_ptr(), NVML_DEVICE_NAME_BUFFER_SIZE)) {
-                Ok(()) => {
-                    let name_raw = CStr::from_ptr(name_vec.as_ptr());
-                    Ok(name_raw.to_str()?.into())
-                }, 
-                Err(e) => Err(e),
-            }
+            nvml_try(nvmlDeviceGetName(self.device, name_vec.as_mut_ptr(), NVML_DEVICE_NAME_BUFFER_SIZE))?;
+
+            let name_raw = CStr::from_ptr(name_vec.as_ptr());
+            Ok(name_raw.to_str()?.into())
         }
     }
 
@@ -264,14 +252,11 @@ impl<'nvml> Device<'nvml> {
     pub fn is_multi_gpu_board(&self) -> Result<bool> {
         unsafe {
             let mut int_bool: c_uint = mem::zeroed();
-            match nvml_try(nvmlDeviceGetMultiGpuBoard(self.device, &mut int_bool)) {
-                Ok(()) => {
-                    match int_bool as u32 {
-                        0 => Ok(false),
-                        _ => Ok(true),
-                    }
-                },
-                Err(e) => Err(e),
+            nvml_try(nvmlDeviceGetMultiGpuBoard(self.device, &mut int_bool))?;
+
+            match int_bool as u32 {
+                0 => Ok(false),
+                _ => Ok(true),
             }
         }
     }

@@ -102,10 +102,9 @@ impl NVML {
     pub fn device_count(&self) -> Result<u32> {
         unsafe {
             let mut count: c_uint = mem::zeroed();
-            match nvml_try(nvmlDeviceGetCount_v2(&mut count)) {
-                Ok(()) => Ok(count as u32),
-                Err(e) => Err(e),
-            }
+            nvml_try(nvmlDeviceGetCount_v2(&mut count))?;
+            
+            Ok(count as u32)
         }
     }
 
@@ -121,14 +120,10 @@ impl NVML {
     pub fn sys_driver_version(&self) -> Result<String> {
         unsafe {
             let mut version_vec = Vec::with_capacity(NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE as usize);
-            match nvml_try(nvmlSystemGetDriverVersion(version_vec.as_mut_ptr(), NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE)) {
-                Ok(()) => {
-                    // Thanks to `Amaranth` on IRC for help with this
-                    let version_raw = CStr::from_ptr(version_vec.as_ptr());
-                    Ok(version_raw.to_str()?.into())
-                },
-                Err(e) => Err(e),
-            }
+            nvml_try(nvmlSystemGetDriverVersion(version_vec.as_mut_ptr(), NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE))?;
+
+            let version_raw = CStr::from_ptr(version_vec.as_ptr());
+            Ok(version_raw.to_str()?.into())
         }
     }
 
@@ -144,14 +139,11 @@ impl NVML {
     pub fn sys_nvml_version(&self) -> Result<String> {
         unsafe {
             let mut version_vec = Vec::with_capacity(NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE as usize);
-            match nvml_try(nvmlSystemGetNVMLVersion(version_vec.as_mut_ptr(), NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE)) {
-                Ok(()) => {
-                    // Thanks to `Amaranth` on IRC for help with this
-                    let version_raw = CStr::from_ptr(version_vec.as_ptr());
-                    Ok(version_raw.to_str()?.into())
-                },
-                Err(e) => Err(e)
-            }
+            nvml_try(nvmlSystemGetNVMLVersion(version_vec.as_mut_ptr(), NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE))?;
+
+            // Thanks to `Amaranth` on IRC for help with this
+            let version_raw = CStr::from_ptr(version_vec.as_ptr());
+            Ok(version_raw.to_str()?.into())
         }
     }
 
@@ -169,14 +161,10 @@ impl NVML {
     pub fn sys_process_name(&self, pid: u32, length: usize) -> Result<String> {
         unsafe {
             let mut name_vec = Vec::with_capacity(length);
-            match nvml_try(nvmlSystemGetProcessName(pid as c_uint, name_vec.as_mut_ptr(), length as c_uint)) {
-                Ok(()) => {
-                    // Thanks to `Amaranth` on IRC for help with this
-                    let name_raw = CStr::from_ptr(name_vec.as_ptr());
-                    Ok(name_raw.to_str()?.into())
-                },
-                Err(e) => Err(e)
-            }
+            nvml_try(nvmlSystemGetProcessName(pid as c_uint, name_vec.as_mut_ptr(), length as c_uint))?;
+
+            let name_raw = CStr::from_ptr(name_vec.as_ptr());
+            Ok(name_raw.to_str()?.into())
         }
     }
 
@@ -210,11 +198,9 @@ impl NVML {
     pub fn device_by_index(&self, index: u32) -> Result<Device> {
         unsafe {
             let mut device: nvmlDevice_t = mem::zeroed();
-            match nvml_try(nvmlDeviceGetHandleByIndex_v2(index as c_uint, &mut device)) {
-                Ok(()) => Ok(Device::_new(device)),
-                Err(e) => Err(e),
-            }
+            nvml_try(nvmlDeviceGetHandleByIndex_v2(index as c_uint, &mut device))?;
 
+            Ok(Device::_new(device))
         }
     }
 

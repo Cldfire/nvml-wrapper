@@ -1,7 +1,7 @@
 [package]
 name = "nvml-sys"
 version = "0.1.0"
-authors = ["cldfire"]
+authors = ["Cldfire"]
 build = "build.rs"
 
 [dependencies]
