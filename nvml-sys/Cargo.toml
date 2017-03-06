@@ -1,0 +1,11 @@
+[package]
+name = "nvml-sys"
+version = "0.1.0"
+authors = ["cldfire"]
+build = "build.rs"
+
+[dependencies]
+
+[build-dependencies]
+bindgen = "0.22"
+pkg-config = "0.3"

@@ -17,9 +17,8 @@ pub mod errors;
 use errors::*;
 use ffi::*;
 use device::Device;
-use std::os::raw::{c_uint, c_char};
-use std::ffi::{CString, CStr};
-use std::sync::Arc;
+use std::os::raw::{c_uint};
+use std::ffi::{CStr};
 use std::mem;
 
 /// The main struct that this library revolves around.
@@ -243,6 +242,7 @@ impl Drop for NVML {
 mod test {
     use super::*;
     use std::thread;
+    use std::sync::Arc;
 
     #[test]
     fn init_drop() {
@@ -438,7 +438,8 @@ mod test {
     #[test]
     fn process_name() {
         let test = NVML::init().expect("init call failed");
-        let name = test.sys_process_name(3426, 80).expect("Could not get name for PID");
+        // TODO: This is stupid
+        let name = test.sys_process_name(25121, 80).expect("Could not get name for PID");
     }
 
     // TODO: This test and others below are specific to a machine with a GPU
