@@ -1,7 +1,7 @@
 use ffi::*;
 use super::errors::*;
-use super::structs::AutoBoostClocksEnabledInfo;
-use super::struct_wrappers::PciInfo;
+use super::structs::*;
+use super::struct_wrappers::*;
 use super::enum_wrappers::*;
 use std::marker::PhantomData;
 use std::ffi::CStr;
@@ -10,6 +10,7 @@ use std::os::raw::c_uint;
 use NVML;
 
 // TODO: Investigate #[inline] and find out whether or not I should use it.
+// TODO: Mark stuff that works on my 980 Ti but NVIDIA does not state should.
 
 /// Struct that represents a device on the system. 
 ///
@@ -41,7 +42,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
-    /// * `InvalidArg`, if the device is invalid (this shouldn't ever be the case?)
+    /// * `InvalidArg`, if the device is invalid
     /// * `Unknown`, on any unexpected error
     /// 
     /// That's it according to NVIDIA's docs. No clue why GPU_IS_LOST and NOT_SUPPORTED
@@ -69,8 +70,8 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
-    /// * `InvalidArg`, if the device is invalid (this shouldn't ever be the case?) or the 
-    /// apiType is invalid (may occur if C lib changes dramatically?)
+    /// * `InvalidArg`, if the device is invalid or the apiType is invalid (may occur if 
+    /// the C lib changes dramatically?)
     /// * `NotSupported`, if this query is not supported by this `Device` or this `Device`
     /// does not support the feature that is being queried (e.g. enabling/disabling auto
     /// boosted clocks is not supported by this `Device`).
@@ -80,8 +81,9 @@ impl<'nvml> Device<'nvml> {
     /// # Device Support
     /// Supports all _fully supported_ products.
     // TODO: Figure out how to test this on platforms it supports
+    // TODO: Make sure there's a test case for when an error is returned and the mem::zeroed() values may be dropped
     // Checked against local nvml.h
-    pub fn is_api_restricted(&self, api: RestrictedApi) -> Result<bool> {
+    pub fn is_api_restricted(&self, api: Api) -> Result<bool> {
         unsafe {
             let mut restricted_state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetAPIRestriction(self.device, api.eq_c_variant(), &mut restricted_state))?;
@@ -103,8 +105,8 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Errors 
     /// * `Uninitialized`, if the library has not been successfully initialized
-    /// * `InvalidArg`, if the device is invalid (this shouldn't ever be the case?) or the 
-    /// clockType is invalid (may occur if C lib changes dramatically?)
+    /// * `InvalidArg`, if the device is invalid or the clockType is invalid (may occur 
+    /// if the C lib changes dramatically?)
     /// * `NotSupported`, if this `Device` does not support this feature
     /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     /// * `Unknown`, on any unexpected error
@@ -113,7 +115,7 @@ impl<'nvml> Device<'nvml> {
     /// Supports Kepler or newer fully supported devices.
     // TODO: Figure out how to test this on platforms it supports
     // Checked against local nvml.h
-    pub fn applications_clock(&self, clock_type: ClockType) -> Result<u32> {
+    pub fn applications_clock(&self, clock_type: Clock) -> Result<u32> {
         unsafe {
             let mut clock: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetApplicationsClock(self.device, clock_type.eq_c_variant(), &mut clock))?;
@@ -134,7 +136,7 @@ impl<'nvml> Device<'nvml> {
     /// 
     /// # Errors 
     /// * `Uninitialized`, if the library has not been successfully initialized
-    /// * `InvalidArg`, if the device is invalid (this shouldn't ever be the case?)
+    /// * `InvalidArg`, if the device is invalid
     /// * `NotSupported`, if this `Device` does not support auto boosted clocks
     /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     /// * `Unknown`, on any unexpected error
@@ -167,13 +169,147 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
+    /// Gets the total, available and used size of BAR1 memory. 
+    ///
+    /// BAR1 memory is used to map the FB (device memory) so that it can be directly accessed
+    /// by the CPU or by 3rd party devices (peer-to-peer on the PCIe bus).
+    ///
+    /// # Errors 
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the device is invalid
+    /// * `NotSupported`, if this `Device` does not support this query
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Kepler or newer fully supported devices.
+    // Checked against local nvml.h
+    pub fn bar1_memory_info(&self) -> Result<BAR1MemoryInfo> {
+        unsafe {
+            let mut mem_info: nvmlBAR1Memory_t = mem::zeroed();
+            nvml_try(nvmlDeviceGetBAR1MemoryInfo(self.device, &mut mem_info))?;
+
+            Ok(mem_info.into())
+        }
+    }
+
+    /// Gets the board ID for this `Device`, from 0-N. 
+    ///
+    /// Devices with the same boardID indicate GPUs connected to the same PLX. Use in
+    /// conjunction with `.is_multi_gpu_board()` to determine if they are on the same
+    /// board as well. 
+    // TODO: Check that when I write it ^
+    ///
+    /// The boardID returned is a unique ID for the current config. Uniqueness and
+    /// ordering across reboots and system configs is not guaranteed (i.e if a Tesla
+    /// K40c returns 0x100 and the two GPUs on a Tesla K10 in the same system return
+    /// 0x200, it is not guaranteed that they will always return those values. They will,
+    /// however, always be different from each other).
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the device is invalid
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Fermi or newer fully supported devices.
+    // Checked against local nvml.h
+    pub fn board_id(&self) -> Result<u32> {
+        unsafe {
+            let mut id: c_uint = mem::zeroed();
+            nvml_try(nvmlDeviceGetBoardId(self.device, &mut id))?;
+
+            Ok(id as u32)
+        }
+    }
+    
+    /// Gets the brand of this `Device`.
+    ///
+    /// See the `Brand` enum for documentation of possible values.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the device is invalid
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `UnexpectedVariant`, check that error's docs for more info
+    /// * `Unknown`, on any unexpected error
+    // Checked against local nvml.h
+    pub fn brand(&self) -> Result<Brand> {
+        unsafe {
+            let mut brand: nvmlBrandType_t = mem::zeroed();
+            nvml_try(nvmlDeviceGetBrand(self.device, &mut brand))?;
+
+            Ok(Brand::try_from(brand)?)
+        }
+    }
+
+    /// Gets bridge chip information for all bridge chips on the board. 
+    ///
+    /// Only applicable to multi-GPU devices.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the device is invalid
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports all _fully supported_ devices.
+    // Checked against local nvml.h
+    pub fn bridge_chip_info(&self) -> Result<BridgeChipHierarchy> {
+        unsafe {
+            let mut info: nvmlBridgeChipHierarchy_t = mem::zeroed();
+            nvml_try(nvmlDeviceGetBridgeChipInfo(self.device, &mut info))?;
+
+            Ok(BridgeChipHierarchy::from(info))
+        }
+    }
+
+    /// Gets this `Device`'s current clock speed for the given `Clock` type.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the device is invalid
+    /// * `NotSupported`, if this `Device` cannot report the specified clock
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Kepler or newer fully supported devices.
+    // Checked against local nvml.h
+    // TODO: Uh... doesn't appear to do what it says? Investigate?
+    pub fn clock_info(&self, clock_type: Clock) -> Result<u32> {
+        unsafe {
+            let mut clock: c_uint = mem::zeroed();
+            nvml_try(nvmlDeviceGetClockInfo(self.device, clock_type.eq_c_variant(), &mut clock))?;
+
+            Ok(clock as u32)
+        }
+    }
+
+    // This is in progress.
+    // pub fn running_compute_processes(&self) {
+    //     unsafe {
+    //         let mut info_array: *mut nvmlProcessInfo_t = ::std::ptr::null_mut();
+    //         let mut count: c_uint = 0;
+    //         nvml_try(nvmlDeviceGetComputeRunningProcesses(self.device, &mut count, info_array)).expect("Test failed");
+
+    //         println!("{:?}", count as u32);
+    //     }
+    // }
+
+
+
     /// Gets the PCI attributes of this `Device`.
     /// 
     /// See `PciInfo` for details about the returned attributes.
     ///
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
-    /// * `InvalidArg`, if the device is invalid (this shouldn't ever be the case?)
+    /// * `InvalidArg`, if the device is invalid
     /// * `GpuLost`, if the GPU has fallen off the bus or is otherwise inaccessible
     /// * `Utf8Error`, if a string obtained from the C function is not valid Utf8
     /// * `Unknown`, on any unexpected error
@@ -183,15 +319,7 @@ impl<'nvml> Device<'nvml> {
             let mut pci_info: nvmlPciInfo_t = mem::zeroed();
             nvml_try(nvmlDeviceGetPciInfo_v2(self.device, &mut pci_info))?;
 
-            let bus_id_raw = CStr::from_ptr(pci_info.busId.as_ptr());
-            Ok(PciInfo {
-                bus: pci_info.bus as u32,
-                bus_id: bus_id_raw.to_str()?.into(),
-                device: pci_info.device as u32,
-                domain: pci_info.domain as u32,
-                pci_device_id: pci_info.pciDeviceId as u32,
-                pci_sub_system_id: pci_info.pciSubSystemId as u32,
-            })
+            Ok(PciInfo::try_from(pci_info)?)
         }
     }
 
@@ -203,7 +331,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Errors 
     /// * `Uninitialized`, if the library has not been successfully initialized
-    /// * `InvalidArg`, if the device is invalid (this shouldn't ever be the case?)
+    /// * `InvalidArg`, if the device is invalid
     /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     // Checked against local nvml.h 
     pub fn index(&self) -> Result<u32> {
@@ -221,7 +349,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
-    /// * `InvalidArg`, if the device is invalid (this shouldn't ever be the case?)
+    /// * `InvalidArg`, if the device is invalid
     /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     /// * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     /// * `Unknown`, on any unexpected error
@@ -240,7 +368,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
-    /// * `InvalidArg`, if the device is invalid (this shouldn't ever be the case?)
+    /// * `InvalidArg`, if the device is invalid
     /// * `NotSupported`, if the `Device` does not support this feature
     /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     /// * `Unknown`, on any unexpected error
@@ -268,7 +396,40 @@ impl<'nvml> Device<'nvml> {
 mod test {
     use super::*;
 
-    // TODO: Gen tests for EVERYTHING IN THIS FILE (!!!!!!!!)
+    // In progress
+    // #[test]
+    // fn test_thing() {
+    //     let test = NVML::init().expect("init call failed");
+    //     let device = test.device_by_index(0).expect("Could not get a device by index 0");
+
+    //     device.running_compute_processes();
+    // }
+
+    // TODO: Look into generating tests via proc macros
+
+    #[test]
+    fn clock() {
+        let test = NVML::init().expect("init call failed");
+        let device = test.device_by_index(0).expect("Could not get a device by index 0");
+        let gfx_clock = device.clock_info(Clock::Graphics);
+        let mem_clock = device.clock_info(Clock::Memory);
+        let sm_clock = device.clock_info(Clock::SM);
+        let vid_clock = device.clock_info(Clock::Video);
+
+        println!("{:?} MHz, {:?} MHz, {:?} MHz, {:?} MHz", gfx_clock, mem_clock, sm_clock, vid_clock);
+    }
+
+    #[ignore]
+    #[test]
+    // TODO: This is not supported for my GPU
+    fn is_api_restricted() {
+        let test = NVML::init().expect("init call failed");
+        let device = test.device_by_index(0).expect("Could not get a device by index 0");
+        let is_restricted = device.is_api_restricted(Api::ApplicationClocks)
+            .expect("Failed to check ApplicationClocks");
+        let is_restricted2 = device.is_api_restricted(Api::AutoBoostedClocks)
+            .expect("Failed to check AutoBoostedClocks");
+    }
 
     // TODO: Gen tests for pci_info
     #[test]
@@ -298,6 +459,6 @@ mod test {
     fn applications_clock() {
         let test = NVML::init().expect("init call failed");
         let device = test.device_by_index(0).expect("Could not get a device by index 0");
-        let clock = device.applications_clock(ClockType::Graphics).expect("Could not get applications clock");
+        let clock = device.applications_clock(Clock::Graphics).expect("Could not get applications clock");
     }
 }

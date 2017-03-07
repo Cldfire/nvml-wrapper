@@ -103,7 +103,7 @@ impl NVML {
         unsafe {
             let mut count: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetCount_v2(&mut count))?;
-            
+
             Ok(count as u32)
         }
     }

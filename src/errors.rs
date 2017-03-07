@@ -8,6 +8,16 @@ error_chain! {
     }
     // TODO: A macro to expand the result of `nvmlErrorString()` at compile time?
     errors {
+        /// An unexpected enum variant was encountered.
+        ///
+        /// This error is specific to this Rust wrapper. It is used to represent the
+        /// possibility that an enum variant that seems to be only used internally by 
+        /// the NVML lib gets returned by a function call. While I don't believe it will
+        /// ever happen, it's best to be complete.
+        // TODO: Can I store the variant with the error?
+        UnexpectedVariant {
+            description("An unexpected enum variant was encountered (wrapper error).")
+        }
         /// NVML was not first initialized with `nvmlInit()`.
         Uninitialized {
             description("NVML was not first initialized with `nvmlInit()`.")
@@ -97,7 +107,7 @@ error_chain! {
     }
 }
 
-/// `?` enabler for nvmlReturn_t types
+/// `?` enabler for nvmlReturn_t types.
 // TODO: Should this be a macro?
 #[doc(hidden)]
 pub fn nvml_try(code: nvmlReturn_t) -> Result<()> {
