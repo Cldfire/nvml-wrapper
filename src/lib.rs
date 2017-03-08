@@ -18,7 +18,7 @@ use errors::*;
 use ffi::*;
 use device::Device;
 use std::os::raw::{c_uint};
-use std::ffi::{CStr};
+use std::ffi::{CStr, CString};
 use std::mem;
 
 /// The main struct that this library revolves around.
@@ -200,11 +200,37 @@ impl NVML {
             let mut device: nvmlDevice_t = mem::zeroed();
             nvml_try(nvmlDeviceGetHandleByIndex_v2(index as c_uint, &mut device))?;
 
-            Ok(Device::_new(device))
+            Ok(Device::new(device))
         }
     }
 
-    // pub fn device_by_pci_bus_id(&self, )
+    /// Acquire the handle for a particular device based on its PCI bus ID.
+    ///
+    /// Usage of this function causes NVML to initialize the target GPU. Additional
+    /// GPUs may be initialized if the target GPU is an SLI slave.
+    ///
+    /// The bus ID corresponds to the `bus_id` returned by `Device.pci_info()`.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if `pci_bus_id` is invalid
+    /// * `NotFound`, if `pci_bus_id` does not match a valid device on the system
+    /// * `InsufficientPower`, if any attached devices have improperly attached external power cables
+    /// * `NoPermission`, if the user doesn't have permission to talk to this device
+    /// * `IrqIssue`, if the NVIDIA kernel detected an interrupt issue with the attached GPUs
+    /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    pub fn device_by_pci_bus_id<S: AsRef<str>>(&self, pci_bus_id: S) -> Result<Device>
+        where std::vec::Vec<u8>: std::convert::From<S> {
+        unsafe {
+            // TODO: Do I need to do this?
+            let c_string = CString::new(pci_bus_id)?;
+            let mut device: nvmlDevice_t = mem::zeroed();
+            nvml_try(nvmlDeviceGetHandleByPciBusId_v2(c_string.as_ptr(), &mut device))?;
+
+            Ok(Device::new(device))
+        }
+    }
 }
 
 /// This `Drop` implementation ignores errors! Use the `.shutdown()` method on the `NVML` struct
@@ -229,6 +255,13 @@ mod test {
     use super::*;
     use std::thread;
     use std::sync::Arc;
+
+    #[test]
+    #[should_panic]
+    fn device_by_pci_bus_id() {
+        let test = NVML::init().expect("init call failed");
+        let device = test.device_by_pci_bus_id("test").expect("Device get failed as expected");
+    }
 
     #[test]
     fn init_drop() {

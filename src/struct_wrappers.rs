@@ -6,6 +6,7 @@ use super::std::mem;
 use std::ffi::CStr;
 
 /// PCI information about a GPU device.
+/// TODO: Trait magic to allow this to be passed in as a bus_id
 pub struct PciInfo {
     /// The bus on which the device resides, 0 to 0xff.
     pub bus: u32,
@@ -116,6 +117,7 @@ impl From<nvmlBridgeChipHierarchy_t> for BridgeChipHierarchy {
 }
 
 /// Information about compute processes running on the GPU.
+#[derive(Debug)]
 pub struct ProcessInfo {
     // Process ID.
     pub pid: u32,
@@ -128,6 +130,26 @@ impl From<nvmlProcessInfo_t> for ProcessInfo {
         ProcessInfo {
             pid: struct_.pid,
             used_gpu_memory: UsedGpuMemory::from(struct_.usedGpuMemory),
+        }
+    }
+}
+
+#[derive(Debug)]
+/// Detailed ECC error counts for a device.
+pub struct EccErrorCounts {
+    pub device_memory: u64,
+    pub l1_cache: u64,
+    pub l2_cache: u64,
+    pub register_file: u64,
+}
+
+impl From<nvmlEccErrorCounts_t> for EccErrorCounts {
+    fn from(struct_: nvmlEccErrorCounts_t) -> Self {
+        EccErrorCounts {
+            device_memory: struct_.deviceMemory as u64,
+            l1_cache: struct_.l1Cache as u64,
+            l2_cache: struct_.l2Cache as u64,
+            register_file: struct_.registerFile as u64,
         }
     }
 }

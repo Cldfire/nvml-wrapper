@@ -5,6 +5,7 @@ error_chain! {
     foreign_links {
         IntoStringError(::std::ffi::IntoStringError);
         Utf8Error(::std::str::Utf8Error);
+        NulError(::std::ffi::NulError);
     }
     // TODO: A macro to expand the result of `nvmlErrorString()` at compile time?
     errors {

@@ -1,6 +1,7 @@
 use super::ffi::*;
 
 /// Respresents possible variants for a firmware version.
+#[derive(Debug)]
 pub enum FirmwareVersion {
     /// The version is unavailable.
     Unavailable,
@@ -17,6 +18,7 @@ impl From<u32> for FirmwareVersion {
 }
 
 /// Represents possible variants for used GPU memory.
+#[derive(Debug)]
 pub enum UsedGpuMemory {
     /// Under WDDM, `NVML_VALUE_NOT_AVAILABLE` is always reported because Windows KMD
     /// manages all the memory, not the NVIDIA driver.
