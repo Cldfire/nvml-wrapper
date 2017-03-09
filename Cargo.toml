@@ -6,6 +6,8 @@ authors = ["Cldfire"]
 [dependencies]
 error-chain = "0.10"
 nvml-sys = { path = "nvml-sys" }
+nvml-derive = { path = "nvml-derive" }
+nvml-errors = { path = "nvml-errors" }
 
 [features]
 default = []

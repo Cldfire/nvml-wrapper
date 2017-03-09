@@ -1,5 +1,12 @@
-use super::ffi::nvmlReturn_t;
-use super::ffi::nvmlReturn_t::*;
+// `error_chain` recursion limit
+#![recursion_limit = "1024"]
+
+#[macro_use]
+extern crate error_chain;
+extern crate nvml_sys as ffi;
+
+use ffi::nvmlReturn_t;
+use ffi::nvmlReturn_t::*;
 
 error_chain! {
     foreign_links {

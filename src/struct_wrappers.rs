@@ -1,12 +1,11 @@
 use super::ffi::*;
-use super::errors::*;
+use super::nvml_errors::*;
 use super::enum_wrappers::*;
 use super::enums::*;
 use super::std::mem;
 use std::ffi::CStr;
 
 /// PCI information about a GPU device.
-/// TODO: Trait magic to allow this to be passed in as a bus_id
 pub struct PciInfo {
     /// The bus on which the device resides, 0 to 0xff.
     pub bus: u32,

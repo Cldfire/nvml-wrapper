@@ -1,8 +1,8 @@
-// `error_chain` recursion limit
-#![recursion_limit = "1024"]
-
 #[macro_use]
 extern crate error_chain;
+extern crate nvml_errors;
+#[macro_use]
+extern crate nvml_derive;
 extern crate nvml_sys as ffi;
 
 // TODO: Module docs. Say something about device support.
@@ -12,9 +12,8 @@ pub mod structs;
 pub mod struct_wrappers;
 pub mod enums;
 pub mod enum_wrappers;
-pub mod errors;
 
-use errors::*;
+use nvml_errors::*;
 use ffi::*;
 use device::Device;
 use std::os::raw::{c_uint};

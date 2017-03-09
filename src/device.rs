@@ -1,5 +1,5 @@
 use ffi::*;
-use super::errors::*;
+use super::nvml_errors::*;
 use super::structs::*;
 use super::struct_wrappers::*;
 use super::enum_wrappers::*;
@@ -26,6 +26,9 @@ pub struct Device<'nvml> {
     device: nvmlDevice_t,
     _phantom: PhantomData<&'nvml NVML>,
 }
+
+unsafe impl<'nvml> Send for Device<'nvml> {}
+unsafe impl<'nvml> Sync for Device<'nvml> {}
 
 impl<'nvml> Device<'nvml> {
     #[doc(hidden)]
@@ -435,7 +438,7 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
-    /// Not documenting this because it's deperecated. Read NVIDIA's docs if you must use it.
+    /// Not documenting this because it's deprecated. Read NVIDIA's docs if you must use it.
     #[deprecated(note="use `Device.memory_error_counter()`")]
     pub fn detailed_ecc_errors(&self, error_type: MemoryError, counter_type: EccCounter) -> Result<EccErrorCounts> {
         unsafe {
