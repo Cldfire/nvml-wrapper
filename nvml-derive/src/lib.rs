@@ -175,18 +175,28 @@ fn gen_impl(variant_slice: &[VariantInfo], count_variant: Option<syn::Ident>) ->
 }
 
 // TODO: This... is so bad. 
-fn attr_val_for_str<S: AsRef<str>>(string: S, ast: &syn::DeriveInput) -> Option<String> {
+ fn attr_val_for_str<S: AsRef<str>>(string: S, ast: &syn::DeriveInput) -> Option<String> {
     let mut return_string: Option<String> = None;
+    // Iterate through attributes on this variant, match on the MetaIte
     ast.attrs.iter().find(|ref a| match a.value {
+        // If this value is a List...
         List(ref ident, ref nested_items_vec) => {
             let mut real_return_val = false;
+            // If the ident matches our derive's prefix...
             if ident == "wrap" {
+                // Iterate through nested attributes in this attribute and match on NestedMetaItem...
                 let item = nested_items_vec.iter().find(|ref i| match i {
+                    // If it's another MetaItem
                     &&&MetaItem(ref item) => match item {
+                        // If it's a name value pair
                         &NameValue(ref ident, ref lit) => {
                             let mut return_val = false;
+                            // If the name matches what was passed in for us to look for
                             if ident == string.as_ref() {
+                                // Match on the value paired with the name
                                 return_string = match lit {
+                                    // If it's a string, return it. Then go beg for mercy after
+                                    // having read through this code.
                                     &Str(ref the_value, _) => Some(the_value.to_string()),
                                     _ => panic!("Attribute value was not a string")
                                 };
