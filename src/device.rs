@@ -874,7 +874,7 @@ impl<'nvml> Device<'nvml> {
                                 location: MemoryLocation) 
                                 -> Result<u64> {
         unsafe {
-            let count: c_ulonglong = mem::zeroed();
+            let mut count: c_ulonglong = mem::zeroed();
             nvml_try(nvmlDeviceGetMemoryErrorCounter(self.device,
                                                      error_type.eq_c_variant(),
                                                      counter_type.eq_c_variant(),
@@ -905,7 +905,7 @@ impl<'nvml> Device<'nvml> {
     /// * `Unknown`, on any unexpected error
     pub fn memory_info(&self) -> Result<MemoryInfo> {
         unsafe {
-            let info: nvmlMemory_t = mem::zeroed();
+            let mut info: nvmlMemory_t = mem::zeroed();
             nvml_try(nvmlDeviceGetMemoryInfo(self.device, &mut info))?;
 
             Ok(info.into())
@@ -929,7 +929,7 @@ impl<'nvml> Device<'nvml> {
     #[cfg(target_os = "linux")]
     pub fn minor_number(&self) -> Result<u32> {
         unsafe {
-            let number: c_uint = mem::zeroed();
+            let mut number: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetMinorNumber(self.device, &mut number))?;
 
             Ok(number as u32)
@@ -1015,7 +1015,7 @@ impl<'nvml> Device<'nvml> {
     /// Supports Kepler or newer fully supported devices.
     pub fn pcie_replay_counter(&self) -> Result<u32> {
         unsafe {
-            let value: c_uint = mem::zeroed();
+            let mut value: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetPcieReplayCounter(self.device, &mut value))?;
 
             Ok(value as u32)
@@ -1038,7 +1038,7 @@ impl<'nvml> Device<'nvml> {
     /// Supports Maxwell and newer fully supported devices.
     pub fn pcie_throughput(&self, counter: PcieUtilCounter) -> Result<u32> {
         unsafe {
-            let throughput: c_uint = mem::zeroed();
+            let mut throughput: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetPcieThroughput(self.device, counter.eq_c_variant(), &mut throughput))?;
 
             Ok(throughput as u32)
@@ -1172,6 +1172,7 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
+    /// Not documenting this because it's deprecated. Read NVIDIA's docs if you must use it.
     #[deprecated(note = "use `.performance_state()`.")]
     pub fn power_state(&self) -> Result<PerformanceState> {
         unsafe {

@@ -122,7 +122,7 @@ pub enum EccCounter {
 /// Memory locations. See `Device.memory_error_counter()`.
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlMemoryLocation_t")]
-#[wrap(has_count = "NVML_MEMORY_LOCATION_COUNT"]
+#[wrap(has_count = "NVML_MEMORY_LOCATION_COUNT")]
 pub enum MemoryLocation {
     /// GPU L1 cache.
     #[wrap(c_variant = "NVML_MEMORY_LOCATION_L1_CACHE")]
@@ -139,6 +139,9 @@ pub enum MemoryLocation {
     /// GPU texture memory.
     #[wrap(c_variant = "NVML_MEMORY_LOCATION_TEXTURE_MEMORY")]
     Texture,
+    /// Shared memory.
+    #[wrap(c_variant = "NVML_MEMORY_LOCATION_TEXTURE_SHM")]
+    Shared,
 }
 
 /// Driver models, Windows only.
@@ -234,6 +237,9 @@ pub enum PerformanceState {
     /// Minimum peformance.
     #[wrap(c_variant = "NVML_PSTATE_15")]
     Fifteen,
+    /// Unknown performance state.
+    #[wrap(c_variant = "NVML_PSTATE_UNKNOWN")]
+    Unknown,
 }
 
 pub fn bool_from_state(state: nvmlEnableState_t) -> bool {
