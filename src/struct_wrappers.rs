@@ -152,3 +152,26 @@ impl From<nvmlEccErrorCounts_t> for EccErrorCounts {
         }
     }
 }
+
+#[derive(Debug)]
+/// Memory allocation information for a device (in bytes).
+pub struct MemoryInfo {
+    /// Unallocated FB memory.
+    pub free: u64,
+    /// Total installed FB memory.
+    pub total: u64,
+    /// Allocated FB memory.
+    ///
+    /// Note that the driver/GPU always sets aside a small amount of memory for bookkeeping.
+    pub used: u64,
+}
+
+impl From<nvmlMemory_t> for MemoryInfo {
+    fn from(struct_: nvmlMemory_t) -> Self {
+        MemoryInfo {
+            free: struct_.free,
+            total: struct_.total,
+            used: struct_.used,
+        }
+    }
+}

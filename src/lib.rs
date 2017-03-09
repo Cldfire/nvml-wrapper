@@ -77,7 +77,7 @@ impl NVML {
 
     /// Use this to shutdown NVML and release allocated resources if you care about handling
     /// potential errors (*the `Drop` implementation ignores errors!*).
-    ///struct_wrappestruct_wrapperssstruct_wstruct_wrappersappers
+    ///
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
     /// * `Unknown`, on any unexpected error
@@ -218,14 +218,56 @@ impl NVML {
     /// * `NoPermission`, if the user doesn't have permission to talk to this device
     /// * `IrqIssue`, if the NVIDIA kernel detected an interrupt issue with the attached GPUs
     /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
+    /// * `NulError`, for which you can read the docs on `std::ffi::NulError`
     /// * `Unknown`, on any unexpected error
     pub fn device_by_pci_bus_id<S: AsRef<str>>(&self, pci_bus_id: S) -> Result<Device>
-        where std::vec::Vec<u8>: std::convert::From<S> {
+        where Vec<u8>: From<S> {
         unsafe {
             // TODO: Do I need to do this?
             let c_string = CString::new(pci_bus_id)?;
             let mut device: nvmlDevice_t = mem::zeroed();
             nvml_try(nvmlDeviceGetHandleByPciBusId_v2(c_string.as_ptr(), &mut device))?;
+
+            Ok(Device::new(device))
+        }
+    }
+
+    /// Not documenting this because it's deprecated. Read NVIDIA's docs if you must use it.
+    #[deprecated(note = "use `.device_by_uuid()`, this errors on dual GPU boards")]
+    pub fn device_by_serial<S: AsRef<str>>(&self, board_serial: S) -> Result<Device>
+        where Vec<u8>: From<S> {
+        unsafe {
+            let c_string = CString::new(board_serial)?;
+            let mut device: nvmlDevice_t = mem::zeroed();
+            nvml_try(nvmlDeviceGetHandleBySerial(c_string.as_ptr(), &mut device))?;
+
+            Ok(Device::new(device))
+        }
+    }
+
+    /// Acquire the handle for a particular device based on its globally unique immutable
+    /// UUID.
+    ///
+    /// Usage of this function causes NVML to initialize the target GPU. Additional
+    /// GPUs may be initialized as the function called within searches for the target GPU.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if `uuid` is invalid
+    /// * `NotFound`, if `uuid` does not match a valid device on the system
+    /// * `InsufficientPower`, if any attached devices have improperly attached external power cables
+    /// * `IrqIssue`, if the NVIDIA kernel detected an interrupt issue with the attached GPUs
+    /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
+    /// * `NulError`, for which you can read the docs on `std::ffi::NulError`
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// NVIDIA doesn't mention `NoPermission` for this one. Strange!
+    pub fn device_by_uuid<S: AsRef<str>>(&self, uuid: S) -> Result<Device> 
+        where Vec<u8>: From<S> {
+        unsafe {
+            let c_string = CString::new(uuid)?;
+            let mut device: nvmlDevice_t = mem::zeroed();
+            nvml_try(nvmlDeviceGetHandleByUUID(c_string.as_ptr(), &mut device))?;
 
             Ok(Device::new(device))
         }

@@ -119,6 +119,28 @@ pub enum EccCounter {
     Aggregate,
 }
 
+/// Memory locations. See `Device.memory_error_counter()`.
+#[derive(EnumWrapper, Debug)]
+#[wrap(c_enum = "nvmlMemoryLocation_t")]
+#[wrap(has_count = "NVML_MEMORY_LOCATION_COUNT"]
+pub enum MemoryLocation {
+    /// GPU L1 cache.
+    #[wrap(c_variant = "NVML_MEMORY_LOCATION_L1_CACHE")]
+    L1Cache,
+    /// GPU L2 cache.
+    #[wrap(c_variant = "NVML_MEMORY_LOCATION_L2_CACHE")]
+    L2Cache,
+    /// GPU device memory.
+    #[wrap(c_variant = "NVML_MEMORY_LOCATION_DEVICE_MEMORY")]
+    Device,
+    /// GPU register file.
+    #[wrap(c_variant = "NVML_MEMORY_LOCATION_REGISTER_FILE")]
+    RegisterFile,
+    /// GPU texture memory.
+    #[wrap(c_variant = "NVML_MEMORY_LOCATION_TEXTURE_MEMORY")]
+    Texture,
+}
+
 /// Driver models, Windows only.
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlDriverModel_t")]
@@ -145,6 +167,73 @@ pub enum OperationMode {
     Compute,
     #[wrap(c_variant = "NVML_GOM_LOW_DP")]
     LowDP,
+}
+
+/// Available infoROM objects.
+#[derive(EnumWrapper, Debug)]
+#[wrap(c_enum = "nvmlInforomObject_t")]
+#[wrap(has_count = "NVML_INFOROM_COUNT")]
+pub enum InfoROM {
+    /// An object defined by OEM.
+    #[wrap(c_variant = "NVML_INFOROM_OEM")]
+    OEM,
+    /// The ECC object determining the level of ECC support.
+    #[wrap(c_variant = "NVML_INFOROM_ECC")]
+    ECC,
+    /// The power management object.
+    #[wrap(c_variant = "NVML_INFOROM_POWER")]
+    Power,
+}
+
+/// Represents the queryable PCIe utilization counters.
+#[derive(EnumWrapper, Debug)]
+#[wrap(c_enum = "nvmlPcieUtilCounter_t")]
+#[wrap(has_count = "NVML_PCIE_UTIL_COUNT")]
+pub enum PcieUtilCounter {
+    #[wrap(c_variant = "NVML_PCIE_UTIL_TX_BYTES")]
+    Send,
+    #[wrap(c_variant = "NVML_PCIE_UTIL_RX_BYTES")]
+    Receive,
+}
+
+/// Allowed performance states. 0 == max, 15 == min.
+#[derive(EnumWrapper, Debug)]
+#[wrap(c_enum = "nvmlPstates_t")]
+pub enum PerformanceState {
+    /// Maximum performance.
+    #[wrap(c_variant = "NVML_PSTATE_0")]
+    Zero,
+    #[wrap(c_variant = "NVML_PSTATE_1")]
+    One,
+    #[wrap(c_variant = "NVML_PSTATE_2")]
+    Two,
+    #[wrap(c_variant = "NVML_PSTATE_3")]
+    Three,
+    #[wrap(c_variant = "NVML_PSTATE_4")]
+    Four,
+    #[wrap(c_variant = "NVML_PSTATE_5")]
+    Five,
+    #[wrap(c_variant = "NVML_PSTATE_6")]
+    Six,
+    #[wrap(c_variant = "NVML_PSTATE_7")]
+    Seven,
+    #[wrap(c_variant = "NVML_PSTATE_8")]
+    Eight,
+    #[wrap(c_variant = "NVML_PSTATE_9")]
+    Nine,
+    #[wrap(c_variant = "NVML_PSTATE_10")]
+    Ten,
+    #[wrap(c_variant = "NVML_PSTATE_11")]
+    Eleven,
+    #[wrap(c_variant = "NVML_PSTATE_12")]
+    Twelve,
+    #[wrap(c_variant = "NVML_PSTATE_13")]
+    Thirteen,
+    #[wrap(c_variant = "NVML_PSTATE_14")]
+    Fourteen,
+    /// Minimum peformance.
+    #[wrap(c_variant = "NVML_PSTATE_15")]
+    Fifteen,
 }
 
 pub fn bool_from_state(state: nvmlEnableState_t) -> bool {

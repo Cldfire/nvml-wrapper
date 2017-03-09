@@ -44,3 +44,12 @@ pub struct OperationModeInfo {
     pub current: OperationMode,
     pub pending: OperationMode,
 }
+
+/// Returned from `Device.power_management_limit_constraints()`
+///
+/// Values are in milliwatts.
+#[derive(Debug)]
+pub struct PowerManagementConstraints {
+    pub min_limit: u32,
+    pub max_limit: u32,
+}

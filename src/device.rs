@@ -6,7 +6,7 @@ use super::enum_wrappers::*;
 use std::marker::PhantomData;
 use std::ffi::CStr;
 use std::mem;
-use std::os::raw::{c_uint, c_ulong};
+use std::os::raw::{c_uint, c_ulong, c_ulonglong};
 use std::slice;
 use NVML;
 
@@ -674,26 +674,6 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
-    /// Gets the PCI attributes of this `Device`.
-    /// 
-    /// See `PciInfo` for details about the returned attributes.
-    ///
-    /// # Errors
-    /// * `Uninitialized`, if the library has not been successfully initialized
-    /// * `InvalidArg`, if the device is invalid
-    /// * `GpuLost`, if the GPU has fallen off the bus or is otherwise inaccessible
-    /// * `Utf8Error`, if a string obtained from the C function is not valid Utf8
-    /// * `Unknown`, on any unexpected error
-    // Checked against local nvml.h
-    pub fn pci_info(&self) -> Result<PciInfo> {
-        unsafe {
-            let mut pci_info: nvmlPciInfo_t = mem::zeroed();
-            nvml_try(nvmlDeviceGetPciInfo_v2(self.device, &mut pci_info))?;
-
-            Ok(PciInfo::try_from(pci_info)?)
-        }
-    }
-
     /// Gets the NVML index of this `Device`. 
     /// 
     /// Keep in mind that the order in which NVML enumerates devices has no guarantees of
@@ -711,6 +691,273 @@ impl<'nvml> Device<'nvml> {
             nvml_try(nvmlDeviceGetIndex(self.device, &mut index))?;
 
             Ok(index as u32)
+        }
+    }
+
+    /// Gets the checksum of the config stored in the device's infoROM.
+    ///
+    /// Can be used to make sure that two GPUs have the exact same configuration.
+    /// The current checksum takes into account configuration stored in PWR and ECC
+    /// infoROM objects. The checksum can change between driver released or when the
+    /// user changes the configuration (e.g. disabling/enabling ECC).
+    ///
+    /// # Errors
+    /// * `CorruptedInfoROM`, if the device's checksum couldn't be retrieved due to infoROM corruption
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the device is invalid
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports all devices with an infoROM.
+    pub fn config_checksum(&self) -> Result<u32> {
+        unsafe {
+            let mut checksum: c_uint = mem::zeroed();
+            nvml_try(nvmlDeviceGetInforomConfigurationChecksum(self.device, &mut checksum))?;
+
+            Ok(checksum as u32)
+        }
+    }
+
+    /// Gets the global infoROM image version.
+    ///
+    /// This image version, just like the VBIOS version, uniquely describes the exact version
+    /// of the infoROM flashed on the board, in contrast to the infoROM object version which
+    /// is only an indicator of supported features.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the device is invalid
+    /// * `NotSupported`, if this `Device` does not have an infoROM
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Utf8Error`, if the string obtained from the C function is not valid Utf8
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// Why is `CorruptedInfoROM` not mentioned? Your guess is as good as mine. While we're
+    /// at it, why is this one of two functions I've seen so far that does not say that
+    /// it will return `InvalidArg` if the device is invalid, like every other device 
+    /// function? Hmm.
+    ///
+    /// # Device Support
+    /// Supports all devices with an infoROM.
+    pub fn info_rom_image_version(&self) -> Result<String> {
+        unsafe {
+            let mut version_vec = Vec::with_capacity(NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE as usize);
+            nvml_try(nvmlDeviceGetInforomImageVersion(self.device, 
+                                                      version_vec.as_mut_ptr(), 
+                                                      NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE))?;
+            
+            let version_raw = CStr::from_ptr(version_vec.as_ptr());
+            Ok(version_raw.to_str()?.into())
+        }
+    }
+
+    /// Gets the version information for this `Device`'s infoROM object, for the passed in 
+    /// object type.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the device is invalid
+    /// * `NotSupported`, if this `Device` does not have an infoROM
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Utf8Error`, if the string obtained from the C function is not valid Utf8
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports all devices with an infoROM.
+    ///
+    /// Fermi and higher parts have non-volatile on-board memory for persisting device info,
+    /// such as aggregate ECC counts. The version of the data structures in this memory may
+    /// change from time to time.
+    pub fn info_rom_version(&self, object: InfoROM) -> Result<String> {
+        unsafe {
+            let mut version_vec = Vec::with_capacity(NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE as usize);
+            nvml_try(nvmlDeviceGetInforomVersion(self.device,
+                                                 object.eq_c_variant(),
+                                                 version_vec.as_mut_ptr(),
+                                                 NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE))?;
+            
+            let version_raw = CStr::from_ptr(version_vec.as_ptr());
+            Ok(version_raw.to_str()?.into())
+        }
+    }
+
+    /// Gets the maximum clock speeds for this `Device`.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the device is invalid
+    /// * `NotSupported`, if this `Device` cannot report the specified `Clock`
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Fermi and newer fully supported devices.
+    ///
+    /// Note: On GPUs from the Fermi family, current P0 clocks (reported by `.clock_info()`)
+    /// can differ from max clocks by a few MHz.
+    pub fn max_clock_info(&self, clock_type: Clock) -> Result<u32> {
+        unsafe {
+            let mut clock: c_uint = mem::zeroed();
+            nvml_try(nvmlDeviceGetMaxClockInfo(self.device, clock_type.eq_c_variant(), &mut clock))?;
+
+            Ok(clock as u32)
+        }
+    }
+
+    /// Gets the max PCIe link generation possible with this `Device` and system.
+    ///
+    /// For a gen 2 PCIe device attached to a gen 1 PCIe bus, the max link generation
+    /// this function will report is generation 1.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the device is invalid
+    /// * `NotSupported`, if PCIe link information is not available
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Fermi and newer fully supported devices.
+    pub fn max_pcie_link_gen(&self) -> Result<u32> {
+        unsafe {
+            let mut max_gen: c_uint = mem::zeroed();
+            nvml_try(nvmlDeviceGetMaxPcieLinkGeneration(self.device, &mut max_gen))?;
+
+            Ok(max_gen as u32)
+        }
+    }
+
+    /// Gets the maximum PCIe link width possible with this `Device` and system.
+    ///
+    /// For a device with a 16x PCie bus width attached to an 8x PCIe system bus,
+    /// this method will report a max link width of 8.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the device is invalid
+    /// * `NotSupported`, if PCIe link information is not available
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Fermi and newer fully supported devices.
+    pub fn max_pcie_link_width(&self) -> Result<u32> {
+        unsafe {
+            let mut max_width: c_uint = mem::zeroed();
+            nvml_try(nvmlDeviceGetMaxPcieLinkWidth(self.device, &mut max_width))?;
+
+            Ok(max_width as u32)
+        }
+    }
+
+    /// Gets the requested memory error counter for this `Device`.
+    ///
+    /// Only applicable to devices with ECC. Requires ECC mode to be enabled.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if `error_type`, `counter_type`, or `location` is invalid (shouldn't occur?)
+    /// * `NotSupported`, if this `Device` does not support ECC error reporting for the specified
+    /// memory
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Fermi and newer fully supported devices. Requires `NVML_INFOROM_ECC` version
+    /// 2.0 or higher to report aggregate location-based memory error counts. Requires
+    /// `NVML_INFOROM_ECC` version 1.0 or higher to report all other memory error counts.
+    pub fn memory_error_counter(&self,
+                                error_type: MemoryError,
+                                counter_type: EccCounter,
+                                location: MemoryLocation) 
+                                -> Result<u64> {
+        unsafe {
+            let count: c_ulonglong = mem::zeroed();
+            nvml_try(nvmlDeviceGetMemoryErrorCounter(self.device,
+                                                     error_type.eq_c_variant(),
+                                                     counter_type.eq_c_variant(),
+                                                     location.eq_c_variant(),
+                                                     &mut count))?;
+            
+            Ok(count as u64)
+        }
+    }
+
+    /// Gets the amount of used, free and total memory available on the device, in bytes.
+    ///
+    /// Note that enabling ECC reduces the amount of total available memory due to the
+    /// extra required parity bits.
+    ///
+    /// Also note that on Windows, most device memory is allocated and managed on startup
+    /// by Windows.
+    ///
+    /// Under Linux and Windows TCC (no physical display connected), the reported amount 
+    /// of used memory is equal to the sum of memory allocated by all active channels on 
+    /// the device.
+    // TODO: is the above accurate?
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the device is invalid
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    pub fn memory_info(&self) -> Result<MemoryInfo> {
+        unsafe {
+            let info: nvmlMemory_t = mem::zeroed();
+            nvml_try(nvmlDeviceGetMemoryInfo(self.device, &mut info))?;
+
+            Ok(info.into())
+        }
+    }
+
+    /// Gets the minor number for this `Device`.
+    ///
+    /// The minor number is such that the NVIDIA device node file for each GPU will
+    /// have the form `/dev/nvidia/[minor number]`.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the device is invalid
+    /// * `NotSupported`, if this query is not supported by this `Device`
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Platform Support
+    /// Only supports Linux.
+    #[cfg(target_os = "linux")]
+    pub fn minor_number(&self) -> Result<u32> {
+        unsafe {
+            let number: c_uint = mem::zeroed();
+            nvml_try(nvmlDeviceGetMinorNumber(self.device, &mut number))?;
+
+            Ok(number as u32)
+        }
+    }
+
+    /// Identifies whether or not this `Device` is on a multi-GPU board.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the device is invalid
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Fermi or newer fully supported devices.
+    // TODO: Figure out how to test this on platforms it supports
+    // Checked against local nvml.h
+    pub fn is_multi_gpu_board(&self) -> Result<bool> {
+        unsafe {
+            let mut int_bool: c_uint = mem::zeroed();
+            nvml_try(nvmlDeviceGetMultiGpuBoard(self.device, &mut int_bool))?;
+
+            match int_bool as u32 {
+                0 => Ok(false),
+                _ => Ok(true),
+            }
         }
     }
 
@@ -735,28 +982,203 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
-    /// Identifies whether or not the `Device` is on a multi-GPU board.
+    /// Gets the PCI attributes of this `Device`.
+    /// 
+    /// See `PciInfo` for details about the returned attributes.
     ///
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
     /// * `InvalidArg`, if the device is invalid
-    /// * `NotSupported`, if the `Device` does not support this feature
+    /// * `GpuLost`, if the GPU has fallen off the bus or is otherwise inaccessible
+    /// * `Utf8Error`, if a string obtained from the C function is not valid Utf8
+    /// * `Unknown`, on any unexpected error
+    // Checked against local nvml.h
+    pub fn pci_info(&self) -> Result<PciInfo> {
+        unsafe {
+            let mut pci_info: nvmlPciInfo_t = mem::zeroed();
+            nvml_try(nvmlDeviceGetPciInfo_v2(self.device, &mut pci_info))?;
+
+            Ok(PciInfo::try_from(pci_info)?)
+        }
+    }
+
+    /// Gets the PCIe replay counter and rollover information.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the device is invalid
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Kepler or newer fully supported devices.
+    pub fn pcie_replay_counter(&self) -> Result<u32> {
+        unsafe {
+            let value: c_uint = mem::zeroed();
+            nvml_try(nvmlDeviceGetPcieReplayCounter(self.device, &mut value))?;
+
+            Ok(value as u32)
+        }
+    }
+
+    /// Gets PCIe utilization information in KB/s.
+    ///
+    /// The function called within this method is querying a byte counter over a 20ms
+    /// interval and thus is the PCIE throughput over that interval.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the device is invalid or `counter` is invalid (shouldn't occur?)
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Maxwell and newer fully supported devices.
+    pub fn pcie_throughput(&self, counter: PcieUtilCounter) -> Result<u32> {
+        unsafe {
+            let throughput: c_uint = mem::zeroed();
+            nvml_try(nvmlDeviceGetPcieThroughput(self.device, counter.eq_c_variant(), &mut throughput))?;
+
+            Ok(throughput as u32)
+        }
+    }
+
+    /// Gets the current performance state for this `Device`. 0 == max, 15 == min.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the device is invalid
+    /// * `NotSupported`, if this `Device` does not support this feature
     /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     /// * `Unknown`, on any unexpected error
     ///
     /// # Device Support
     /// Supports Fermi or newer fully supported devices.
-    // TODO: Figure out how to test this on platforms it supports
-    // Checked against local nvml.h
-    pub fn is_multi_gpu_board(&self) -> Result<bool> {
+    pub fn performance_state(&self) -> Result<PerformanceState> {
         unsafe {
-            let mut int_bool: c_uint = mem::zeroed();
-            nvml_try(nvmlDeviceGetMultiGpuBoard(self.device, &mut int_bool))?;
+            let mut state: nvmlPstates_t = mem::zeroed();
+            nvml_try(nvmlDeviceGetPerformanceState(self.device, &mut state))?;
 
-            match int_bool as u32 {
-                0 => Ok(false),
-                _ => Ok(true),
-            }
+            Ok(state.into())
+        }
+    } 
+
+    /// Gets whether or not persistent mode is enabled for this `Device`.
+    ///
+    /// When driver persistence mode is enabled the driver software is not torn down
+    /// when the last client disconnects. This feature is disabled by default.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the device is invalid
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Platform Support
+    /// Only supports Linux.
+    #[cfg(target_os = "linux")]
+    pub fn is_in_persistent_mode(&self) -> Result<bool> {
+        unsafe {
+            let mut state: nvmlEnableState_t = mem::zeroed();
+            nvml_try(nvmlDeviceGetPersistenceMode(self.device, &mut state))?;
+
+            Ok(bool_from_state(state))
+        }
+    }
+
+    /// Gets the default power management limit for this `Device`, in milliwatts.
+    ///
+    /// This is the limit that this `Device` boots with.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the device is invalid
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Kepler or newer fully supported devices.
+    pub fn power_management_limit_default(&self) -> Result<u32> {
+        unsafe {
+            let mut limit: c_uint = mem::zeroed();
+            nvml_try(nvmlDeviceGetPowerManagementDefaultLimit(self.device, &mut limit))?;
+
+            Ok(limit as u32)
+        }
+    }
+
+    /// Gets the power management limit associated with this `Device`.
+    ///
+    /// The power limit defines the upper boundary for the card's power draw. If the card's
+    /// total power draw reaches this limit, the power management algorithm kicks in.
+    ///
+    /// This reading is only supported if power management mode is supported. See
+    /// `.power_management_mode()`.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the device is invalid
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Fermi or newer fully supported devices.
+    pub fn power_management_limit(&self) -> Result<u32> {
+        unsafe {
+            let mut limit: c_uint = mem::zeroed();
+            nvml_try(nvmlDeviceGetPowerManagementLimit(self.device, &mut limit))?;
+
+            Ok(limit as u32)
+        }
+    }
+
+    /// Gets information about possible power management limit values for this `Device`, in milliwatts.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the device is invalid
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Kepler or newer fully supported devices.
+    pub fn power_management_limit_constraints(&self) -> Result<PowerManagementConstraints> {
+        unsafe {
+            let mut min: c_uint = mem::zeroed();
+            let mut max: c_uint = mem::zeroed();
+            nvml_try(nvmlDeviceGetPowerManagementLimitConstraints(self.device, &mut min, &mut max))?;
+
+            Ok(PowerManagementConstraints {
+                min_limit: min as u32,
+                max_limit: max as u32,
+            })
+        }
+    }
+
+    /// Not documenting this because it's deprecated. Read NVIDIA's docs if you must use it.
+    #[deprecated(note = "NVIDIA states that \"this API has been deprecated.\"")]
+    pub fn is_power_management_algo_active(&self) -> Result<bool> {
+        unsafe {
+            let mut state: nvmlEnableState_t = mem::zeroed();
+            nvml_try(nvmlDeviceGetPowerManagementMode(self.device, &mut state))?;
+
+            Ok(bool_from_state(state))
+        }
+    }
+
+    #[deprecated(note = "use `.performance_state()`.")]
+    pub fn power_state(&self) -> Result<PerformanceState> {
+        unsafe {
+            let mut state: nvmlPstates_t = mem::zeroed();
+            nvml_try(nvmlDeviceGetPowerState(self.device, &mut state))?;
+
+            Ok(state.into())
         }
     }
 }
