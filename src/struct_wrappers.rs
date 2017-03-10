@@ -169,9 +169,64 @@ pub struct MemoryInfo {
 impl From<nvmlMemory_t> for MemoryInfo {
     fn from(struct_: nvmlMemory_t) -> Self {
         MemoryInfo {
-            free: struct_.free,
-            total: struct_.total,
-            used: struct_.used,
+            free: struct_.free as u64,
+            total: struct_.total as u64,
+            used: struct_.used as u64,
         }
     }
 }
+
+#[derive(Debug)]
+/// Utilization information for a device. Each sample period may be between 1 second
+/// and 1/6 second, depending on the product being queried.
+pub struct Utilization {
+    /// Percent of time over the past sample period during which one or more kernels
+    /// was executing on the GPU.
+    pub gpu: u32,
+    /// Percent of time over the past sample period during which global (device)
+    /// memory was being read or written to.
+    pub memory: u32,
+}
+
+impl From<nvmlUtilization_t> for Utilization {
+    fn from(struct_: nvmlUtilization_t) -> Self {
+        Utilization {
+            gpu: struct_.gpu as u32,
+            memory: struct_.memory as u32,
+        }
+    }
+}
+
+#[derive(Debug)]
+/// Performance policy violation status data.
+pub struct ViolationTime {
+    /// Represents CPU timestamp in microseconds.
+    pub reference_time: u64,
+    /// in nanoseconds
+    pub violation_time: u64,
+}
+
+impl From<nvmlViolationTime_t> for ViolationTime {
+    fn from(struct_: nvmlViolationTime_t) -> Self {
+        ViolationTime {
+            reference_time: struct_.referenceTime as u64,
+            violation_time: struct_.violationTime as u64,
+        }
+    }
+}
+
+/// Description of an HWBC entry.
+#[derive(Debug)]
+pub struct HwbcEntry {
+    pub id: u32,
+    pub firmware_version: String,
+}
+
+// In progress
+// impl From<nvmlHwbcEntry_t> for HwbcEntry {
+//     fn from(struct_: nvmlHwbcEntry_t) {
+//         HwbcEntry {
+
+//         }
+//     }
+// }

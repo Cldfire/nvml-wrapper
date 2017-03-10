@@ -8,6 +8,7 @@ extern crate nvml_sys as ffi;
 // TODO: Module docs. Say something about device support.
 
 pub mod device;
+pub mod unit;
 pub mod structs;
 pub mod struct_wrappers;
 pub mod enums;
@@ -16,9 +17,12 @@ pub mod enum_wrappers;
 use nvml_errors::*;
 use ffi::*;
 use device::Device;
-use std::os::raw::{c_uint};
+use unit::Unit;
+use std::os::raw::{c_uint, c_int};
 use std::ffi::{CStr, CString};
 use std::mem;
+use enum_wrappers::TopologyLevel;
+use std::slice;
 
 /// The main struct that this library revolves around.
 ///
@@ -199,7 +203,7 @@ impl NVML {
             let mut device: nvmlDevice_t = mem::zeroed();
             nvml_try(nvmlDeviceGetHandleByIndex_v2(index as c_uint, &mut device))?;
 
-            Ok(Device::new(device))
+            Ok(device.into())
         }
     }
 
@@ -228,7 +232,7 @@ impl NVML {
             let mut device: nvmlDevice_t = mem::zeroed();
             nvml_try(nvmlDeviceGetHandleByPciBusId_v2(c_string.as_ptr(), &mut device))?;
 
-            Ok(Device::new(device))
+            Ok(device.into())
         }
     }
 
@@ -241,7 +245,7 @@ impl NVML {
             let mut device: nvmlDevice_t = mem::zeroed();
             nvml_try(nvmlDeviceGetHandleBySerial(c_string.as_ptr(), &mut device))?;
 
-            Ok(Device::new(device))
+            Ok(device.into())
         }
     }
 
@@ -269,9 +273,144 @@ impl NVML {
             let mut device: nvmlDevice_t = mem::zeroed();
             nvml_try(nvmlDeviceGetHandleByUUID(c_string.as_ptr(), &mut device))?;
 
-            Ok(Device::new(device))
+            Ok(device.into())
         }
     }
+
+    /// Gets the common ancestor for two devices.
+    ///
+    /// Note: this is the same as `Device.topology_common_ancestor()`.
+    ///
+    /// NVIDIA's docs for this are extremely confusing. That's all I have to say.
+    ///
+    /// # Errors
+    /// * `InvalidArg`, if the device is invalid or `threshold_type` is invalid (shouldn't occur?)
+    /// * `NotSupported`, if this `Device` or the OS does not support this feature
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Platform Support
+    /// Only supports Linux.
+    // TODO: Investigate this and the method on device more
+    #[cfg(target_os = "linux")]
+    pub fn topology_common_ancestor(&self, device1: &Device, device2: &Device) -> Result<TopologyLevel> {
+        unsafe {
+            let mut level: nvmlGpuTopologyLevel_t = mem::zeroed();
+            nvml_try(nvmlDeviceGetTopologyCommonAncestor(device1.c_device(), device2.c_device(), &mut level))?;
+
+            Ok(level.into())
+        }
+    }
+
+    /// Gets the set of GPUs that are nearest to the passed-in `Device` at a specific 
+    /// interconnectivity level.
+    ///
+    /// Note: this is the same as `Device.topology_nearest_gpus()`.
+    ///
+    /// # Errors
+    /// * `InvalidArg`, if the device is invalid or `level` is invalid (shouldn't occur?)
+    /// * `NotSupported`, if this `Device` or the OS does not support this feature
+    /// * `Unknown`, an error has occured in the underlying topology discovery
+    ///
+    /// # Platform Support
+    /// Only supports Linux.
+    #[cfg(target_os = "linux")]
+    pub fn topology_nearest_gpus(&self, device: &Device, level: TopologyLevel) -> Result<Vec<Device>> {
+        unsafe {
+            let mut first_item: nvmlDevice_t = mem::zeroed();
+            // TODO: Fails if I pass 0? What?
+            let mut count: c_uint = 0;
+            nvml_try(nvmlDeviceGetTopologyNearestGpus(device.c_device(), 
+                                                      level.eq_c_variant(), 
+                                                      &mut count, 
+                                                      &mut first_item))?;
+            
+            // TODO: Again I believe I'm doing every single one of these wrong. The array has
+            // already been malloc'd on the C side according to NVIDIA, meaning I'm probably
+            // responsible for freeing the memory or something? Which I'm not doing here?
+            // Investigate?
+            //
+            // Also other topo method below
+            Ok(slice::from_raw_parts(&first_item as *const nvmlDevice_t, 
+                                     count as usize)
+                                     .iter()
+                                     .map(|d| Device::from(*d))
+                                     .collect())
+        }
+    }
+
+    /// Acquire the handle for a particular `Unit` based on its index.
+    ///
+    /// Valid indices are derived from the `unit_count` returned by `.unit_count()`.
+    /// For example, if `unit_count` is 2 the valid indices are 0 and 1, corresponding
+    /// to UNIT 0 and UNIT 1.
+    ///
+    /// Note that the order in which NVML enumerates units has no guarantees of
+    /// consistency between reboots.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if `index` is invalid
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// For S-class products.
+    pub fn unit_by_index(&self, index: u32) -> Result<Unit> {
+        unsafe {
+            let mut unit: nvmlUnit_t = mem::zeroed();
+            nvml_try(nvmlUnitGetHandleByIndex(index as c_uint, &mut unit))?;
+
+            Ok(unit.into())
+        }
+    }
+
+    /// Checks if the passed-in `Device`s are on the same physical board.
+    ///
+    /// Note: this is the same as `Device.is_on_same_board_as()`.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if either `Device` is invalid
+    /// * `NotSupported`, if this check is not supported by this `Device`
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    pub fn is_device_on_same_board_as(device1: &Device, device2: &Device) -> Result<bool> {
+        unsafe {
+            let mut bool_int: c_int = mem::zeroed();
+            nvml_try(nvmlDeviceOnSameBoard(device1.c_device(), device2.c_device(), &mut bool_int))?;
+
+            match bool_int {
+                0 => Ok(true),
+                _ => Ok(false),
+            }
+        }
+    }
+
+    /// Gets the set of GPUs that have a CPU affinity with the given CPU number.
+    ///
+    /// # Errors
+    /// * `InvalidArg`, if `cpu_number` is invalid
+    /// * `NotSupported`, if this `Device` or the OS does not support this feature
+    /// * `Unknown`, an error has occured in the underlying topology discovery
+    ///
+    /// # Platform Support
+    /// Only supports Linux.
+    #[cfg(target_os = "Linux")]
+    pub fn topology_gpu_set(&self, cpu_number: u32) -> Result<Vec<Device>> {
+        unsafe {
+            let mut first_item: nvmlDevice_t = mem::zeroed();
+            let mut count: c_uint = 0;
+            nvml_try(nvmlSystemGetTopologyGpuSet(cpu_number as c_uint, &mut count, &mut first_item))?;
+
+            Ok(slice::from_raw_parts(&first_item as *const nvmlDevice_t, 
+                                     count as usize)
+                                     .iter()
+                                     .map(|d| Device::from(*d))
+                                     .collect())
+        }
+    }
+
+    // In progress
+    // pub fn hic_version(&self) -> 
 }
 
 /// This `Drop` implementation ignores errors! Use the `.shutdown()` method on the `NVML` struct

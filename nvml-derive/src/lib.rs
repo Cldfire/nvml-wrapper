@@ -133,6 +133,7 @@ fn gen_impl(variant_slice: &[VariantInfo], count_variant: Option<syn::Ident>) ->
         v.tokens_for_try_from_c()
     }).collect();
 
+    // TODO: Add error docs to `try_from`
     if let Some(v) = count_variant {
         quote! {
             impl #rust_name {

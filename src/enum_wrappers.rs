@@ -25,7 +25,7 @@ pub enum Api {
     AutoBoostedClocks,
 }
 
-/// Clock types. All speeds are in Mhz. 
+/// Clock types. All speeds are in MHz. 
 // impl and enum checked against local nvml.h
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlClockType_t")]
@@ -164,10 +164,14 @@ pub enum DriverModel {
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlGpuOperationMode_t")]
 pub enum OperationMode {
+    /// Everything is enabled and running at full speed.
     #[wrap(c_variant = "NVML_GOM_ALL_ON")]
     AllOn,
+    /// Designed for running only compute tasks; disables graphics operations.
     #[wrap(c_variant = "NVML_GOM_COMPUTE")]
     Compute,
+    /// Designed for running graphics applications that don't require high bandwidth
+    /// double precision.
     #[wrap(c_variant = "NVML_GOM_LOW_DP")]
     LowDP,
 }
@@ -242,9 +246,113 @@ pub enum PerformanceState {
     Unknown,
 }
 
+/// Causes for page retirement.
+#[derive(EnumWrapper, Debug)]
+#[wrap(c_enum = "nvmlPageRetirementCause_t")]
+#[wrap(has_count = "NVML_PAGE_RETIREMENT_CAUSE_COUNT")]
+pub enum RetirementCause {
+    /// Page was retired due to multiple single bit ECC errors.
+    #[wrap(c_variant = "NVML_PAGE_RETIREMENT_CAUSE_MULTIPLE_SINGLE_BIT_ECC_ERRORS")]
+    MultipleSingleBitEccErrors,
+    /// Page was retired due to a double bit ECC error.
+    #[wrap(c_variant = "NVML_PAGE_RETIREMENT_CAUSE_DOUBLE_BIT_ECC_ERROR")]
+    DoubleBitEccError,
+}
+
+/// Possible types of sampling events.
+#[derive(EnumWrapper, Debug)]
+#[wrap(c_enum = "nvmlSamplingType_t")]
+#[wrap(has_count = "NVML_SAMPLINGTYPE_COUNT")]
+pub enum Sampling {
+    /// Total power drawn by GPU.
+    #[wrap(c_variant = "NVML_TOTAL_POWER_SAMPLES")]
+    Power,
+    /// Percent of time during which one or more kernels was executing on the GPU.
+    #[wrap(c_variant = "NVML_GPU_UTILIZATION_SAMPLES")]
+    GpuUtilization,
+    /// Percent of time during which global (device) memory was being read or written.
+    #[wrap(c_variant = "NVML_MEMORY_UTILIZATION_SAMPLES")]
+    MemoryUtilization,
+    /// Percent of time during which NVENC remains busy.
+    #[wrap(c_variant = "NVML_ENC_UTILIZATION_SAMPLES")]
+    EncoderUtilization,
+    /// Percent of time during which NVDEC remains busy.
+    #[wrap(c_variant = "NVML_DEC_UTILIZATION_SAMPLES")]
+    DecoderUtilization,
+    /// Processor clock samples.
+    #[wrap(c_variant = "NVML_PROCESSOR_CLK_SAMPLES")]
+    ProcessorClock,
+    /// Memory clock samples.
+    #[wrap(c_variant = "NVML_MEMORY_CLK_SAMPLES")]
+    MemoryClock,
+}
+
+#[derive(EnumWrapper, Debug)]
+#[wrap(c_enum = "nvmlTemperatureSensors_t")]
+#[wrap(has_count = "NVML_TEMPERATURE_COUNT")]
+pub enum TemperatureSensor {
+    #[wrap(c_variant = "NVML_TEMPERATURE_GPU")]
+    Gpu,
+}
+
+#[derive(EnumWrapper, Debug)]
+#[wrap(c_enum = "nvmlTemperatureThresholds_t")]
+#[wrap(has_count = "NVML_TEMPERATURE_THRESHOLD_COUNT")]
+pub enum TemperatureThreshold {
+    #[wrap(c_variant = "NVML_TEMPERATURE_THRESHOLD_SHUTDOWN")]
+    Shutdown,
+    #[wrap(c_variant = "NVML_TEMPERATURE_THRESHOLD_SLOWDOWN")]
+    Slowdown,
+}
+
+/// Level relationships within a system between two GPUs.
+#[derive(EnumWrapper, Debug)]
+#[wrap(c_enum = "nvmlGpuTopologyLevel_t")]
+pub enum TopologyLevel {
+    /// e.g. Tesla K80.
+    #[wrap(c_variant = "NVML_TOPOLOGY_INTERNAL")]
+    Internal,
+    /// All devices that only need traverse a single PCIe switch.
+    #[wrap(c_variant = "NVML_TOPOLOGY_SINGLE")]
+    Single,
+    /// All devices that need not traverse a host bridge.
+    #[wrap(c_variant = "NVML_TOPOLOGY_MULTIPLE")]
+    Multiple,
+    /// ALl devices that are connected to the same host bridge.
+    #[wrap(c_variant = "NVML_TOPOLOGY_HOSTBRIDGE")]
+    HostBridge,
+    /// All devices that are connected to the same CPU but possibly multiple host
+    /// bridges.
+    #[wrap(c_variant = "NVML_TOPOLOGY_CPU")]
+    Cpu,
+    /// All devices in the system
+    #[wrap(c_variant = "NVML_TOPOLOGY_SYSTEM")]
+    System,
+}
+
+/// Types of performance policy for which violation times can be queried.
+#[derive(EnumWrapper, Debug)]
+#[wrap(c_enum = "nvmlPerfPolicyType_t")]
+#[wrap(has_count = "NVML_PERF_POLICY_COUNT")]
+pub enum PerformancePolicy {
+    #[wrap(c_variant = "NVML_PERF_POLICY_POWER")]
+    Power,
+    #[wrap(c_variant = "NVML_PERF_POLICY_THERMAL")]
+    Thermal,
+    #[wrap(c_variant = "NVML_PERF_POLICY_SYNC_BOOST")]
+    SyncBoost,
+}
+
 pub fn bool_from_state(state: nvmlEnableState_t) -> bool {
     match state {
         nvmlEnableState_t::NVML_FEATURE_DISABLED => false,
         nvmlEnableState_t::NVML_FEATURE_ENABLED => true,
+    }
+}
+
+pub fn state_from_bool(bool_: bool) -> nvmlEnableState_t {
+    match bool_ {
+        false => nvmlEnableState_t::NVML_FEATURE_DISABLED,
+        true => nvmlEnableState_t::NVML_FEATURE_ENABLED,
     }
 }
