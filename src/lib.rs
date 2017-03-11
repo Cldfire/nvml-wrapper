@@ -409,8 +409,25 @@ impl NVML {
         }
     }
 
-    // In progress
-    // pub fn hic_version(&self) -> 
+    // TODO: NVIDIA doesn't explain this very well...
+    // pub fn hic_version(&self) ->
+
+    /// Gets the number of units in the system.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports S-class products.
+    pub fn unit_count(&self) -> Result<u32> {
+        unsafe {
+            let mut count: c_uint = mem::zeroed();
+            nvml_try(nvmlUnitGetCount(&mut count))?;
+
+            Ok(count as u32)
+        }
+    }
 }
 
 /// This `Drop` implementation ignores errors! Use the `.shutdown()` method on the `NVML` struct

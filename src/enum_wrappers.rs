@@ -343,11 +343,54 @@ pub enum PerformancePolicy {
     SyncBoost,
 }
 
+/// Unit fan state.
+#[derive(EnumWrapper, Debug)]
+#[wrap(c_enum = "nvmlFanState_t")]
+pub enum FanState {
+    /// Working properly
+    #[wrap(c_variant = "NVML_FAN_NORMAL")]
+    Normal,
+    #[wrap(c_variant = "NVML_FAN_FAILED")]
+    Failed,
+}
+
 pub fn bool_from_state(state: nvmlEnableState_t) -> bool {
     match state {
         nvmlEnableState_t::NVML_FEATURE_DISABLED => false,
         nvmlEnableState_t::NVML_FEATURE_ENABLED => true,
     }
+}
+
+#[derive(EnumWrapper, Debug)]
+#[wrap(c_enum = "nvmlLedColor_t")]
+pub enum LedColor {
+    /// Used to indicate good health.
+    #[wrap(c_variant = "NVML_LED_COLOR_GREEN")]
+    Green,
+    /// Used to indicate a problem.
+    #[wrap(c_variant = "NVML_LED_COLOR_AMBER")]
+    Amber,
+}
+
+/// `ExclusiveProcess` was added in CUDA 4.0. Earlier CUDA versions supported a single
+/// exclusive mode, which is equivalent to `ExclusiveThread` in CUDA 4.0 and beyond.
+#[derive(EnumWrapper, Debug)]
+#[wrap(c_enum = "nvmlComputeMode_t")]
+#[wrap(has_count = "NVML_COMPUTEMODE_COUNT")]
+pub enum ComputeMode {
+    /// Multiple contexts per device.
+    #[wrap(c_variant = "NVML_COMPUTEMODE_DEFAULT")]
+    Default,
+    /// Only one context per device, usable from one thread at a time. This mode
+    /// has been deprecated and will be removed in future releases.
+    #[wrap(c_variant = "NVML_COMPUTEMODE_EXCLUSIVE_THREAD")]
+    ExclusiveThread,
+    /// No contexts per device.
+    #[wrap(c_variant = "NVML_COMPUTEMODE_PROHIBITED")]
+    Prohibited,
+    /// Only one context per device, usable from multiple threads at a time.
+    #[wrap(c_variant = "NVML_COMPUTEMODE_EXCLUSIVE_PROCESS")]
+    ExclusiveProcess,
 }
 
 pub fn state_from_bool(bool_: bool) -> nvmlEnableState_t {

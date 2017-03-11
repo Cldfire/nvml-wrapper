@@ -178,7 +178,7 @@ fn gen_impl(variant_slice: &[VariantInfo], count_variant: Option<syn::Ident>) ->
 // TODO: This... is so bad. 
  fn attr_val_for_str<S: AsRef<str>>(string: S, ast: &syn::DeriveInput) -> Option<String> {
     let mut return_string: Option<String> = None;
-    // Iterate through attributes on this variant, match on the MetaIte
+    // Iterate through attributes on this variant, match on the MetaItem
     ast.attrs.iter().find(|ref a| match a.value {
         // If this value is a List...
         List(ref ident, ref nested_items_vec) => {

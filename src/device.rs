@@ -1722,12 +1722,295 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
+    // Wrappers for things from Accounting Statistics now
+
+    /// Clears accounting information about all processes that have already terminated.
+    ///
+    /// Requires root/admin permissions.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the `Device` is invalid
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `NoPermission`, if the user doesn't have permission to perform this operation
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Kepler and newer fully supported devices.
+    pub fn clear_accounting_pids(&self) -> Result<()> {
+        unsafe {
+            nvml_try(nvmlDeviceClearAccountingPids(self.device))
+        }
+    }
+
+    /// Gets the number of processes that the circular buffer with accounting PIDs can hold
+    /// (in number of elements).
+    ///
+    /// This is the max number of processes that accounting information will be stored for
+    /// before the oldest process information will get overwritten by information
+    /// about new processes.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the `Device` is invalid
+    /// * `NotSupported`, if this `Device` does not support this feature or accounting mode
+    /// is disabled
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Kepler and newer fully supported devices.
+    pub fn accounting_buffer_size(&self) -> Result<u32> {
+        unsafe {
+            // TODO: I _think_ this is supposed to just be a return value?
+            let mut count: c_uint = mem::zeroed();
+            nvml_try(nvmlDeviceGetAccountingBufferSize(self.device, &mut count))?;
+
+            Ok(count as u32)
+        }
+    }
+
+    /// Gets whether or not per-process accounting mode is enabled.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the `Device` is invalid
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Kepler and newer fully supported devices.
+    pub fn is_accounting_enabled(&self) -> Result<bool> {
+        unsafe {
+            let mut state: nvmlEnableState_t = mem::zeroed();
+            nvml_try(nvmlDeviceGetAccountingMode(self.device, &mut state))?;
+
+            Ok(bool_from_state(state))
+        }
+    }
+
+    /// Gets the list of processes that can be queried for accounting stats.
+    ///
+    /// The list of processes returned can be in running or terminated state.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the `Device` is invalid
+    /// * `NotSupported`, if this `Device` does not support this feature or accounting
+    /// mode is disabled
+    /// * `InsufficientSize`,
+    // TODO: ^
+    /// * `Unknown`, on any unexpected error
+    pub fn accounting_pids(&self, size: usize) -> Result<Vec<u32>> {
+        unsafe {
+            let mut first_item: c_uint = mem::zeroed();
+            // TODO: Again, query with 0, if insufficientsize, count is supposed to be
+            // required size...
+            let mut count: c_uint = size as c_uint;
+            nvml_try(nvmlDeviceGetAccountingPids(self.device, &mut count, &mut first_item))?;
+
+            // TODO: is this safe, correct, is mapping this to u32 stupid
+            Ok(slice::from_raw_parts(first_item as *const c_uint,
+                                     count as usize)
+                                     .iter()
+                                     .map(|p| *p as u32)
+                                     .collect())
+        }
+    }
+
+    /// Gets a process's accounting stats.
+    ///
+    /// Accounting stats capture GPU utilization and other statistics across the lifetime
+    /// of a process. Accounting stats can be queried during the lifetime of the process
+    /// and after its termination. The `time` field in `AccountingStats` is reported as
+    /// zero during the lifetime of the process and updated to the actual running time
+    /// after its termination.
+    ///
+    /// Accounting stats are kept in a circular buffer; newly created process overwrite
+    /// information regarding old processes.
+    ///
+    /// Note:
+    /// * Accounting mode needs to be on. See `.is_accounting_enabled()`.
+    /// * Only compute and graphics applications stats can be queried. Monitoring
+    /// applications can't be queried since they don't contribute to GPU utilization.
+    /// * If a PID collision occurs, the stats of the latest process (the one that
+    /// terminated last) will be reported.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the `Device` is invalid
+    /// * `NotFound`, if the process stats were not found
+    /// * `NotSupported`, if this `Device` does not support this feature or accounting
+    /// mode is disabled
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Suports Kepler and newer fully supported devices.
+    pub fn accounting_stats_for(&self, pid: u32) -> Result<AccountingStats> {
+        unsafe {
+            let mut stats: nvmlAccountingStats_t = mem::zeroed();
+            nvml_try(nvmlDeviceGetAccountingStats(self.device, pid as c_uint, &mut stats))?;
+
+            Ok(stats.into())
+        }
+    }
+
+    /// Enables or disables per-process accounting.
+    ///
+    /// Requires root/admin permissions.
+    ///
+    /// Note:
+    /// * This setting is not persistent and will default to disabled after the driver
+    /// unloads. Enable persistence mode to be sure the settings doesn't switch off
+    /// to disabled.
+    /// * Enabling accounting mode has no negative impact on GPU performance.
+    /// * Disabling accounting clears accounting information for all PIDs
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the `Device` is invalid
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `NoPermission`, if the user doesn't have permission to perform this operation
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Kepler and newer fully supported devices.
+    pub fn set_accounting(&self, enabled: bool) -> Result<()> {
+        unsafe {
+            nvml_try(nvmlDeviceSetAccountingMode(self.device, state_from_bool(enabled)))
+        }
+    }
+
+    // Device commands starting here
+
+    /// Clears the ECC error and other memory error counts for this `Device`.
+    ///
+    /// Sets all of the specified ECC counters to 0, including both detailed and total counts.
+    ///
+    /// Requires root/admin permissions and ECC mode to be enabled.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the `Device` is invalid or `counter_type` is invalid (shouldn't occur?)
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `NoPermission`, if the user doesn't have permission to perform this operation
+    /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Kepler and newer fully supported devices. Only applicable to devices with
+    /// ECC. Requires `NVML_INFOROM_ECC` version 2.0 or higher to clear aggregate
+    /// location-based ECC counts. Requires `NVML_INFOROM_ECC` version 1.0 or higher to
+    /// clear all other ECC counts.
+    pub fn clear_ecc_error_counts(&self, counter_type: EccCounter) -> Result<()> {
+        unsafe {
+            nvml_try(nvmlDeviceClearEccErrorCounts(self.device, counter_type.eq_c_variant()))
+        }
+    }
+
+    /// Changes the root/admin restrictions on certain APIs.
+    ///
+    /// This method can be used by a root/admin user to give non root/admin users access
+    /// to certain otherwise-restricted APIs. The new setting lasts for the lifetime of
+    /// the NVIDIA driver; it is not persistent. See `.is_api_restricted()` to query
+    /// current settings.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the `Device` is invalid or `api_type` is invalid (shouldn't occur?)
+    /// * `NotSupported`, if this `Device` does not support changing API restrictions or
+    /// this `Device` does not support the feature that API restrictions are being set for
+    /// (e.g. enabling/disabling auto boosted clocks is not supported by this `Device`).
+    /// * `NoPermission`, if the user doesn't have permission to perform this operation
+    /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Kepler and newer fully supported devices.
+    pub fn set_api_restricted(&self, api_type: Api, restricted: bool) -> Result<()> {
+        unsafe {
+            nvml_try(nvmlDeviceSetAPIRestriction(self.device, 
+                                                 api_type.eq_c_variant(), 
+                                                 state_from_bool(restricted)))
+        }
+    }
+
+    /// Sets clocks that applications will lock to.
+    ///
+    /// Sets the clocks that compute and graphics applications will be running at. e.g.
+    /// CUDA driver requests these clocks during context creation which means this
+    /// property defines clocks at which CUDA applications will be running unless some
+    /// overspec event occurs (e.g. over power, over thermal or external HW brake).
+    ///
+    /// Can be used as a setting to request constant performance. Requires root/admin
+    /// permissions.
+    ///
+    /// Note that after a system reboot or driver reload applications clocks go back
+    /// to their default value.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the `Device` is invalid or the clocks are not a valid combo
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `NoPermission`, if the user doesn't have permission to perform this operation
+    /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Kepler and newer non-GeForce fully supported devices and Maxwell or newer
+    /// GeForce devices.
+    pub fn set_applications_clocks(&self, mem_clock: u32, graphics_clock: u32) -> Result<()> {
+        unsafe {
+            nvml_try(nvmlDeviceSetApplicationsClocks(self.device, 
+                                                     mem_clock as c_uint, 
+                                                     graphics_clock as c_uint))
+        }
+    }
+
+    /// Sets the compute mode for this `Device`.
+    ///
+    /// The compute mode determines whether a GPU can be used for compute operations
+    /// and whether it can be shared across contexts.
+    ///
+    /// This operation takes effect immediately. Under Linux it is not persistent
+    /// across reboots and always resets to `Default`. Under Windows it is
+    /// persistent.
+    ///
+    /// Under Windows, compute mode may only be set to `Default` when running in WDDM.
+    ///
+    /// Requires root/admin permissions.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the `Device` is invalid or `mode` is invalid (shouldn't occur?)
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `NoPermission`, if the user doesn't have permission to perform this operation
+    /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    pub fn set_compute_mode(&self, mode: ComputeMode) -> Result<()> {
+        unsafe {
+            nvml_try(nvmlDeviceSetComputeMode(self.device, mode.eq_c_variant()))
+        }
+    }
+
+    // TODO: Finish docs for this and figure out how the flag stuff works
+    /// Sets the driver model for this `Device`.
+    ///
+    /// On Windows platforms the device driver can run in either WDDM or WDM (TCC)
+    /// mode. If a display is attached to a device it must run in WDDM mode.
+    ///
+    /// It is possible to force the change to WDM (TCC) while the display is still
+    /// attached with a force flag ()
+    #[cfg(target_os = "windows")]
+    pub fn set_driver_model(&self, model: DriverModel) -> Result<()> {
+        unsafe {
+            nvml_try(nvmlDeviceSetDriverModel(self.device, model.eq_c_variant(), ))
+        }
+    }
+
     /// Only use this if it's absolutely necessary. 
     pub fn c_device(&self) -> nvmlDevice_t {
         self.device
     }
-
-    // Am I actually done?!??!?!?
 }
 
 #[cfg(feature = "test")]

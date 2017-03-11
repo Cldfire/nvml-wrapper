@@ -5,6 +5,8 @@ use super::enums::*;
 use super::std::mem;
 use std::ffi::CStr;
 
+// TODO: Document errors for try_froms
+
 /// PCI information about a GPU device.
 pub struct PciInfo {
     /// The bus on which the device resides, 0 to 0xff.
@@ -100,6 +102,7 @@ impl From<nvmlBridgeChipHierarchy_t> for BridgeChipHierarchy {
         // [BridgeChipInfo; 128] is currently (3-7-17) 1536 bytes
         // This means we currently allocate 192 bytes
         // TODO: Check that order is correct here (very important that it is!)
+        // TODO: Why is this value not used?
         let mut hierarchy: Vec<BridgeChipInfo>
              = Vec::with_capacity(mem::size_of::<[BridgeChipInfo; NVML_MAX_PHYSICAL_BRIDGE as usize]>() / 8);
         hierarchy = struct_.bridgeChipInfo.iter()
@@ -222,11 +225,183 @@ pub struct HwbcEntry {
     pub firmware_version: String,
 }
 
-// In progress
-// impl From<nvmlHwbcEntry_t> for HwbcEntry {
-//     fn from(struct_: nvmlHwbcEntry_t) {
-//         HwbcEntry {
+impl HwbcEntry {
+    /// Waiting for `TryFrom` to be stable. In the meantime, we do this.
+    pub fn try_from(struct_: nvmlHwbcEntry_t) -> Result<Self> {
+        unsafe {
+            let version_raw = CStr::from_ptr(struct_.firmwareVersion.as_ptr());
+            Ok(HwbcEntry {
+                id: struct_.hwbcId as u32,
+                firmware_version: version_raw.to_str()?.into()
+            })
+        }
+    }
+}
 
-//         }
-//     }
-// }
+/// Fan information readings for an entire S-class unit.
+#[derive(Debug)]
+pub struct UnitFansInfo {
+    /// Number of fans in the unit.
+    pub count: u32,
+    /// Fan data for each fan.
+    pub fans: Vec<FanInfo>,
+}
+
+impl From<nvmlUnitFanSpeeds_t> for UnitFansInfo {
+    fn from(struct_: nvmlUnitFanSpeeds_t) -> Self {
+        UnitFansInfo {
+            count: struct_.count as u32,
+            fans: struct_.fans.iter().map(|f| FanInfo::from(*f)).collect(),
+        }
+    }
+}
+
+/// Fan info reading for a single fan in an S-class unit.
+#[derive(Debug)]
+pub struct FanInfo {
+    /// Fan speed (RPM).
+    pub speed: u32,
+    /// Indicates whether a fan is working properly.
+    pub state: FanState,
+}
+
+impl From<nvmlUnitFanInfo_t> for FanInfo {
+    fn from(struct_: nvmlUnitFanInfo_t) -> Self {
+        FanInfo {
+            speed: struct_.speed as u32,
+            state: struct_.state.into(),
+        }
+    }
+}
+
+/// Power usage information for an S-class unit. The power supply state is a human-readable
+/// string that equals "Normal" or contains a combination of "Abnormal" plus one or more of
+/// the following (aka good luck matching on it):
+///
+/// * High voltage
+/// * Fan failure
+/// * Heatsink temperature
+/// * Current limit
+/// * Voltage below UV alarm threshold
+/// * Low voltage
+/// * SI2C remote off command
+/// * MOD_DISABLE input
+/// * Short pin transition
+#[derive(Debug)]
+pub struct UnitPsuInfo {
+    /// PSU current (in A)
+    pub current: u32,
+    /// PSU power draw (in W)
+    pub power_draw: u32,
+    /// Human-readable string describing the PSU state.
+    pub state: String,
+    /// PSU voltage (in V)
+    pub voltage: u32,
+}
+
+impl UnitPsuInfo {
+    /// Waiting for `TryFrom` to be stable. In the meantime, we do this.
+    pub fn try_from(struct_: nvmlPSUInfo_t) -> Result<Self> {
+        unsafe {
+            let state_raw = CStr::from_ptr(struct_.state.as_ptr());
+            Ok(UnitPsuInfo {
+                current: struct_.current as u32,
+                power_draw: struct_.power as u32,
+                state: state_raw.to_str()?.into(),
+                voltage: struct_.voltage as u32,
+            })
+        }
+    }
+}
+
+/// Static S-class unit info.
+#[derive(Debug)]
+pub struct UnitInfo {
+    pub firmware_version: String,
+    /// Product identifier.
+    pub id: String,
+    pub name: String,
+    /// Product serial number.
+    pub serial: String,
+}
+
+impl UnitInfo {
+    /// Waiting for `TryFrom` to be stable. In the meantime, we do this.
+    pub fn try_from(struct_: nvmlUnitInfo_t) -> Result<Self> {
+        unsafe {
+            let version_raw = CStr::from_ptr(struct_.firmwareVersion.as_ptr());
+            let id_raw = CStr::from_ptr(struct_.id.as_ptr());
+            let name_raw = CStr::from_ptr(struct_.name.as_ptr());
+            let serial_raw = CStr::from_ptr(struct_.serial.as_ptr());
+
+            Ok(UnitInfo {
+                firmware_version: version_raw.to_str()?.into(),
+                id: id_raw.to_str()?.into(),
+                name: name_raw.to_str()?.into(),
+                serial: serial_raw.to_str()?.into(),
+            })
+        }
+    }
+}
+
+/// Accounting statistics for a process.
+///
+/// There is a field: `unsigned int reserved[5]` present on the C struct that this wraps
+/// that NVIDIA says is "reserved for future use." If it ever gets used in the future,
+/// an equivalent wrapping field will have to be added to this struct.
+#[derive(Debug)]
+pub struct AccountingStats {
+    /// Percent of time over the process's lifetime during which one or more kernels was
+    /// executing on the GPU. This is just like what is returned by
+    /// `Device.utilization_rates()` except it is for the lifetime of a process (not just
+    /// the last sample period). 
+    ///
+    /// It will be `None` if `Device.utilization_rates()` is not supported.
+    pub gpu_utilization: Option<u32>,
+    /// Whether the process is running.
+    pub is_running: bool,
+    /// Max total memory in bytes that was ever allocated by the process.
+    ///
+    /// It will be `None` if `nvmlProcessInfo_t->usedGpuMemory` is not supported.
+    pub max_memory_usage: Option<u64>,
+    /// Percent of time over the process's lifetime during which global (device) memory
+    /// was being read from or written to.
+    ///
+    /// It will be `None` if `Device.utilization_rates()` is not supported.
+    pub memory_utilization: Option<u32>,
+    /// CPU timestamp in usec representing the start time for the process.
+    pub start_time: u64,
+    /// Amount of time in ms during which the compute context was active. This will be
+    /// zero if the process is not terminated.
+    pub time: u64,
+}
+
+impl From<nvmlAccountingStats_t> for AccountingStats {
+    fn from(struct_: nvmlAccountingStats_t) -> Self {
+        let not_avail_u64 = (NVML_VALUE_NOT_AVAILABLE) as u64;
+        let not_avail_u32 = (NVML_VALUE_NOT_AVAILABLE) as u32;
+
+        AccountingStats {
+            gpu_utilization: match struct_.gpuUtilization as u32 {
+                v if v == not_avail_u32 => None,
+                _ => Some(struct_.gpuUtilization as u32),
+            },
+            is_running: match struct_.isRunning {
+                0 => false,
+                // NVIDIA only says 1 is for running, but I don't think anything
+                // else warrants an error (or a panic), so
+                _ => true,
+            },
+            max_memory_usage: match struct_.maxMemoryUsage as u64 {
+                v if v == not_avail_u64 => None,
+                _ => Some(struct_.maxMemoryUsage as u64),
+            },
+            memory_utilization: match struct_.memoryUtilization as u32 {
+                v if v == not_avail_u32 => None,
+                _ => Some(struct_.memoryUtilization as u32),
+            },
+            start_time: struct_.startTime as u64,
+            time: struct_.time as u64,
+        }
+    }
+}
