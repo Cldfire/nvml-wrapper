@@ -30,6 +30,7 @@ pub struct Device<'nvml> {
     _phantom: PhantomData<&'nvml NVML>,
 }
 
+// Here to clarify that Device does have these traits. I know they are implemented without this.
 unsafe impl<'nvml> Send for Device<'nvml> {}
 unsafe impl<'nvml> Sync for Device<'nvml> {}
 
@@ -75,8 +76,10 @@ impl<'nvml> Device<'nvml> {
     ///
     /// Only root users are able to call functions belonging to restricted APIs. See 
     /// the documentation for the `RestrictedApi` enum for a list of those functions.
-    // TODO: Document how to change perms
     ///
+    /// Non-root users can be granted access to these APIs through use of
+    /// `.set_api_restricted()`.
+    /// 
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
     /// * `InvalidArg`, if the device is invalid or the apiType is invalid (may occur if 
@@ -110,7 +113,6 @@ impl<'nvml> Device<'nvml> {
     /// situation occurs.
     ///
     /// This setting can be changed using `.set_applications_clocks()`.
-    // TODO: Check that name is correct after I write the method ^
     ///
     /// # Errors 
     /// * `Uninitialized`, if the library has not been successfully initialized
@@ -141,7 +143,6 @@ impl<'nvml> Device<'nvml> {
     /// On Pascal and newer hardware, auto boosted clocks are controlled through application
     /// clocks. Use `.set_applications_clocks()` and `.reset_applications_clocks()` to control
     /// auto boost behavior.
-    // TODO: Check these method names after I write them ^
     /// 
     /// # Errors 
     /// * `Uninitialized`, if the library has not been successfully initialized
@@ -194,7 +195,6 @@ impl<'nvml> Device<'nvml> {
     /// Devices with the same boardID indicate GPUs connected to the same PLX. Use in
     /// conjunction with `.is_multi_gpu_board()` to determine if they are on the same
     /// board as well. 
-    // TODO: Check that when I write it ^
     ///
     /// The boardID returned is a unique ID for the current config. Uniqueness and
     /// ordering across reboots and system configs is not guaranteed (i.e if a Tesla
@@ -2006,6 +2006,109 @@ impl<'nvml> Device<'nvml> {
             nvml_try(nvmlDeviceSetDriverModel(self.device, model.eq_c_variant(), ))
         }
     }
+
+    /// Set whether or not ECC mode is enabled for this `Device`.
+    ///
+    /// Requires root/admin permissions. Only applicable to devices with ECC.
+    ///
+    /// This operation takes effect after the next reboot.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the `Device` is invalid
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `NoPermission`, if the user doesn't have permission to perform this operation
+    /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Kepler and newer fully supported devices. Requires NVML_INFOROM_ECC version
+    /// 1.0 or higher.
+    pub fn set_ecc(&self, enabled: bool) -> Result<()> {
+        unsafe {
+            nvml_try(nvmlDeviceSetEccMode(self.device, state_from_bool(enabled)))
+        }
+    }
+
+    /// Sets the GPU operation mode for this `Device`.
+    ///
+    /// Requires root/admin permissions. Chaning GOMs requires a reboot, a requirement
+    /// that may be removed in the future.
+    ///
+    /// Compute only GOMs don't support graphics acceleration. Under Windows switching
+    /// to these GOMs when the pending driver model is WDDM is not supported.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the `Device` is invalid or `mode` is invalid (shouldn't occur?)
+    /// * `NotSupported`, if this `Device` does not support GOMs or a specific mode
+    /// * `NoPermission`, if the user doesn't have permission to perform this operation
+    /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports GK110 M-class and X-class Tesla products from the Kepler family. Modes
+    /// `LowDP` and `AllOn` are supported on fully supported GeForce products. Not
+    /// supported on Quadro and Tesla C-class products.
+    pub fn set_gpu_op_mode(&self, mode: OperationMode) -> Result<()> {
+        unsafe {
+            nvml_try(nvmlDeviceSetGpuOperationMode(self.device, mode.eq_c_variant()))
+        }
+    }
+
+    /// Sets the persistence mode for this `Device`.
+    ///
+    /// The persistence mode determines whether the GPU driver software is torn down
+    /// after the last client exits.
+    ///
+    /// This operation takes effect immediately and requires root/admin permissions.
+    /// It is not persistent across reboots; after each reboot it will default to
+    /// disabled.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the `Device` is invalid
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `NoPermission`, if the user doesn't have permission to perform this operation
+    /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Platform Support
+    /// Only supports Linux.
+    #[cfg(target_os = "linux")]
+    pub fn set_persistence(&self, enabled: bool) -> Result<()> {
+        unsafe {
+            nvml_try(nvmlDeviceSetPersistenceMode(self.device, state_from_bool(enabled)))
+        }
+    }
+
+    /// Sets the power limit for this `Device`, in milliwatts.
+    ///
+    /// This limit is not persistent across reboots or driver unloads. Enable
+    /// persistent mode to prevent the driver from unloading when no application
+    /// is using this `Device`.
+    ///
+    /// Requires root/admin permissions. See `.power_management_limit_constraints()`
+    /// to check the allowed range of values.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the `Device` is invalid or `limit` is out of range
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// For some reason NVIDIA does not mention `NoPermission`.
+    ///
+    /// # Device Support
+    /// Supports Kepler and newer fully supported devices.
+    pub fn set_power_management_limit(&self, limit: u32) -> Result<()> {
+        unsafe {
+            nvml_try(nvmlDeviceSetPowerManagementLimit(self.device, limit as c_uint))
+        }
+    }
+
+    // TODO: event handling methods
 
     /// Only use this if it's absolutely necessary. 
     pub fn c_device(&self) -> nvmlDevice_t {

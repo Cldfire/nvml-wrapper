@@ -1,3 +1,34 @@
+//! Rust wrapper for the NVIDIA Management Library (NVML), a C-based programmatic interface 
+//! for monitoring and managing various states within NVIDIA (primarily Tesla) GPUs. It is
+//! intended to be a platform for building 3rd party applications, and is also the underlying
+//! library for NVIDIA's nvidia-smi tool.
+//!
+//! NVML supports the following platforms:
+//!
+//! * Windows
+//!     * Windows Server 2008 R2 64-bit
+//!     * Windows Server 2012 R2 64-bit
+//!     * Windows 7 64-bit 
+//!     * Windows 8 64-bit
+//!     * Windows 10 64-bit
+//! * Linux
+//!     * 64-bit
+//!     * 32-bit
+//! * Hypervisors
+//!     * Windows Server 2008R2/2012 Hyper-V 64-bit
+//!     * Citrix XenServer 6.2 SP1+
+//!     * VMware ESX 5.1/5.5
+//!
+//! And the following products:
+//!
+//! * Full Support
+//!     * Tesla products Fermi architecture and up
+//!     * Quadro products Fermi architecture and up
+//!     * GRID products Kepler architecture and up
+//!     * Select GeForce Titan products
+//! * Limited Support
+//!     * All GeForce products Fermi architecture and up
+
 #[macro_use]
 extern crate error_chain;
 extern crate nvml_errors;
@@ -42,8 +73,8 @@ use std::slice;
 /// online here (http://docs.nvidia.com/deploy/nvml-api/index.html), the hosted docs are outdated and
 /// do not accurately reflect the version of NVML that this library is written for. Beware.
 pub struct NVML;
-// Here to clarify without a doubt that NVML does have these traits
-// TODO: Do I even need to do this?
+
+// Here to clarify that NVML does have these traits. I know they are implemented without this.
 unsafe impl Send for NVML {}
 unsafe impl Sync for NVML {}
 
@@ -72,7 +103,6 @@ impl NVML {
     /// * `Unknown`, on any unexpected error
     pub fn init() -> Result<Self> {
         unsafe {
-            // TODO: nvmlInit is #DEFINEd to be nvmlInit_v2, can that be replicated in Rust?
             nvml_try(nvmlInit_v2())?;
         }
 
@@ -439,6 +469,7 @@ impl Drop for NVML {
                 Ok(()) => (),
                 Err(e) => {
                     println!("WARNING: Error returned by `nmvlShutdown()` in Drop implementation: {:?}", e);
+                    // TODO: Should I panic
                     panic!("Error returned by `nmvlShutdown()` in Drop implementation: {:?}", e);
                 }
             }
@@ -453,11 +484,53 @@ mod test {
     use std::thread;
     use std::sync::Arc;
 
-    #[test]
-    #[should_panic]
-    fn device_by_pci_bus_id() {
-        let test = NVML::init().expect("init call failed");
-        let device = test.device_by_pci_bus_id("test").expect("Device get failed as expected");
+    fn single<T>(test: T) where T: Fn(NVML) -> () + Send + Sync + 'static {
+        let nvml_test = NVML::init().expect("init call failed");
+        test(nvml_test);
+    }
+
+    fn multi<T>(count: usize, test: T) where T: Fn(NVML, usize) -> () + Send + Sync + 'static {
+        for i in 0..count {
+            let nvml_test = NVML::init().expect(&format!("init call{} failed", i));
+            test(nvml_test, i);
+        }
+    }
+
+    fn multi_thread<T>(threads: usize, test: T) where T: Fn(NVML, usize) -> () + Send + Sync + 'static {
+        let mut handles = Vec::with_capacity(std::mem::size_of::<thread::JoinHandle<()>>() * threads);
+        let fn_arc = Arc::new(test);
+
+        for i in 0..threads {
+            let fn_clone = fn_arc.clone();
+
+            handles.push(thread::spawn(move || {
+                let nvml_test = NVML::init().expect(&format!("init call{} failed", i));
+                fn_clone(nvml_test, i);
+            }))
+        }
+
+        for (i, j) in handles.into_iter().enumerate() {
+            let res = j.join().expect(&format!("handle{} joi failed", i));
+        }
+    }
+
+    fn multi_thread_arc<T>(threads: usize, test: T) where T: Fn(Arc<NVML>, usize) -> () + Send + Sync + 'static {
+        let mut handles = Vec::with_capacity(std::mem::size_of::<thread::JoinHandle<()>>() * threads);
+        let nvml_test = Arc::new(NVML::init().expect("init call failed"));
+        let fn_arc = Arc::new(test);
+
+        for i in 0..threads {
+            let nvml_clone = nvml_test.clone();
+            let fn_clone = fn_arc.clone();
+
+            handles.push(thread::spawn(move || {
+                fn_clone(nvml_clone, i);
+            }));
+        }
+
+        for (i, j) in handles.into_iter().enumerate() {
+            let res = j.join().expect(&format!("handle{} join failed", i));
+        }
     }
 
     #[test]
@@ -467,8 +540,9 @@ mod test {
 
     #[test]
     fn init_shutdown() {
-        let test = NVML::init().expect("init call failed");
-        test.shutdown().expect("shutdown failed");
+        single(|nvml| {
+            nvml.shutdown().expect("shutdown failed");
+        });
     }
 
     #[test]
@@ -480,13 +554,9 @@ mod test {
 
     #[test]
     fn init_shutdown_multiple() {
-        let test1 = NVML::init().expect("init call1 failed");
-        let test2 = NVML::init().expect("init call2 failed");
-        let test3 = NVML::init().expect("init call3 failed");
-
-        test1.shutdown().expect("shutdown1 failed");
-        test2.shutdown().expect("shutdown2 failed");
-        test3.shutdown().expect("shutdown3 failed");
+        multi(3, |nvml, i| {
+            nvml.shutdown().expect(&format!("shutdown{} failed", i));
+        })
     }
 
     #[test]
@@ -510,129 +580,54 @@ mod test {
 
     #[test]
     fn init_shutdown_multiple_threads() {
-        let handle1 = thread::spawn(|| {
-            let test = NVML::init().expect("init call1 failed");
-            test.shutdown().expect("shutdown1 failed");
-        });
-
-        let handle2 = thread::spawn(|| {
-            let test = NVML::init().expect("init call2 failed");
-            test.shutdown().expect("shutdown2 failed");
-        });
-
-        let handle3 = thread::spawn(|| {
-            let test = NVML::init().expect("init call3 failed");
-            test.shutdown().expect("shutdown3 failed");
-        });
-        
-        let res1 = handle1.join().expect("handle1 join failed");
-        let res2 = handle2.join().expect("handle2 join failed");
-        let res3 = handle3.join().expect("handle3 join failed");
+        multi_thread(3, |nvml, i| {
+            nvml.shutdown().expect(&format!("shutdown{} failed", i));
+        })
     }
 
     #[test]
     fn device_count() {
-        let test = NVML::init().expect("init call failed");
-        let count = test.device_count().expect("Could not get device count");
+        single(|nvml| {
+            let count = nvml.device_count().expect("Could not get device count");
 
-        #[cfg(feature = "test-local")]
-        {
-            assert_eq!(count, 1);
-        }
+            #[cfg(feature = "test-local")]
+            {
+                assert_eq!(count, 1);
+            }
+        });
     }
 
     #[test]
     fn device_count_multiple() {
-        let test1 = NVML::init().expect("init call1 failed");
-        let test2 = NVML::init().expect("init call2 failed");
-        let test3 = NVML::init().expect("init call3 failed");
-
-        let count1 = test1.device_count().expect("Could not get device count1");
-        let count2 = test2.device_count().expect("Could not get device count2");
-        let count3 = test3.device_count().expect("Could not get device count3");
-
-        #[cfg(feature = "test-local")]
-        {
-            assert_eq!(count1, 1);
-            assert_eq!(count2, 1);
-            assert_eq!(count3, 1);
-        }
+        multi(3, |nvml, i| {
+            let count = nvml.device_count().expect(&format!("Could not get device count{}", i));
+            #[cfg(feature = "test-local")]
+            {
+                assert_eq!(count, 1);
+            }
+        });
     }
 
     #[test]
     fn device_count_multiple_threads() {
-        let handle1 = thread::spawn(|| {
-            let test = NVML::init().expect("init call1 failed");
-            let count = test.device_count().expect("Could not get device count");
-
+        multi_thread(3, |nvml, i| {
+            let count = nvml.device_count().expect(&format!("Could not get device count{}", i));
             #[cfg(feature = "test-local")]
             {
                 assert_eq!(count, 1);
             }
         });
-
-        let handle2 = thread::spawn(|| {
-            let test = NVML::init().expect("init call2 failed");
-            let count = test.device_count().expect("Could not get device count");
-
-            #[cfg(feature = "test-local")]
-            {
-                assert_eq!(count, 1);
-            }
-        });
-
-        let handle3 = thread::spawn(|| {
-            let test = NVML::init().expect("init call3 failed");
-            let count = test.device_count().expect("Could not get device count");
-
-            #[cfg(feature = "test-local")]
-            {
-                assert_eq!(count, 1);
-            }
-        });
-
-        let res1 = handle1.join().expect("handle1 join failed");
-        let res2 = handle2.join().expect("handle2 join failed");
-        let res3 = handle3.join().expect("handle3 join failed");
     }
 
     #[test]
-    fn device_count_multiple_threads_reference() {
-        let test = Arc::new(NVML::init().expect("init call failed"));
-        let ref_1 = test.clone();
-        let ref_2 = test.clone();
-        let ref_3 = test.clone();
-        
-        let handle1 = thread::spawn(move || {
-            let count = ref_1.device_count().expect("Could not get device count1");
-
+    fn device_count_multiple_threads_arc() {
+        multi_thread_arc(3, |nvml, i| {
+            let count = nvml.device_count().expect(&format!("Could not get device count{}", i));
             #[cfg(feature = "test-local")]
             {
                 assert_eq!(count, 1);
             }
         });
-
-        let handle2 = thread::spawn(move || {
-            let count = ref_2.device_count().expect("Could not get device count2");
-
-            #[cfg(feature = "test-local")]
-            {
-                assert_eq!(count, 1);
-            }
-        });
-
-        let handle3 = thread::spawn(move || {
-            let count = ref_3.device_count().expect("Could not get device count3");
-
-            #[cfg(feature = "test-local")]
-            {
-                assert_eq!(count, 1);
-            }
-        });
-
-        let res1 = handle1.join().expect("handle1 join failed");
-        let res2 = handle2.join().expect("handle2 join failed");
-        let res3 = handle3.join().expect("handle3 join failed");
     }
 
     // TODO: Gen tests for driver version
@@ -702,28 +697,10 @@ mod test {
         let res3 = handle3.join().expect("handle3 join failed");
     }
 
-    #[cfg_attr(not(feature = "test-local"), should_panic)]
     #[test]
-    fn device_by_index_multiple_threads_reference() {
-        let test = Arc::new(NVML::init().expect("init call failed"));
-        let ref_1 = test.clone();
-        let ref_2 = test.clone();
-        let ref_3 = test.clone();
-        
-        let handle1 = thread::spawn(move || {
-            let device = ref_1.device_by_index(0).expect("Could not get device1 by index 0");
+    fn device_by_index_multiple_threads_arc() {
+        multi_thread_arc(3, |arc, i| {
+            let device = arc.device_by_index(0).expect(&format!("Could not get device by index 0, call{}", i));
         });
-
-        let handle2 = thread::spawn(move || {
-            let device = ref_2.device_by_index(0).expect("Could not get device2 by index 0");
-        });
-
-        let handle3 = thread::spawn(move || {
-            let device = ref_3.device_by_index(0).expect("Could not get device3 by index 0");
-        });
-
-        let res1 = handle1.join().expect("handle1 join failed");
-        let res2 = handle2.join().expect("handle2 join failed");
-        let res3 = handle3.join().expect("handle3 join failed");
     }
 }

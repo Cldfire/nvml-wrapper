@@ -29,6 +29,7 @@ pub struct Unit<'nvml> {
     _phantom: PhantomData<&'nvml NVML>,
 }
 
+// Here to clarify that Unit does have these traits. I know they are implemented without this.
 unsafe impl<'nvml> Send for Unit<'nvml> {}
 unsafe impl<'nvml> Sync for Unit<'nvml> {}
 

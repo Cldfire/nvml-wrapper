@@ -81,12 +81,7 @@ impl From<nvmlBridgeChipInfo_t> for BridgeChipInfo {
 /// This struct stores the complete hierarchy of the bridge chip within the board. 
 /// 
 /// The immediate bridge is stored at index 0 of `chips_hierarchy`. The parent to 
-/// the immediate bridge is at index 1, and so forth. 
-///
-/// If that explanation didn't make anything clear to you, it's not clear to me either,
-/// I just copied what NVIDIA's docs said. I suppose it's logical to assume that anyone
-/// interested in doing anything with this will already know what a bridge chip 
-/// hierarchy is.
+/// the immediate bridge is at index 1, and so forth.
 pub struct BridgeChipHierarchy {
     /// Hierarchy of bridge chips on the board.
     pub chips_hierarchy: Vec<BridgeChipInfo>,
