@@ -22,6 +22,7 @@ impl From<u32> for FirmwareVersion {
 }
 
 /// Represents possible variants for used GPU memory.
+// Checked
 #[derive(Debug)]
 pub enum UsedGpuMemory {
     /// Under WDDM, `NVML_VALUE_NOT_AVAILABLE` is always reported because Windows KMD
@@ -57,12 +58,10 @@ impl UnitLedState {
     pub fn try_from(struct_: nvmlLedState_t) -> Result<Self> {
         match struct_.color {
             nvmlLedColor_t::NVML_LED_COLOR_GREEN => Ok(UnitLedState::Green),
-            nvmlLedColor_t::NVML_LED_COLOR_AMBER => {
-                unsafe {
-                    let cause_raw = CStr::from_ptr(struct_.cause.as_ptr());
-                    Ok(UnitLedState::Amber(cause_raw.to_str()?.into()))
-                }
-            },
+            nvmlLedColor_t::NVML_LED_COLOR_AMBER => unsafe {
+                let cause_raw = CStr::from_ptr(struct_.cause.as_ptr());
+                Ok(UnitLedState::Amber(cause_raw.to_str()?.into()))
+            }
         }
     }
 }

@@ -54,6 +54,8 @@ impl<'nvml> Unit<'nvml> {
     ///
     /// # Device Support
     /// For S-class products.
+    // Checked against local
+    #[inline]
     pub fn devices(&self, size: usize) -> Result<Vec<Device>> {
         unsafe {
             let mut first_item: nvmlDevice_t = mem::zeroed();
@@ -61,7 +63,7 @@ impl<'nvml> Unit<'nvml> {
             nvml_try(nvmlUnitGetDevices(self.unit, &mut count, &mut first_item))?;
 
             // TODO: Is this correct, safe, etc.
-            Ok(slice::from_raw_parts(&first_item as *const nvmlDevice_t,
+            Ok(slice::from_raw_parts(first_item as *const nvmlDevice_t,
                                      count as usize)
                                      .iter()
                                      .map(|d| Device::from(*d))
@@ -69,7 +71,7 @@ impl<'nvml> Unit<'nvml> {
         }
     }
 
-    /// Gets fan information for this `Unit` (speed, count and state).
+    /// Gets fan information for this `Unit` (fan count and state + speed for each).
     ///
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
@@ -79,6 +81,8 @@ impl<'nvml> Unit<'nvml> {
     ///
     /// # Device Support
     /// For S-class products.
+    // Checked against local
+    #[inline]
     pub fn fan_info(&self) -> Result<UnitFansInfo> {
         unsafe {
             let mut fans_info: nvmlUnitFanSpeeds_t = mem::zeroed();
@@ -99,6 +103,8 @@ impl<'nvml> Unit<'nvml> {
     ///
     /// # Device Support
     /// For S-class products.
+    // Checked against local
+    #[inline]
     pub fn led_state(&self) -> Result<UnitLedState> {
         unsafe {
             let mut state: nvmlLedState_t = mem::zeroed();
@@ -119,6 +125,8 @@ impl<'nvml> Unit<'nvml> {
     ///
     /// # Device Support
     /// For S-class products.
+    // Checked against local
+    #[inline]
     pub fn psu_info(&self) -> Result<UnitPsuInfo> {
         unsafe {
             let mut info: nvmlPSUInfo_t = mem::zeroed();
@@ -130,6 +138,8 @@ impl<'nvml> Unit<'nvml> {
 
     /// Gets the temperature for the specified `UnitTemperatureReading`, in °C.
     ///
+    /// Available readings depend on the product.
+    ///
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
     /// * `InvalidArg`, if the unit is invalid
@@ -138,6 +148,8 @@ impl<'nvml> Unit<'nvml> {
     ///
     /// # Device Support
     /// For S-class products. Available readings depend on the product.
+    // Checked against local
+    #[inline]
     pub fn temperature(&self, reading_type: UnitTemperatureReading) -> Result<u32> {
         unsafe {
             let mut temp: c_uint = mem::zeroed();
@@ -156,6 +168,8 @@ impl<'nvml> Unit<'nvml> {
     ///
     /// # Device Support
     /// For S-class products.
+    // Checked against local
+    #[inline]
     pub fn info(&self) -> Result<UnitInfo> {
         unsafe {
             let mut info: nvmlUnitInfo_t = mem::zeroed();
@@ -184,9 +198,10 @@ impl<'nvml> Unit<'nvml> {
     ///
     /// # Device Support
     /// For S-class products.
+    #[inline]
     pub fn set_led_color(&self, color: LedColor) -> Result<()> {
         unsafe {
-            nvml_try(nvmlUnitSetLedState(self.unit, color.eq_c_variant()))
+            nvml_try(nvmlUnitSetLedState(self.unit, color.into_c()))
         }
     }
 }

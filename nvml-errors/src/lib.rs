@@ -14,7 +14,6 @@ error_chain! {
         Utf8Error(::std::str::Utf8Error);
         NulError(::std::ffi::NulError);
     }
-    // TODO: A macro to expand the result of `nvmlErrorString()` at compile time?
     errors {
         /// An unexpected enum variant was encountered.
         ///
@@ -22,7 +21,6 @@ error_chain! {
         /// possibility that an enum variant that seems to be only used internally by 
         /// the NVML lib gets returned by a function call. While I don't believe it will
         /// ever happen, it's best to be complete.
-        // TODO: Can I store the variant with the error?
         UnexpectedVariant {
             description("An unexpected enum variant was encountered (wrapper error).")
         }
@@ -116,7 +114,6 @@ error_chain! {
 }
 
 /// `?` enabler for nvmlReturn_t types.
-// TODO: Should this be a macro?
 #[doc(hidden)]
 pub fn nvml_try(code: nvmlReturn_t) -> Result<()> {
     match code {

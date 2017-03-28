@@ -7,6 +7,7 @@ use super::nvml_errors::*;
 // TODO: Should platform-specific things be in their own modules?
 
 /// API types that allow changes to default permission restrictions.
+// Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlRestrictedAPI_t")]
 #[wrap(has_count = "NVML_RESTRICTED_API_COUNT")]
@@ -15,18 +16,18 @@ pub enum Api {
     ///
     /// Applicable methods on `Device`: `.set_applications_clocks()`, 
     /// `.reset_applications_clocks()`
-    // TODO: Come back and make sure these names are right when I actually write them. And below
     #[wrap(c_variant = "NVML_RESTRICTED_API_SET_APPLICATION_CLOCKS")]
     ApplicationClocks,
     /// APIs that enable/disable auto boosted clocks.
     ///
     /// Applicable methods on `Device`: `.set_auto_boosted_clocks_enabled()`
+    // TODO: does that exist ^
     #[wrap(c_variant = "NVML_RESTRICTED_API_SET_AUTO_BOOSTED_CLOCKS")]
     AutoBoostedClocks,
 }
 
 /// Clock types. All speeds are in MHz. 
-// impl and enum checked against local nvml.h
+// Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlClockType_t")]
 #[wrap(has_count = "NVML_CLOCK_COUNT")]
@@ -34,8 +35,9 @@ pub enum Clock {
     /// Graphics clock domain.
     #[wrap(c_variant = "NVML_CLOCK_GRAPHICS")]
     Graphics,
-    /// SM clock domain.
-    // TODO: Improve that ^
+    /// SM (Streaming Multiprocessor) clock domain.
+    ///
+    /// What AMD calls a CU (Compute Unit) can be compared to this.
     #[wrap(c_variant = "NVML_CLOCK_SM")]
     SM,
     /// Memory clock domain.
@@ -47,6 +49,7 @@ pub enum Clock {
 }
 
 /// GPU brand.
+// Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlBrandType_t")]
 #[wrap(has_count = "NVML_BRAND_COUNT")]
@@ -62,7 +65,7 @@ pub enum Brand {
     /// NVIDIA's multi-display cards.
     #[wrap(c_variant = "NVML_BRAND_NVS")]
     NVS,
-    /// vGPUs
+    /// Targeted at virtualization (vGPUs).
     #[wrap(c_variant = "NVML_BRAND_GRID")]
     GRID,
     /// Targeted at gaming.
@@ -74,6 +77,7 @@ pub enum Brand {
 ///
 /// NVIDIA does not provide docs (in the code, that is) explaining what each chip
 /// type is, so you're on your own there.
+// Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlBridgeChipType_t")]
 pub enum BridgeChip {
@@ -84,18 +88,21 @@ pub enum BridgeChip {
 }
 
 /// Memory error types.
+// Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlMemoryErrorType_t")]
 #[wrap(has_count = "NVML_MEMORY_ERROR_TYPE_COUNT")]
 pub enum MemoryError {
-    /// A memory error that was corrected for ECC errors.
+    /// A memory error that was corrected.
     ///
-    /// These are single bit errors for texture memory and are fixed by a resend.
+    /// ECC error: single bit error.
+    /// Texture memory: error fixed by a resend.
     #[wrap(c_variant = "NVML_MEMORY_ERROR_TYPE_CORRECTED")]
     Corrected,
-    /// A memory error that was not corrected for ECC errors.
+    /// A memory error that was not corrected.
     ///
-    /// These are double bit errors for texture memory where the resend failed.
+    /// ECC error: double bit error.
+    /// Texture memory: error occured and resend failed.
     #[wrap(c_variant = "NVML_MEMORY_ERROR_TYPE_UNCORRECTED")]
     Uncorrected,
 }
@@ -107,6 +114,7 @@ pub enum MemoryError {
 /// active clients exist. If persistence mode is enabled or there is always a
 /// driver client active (such as X11), then Linux also sees per-boot behavior.
 /// If not, volatile counts are reset each time a compute app is run.
+// Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlEccCounterType_t")]
 #[wrap(has_count = "NVML_ECC_COUNTER_TYPE_COUNT")]
@@ -120,6 +128,7 @@ pub enum EccCounter {
 }
 
 /// Memory locations. See `Device.memory_error_counter()`.
+// Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlMemoryLocation_t")]
 #[wrap(has_count = "NVML_MEMORY_LOCATION_COUNT")]
@@ -145,6 +154,7 @@ pub enum MemoryLocation {
 }
 
 /// Driver models, Windows only.
+// Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlDriverModel_t")]
 #[cfg(target_os = "windows")]
@@ -160,7 +170,8 @@ pub enum DriverModel {
 /// GPU operation mode.
 ///
 /// Allows for the reduction of power usage and optimization of GPU throughput
-/// by disabling GPU features.
+/// by disabling GPU features. Each mode is designed to meet specific needs.
+// Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlGpuOperationMode_t")]
 pub enum OperationMode {
@@ -177,6 +188,7 @@ pub enum OperationMode {
 }
 
 /// Available infoROM objects.
+// Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlInforomObject_t")]
 #[wrap(has_count = "NVML_INFOROM_COUNT")]
@@ -192,7 +204,8 @@ pub enum InfoROM {
     Power,
 }
 
-/// Represents the queryable PCIe utilization counters.
+/// Represents the queryable PCIe utilization counters (in bytes). 1KB granularity.
+// Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlPcieUtilCounter_t")]
 #[wrap(has_count = "NVML_PCIE_UTIL_COUNT")]
@@ -203,11 +216,20 @@ pub enum PcieUtilCounter {
     Receive,
 }
 
-/// Allowed performance states. 0 == max, 15 == min.
+/// Allowed performance states.
+///
+/// ```text
+/// Value    Performance
+///   0           |
+///  ...          |
+///  15           ▼
+/// ```
+// TODO: Make sure that looks right ^
+// Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlPstates_t")]
 pub enum PerformanceState {
-    /// Maximum performance.
+    /// Maximum performance.            
     #[wrap(c_variant = "NVML_PSTATE_0")]
     Zero,
     #[wrap(c_variant = "NVML_PSTATE_1")]
@@ -247,6 +269,7 @@ pub enum PerformanceState {
 }
 
 /// Causes for page retirement.
+// Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlPageRetirementCause_t")]
 #[wrap(has_count = "NVML_PAGE_RETIREMENT_CAUSE_COUNT")]
@@ -254,12 +277,13 @@ pub enum RetirementCause {
     /// Page was retired due to multiple single bit ECC errors.
     #[wrap(c_variant = "NVML_PAGE_RETIREMENT_CAUSE_MULTIPLE_SINGLE_BIT_ECC_ERRORS")]
     MultipleSingleBitEccErrors,
-    /// Page was retired due to a double bit ECC error.
+    /// Page was retired due to a single double bit ECC error.
     #[wrap(c_variant = "NVML_PAGE_RETIREMENT_CAUSE_DOUBLE_BIT_ECC_ERROR")]
     DoubleBitEccError,
 }
 
 /// Possible types of sampling events.
+// Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlSamplingType_t")]
 #[wrap(has_count = "NVML_SAMPLINGTYPE_COUNT")]
@@ -287,25 +311,31 @@ pub enum Sampling {
     MemoryClock,
 }
 
+// Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlTemperatureSensors_t")]
 #[wrap(has_count = "NVML_TEMPERATURE_COUNT")]
 pub enum TemperatureSensor {
+    /// Sensor for the GPU die.
     #[wrap(c_variant = "NVML_TEMPERATURE_GPU")]
     Gpu,
 }
 
+// Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlTemperatureThresholds_t")]
 #[wrap(has_count = "NVML_TEMPERATURE_THRESHOLD_COUNT")]
 pub enum TemperatureThreshold {
+    /// Temperature at which the GPU will shut down for hardware protection.
     #[wrap(c_variant = "NVML_TEMPERATURE_THRESHOLD_SHUTDOWN")]
     Shutdown,
+    /// Temperature at which the GPU will begin to throttle.
     #[wrap(c_variant = "NVML_TEMPERATURE_THRESHOLD_SLOWDOWN")]
     Slowdown,
 }
 
 /// Level relationships within a system between two GPUs.
+// Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlGpuTopologyLevel_t")]
 pub enum TopologyLevel {
@@ -331,6 +361,7 @@ pub enum TopologyLevel {
 }
 
 /// Types of performance policy for which violation times can be queried.
+// Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlPerfPolicyType_t")]
 #[wrap(has_count = "NVML_PERF_POLICY_COUNT")]
@@ -344,6 +375,7 @@ pub enum PerformancePolicy {
 }
 
 /// Unit fan state.
+// Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlFanState_t")]
 pub enum FanState {
@@ -354,13 +386,7 @@ pub enum FanState {
     Failed,
 }
 
-pub fn bool_from_state(state: nvmlEnableState_t) -> bool {
-    match state {
-        nvmlEnableState_t::NVML_FEATURE_DISABLED => false,
-        nvmlEnableState_t::NVML_FEATURE_ENABLED => true,
-    }
-}
-
+// Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlLedColor_t")]
 pub enum LedColor {
@@ -374,6 +400,7 @@ pub enum LedColor {
 
 /// `ExclusiveProcess` was added in CUDA 4.0. Earlier CUDA versions supported a single
 /// exclusive mode, which is equivalent to `ExclusiveThread` in CUDA 4.0 and beyond.
+// Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlComputeMode_t")]
 #[wrap(has_count = "NVML_COMPUTEMODE_COUNT")]
@@ -381,8 +408,9 @@ pub enum ComputeMode {
     /// Multiple contexts per device.
     #[wrap(c_variant = "NVML_COMPUTEMODE_DEFAULT")]
     Default,
-    /// Only one context per device, usable from one thread at a time. This mode
-    /// has been deprecated and will be removed in future releases.
+    /// *SUPPORT REMOVED*
+    ///
+    /// Only one context per device, usable from one thread at a time. *NOT SUPPORTED*
     #[wrap(c_variant = "NVML_COMPUTEMODE_EXCLUSIVE_THREAD")]
     ExclusiveThread,
     /// No contexts per device.
@@ -391,6 +419,13 @@ pub enum ComputeMode {
     /// Only one context per device, usable from multiple threads at a time.
     #[wrap(c_variant = "NVML_COMPUTEMODE_EXCLUSIVE_PROCESS")]
     ExclusiveProcess,
+}
+
+pub fn bool_from_state(state: nvmlEnableState_t) -> bool {
+    match state {
+        nvmlEnableState_t::NVML_FEATURE_DISABLED => false,
+        nvmlEnableState_t::NVML_FEATURE_ENABLED => true,
+    }
 }
 
 pub fn state_from_bool(bool_: bool) -> nvmlEnableState_t {

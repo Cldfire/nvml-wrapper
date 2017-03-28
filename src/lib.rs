@@ -29,6 +29,8 @@
 //! * Limited Support
 //!     * All GeForce products Fermi architecture and up
 
+// TODO: Finish module docs. Say something about device support.
+
 #[macro_use]
 extern crate error_chain;
 extern crate nvml_errors;
@@ -36,14 +38,14 @@ extern crate nvml_errors;
 extern crate nvml_derive;
 extern crate nvml_sys as ffi;
 
-// TODO: Module docs. Say something about device support.
-
 pub mod device;
 pub mod unit;
 pub mod structs;
 pub mod struct_wrappers;
 pub mod enums;
 pub mod enum_wrappers;
+#[cfg(feature = "test")]
+mod test_utils;
 
 use nvml_errors::*;
 use ffi::*;
@@ -95,12 +97,15 @@ impl NVML {
     /// In practice, there should be no need to create multiple `NVML` structs; wrap this struct
     /// in an `Arc` and go that route. 
     ///
-    /// Note that this will initialize NVML but not any GPUs.
+    /// Note that this will initialize NVML but not any GPUs. This means that NVML can
+    /// communicate with a GPU even when other GPUs in a system are bad or unstable.
     ///
     /// # Errors
     /// * `DriverNotLoaded`, if the NVIDIA driver is not running
     /// * `NoPermission`, if NVML does not have permission to talk to the driver
     /// * `Unknown`, on any unexpected error
+    // Checked against local
+    #[inline]
     pub fn init() -> Result<Self> {
         unsafe {
             nvml_try(nvmlInit_v2())?;
@@ -116,6 +121,8 @@ impl NVML {
     /// * `Uninitialized`, if the library has not been successfully initialized
     /// * `Unknown`, on any unexpected error
     // Thanks to `sorear` on IRC for suggesting this approach
+    // Checked against local
+    #[inline]
     pub fn shutdown(self) -> Result<()> {
         unsafe {
             nvml_try(nvmlShutdown())
@@ -129,9 +136,8 @@ impl NVML {
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
     /// * `Unknown`, on any unexpected error
-    ///
-    /// If `InvalidArg` ever gets returned from this function, that is a bug.
-    /// Please file an issue with any relevant information. 
+    // Checked against local
+    #[inline]
     pub fn device_count(&self) -> Result<u32> {
         unsafe {
             let mut count: c_uint = mem::zeroed();
@@ -147,9 +153,8 @@ impl NVML {
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
     /// * `Utf8Error`, if the string obtained from the C function is not valid Utf8
-    ///
-    /// If either of `InvalidArg` or `InsufficientSize` ever get returned from this function,
-    /// that is a bug. Please file an issue with any relevant information. 
+    // Checked against local
+    #[inline]
     pub fn sys_driver_version(&self) -> Result<String> {
         unsafe {
             let mut version_vec = Vec::with_capacity(NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE as usize);
@@ -166,9 +171,8 @@ impl NVML {
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
     /// * `Utf8Error`, if the string obtained from the C function is not valid Utf8
-    ///
-    /// If either of `InvalidArg` or `InsufficientSize` ever get returned from this function,
-    /// that is a bug. Please file an issue with any relevant information. 
+    // Checked against local
+    #[inline]
     pub fn sys_nvml_version(&self) -> Result<String> {
         unsafe {
             let mut version_vec = Vec::with_capacity(NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE as usize);
@@ -187,10 +191,12 @@ impl NVML {
     /// * `InvalidArg`, if the length is 0 (if this is returned without length being 0, file an issue)
     /// * `NotFound`, if the process does not exist
     /// * `NoPermission`, if the user doesn't have permission to perform the operation
-    /// * `Utf8Error`, if the string obtained from the C function is not valid Utf8. NVIDIA's docs say
+    /// * `Utf8Error`, if the string obtained from the C function is not valid UTF-8. NVIDIA's docs say
     /// that the string encoding is ANSI, so this may very well happen. 
     /// * `Unknown`, on any unexpected error
     // TODO: The docs say the string is ANSI-encoded. Not sure if I should try to do anything about that
+    // Checked against local
+    #[inline]
     pub fn sys_process_name(&self, pid: u32, length: usize) -> Result<String> {
         unsafe {
             let mut name_vec = Vec::with_capacity(length);
@@ -217,8 +223,7 @@ impl NVML {
     /// that devices be looked up by their PCI ids or UUID." In this library, that translates
     /// into usage of `.device_by_uuid()` and `.device_by_pci_bus_id()`.
     ///
-    /// The NVML index may not correlate with other APIs such as the CUDA device index. 
-    /// Keep that in mind. 
+    /// The NVML index may not correlate with other APIs such as the CUDA device index.
     ///
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
@@ -228,6 +233,8 @@ impl NVML {
     /// * `IrqIssue`, if the NVIDIA kernel detected an interrupt issue with the attached GPUs
     /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
     /// * `Unknown`, on any unexpected error
+    // Checked against local
+    #[inline]
     pub fn device_by_index(&self, index: u32) -> Result<Device> {
         unsafe {
             let mut device: nvmlDevice_t = mem::zeroed();
@@ -254,6 +261,8 @@ impl NVML {
     /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
     /// * `NulError`, for which you can read the docs on `std::ffi::NulError`
     /// * `Unknown`, on any unexpected error
+    // Checked against local
+    #[inline]
     pub fn device_by_pci_bus_id<S: AsRef<str>>(&self, pci_bus_id: S) -> Result<Device>
         where Vec<u8>: From<S> {
         unsafe {
@@ -268,6 +277,7 @@ impl NVML {
 
     /// Not documenting this because it's deprecated. Read NVIDIA's docs if you must use it.
     #[deprecated(note = "use `.device_by_uuid()`, this errors on dual GPU boards")]
+    #[inline]
     pub fn device_by_serial<S: AsRef<str>>(&self, board_serial: S) -> Result<Device>
         where Vec<u8>: From<S> {
         unsafe {
@@ -296,6 +306,8 @@ impl NVML {
     /// * `Unknown`, on any unexpected error
     ///
     /// NVIDIA doesn't mention `NoPermission` for this one. Strange!
+    // Checked against local
+    #[inline]
     pub fn device_by_uuid<S: AsRef<str>>(&self, uuid: S) -> Result<Device> 
         where Vec<u8>: From<S> {
         unsafe {
@@ -311,8 +323,6 @@ impl NVML {
     ///
     /// Note: this is the same as `Device.topology_common_ancestor()`.
     ///
-    /// NVIDIA's docs for this are extremely confusing. That's all I have to say.
-    ///
     /// # Errors
     /// * `InvalidArg`, if the device is invalid or `threshold_type` is invalid (shouldn't occur?)
     /// * `NotSupported`, if this `Device` or the OS does not support this feature
@@ -321,7 +331,9 @@ impl NVML {
     /// # Platform Support
     /// Only supports Linux.
     // TODO: Investigate this and the method on device more
+    // Checked against local
     #[cfg(target_os = "linux")]
+    #[inline]
     pub fn topology_common_ancestor(&self, device1: &Device, device2: &Device) -> Result<TopologyLevel> {
         unsafe {
             let mut level: nvmlGpuTopologyLevel_t = mem::zeroed();
@@ -343,14 +355,16 @@ impl NVML {
     ///
     /// # Platform Support
     /// Only supports Linux.
+    // Checked against local
     #[cfg(target_os = "linux")]
+    #[inline]
     pub fn topology_nearest_gpus(&self, device: &Device, level: TopologyLevel) -> Result<Vec<Device>> {
         unsafe {
             let mut first_item: nvmlDevice_t = mem::zeroed();
             // TODO: Fails if I pass 0? What?
             let mut count: c_uint = 0;
             nvml_try(nvmlDeviceGetTopologyNearestGpus(device.c_device(), 
-                                                      level.eq_c_variant(), 
+                                                      level.into_c(), 
                                                       &mut count, 
                                                       &mut first_item))?;
             
@@ -370,7 +384,7 @@ impl NVML {
 
     /// Acquire the handle for a particular `Unit` based on its index.
     ///
-    /// Valid indices are derived from the `unit_count` returned by `.unit_count()`.
+    /// Valid indices are derived from the count returned by `.unit_count()`.
     /// For example, if `unit_count` is 2 the valid indices are 0 and 1, corresponding
     /// to UNIT 0 and UNIT 1.
     ///
@@ -384,6 +398,8 @@ impl NVML {
     ///
     /// # Device Support
     /// For S-class products.
+    // Checked against local
+    #[inline]
     pub fn unit_by_index(&self, index: u32) -> Result<Unit> {
         unsafe {
             let mut unit: nvmlUnit_t = mem::zeroed();
@@ -403,6 +419,7 @@ impl NVML {
     /// * `NotSupported`, if this check is not supported by this `Device`
     /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     /// * `Unknown`, on any unexpected error
+    #[inline]
     pub fn is_device_on_same_board_as(device1: &Device, device2: &Device) -> Result<bool> {
         unsafe {
             let mut bool_int: c_int = mem::zeroed();
@@ -425,6 +442,7 @@ impl NVML {
     /// # Platform Support
     /// Only supports Linux.
     #[cfg(target_os = "Linux")]
+    #[inline]
     pub fn topology_gpu_set(&self, cpu_number: u32) -> Result<Vec<Device>> {
         unsafe {
             let mut first_item: nvmlDevice_t = mem::zeroed();
@@ -450,6 +468,8 @@ impl NVML {
     ///
     /// # Device Support
     /// Supports S-class products.
+    // Checked against local
+    #[inline]
     pub fn unit_count(&self) -> Result<u32> {
         unsafe {
             let mut count: c_uint = mem::zeroed();
@@ -468,6 +488,7 @@ impl Drop for NVML {
             match nvml_try(nvmlShutdown()) {
                 Ok(()) => (),
                 Err(e) => {
+                    // TODO: stderr?
                     println!("WARNING: Error returned by `nmvlShutdown()` in Drop implementation: {:?}", e);
                     // TODO: Should I panic
                     panic!("Error returned by `nmvlShutdown()` in Drop implementation: {:?}", e);
@@ -481,57 +502,9 @@ impl Drop for NVML {
 #[allow(unused_variables, unused_imports)]
 mod test {
     use super::*;
+    use test_utils::*;
     use std::thread;
     use std::sync::Arc;
-
-    fn single<T>(test: T) where T: Fn(NVML) -> () + Send + Sync + 'static {
-        let nvml_test = NVML::init().expect("init call failed");
-        test(nvml_test);
-    }
-
-    fn multi<T>(count: usize, test: T) where T: Fn(NVML, usize) -> () + Send + Sync + 'static {
-        for i in 0..count {
-            let nvml_test = NVML::init().expect(&format!("init call{} failed", i));
-            test(nvml_test, i);
-        }
-    }
-
-    fn multi_thread<T>(threads: usize, test: T) where T: Fn(NVML, usize) -> () + Send + Sync + 'static {
-        let mut handles = Vec::with_capacity(std::mem::size_of::<thread::JoinHandle<()>>() * threads);
-        let fn_arc = Arc::new(test);
-
-        for i in 0..threads {
-            let fn_clone = fn_arc.clone();
-
-            handles.push(thread::spawn(move || {
-                let nvml_test = NVML::init().expect(&format!("init call{} failed", i));
-                fn_clone(nvml_test, i);
-            }))
-        }
-
-        for (i, j) in handles.into_iter().enumerate() {
-            let res = j.join().expect(&format!("handle{} joi failed", i));
-        }
-    }
-
-    fn multi_thread_arc<T>(threads: usize, test: T) where T: Fn(Arc<NVML>, usize) -> () + Send + Sync + 'static {
-        let mut handles = Vec::with_capacity(std::mem::size_of::<thread::JoinHandle<()>>() * threads);
-        let nvml_test = Arc::new(NVML::init().expect("init call failed"));
-        let fn_arc = Arc::new(test);
-
-        for i in 0..threads {
-            let nvml_clone = nvml_test.clone();
-            let fn_clone = fn_arc.clone();
-
-            handles.push(thread::spawn(move || {
-                fn_clone(nvml_clone, i);
-            }));
-        }
-
-        for (i, j) in handles.into_iter().enumerate() {
-            let res = j.join().expect(&format!("handle{} join failed", i));
-        }
-    }
 
     #[test]
     fn init_drop() {
@@ -556,7 +529,7 @@ mod test {
     fn init_shutdown_multiple() {
         multi(3, |nvml, i| {
             nvml.shutdown().expect(&format!("shutdown{} failed", i));
-        })
+        });
     }
 
     #[test]
@@ -582,7 +555,7 @@ mod test {
     fn init_shutdown_multiple_threads() {
         multi_thread(3, |nvml, i| {
             nvml.shutdown().expect(&format!("shutdown{} failed", i));
-        })
+        });
     }
 
     #[test]
@@ -658,49 +631,31 @@ mod test {
     #[test]
     #[cfg_attr(not(feature = "test-local"), should_panic)]
     fn device_by_index() {
-        let test = NVML::init().expect("init call failed");
-        let device = test.device_by_index(0).expect("Could not get a device by index 0");
+        single(|nvml| {
+            let device = device(&nvml, 0);
+        });
     }
 
     #[test]
     #[cfg_attr(not(feature = "test-local"), should_panic)]
     fn device_by_index_multiple() {
-        let test1 = NVML::init().expect("init call1 failed");
-        let test2 = NVML::init().expect("init call2 failed");
-        let test3 = NVML::init().expect("init call3 failed");
-
-        let device1 = test1.device_by_index(0).expect("Could not get device1 by index 0");
-        let device2 = test2.device_by_index(0).expect("Could not get device2 by index 0");
-        let device3 = test3.device_by_index(0).expect("Could not get device3 by index 0");
+        multi(3, |nvml, i| {
+            let device = device(&nvml, i);
+        });
     }
 
     #[cfg_attr(not(feature = "test-local"), should_panic)]
     #[test]
     fn device_by_index_multiple_threads() {
-        let handle1 = thread::spawn(|| {
-            let test = NVML::init().expect("init call1 failed");
-            let device = test.device_by_index(0).expect("Could not get device1 by index 0");
+        multi_thread(3, |nvml, i| {
+            let device = device(&nvml, i);
         });
-
-        let handle2 = thread::spawn(|| {
-            let test = NVML::init().expect("init call2 failed");
-            let device = test.device_by_index(0).expect("Could not get device2 by index 0");
-        });
-
-        let handle3 = thread::spawn(|| {
-            let test = NVML::init().expect("init call3 failed");
-            let device = test.device_by_index(0).expect("Could not get device3 by index 0");
-        });
-
-        let res1 = handle1.join().expect("handle1 join failed");
-        let res2 = handle2.join().expect("handle2 join failed");
-        let res3 = handle3.join().expect("handle3 join failed");
     }
 
     #[test]
     fn device_by_index_multiple_threads_arc() {
-        multi_thread_arc(3, |arc, i| {
-            let device = arc.device_by_index(0).expect(&format!("Could not get device by index 0, call{}", i));
+        multi_thread_arc(3, |nvml, i| {
+            let device = device(&nvml, i);
         });
     }
 }

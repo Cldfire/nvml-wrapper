@@ -8,6 +8,7 @@ use std::ffi::CStr;
 // TODO: Document errors for try_froms
 
 /// PCI information about a GPU device.
+// Checked against local
 pub struct PciInfo {
     /// The bus on which the device resides, 0 to 0xff.
     pub bus: u32,
@@ -41,6 +42,7 @@ impl PciInfo {
 }
 
 /// BAR1 memory allocation information for a device (in bytes)
+// Checked against local
 pub struct BAR1MemoryInfo {
     /// Unallocated
     pub free: u64,
@@ -61,6 +63,7 @@ impl From<nvmlBAR1Memory_t> for BAR1MemoryInfo {
 }
 
 /// Information about a bridge chip.
+// Checked against local
 pub struct BridgeChipInfo {
     pub fw_version: FirmwareVersion,
     pub chip_type: BridgeChip,
@@ -82,10 +85,12 @@ impl From<nvmlBridgeChipInfo_t> for BridgeChipInfo {
 /// 
 /// The immediate bridge is stored at index 0 of `chips_hierarchy`. The parent to 
 /// the immediate bridge is at index 1, and so forth.
+// Checked against local
 pub struct BridgeChipHierarchy {
     /// Hierarchy of bridge chips on the board.
     pub chips_hierarchy: Vec<BridgeChipInfo>,
     /// Number of bridge chips on the board.
+    // TODO: Binding type is c_uchar, investigate
     pub chip_count: u8,
 }
 
@@ -113,8 +118,9 @@ impl From<nvmlBridgeChipHierarchy_t> for BridgeChipHierarchy {
     }
 }
 
-/// Information about compute processes running on the GPU.
 #[derive(Debug)]
+/// Information about compute processes running on the GPU.
+// Checked against local
 pub struct ProcessInfo {
     // Process ID.
     pub pid: u32,
@@ -133,6 +139,7 @@ impl From<nvmlProcessInfo_t> for ProcessInfo {
 
 #[derive(Debug)]
 /// Detailed ECC error counts for a device.
+// Checked against local
 pub struct EccErrorCounts {
     pub device_memory: u64,
     pub l1_cache: u64,
@@ -153,6 +160,7 @@ impl From<nvmlEccErrorCounts_t> for EccErrorCounts {
 
 #[derive(Debug)]
 /// Memory allocation information for a device (in bytes).
+// Checked against local
 pub struct MemoryInfo {
     /// Unallocated FB memory.
     pub free: u64,
@@ -177,6 +185,7 @@ impl From<nvmlMemory_t> for MemoryInfo {
 #[derive(Debug)]
 /// Utilization information for a device. Each sample period may be between 1 second
 /// and 1/6 second, depending on the product being queried.
+// Checked against local
 pub struct Utilization {
     /// Percent of time over the past sample period during which one or more kernels
     /// was executing on the GPU.
@@ -197,10 +206,11 @@ impl From<nvmlUtilization_t> for Utilization {
 
 #[derive(Debug)]
 /// Performance policy violation status data.
+// Checked against local
 pub struct ViolationTime {
     /// Represents CPU timestamp in microseconds.
     pub reference_time: u64,
-    /// in nanoseconds
+    /// Violation time in nanoseconds.
     pub violation_time: u64,
 }
 
@@ -214,6 +224,7 @@ impl From<nvmlViolationTime_t> for ViolationTime {
 }
 
 /// Description of an HWBC entry.
+// Checked against local
 #[derive(Debug)]
 pub struct HwbcEntry {
     pub id: u32,
@@ -234,6 +245,7 @@ impl HwbcEntry {
 }
 
 /// Fan information readings for an entire S-class unit.
+// Checked against local
 #[derive(Debug)]
 pub struct UnitFansInfo {
     /// Number of fans in the unit.
@@ -252,6 +264,7 @@ impl From<nvmlUnitFanSpeeds_t> for UnitFansInfo {
 }
 
 /// Fan info reading for a single fan in an S-class unit.
+// Checked against local
 #[derive(Debug)]
 pub struct FanInfo {
     /// Fan speed (RPM).
@@ -278,10 +291,11 @@ impl From<nvmlUnitFanInfo_t> for FanInfo {
 /// * Heatsink temperature
 /// * Current limit
 /// * Voltage below UV alarm threshold
-/// * Low voltage
+/// * Low-voltage
 /// * SI2C remote off command
 /// * MOD_DISABLE input
 /// * Short pin transition
+// Checked against local
 #[derive(Debug)]
 pub struct UnitPsuInfo {
     /// PSU current (in A)
@@ -310,6 +324,7 @@ impl UnitPsuInfo {
 }
 
 /// Static S-class unit info.
+// Checked against local
 #[derive(Debug)]
 pub struct UnitInfo {
     pub firmware_version: String,
@@ -344,6 +359,7 @@ impl UnitInfo {
 /// There is a field: `unsigned int reserved[5]` present on the C struct that this wraps
 /// that NVIDIA says is "reserved for future use." If it ever gets used in the future,
 /// an equivalent wrapping field will have to be added to this struct.
+// Checked against local
 #[derive(Debug)]
 pub struct AccountingStats {
     /// Percent of time over the process's lifetime during which one or more kernels was
@@ -358,6 +374,7 @@ pub struct AccountingStats {
     /// Max total memory in bytes that was ever allocated by the process.
     ///
     /// It will be `None` if `nvmlProcessInfo_t->usedGpuMemory` is not supported.
+    // TODO: Eq rust name ^
     pub max_memory_usage: Option<u64>,
     /// Percent of time over the process's lifetime during which global (device) memory
     /// was being read from or written to.

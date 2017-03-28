@@ -138,7 +138,7 @@ fn gen_impl(variant_slice: &[VariantInfo], count_variant: Option<syn::Ident>) ->
         quote! {
             impl #rust_name {
                 /// Returns the C enum variant equivalent for the given Rust enum variant.
-                pub fn eq_c_variant(&self) -> #c_name {
+                pub fn into_c(&self) -> #c_name {
                     match *self {
                         #(#for_arms)*
                     }
@@ -157,7 +157,7 @@ fn gen_impl(variant_slice: &[VariantInfo], count_variant: Option<syn::Ident>) ->
         quote! {
             impl #rust_name {
                 /// Returns the C enum variant equivalent for the given Rust enum variant.
-                pub fn eq_c_variant(&self) -> #c_name {
+                pub fn into_c(&self) -> #c_name {
                     match *self {
                         #(#for_arms)*
                     }
