@@ -1,19 +1,17 @@
 use ffi::*;
-use super::nvml_errors::*;
-use super::structs::*;
-use super::struct_wrappers::*;
-use super::enum_wrappers::*;
+use nvml_errors::*;
+use structs::*;
+use struct_wrappers::*;
+use enum_wrappers::*;
+use NVML;
 use std::marker::PhantomData;
 use std::ffi::CStr;
 use std::mem;
 use std::os::raw::{c_uint, c_ulong, c_ulonglong, c_int};
 use std::slice;
-use NVML;
 
-// TODO: Investigate #[inline] and find out whether or not I should use it.
 // TODO: Mark stuff that works on my 980 Ti but NVIDIA does not state should.
 // TODO: A number of things here that return Utf8Errors I have not documented.
-// TODO: Check all the errors while you're at that.
 
 /// Struct that represents a device on the system. 
 ///
@@ -30,7 +28,6 @@ pub struct Device<'nvml> {
     _phantom: PhantomData<&'nvml NVML>,
 }
 
-// Here to clarify that Device does have these traits. I know they are implemented without this.
 unsafe impl<'nvml> Send for Device<'nvml> {}
 unsafe impl<'nvml> Sync for Device<'nvml> {}
 
@@ -92,21 +89,15 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports all _fully supported_ products.
-    // TODO: Figure out how to test this on platforms it supports
     // TODO: Make sure there's a test case for when an error is returned and the mem::zeroed() values may be dropped
-    // Checked against local nvml.h
+    // Checked against local
     #[inline]
     pub fn is_api_restricted(&self, api: Api) -> Result<bool> {
         unsafe {
             let mut restricted_state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetAPIRestriction(self.device, api.into_c(), &mut restricted_state))?;
 
-            match restricted_state {
-                nvmlEnableState_enum::NVML_FEATURE_ENABLED
-                    => Ok(true),
-                nvmlEnableState_enum::NVML_FEATURE_DISABLED
-                    => Ok(false),
-            }
+            Ok(bool_from_state(restricted_state))
         }
     }
 
@@ -125,8 +116,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Kepler or newer fully supported devices.
-    // TODO: Figure out how to test this on platforms it supports
-    // Checked against local nvml.h
+    // Checked against local
     #[inline]
     pub fn applications_clock(&self, clock_type: Clock) -> Result<u32> {
         unsafe {
@@ -137,7 +127,7 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
-    /// Gets the current state and default state of auto boosted clocks.
+    /// Gets the current and default state of auto boosted clocks.
     ///
     /// Auto boosted clocks are enabled by default on some hardware, allowing the GPU to run
     /// as fast as thermals will allow it to. 
@@ -155,8 +145,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Kepler or newer fully supported devices.
-    // TODO: Figure out how to test this on platforms it supports
-    // Checked against local nvml.h
+    // Checked against local
     #[inline]
     pub fn auto_boosted_clocks_enabled(&self) -> Result<AutoBoostClocksEnabledInfo> {
         unsafe {
@@ -183,7 +172,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Kepler or newer fully supported devices.
-    // Checked against local nvml.h
+    // Checked against local
     #[inline]
     pub fn bar1_memory_info(&self) -> Result<BAR1MemoryInfo> {
         unsafe {
@@ -215,7 +204,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Fermi or newer fully supported devices.
-    // Checked against local nvml.h
+    // Checked against local
     #[inline]
     pub fn board_id(&self) -> Result<u32> {
         unsafe {
@@ -260,7 +249,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports all _fully supported_ devices.
-    // Checked against local nvml.h
+    // Checked against local
     #[inline]
     pub fn bridge_chip_info(&self) -> Result<BridgeChipHierarchy> {
         unsafe {
@@ -281,8 +270,8 @@ impl<'nvml> Device<'nvml> {
     /// * `Unknown`, on any unexpected error
     ///
     /// # Device Support
-    /// Supports Kepler or newer fully supported devices.
-    // Checked against local nvml.h
+    /// Supports Fermi or newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn clock_info(&self, clock_type: Clock) -> Result<u32> {
         unsafe {
@@ -420,6 +409,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Kepler or newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn decoder_utilization(&self) -> Result<DecoderUtilizationInfo> {
         unsafe {
@@ -446,6 +436,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Kepler or newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn default_applications_clock(&self, clock_type: Clock) -> Result<u32> {
         unsafe {
@@ -536,6 +527,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Platform Support
     /// Only supports Windows.
+    // Checked against local
     #[cfg(target_os = "windows")]
     #[inline]
     pub fn driver_model(&self) -> Result<DriverModels> {
@@ -564,6 +556,7 @@ impl<'nvml> Device<'nvml> {
     /// Supports Fermi and newer fully supported devices. Only applicable to devices with
     /// ECC. Requires NVML_INFOROM_ECC version 1.0 or higher.
     // TODO: Expose that somehow? ^
+    // Checked against local
     #[inline]
     pub fn is_ecc_enabled(&self) -> Result<EccModeInfo> {
         unsafe {
@@ -587,6 +580,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Kepler or newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn encoder_utilization(&self) -> Result<EncoderUtilizationInfo> {
         unsafe {
@@ -614,6 +608,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Kepler or newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn enforced_power_limit(&self) -> Result<u32> {
         unsafe {
@@ -625,7 +620,7 @@ impl<'nvml> Device<'nvml> {
     }
 
     /// Gets the intended operating speed of this `Device`'s fan as a percentage of the
-    /// maximum fan speed.
+    /// maximum fan speed (100%).
     ///
     /// Note: The reported speed is the intended fan speed. If the fan is physically blocked
     /// and unable to spin, the output will not match the actual fan speed.
@@ -639,6 +634,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports all discrete products with dedicated fans.
+    // Checked against local
     #[inline]
     pub fn fan_speed(&self) -> Result<u32> {
         unsafe {
@@ -660,9 +656,10 @@ impl<'nvml> Device<'nvml> {
     /// * `Unknown`, on any unexpected error
     ///
     /// # Device Support
-    /// Supports GK110 M-class Tesla products from the Kepler family. Modes `LowDP`
+    /// Supports GK110 M-class and X-class Tesla products from the Kepler family. Modes `LowDP`
     /// and `AllOn` are supported on fully supported GeForce products. Not supported
     /// on Quadro and Tesla C-class products.
+    // Checked against local
     #[inline]
     pub fn gpu_operation_mode(&self) -> Result<OperationModeInfo> {
         unsafe {
@@ -834,8 +831,9 @@ impl<'nvml> Device<'nvml> {
     /// # Device Support
     /// Supports Fermi and newer fully supported devices.
     ///
-    /// Note: On GPUs from the Fermi family, current P0 clocks (reported by `.clock_info()`)
-    /// can differ from max clocks by a few MHz.
+    /// Note: On GPUs from the Fermi family, current P0 (Performance state 0?) clocks 
+    /// (reported by `.clock_info()`) can differ from max clocks by a few MHz.
+    // Checked against local
     #[inline]
     pub fn max_clock_info(&self, clock_type: Clock) -> Result<u32> {
         unsafe {
@@ -912,6 +910,7 @@ impl<'nvml> Device<'nvml> {
     /// Supports Fermi and newer fully supported devices. Requires `NVML_INFOROM_ECC` version
     /// 2.0 or higher to report aggregate location-based memory error counts. Requires
     /// `NVML_INFOROM_ECC` version 1.0 or higher to report all other memory error counts.
+    // Checked against local
     #[inline]
     pub fn memory_error_counter(&self,
                                 error_type: MemoryError,
@@ -941,13 +940,13 @@ impl<'nvml> Device<'nvml> {
     /// Under Linux and Windows TCC (no physical display connected), the reported amount 
     /// of used memory is equal to the sum of memory allocated by all active channels on 
     /// the device.
-    // TODO: is the above accurate?
     ///
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
     /// * `InvalidArg`, if the device is invalid
     /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     /// * `Unknown`, on any unexpected error
+    // Checked against local
     #[inline]
     pub fn memory_info(&self) -> Result<MemoryInfo> {
         unsafe {
@@ -996,7 +995,7 @@ impl<'nvml> Device<'nvml> {
     /// # Device Support
     /// Supports Fermi or newer fully supported devices.
     // TODO: Figure out how to test this on platforms it supports
-    // Checked against local nvml.h
+    // Checked against local
     #[inline]
     pub fn is_multi_gpu_board(&self) -> Result<bool> {
         unsafe {
@@ -1053,7 +1052,7 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
-    /// Gets the PCIe replay counter and rollover information.
+    /// Gets the PCIe replay counter.
     ///
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
@@ -1064,6 +1063,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Kepler or newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn pcie_replay_counter(&self) -> Result<u32> {
         unsafe {
@@ -1088,6 +1088,10 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Maxwell and newer fully supported devices.
+    ///
+    /// # Environment Support
+    /// This method is not supported in virtualized GPU environments.
+    // Checked against local
     #[inline]
     pub fn pcie_throughput(&self, counter: PcieUtilCounter) -> Result<u32> {
         unsafe {
@@ -1109,6 +1113,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Fermi or newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn performance_state(&self) -> Result<PerformanceState> {
         unsafe {
@@ -1158,6 +1163,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Kepler or newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn power_management_limit_default(&self) -> Result<u32> {
         unsafe {
@@ -1184,7 +1190,9 @@ impl<'nvml> Device<'nvml> {
     /// Supports Fermi or newer fully supported devices.
     ///
     /// This reading is only supported if power management mode is supported. See
-    /// `.power_management_mode()`.
+    /// `.is_power_management_algo_active()`. Yes, it's deprecated, but that's what
+    /// NVIDIA's docs said to see.
+    // Checked against local
     #[inline]
     pub fn power_management_limit(&self) -> Result<u32> {
         unsafe {
@@ -1206,6 +1214,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Kepler or newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn power_management_limit_constraints(&self) -> Result<PowerManagementConstraints> {
         unsafe {
@@ -1257,7 +1266,9 @@ impl<'nvml> Device<'nvml> {
     /// Supports Fermi and newer fully supported devices.
     ///
     /// This reading is accurate to within +/- 5% of current power draw on Fermi and Kepler GPUs.
-    /// It is only supported if power management mode is supported. See `.power_management_mode()`.
+    /// It is only supported if power management mode is supported. See `.is_power_management_algo_active()`.
+    /// Yes, that is deperecated, but that's what NVIDIA's docs say to see.
+    // Checked against local
     #[inline]
     pub fn power_usage(&self) -> Result<u32> {
         unsafe {
@@ -1285,6 +1296,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Kepler and newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn retired_pages(&self, cause: RetirementCause, size: usize) -> Result<Vec<u64>> {
         unsafe {
@@ -1315,6 +1327,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Kepler and newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn are_pages_pending_retired(&self) -> Result<bool> {
         unsafe {
@@ -1357,7 +1370,7 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
-    // TODO: supportedclocksthrottlereasons. Also bitmask stuff
+    // TODO: supportedclocksthrottlereasons. is bitmask stuff
 
     /// Gets a `Vec` of possible graphics clocks that can be used as an arg for
     /// `set_applications_clocks()`.
@@ -1373,6 +1386,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Kepler and newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn supported_graphics_clocks(&self, for_mem_clock: u32, size: c_uint) -> Result<Vec<u32>> {
         unsafe {
@@ -1403,13 +1417,13 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Kepler and newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn supported_memory_clocks(&self, size: c_uint) -> Result<Vec<u32>> {
         unsafe {
             let mut first_item: c_uint = mem::zeroed();
             // TODO: Convert all other function calls like this to take `size` param as c_uint
             // TODO: says count is set to the number of required elements if `InsufficientSize`?
-            // what?
             let mut count: c_uint = size;
             nvml_try(nvmlDeviceGetSupportedMemoryClocks(self.device, 
                                                           &mut count, 
@@ -1428,6 +1442,7 @@ impl<'nvml> Device<'nvml> {
     /// * `NotSupported`, if this `Device` does not have the specified sensor
     /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     /// * `Unknown`, on any unexpected error
+    // Checked against local
     #[inline]
     pub fn temperature(&self, sensor: TemperatureSensor) -> Result<u32> {
         unsafe {
@@ -1449,6 +1464,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Kepler and newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn temperature_threshold(&self, threshold_type: TemperatureThreshold) -> Result<u32> {
         unsafe {
@@ -1514,7 +1530,7 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
-    /// Gets the total ECC error coutns for this `Device`.
+    /// Gets the total ECC error counts for this `Device`.
     ///
     /// Only applicable to devices with ECC. The total error count is the sum of errors across
     /// each of the separate memory systems, i.e. the total set of errors across the entire device.
@@ -1529,6 +1545,7 @@ impl<'nvml> Device<'nvml> {
     /// # Device Support
     /// Supports Fermi and newer fully supported devices. Requires NVML_INFOROM_ECC version 1.0
     /// or higher. Requires ECC mode to be enabled.
+    // Checked against local
     #[inline]
     pub fn total_ecc_errors(&self, error_type: MemoryError, counter_type: EccCounter) -> Result<u64> {
         unsafe {
@@ -1583,6 +1600,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Fermi and newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn utilization_rates(&self) -> Result<Utilization> {
         unsafe {
@@ -1602,8 +1620,9 @@ impl<'nvml> Device<'nvml> {
     /// * `InvalidArg`, if the device is invalid
     /// * `NotSupported`, if this `Device` does not support this feature
     /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
-    /// * `Utf8Error`, if the string obtained from the C function is not valid Utf8
+    /// * `Utf8Error`, if the string obtained from the C function is not valid UTF-8
     /// * `Unknown`, on any unexpected error
+    // Checked against local
     #[inline]
     pub fn vbios_version(&self) -> Result<String> {
         unsafe {
@@ -1636,6 +1655,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Kepler or newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn violation_status(&self, perf_policy: PerformancePolicy) -> Result<ViolationTime> {
         unsafe {
@@ -1654,6 +1674,7 @@ impl<'nvml> Device<'nvml> {
     /// * `NotSupported`, if this check is not supported by this `Device`
     /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     /// * `Unknown`, on any unexpected error
+    // Checked against local
     #[inline]
     pub fn is_on_same_board_as(&self, other_device: &Device) -> Result<bool> {
         unsafe {
@@ -1661,8 +1682,8 @@ impl<'nvml> Device<'nvml> {
             nvml_try(nvmlDeviceOnSameBoard(self.device, other_device.c_device(), &mut bool_int))?;
 
             match bool_int {
-                0 => Ok(true),
-                _ => Ok(false),
+                0 => Ok(false),
+                _ => Ok(true),
             }
         }
     }
@@ -1670,8 +1691,13 @@ impl<'nvml> Device<'nvml> {
     /// Resets the application clock to the default value.
     ///
     /// This is the applications clock that will be used after a system reboot or a driver
-    /// reload. Default value is a constant, but the current value can be changed using
+    /// reload. The default value is a constant, but the current value be changed with
     /// `.set_applications_clocks()`.
+    ///
+    /// On Pascal and newer hardware, if clocks were previously locked with 
+    /// `.set_applications_clocks()`, this call will unlock clocks. This returns clocks
+    /// to their default behavior of automatically boosting above base clocks as
+    /// thermal limits allow.
     ///
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
@@ -1681,8 +1707,9 @@ impl<'nvml> Device<'nvml> {
     /// * `Unknown`, on any unexpected error
     ///
     /// # Device Support
-    /// Support Fermi and newer non-GeForce fully supported devices and Maxwell or newer
+    /// Supports Fermi and newer non-GeForce fully supported devices and Maxwell or newer
     /// GeForce devices.
+    // Checked against local
     #[inline]
     pub fn reset_applications_clocks(&self) -> Result<()> {
         unsafe {
@@ -1717,6 +1744,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Kepler and newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn set_auto_boosted_clocks(&self, enabled: bool) -> Result<()> {
         unsafe {
@@ -1776,6 +1804,7 @@ impl<'nvml> Device<'nvml> {
     /// # Device Support
     /// Supports Kepler or newer non-GeForce fully supported devices and Maxwell or newer
     /// GeForce devices.
+    // Checked against local
     #[inline]
     pub fn set_auto_boosted_clocks_default(&self, enabled: bool) -> Result<()> {
         unsafe {
@@ -1822,6 +1851,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Kepler and newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn clear_accounting_pids(&self) -> Result<()> {
         unsafe {
@@ -1845,10 +1875,10 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Kepler and newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn accounting_buffer_size(&self) -> Result<u32> {
         unsafe {
-            // TODO: I _think_ this is supposed to just be a return value?
             let mut count: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetAccountingBufferSize(self.device, &mut count))?;
 
@@ -1866,6 +1896,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Kepler and newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn is_accounting_enabled(&self) -> Result<bool> {
         unsafe {
@@ -1878,7 +1909,9 @@ impl<'nvml> Device<'nvml> {
 
     /// Gets the list of processes that can be queried for accounting stats.
     ///
-    /// The list of processes returned can be in running or terminated state.
+    /// The list of processes returned can be in running or terminated state. Note that
+    /// in the case of a PID collision some processes might not be accessible before
+    /// the circular buffer is full.
     ///
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
@@ -1888,6 +1921,7 @@ impl<'nvml> Device<'nvml> {
     /// * `InsufficientSize`,
     // TODO: ^
     /// * `Unknown`, on any unexpected error
+    // Checked against local
     #[inline]
     pub fn accounting_pids(&self, size: usize) -> Result<Vec<u32>> {
         unsafe {
@@ -1914,7 +1948,7 @@ impl<'nvml> Device<'nvml> {
     /// zero during the lifetime of the process and updated to the actual running time
     /// after its termination.
     ///
-    /// Accounting stats are kept in a circular buffer; newly created process overwrite
+    /// Accounting stats are kept in a circular buffer; newly created processes overwrite
     /// information regarding old processes.
     ///
     /// Note:
@@ -1934,11 +1968,16 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Suports Kepler and newer fully supported devices.
+    ///
+    /// # Warning
+    /// On Kepler devices, per-process stats are accurate _only if_ there's one process
+    /// running on this `Device`.
+    // Checked against local
     #[inline]
-    pub fn accounting_stats_for(&self, pid: u32) -> Result<AccountingStats> {
+    pub fn accounting_stats_for(&self, process_id: u32) -> Result<AccountingStats> {
         unsafe {
             let mut stats: nvmlAccountingStats_t = mem::zeroed();
-            nvml_try(nvmlDeviceGetAccountingStats(self.device, pid as c_uint, &mut stats))?;
+            nvml_try(nvmlDeviceGetAccountingStats(self.device, process_id as c_uint, &mut stats))?;
 
             Ok(stats.into())
         }
@@ -1950,7 +1989,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// Note:
     /// * This setting is not persistent and will default to disabled after the driver
-    /// unloads. Enable persistence mode to be sure the settings doesn't switch off
+    /// unloads. Enable persistence mode to be sure the setting doesn't switch off
     /// to disabled.
     /// * Enabling accounting mode has no negative impact on GPU performance.
     /// * Disabling accounting clears accounting information for all PIDs
@@ -1964,6 +2003,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Device Support
     /// Supports Kepler and newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn set_accounting(&self, enabled: bool) -> Result<()> {
         unsafe {
@@ -1976,6 +2016,7 @@ impl<'nvml> Device<'nvml> {
     /// Clears the ECC error and other memory error counts for this `Device`.
     ///
     /// Sets all of the specified ECC counters to 0, including both detailed and total counts.
+    /// This operation takes effect immediately.
     ///
     /// Requires root/admin permissions and ECC mode to be enabled.
     ///
@@ -1984,7 +2025,7 @@ impl<'nvml> Device<'nvml> {
     /// * `InvalidArg`, if the `Device` is invalid or `counter_type` is invalid (shouldn't occur?)
     /// * `NotSupported`, if this `Device` does not support this feature
     /// * `NoPermission`, if the user doesn't have permission to perform this operation
-    /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     /// * `Unknown`, on any unexpected error
     ///
     /// # Device Support
@@ -1992,6 +2033,7 @@ impl<'nvml> Device<'nvml> {
     /// ECC. Requires `NVML_INFOROM_ECC` version 2.0 or higher to clear aggregate
     /// location-based ECC counts. Requires `NVML_INFOROM_ECC` version 1.0 or higher to
     /// clear all other ECC counts.
+    // Checked against local
     #[inline]
     pub fn clear_ecc_error_counts(&self, counter_type: EccCounter) -> Result<()> {
         unsafe {
@@ -2013,11 +2055,12 @@ impl<'nvml> Device<'nvml> {
     /// this `Device` does not support the feature that API restrictions are being set for
     /// (e.g. enabling/disabling auto boosted clocks is not supported by this `Device`).
     /// * `NoPermission`, if the user doesn't have permission to perform this operation
-    /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     /// * `Unknown`, on any unexpected error
     ///
     /// # Device Support
     /// Supports Kepler and newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn set_api_restricted(&self, api_type: Api, restricted: bool) -> Result<()> {
         unsafe {
@@ -2037,6 +2080,11 @@ impl<'nvml> Device<'nvml> {
     /// Can be used as a setting to request constant performance. Requires root/admin
     /// permissions.
     ///
+    /// On Pascal and newer hardware, this will automatically disable automatic boosting
+    /// of clocks. On K80 and newer Kepler and Maxwell GPUs, users desiring fixed performance
+    /// should also call `.set_auto_boosted_clocks(false)` to prevent clocks from automatically
+    /// boosting above the clock value being set here.
+    ///
     /// Note that after a system reboot or driver reload applications clocks go back
     /// to their default value.
     ///
@@ -2045,12 +2093,13 @@ impl<'nvml> Device<'nvml> {
     /// * `InvalidArg`, if the `Device` is invalid or the clocks are not a valid combo
     /// * `NotSupported`, if this `Device` does not support this feature
     /// * `NoPermission`, if the user doesn't have permission to perform this operation
-    /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     /// * `Unknown`, on any unexpected error
     ///
     /// # Device Support
     /// Supports Kepler and newer non-GeForce fully supported devices and Maxwell or newer
     /// GeForce devices.
+    // Checked against local
     #[inline]
     pub fn set_applications_clocks(&self, mem_clock: u32, graphics_clock: u32) -> Result<()> {
         unsafe {
@@ -2069,7 +2118,8 @@ impl<'nvml> Device<'nvml> {
     /// across reboots and always resets to `Default`. Under Windows it is
     /// persistent.
     ///
-    /// Under Windows, compute mode may only be set to `Default` when running in WDDM.
+    /// Under Windows, compute mode may only be set to `Default` when running in WDDM
+    /// (physical display connected).
     ///
     /// Requires root/admin permissions.
     ///
@@ -2078,8 +2128,9 @@ impl<'nvml> Device<'nvml> {
     /// * `InvalidArg`, if the `Device` is invalid or `mode` is invalid (shouldn't occur?)
     /// * `NotSupported`, if this `Device` does not support this feature
     /// * `NoPermission`, if the user doesn't have permission to perform this operation
-    /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     /// * `Unknown`, on any unexpected error
+    // Checked against local
     #[inline]
     pub fn set_compute_mode(&self, mode: ComputeMode) -> Result<()> {
         unsafe {
@@ -2091,7 +2142,7 @@ impl<'nvml> Device<'nvml> {
     /// Sets the driver model for this `Device`.
     ///
     /// On Windows platforms the device driver can run in either WDDM or WDM (TCC)
-    /// mode. If a display is attached to a device it must run in WDDM mode.
+    /// mode. If a physical display is attached to a device it must run in WDDM mode.
     ///
     /// It is possible to force the change to WDM (TCC) while the display is still
     /// attached with a force flag ()
@@ -2114,12 +2165,13 @@ impl<'nvml> Device<'nvml> {
     /// * `InvalidArg`, if the `Device` is invalid
     /// * `NotSupported`, if this `Device` does not support this feature
     /// * `NoPermission`, if the user doesn't have permission to perform this operation
-    /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     /// * `Unknown`, on any unexpected error
     ///
     /// # Device Support
     /// Supports Kepler and newer fully supported devices. Requires NVML_INFOROM_ECC version
     /// 1.0 or higher.
+    // Checked against local
     #[inline]
     pub fn set_ecc(&self, enabled: bool) -> Result<()> {
         unsafe {
@@ -2133,20 +2185,22 @@ impl<'nvml> Device<'nvml> {
     /// that may be removed in the future.
     ///
     /// Compute only GOMs don't support graphics acceleration. Under Windows switching
-    /// to these GOMs when the pending driver model is WDDM is not supported.
+    /// to these GOMs when the pending driver model is WDDM (physical display attached)
+    /// is not supported.
     ///
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
     /// * `InvalidArg`, if the `Device` is invalid or `mode` is invalid (shouldn't occur?)
     /// * `NotSupported`, if this `Device` does not support GOMs or a specific mode
     /// * `NoPermission`, if the user doesn't have permission to perform this operation
-    /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     /// * `Unknown`, on any unexpected error
     ///
     /// # Device Support
     /// Supports GK110 M-class and X-class Tesla products from the Kepler family. Modes
     /// `LowDP` and `AllOn` are supported on fully supported GeForce products. Not
     /// supported on Quadro and Tesla C-class products.
+    // Checked against local
     #[inline]
     pub fn set_gpu_op_mode(&self, mode: OperationMode) -> Result<()> {
         unsafe {
@@ -2168,14 +2222,15 @@ impl<'nvml> Device<'nvml> {
     /// * `InvalidArg`, if the `Device` is invalid
     /// * `NotSupported`, if this `Device` does not support this feature
     /// * `NoPermission`, if the user doesn't have permission to perform this operation
-    /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     /// * `Unknown`, on any unexpected error
     ///
     /// # Platform Support
     /// Only supports Linux.
+    // Checked against local
     #[cfg(target_os = "linux")]
     #[inline]
-    pub fn set_persistence(&self, enabled: bool) -> Result<()> {
+    pub fn set_persistent(&self, enabled: bool) -> Result<()> {
         unsafe {
             nvml_try(nvmlDeviceSetPersistenceMode(self.device, state_from_bool(enabled)))
         }
@@ -2194,13 +2249,14 @@ impl<'nvml> Device<'nvml> {
     /// * `Uninitialized`, if the library has not been successfully initialized
     /// * `InvalidArg`, if the `Device` is invalid or `limit` is out of range
     /// * `NotSupported`, if this `Device` does not support this feature
-    /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     /// * `Unknown`, on any unexpected error
     ///
     /// For some reason NVIDIA does not mention `NoPermission`.
     ///
     /// # Device Support
     /// Supports Kepler and newer fully supported devices.
+    // Checked against local
     #[inline]
     pub fn set_power_management_limit(&self, limit: u32) -> Result<()> {
         unsafe {
@@ -2208,7 +2264,65 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
-    // TODO: event handling methods
+    // Event handling methods
+    // TODO: Figure out what to do about platform support situation
+
+    /// Starts recording the given `EventTypes` for this `Device` and adding them
+    /// to the specified `EventSet`.
+    ///
+    /// All events that occurred before this call was made will not be recorded.
+    ///
+    /// ECC events are only available on `Device`s with ECC enabled. Power capping events
+    /// are only available on `Device`s with power management enabled.
+    // TODO: Is this a good way to handle the error cases here? (Unknown = should be freed)
+    // TODO: Should I just provide a higher-level method that creates a set for you?
+    #[cfg(platform = "linux")]
+    #[inline]
+    pub fn register_events(&self, events: &EventTypes, set: EventSet) -> Result<EventSet> {
+        unsafe {
+            match nvml_try(nvmlDeviceRegisterEvents(self.device, 
+                                                    events.bits() as c_ulonglong, 
+                                                    set.c_set())) {
+                Ok(()) => Ok(set),
+                Err(ErrorKind::Unknown) => {
+                    // NVIDIA says that if an Unknown error is returned, `set` will
+                    // be in an undefined state and should be freed.
+                    // TODO: Something better to match on instead of string?
+                    set.destroy().chain_err(|| "Error is from destroy call")?;
+                    Err(ErrorKind::Unknown)
+                },
+                Err(e) => Err(e)
+            }
+        }
+    }
+
+    /// Gets the `EventTypes` that this `Device` supports.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Fermi and newer fully supported devices.
+    ///
+    /// # Platform Support
+    /// Only supports Linux.
+    // TODO: examples of interpreting the returned flags
+    #[cfg(platform = "linux")]
+    #[inline]
+    pub fn supported_event_types(&self) -> Result<EventTypes> {
+        unsafe {
+            let mut flags: c_ulonglong = mem::zeroed();
+            nvml_try(nvmlDeviceGetSupportedEventTypes(self.device, &mut flags))?;
+
+            if let Some(f) = EventTypes::from_bits(flags as u64) {
+                f
+            } else {
+                Err(ErrorKind::IncorrectBits)
+            }
+        }
+    }
 
     /// Only use this if it's absolutely necessary. 
     #[inline]
@@ -2221,7 +2335,8 @@ impl<'nvml> Device<'nvml> {
 #[cfg(feature = "test-local")]
 #[allow(unused_variables, unused_imports)]
 mod test {
-    use super::*;
+    use NVML;
+    use enum_wrappers::*;
     use test_utils::*;
 
     // Doesn't work right now

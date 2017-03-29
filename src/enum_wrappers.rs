@@ -48,6 +48,26 @@ pub enum Clock {
     Video,
 }
 
+/// These are used in combo with `Clock` to specify a single clock value.
+// Checked against local
+#[derive(EnumWrapper, Debug)]
+#[wrap(c_enum = "nvmlClockId_t")]
+#[wrap(has_count = "NVML_CLOCK_ID_COUNT")]
+pub enum ClockId {
+    /// Current actual clock value.
+    #[wrap(c_variant = "NVML_CLOCK_ID_CURRENT")]
+    Current,
+    /// Target application clock.
+    #[wrap(c_variant = "NVML_CLOCK_ID_APP_CLOCK_TARGET")]
+    TargetAppClock,
+    /// Default application clock target.
+    #[wrap(c_variant = "NVML_CLOCK_ID_APP_CLOCK_DEFAULT")]
+    DefaultAppClock,
+    /// OEM-defined maximum clock rate.
+    #[wrap(c_variant = "NVML_CLOCK_ID_CUSTOMER_BOOST_MAX")]
+    CustomerMaxBoost,
+}
+
 /// GPU brand.
 // Checked against local
 #[derive(EnumWrapper, Debug)]

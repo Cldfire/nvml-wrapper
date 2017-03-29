@@ -1,8 +1,9 @@
-use super::ffi::*;
-use super::nvml_errors::*;
-use super::enum_wrappers::*;
-use super::enums::*;
-use super::std::mem;
+use ffi::*;
+use nvml_errors::*;
+use enum_wrappers::*;
+use enums::*;
+use std::mem;
+use device::Device;
 use std::ffi::CStr;
 
 // TODO: Document errors for try_froms
@@ -282,9 +283,11 @@ impl From<nvmlUnitFanInfo_t> for FanInfo {
     }
 }
 
-/// Power usage information for an S-class unit. The power supply state is a human-readable
-/// string that equals "Normal" or contains a combination of "Abnormal" plus one or more of
-/// the following (aka good luck matching on it):
+/// Power usage information for an S-class unit. 
+///
+/// The power supply state is a human-readable string that equals "Normal" or contains 
+/// a combination of "Abnormal" plus one or more of the following (aka good luck matching 
+/// on it):
 ///
 /// * High voltage
 /// * Fan failure
@@ -414,6 +417,31 @@ impl From<nvmlAccountingStats_t> for AccountingStats {
             },
             start_time: struct_.startTime as u64,
             time: struct_.time as u64,
+        }
+    }
+}
+
+// TODO: Should this be higher level. It probably should
+/// Information about an event that has occurred.
+// Checked against local
+#[derive(Debug)]
+pub struct EventData<'nvml> {
+    /// Device where the event occurred.
+    // TODO: Need to be able to compare device handles for equality due to this
+    pub device: Device<'nvml>,
+    /// Information about what specific event occurred.
+    pub event_type: u64,
+    /// Stores the last XID error for the device in the event of nvmlEventTypeXidCriticalError,
+    /// is 0 for any other event. Is 999 for an unknown XID error.
+    pub event_data: u64,
+}
+
+impl<'nvml> From<nvmlEventData_t> for EventData<'nvml> {
+    fn from(struct_: nvmlEventData_t) -> Self {
+        EventData {
+            device: struct_.device.into(),
+            event_type: struct_.eventType as u64,
+            event_data: struct_.eventData as u64,
         }
     }
 }

@@ -198,6 +198,7 @@ impl<'nvml> Unit<'nvml> {
     ///
     /// # Device Support
     /// For S-class products.
+    // checked against local
     #[inline]
     pub fn set_led_color(&self, color: LedColor) -> Result<()> {
         unsafe {

@@ -15,6 +15,14 @@ error_chain! {
         NulError(::std::ffi::NulError);
     }
     errors {
+        /// Bits that did not correspond to a flag were encountered whilst attempting to
+        /// interpret them as bitflags.
+        ///
+        /// This error is specific to this Rust wrapper.
+        IncorrectBits {
+            description("Bits that did not correspond to a flag were encountered whilst attempting \
+                        to interpret them as bitflags")
+        }
         /// An unexpected enum variant was encountered.
         ///
         /// This error is specific to this Rust wrapper. It is used to represent the

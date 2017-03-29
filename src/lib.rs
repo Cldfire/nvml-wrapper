@@ -30,9 +30,12 @@
 //!     * All GeForce products Fermi architecture and up
 
 // TODO: Finish module docs. Say something about device support.
+// TODO: Wrap device in arc as well for arc tests (to avoid sync / send issue)
 
 #[macro_use]
 extern crate error_chain;
+#[macro_use]
+extern crate bitflags;
 extern crate nvml_errors;
 #[macro_use]
 extern crate nvml_derive;
@@ -44,6 +47,7 @@ pub mod structs;
 pub mod struct_wrappers;
 pub mod enums;
 pub mod enum_wrappers;
+pub mod event;
 #[cfg(feature = "test")]
 mod test_utils;
 
@@ -51,6 +55,7 @@ use nvml_errors::*;
 use ffi::*;
 use device::Device;
 use unit::Unit;
+use event::EventSet;
 use std::os::raw::{c_uint, c_int};
 use std::ffi::{CStr, CString};
 use std::mem;
@@ -419,6 +424,7 @@ impl NVML {
     /// * `NotSupported`, if this check is not supported by this `Device`
     /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     /// * `Unknown`, on any unexpected error
+    // Checked against local
     #[inline]
     pub fn is_device_on_same_board_as(device1: &Device, device2: &Device) -> Result<bool> {
         unsafe {
@@ -426,8 +432,8 @@ impl NVML {
             nvml_try(nvmlDeviceOnSameBoard(device1.c_device(), device2.c_device(), &mut bool_int))?;
 
             match bool_int {
-                0 => Ok(true),
-                _ => Ok(false),
+                0 => Ok(false),
+                _ => Ok(true),
             }
         }
     }
@@ -476,6 +482,24 @@ impl NVML {
             nvml_try(nvmlUnitGetCount(&mut count))?;
 
             Ok(count as u32)
+        }
+    }
+
+    /// Create an empty set of events.
+    ///
+    /// # Errors
+    /// `Uninitialized`, if the library has not been successfully initialized
+    /// `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Fermi and newer fully supported devices.
+    // Checked against local
+    pub fn create_event_set(&self) -> Result<EventSet> {
+        unsafe {
+            let mut set: nvmlEventSet_t = mem::zeroed();
+            nvml_try(nvmlEventSetCreate(&mut set))?;
+
+            Ok(set.into())
         }
     }
 }
