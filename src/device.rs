@@ -25,6 +25,8 @@ use std::slice;
 #[derive(Debug)]
 pub struct Device<'nvml> {
     device: nvmlDevice_t,
+    // Storage for PCI info used in drain state calls
+    pci_info: Option<nvmlPciInfo_t>,
     _phantom: PhantomData<&'nvml NVML>,
 }
 
@@ -35,6 +37,7 @@ impl<'nvml> From<nvmlDevice_t> for Device<'nvml> {
     fn from(device: nvmlDevice_t) -> Self {
         Device {
             device: device,
+            pci_info: None,
             _phantom: PhantomData,
         }
     }
@@ -2265,7 +2268,7 @@ impl<'nvml> Device<'nvml> {
     }
 
     // Event handling methods
-    // TODO: Figure out what to do about platform support situation
+    // TODO: Figure out what to do about platform support situation for these
 
     /// Starts recording the given `EventTypes` for this `Device` and adding them
     /// to the specified `EventSet`.
@@ -2274,8 +2277,24 @@ impl<'nvml> Device<'nvml> {
     ///
     /// ECC events are only available on `Device`s with ECC enabled. Power capping events
     /// are only available on `Device`s with power management enabled.
+    ///
+    /// # Errors
+    /// `Uninitialized`, if the library has not been successfully initialized
+    /// `InvalidArg`, if `events` is invalid (shouldn't occur?)
+    /// `NotSupported`, if the platform does not support this feature or some of the
+    /// requested event types.
+    /// `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// `Unknown`, on any unexpected error. **If this error is returned, the `set` you
+    /// passed in has had its resources freed and will not be returned to you**. NVIDIA's
+    /// docs say that this error means that the set is in an invalid state.
+    ///
+    /// # Device Support
+    /// Supports Fermi and newer fully supported devices.
+    ///
+    /// # Platform Support
+    /// Only supports Linux.
+    // Checked against local
     // TODO: Is this a good way to handle the error cases here? (Unknown = should be freed)
-    // TODO: Should I just provide a higher-level method that creates a set for you?
     #[cfg(platform = "linux")]
     #[inline]
     pub fn register_events(&self, events: &EventTypes, set: EventSet) -> Result<EventSet> {
@@ -2291,6 +2310,7 @@ impl<'nvml> Device<'nvml> {
                     set.destroy().chain_err(|| "Error is from destroy call")?;
                     Err(ErrorKind::Unknown)
                 },
+                // TODO: Figure out how to return set in error case
                 Err(e) => Err(e)
             }
         }
@@ -2324,6 +2344,120 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
+    // Drain states
+
+    /// Enable or disable drain state for this `Device`.
+    ///
+    /// Enabling drain state forces this `Device` to no longer accept new incoming requests.
+    /// Any new NVML processes will no longer see this `Device`.
+    /// 
+    /// **`nvmlDeviceGetPciInfo` is also called the first time a drain-state-related 
+    /// method is called in order to provide the drain call with the necessary PCI 
+    /// information.** After the first call it is stored in this `Device` struct for future 
+    /// calls. If you need to update the stored value for some reason, pass `true` for the 
+    /// `update_storage` argument.
+    ///
+    /// Must be called as administrator. Persistence mode for this `Device` must be turned
+    /// off before this call is made.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the PCI info is invalid (maybe possible if stored?)
+    /// * `NotSupported`, if this `Device` doesn't support this feature
+    /// * `NoPermission`, if the calling process has insufficient permissions to perform
+    /// this operation
+    /// * `InUse`, if this `Device` has persistence mode turned on
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Maxwell and newer fully supported devices.
+    ///
+    /// Some Kepler devices are also supported (that's all NVIDIA says, no specifics).
+    ///
+    /// # Platform Support
+    /// Only supports Linux.
+    // TODO: Should there be a separate method to update storage
+    // TODO: Is this an ergonomic way to do this
+    #[cfg(target_os = "linux")]
+    #[inline]
+    pub fn set_drain(&mut self, enabled: bool, update_storage: bool) -> Result<()> {
+        unsafe {
+            if update_storage || self.pci_info.is_none() {
+                let mut pci_info: nvmlPciInfo_t = mem::zeroed();
+                nvml_try(nvmlDeviceGetPciInfo_v2(self.device, &mut pci_info))?;
+
+                self.pci_info = Some(pci_info);
+            }
+
+            // Due to the above if, self.pci_info must be Some(), so we are free to unwrap here
+            nvml_try(nvmlDeviceModifyDrainState(&mut self.pci_info.unwrap(), state_from_bool(enabled)))
+        }
+    }
+
+    /// Query the drain state of this `Device`.
+    ///
+    /// **`nvmlDeviceGetPciInfo` is also called the first time a drain-state-related 
+    /// method is called in order to provide the drain call with the necessary PCI 
+    /// information.** After the first call it is stored in this `Device` struct for future 
+    /// calls. If you need to update the stored value for some reason, pass `true` for the 
+    /// `update_storage` argument.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the PCI info is invalid (maybe possible if stored?)
+    /// * `NotSupported`, if this `Device` doesn't support this feature
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Maxwell and newer fully supported devices.
+    ///
+    /// Some Kepler devices are also supported (that's all NVIDIA says, no specifics).
+    ///
+    /// # Platform Support
+    /// Only supports Linux.
+    #[cfg(target_os = "linux")]
+    #[inline]
+    pub fn is_drain_enabled(&mut self, update_storage: bool) -> Result<bool> {
+        unsafe {
+            if update_storage || self.pci_info.is_none() {
+                let mut pci_info: nvmlPciInfo_t = mem::zeroed();
+                nvml_try(nvmlDeviceGetPciInfo_v2(self.device, &mut pci_info))?;
+
+                self.pci_info = Some(pci_info);
+            }
+            
+            let mut state: nvmlEnableState_t = mem::zeroed();
+            // Due to the above if, self.pci_info must be Some(), so we are free to unwrap here
+            nvml_try(nvmlDeviceQueryDrainState(&mut self.pci_info.unwrap(), &mut state))?;
+
+            Ok(bool_from_state(state))
+        }
+    }
+
+    // In progress
+    
+    // /// Removes this `Device` from the view of both NVML and the NVIDIA kernal driver.
+    // ///
+    // /// This call only works if no other processes are attached. If other processes
+    // /// are attached when this is called, the `InUse` error will be returned and
+    // /// this `Device` will return to its original draining state.
+    // // TODO: Figure out how to return device if handle is still valid
+    // pub fn remove(mut self, update_storage: bool) -> Result<()> {
+    //     unsafe {
+    //         if update_storage || self.pci_info.is_none() {
+    //             let mut pci_info: nvmlPciInfo_t = mem::zeroed();
+    //             nvml_try(nvmlDeviceGetPciInfo_v2(self.device, &mut pci_info))?;
+
+    //             self.pci_info = Some(pci_info);
+    //         }
+
+    //         // Due to the above if, self.pci_info must be Some(), so we are free to unwrap here
+    //         nvml_try(nvmlDeviceRemoveGpu(&mut self.pci_info.unwrap()))
+    //     }
+    // }
+
     /// Only use this if it's absolutely necessary. 
     #[inline]
     pub fn c_device(&self) -> nvmlDevice_t {
@@ -2331,7 +2465,7 @@ impl<'nvml> Device<'nvml> {
     }
 }
 
-#[cfg(feature = "test")]
+#[cfg(test)]
 #[cfg(feature = "test-local")]
 #[allow(unused_variables, unused_imports)]
 mod test {

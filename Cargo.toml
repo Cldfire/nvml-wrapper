@@ -12,5 +12,4 @@ nvml-errors = { path = "nvml-errors" }
 
 [features]
 default = []
-test = []
 test-local = []

@@ -48,7 +48,7 @@ pub mod struct_wrappers;
 pub mod enums;
 pub mod enum_wrappers;
 pub mod event;
-#[cfg(feature = "test")]
+#[cfg(test)]
 mod test_utils;
 
 use nvml_errors::*;
@@ -59,7 +59,7 @@ use event::EventSet;
 use std::os::raw::{c_uint, c_int};
 use std::ffi::{CStr, CString};
 use std::mem;
-use enum_wrappers::TopologyLevel;
+use enum_wrappers::*;
 use std::slice;
 
 /// The main struct that this library revolves around.
@@ -447,7 +447,7 @@ impl NVML {
     ///
     /// # Platform Support
     /// Only supports Linux.
-    #[cfg(target_os = "Linux")]
+    #[cfg(target_os = "linux")]
     #[inline]
     pub fn topology_gpu_set(&self, cpu_number: u32) -> Result<Vec<Device>> {
         unsafe {
@@ -488,12 +488,13 @@ impl NVML {
     /// Create an empty set of events.
     ///
     /// # Errors
-    /// `Uninitialized`, if the library has not been successfully initialized
-    /// `Unknown`, on any unexpected error
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `Unknown`, on any unexpected error
     ///
     /// # Device Support
     /// Supports Fermi and newer fully supported devices.
     // Checked against local
+    #[inline]
     pub fn create_event_set(&self) -> Result<EventSet> {
         unsafe {
             let mut set: nvmlEventSet_t = mem::zeroed();
@@ -522,7 +523,7 @@ impl Drop for NVML {
     }
 }
 
-#[cfg(feature = "test")]
+#[cfg(test)]
 #[allow(unused_variables, unused_imports)]
 mod test {
     use super::*;

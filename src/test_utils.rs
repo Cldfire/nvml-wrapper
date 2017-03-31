@@ -23,6 +23,7 @@ impl ShouldPrint for () {
 impl<'a> ShouldPrint for &'a str {}
 impl ShouldPrint for String {}
 impl ShouldPrint for Brand {}
+impl ShouldPrint for [i8; 16] {}
 
 pub fn device<'nvml>(from: &'nvml NVML, index: usize) -> Device<'nvml> {
     from.device_by_index(0).expect(&format!("Could not get{} device by index 0", index))

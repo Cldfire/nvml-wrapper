@@ -9,7 +9,7 @@ use NVML;
 bitflags! {
     /// Event types that you can request to be notified about.
     ///
-    /// Types can be combined with the bitwise Or operator `|` when passed to
+    /// Types can be combined with the Bitwise Or operator `|` when passed to
     /// `Device.register_events()`.
     // TODO: Example(s)
     // Checked against local
@@ -66,7 +66,6 @@ impl<'nvml> EventSet<'nvml> {
     /// * `Unknown`, on any unexpected error
     // Checked against local
     // TODO: Should this be a weaker name?
-    // TODO: Shoud we not consume here? can the set be used after events have been released?
     #[inline]
     pub fn release_events(self) -> Result<()> {
         unsafe {
@@ -96,8 +95,10 @@ impl<'nvml> EventSet<'nvml> {
     /// # Device Support
     /// Supports Fermi and newer fully supported devices.
     // Checked against local
+    // TODO: Should I go higher level with this?
+    // Should it be tied to the device and managed for you
     #[inline]
-    pub fn set_wait(&self, timeout: u32) -> Result<EventData> {
+    pub fn wait(&self, timeout: u32) -> Result<EventData> {
         unsafe {
             let mut data: nvmlEventData_t = mem::zeroed();
             nvml_try(nvmlEventSetWait(self.set, &mut data, timeout as c_uint))?;

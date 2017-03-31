@@ -4,12 +4,15 @@ use enum_wrappers::*;
 use enums::*;
 use std::mem;
 use device::Device;
-use std::ffi::CStr;
+use std::os::raw::{c_uint, c_char};
+use std::ffi::{CStr, CString};
+use std::u32;
 
-// TODO: Document errors for try_froms
+// TODO: Document errors for try_froms and try_intos
 
 /// PCI information about a GPU device.
 // Checked against local
+#[derive(Debug, Clone)]
 pub struct PciInfo {
     /// The bus on which the device resides, 0 to 0xff.
     pub bus: u32,
@@ -39,6 +42,39 @@ impl PciInfo {
                 pci_sub_system_id: struct_.pciSubSystemId as u32,
             })
         }
+    }
+
+    /// Waiting to `TryInto` to be stable. In the meantime, we do this.
+    pub fn try_into_c(self) -> Result<nvmlPciInfo_t> {
+        // TODO: Is my method of getting the c_char array from the stored string correct
+        // TODO: If it is do it better
+        let mut bus_id_c: [c_char; 16] = [0; 16];
+        let mut bus_id = CString::new(self.bus_id)?.into_bytes_with_nul();
+
+        if bus_id.len() > 16 {
+            panic!("length was > 16")
+        } else if bus_id.len() < 16 {
+            while bus_id.len() != 16 {
+                bus_id.push(0);
+            }
+        };
+
+        bus_id_c.clone_from_slice(&bus_id.iter()
+                                         .map(|b| *b as i8)
+                                         .collect::<Vec<_>>());
+
+        Ok(nvmlPciInfo_t {
+            busId: bus_id_c,
+            domain: self.domain as c_uint,
+            bus: self.bus as c_uint,
+            device: self.device as c_uint,
+            pciDeviceId: self.pci_device_id as c_uint,
+            pciSubSystemId: self.pci_sub_system_id as c_uint,
+            reserved0: u32::MAX as c_uint,
+            reserved1: u32::MAX as c_uint,
+            reserved2: u32::MAX as c_uint,
+            reserved3: u32::MAX as c_uint,
+        })
     }
 }
 
@@ -422,6 +458,7 @@ impl From<nvmlAccountingStats_t> for AccountingStats {
 }
 
 // TODO: Should this be higher level. It probably should
+// Store specific event flag ^
 /// Information about an event that has occurred.
 // Checked against local
 #[derive(Debug)]
@@ -443,5 +480,42 @@ impl<'nvml> From<nvmlEventData_t> for EventData<'nvml> {
             event_type: struct_.eventType as u64,
             event_data: struct_.eventData as u64,
         }
+    }
+}
+
+#[cfg(test)]
+#[allow(unused_variables, unused_imports)]
+mod tests {
+    use test_utils::*;
+    use nvml_errors::*;
+    use ffi::*;
+    use std::mem;
+
+    #[test]
+    fn pci_info_from_to_c() {
+        single(|nvml| {
+            let device = device(&nvml, 0);
+            let converted = device.pci_info()
+                                  .expect("wrapped pci info")
+                                  .try_into_c()
+                                  .expect("converted c pci info");
+
+            let raw = unsafe {
+                let mut pci_info: nvmlPciInfo_t = mem::zeroed();
+                nvml_try(nvmlDeviceGetPciInfo_v2(device.c_device(), &mut pci_info)).expect("raw pci info");
+                pci_info
+            };
+
+            assert_eq!(converted.busId, raw.busId);
+            assert_eq!(converted.domain, raw.domain);
+            assert_eq!(converted.bus, raw.bus);
+            assert_eq!(converted.device, raw.device);
+            assert_eq!(converted.pciDeviceId, raw.pciDeviceId);
+            assert_eq!(converted.pciSubSystemId, raw.pciSubSystemId);
+            assert_eq!(converted.reserved0, raw.reserved0);
+            assert_eq!(converted.reserved1, raw.reserved1);
+            assert_eq!(converted.reserved2, raw.reserved2);
+            assert_eq!(converted.reserved3, raw.reserved3);
+        })
     }
 }
