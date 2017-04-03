@@ -1,4 +1,4 @@
-use super::enum_wrappers::*;
+use enum_wrappers::device::*;
 
 /// Returned from `Device.auto_boosted_clocks_enabled()`
 #[derive(Debug)]

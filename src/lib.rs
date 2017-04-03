@@ -59,7 +59,7 @@ use event::EventSet;
 use std::os::raw::{c_uint, c_int};
 use std::ffi::{CStr, CString};
 use std::mem;
-use enum_wrappers::*;
+use enum_wrappers::device::*;
 use std::slice;
 
 /// The main struct that this library revolves around.

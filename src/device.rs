@@ -1,8 +1,9 @@
 use ffi::*;
 use nvml_errors::*;
-use structs::*;
-use struct_wrappers::*;
+use structs::device::*;
+use struct_wrappers::device::*;
 use enum_wrappers::*;
+use enum_wrappers::device::*;
 use NVML;
 use std::marker::PhantomData;
 use std::ffi::CStr;
@@ -2423,7 +2424,9 @@ impl<'nvml> Device<'nvml> {
         unsafe {
             if update_storage || self.pci_info.is_none() {
                 let mut pci_info: nvmlPciInfo_t = mem::zeroed();
-                nvml_try(nvmlDeviceGetPciInfo_v2(self.device, &mut pci_info))?;
+                nvml_try(nvmlDeviceGetPciInfo_v2(self.device, &mut pci_info))
+                    // TODO: Something better to match on here
+                    .chain_err(|| "Error from nvmlDeviceGetPciInfo call")?;
 
                 self.pci_info = Some(pci_info);
             }
@@ -2437,7 +2440,7 @@ impl<'nvml> Device<'nvml> {
     }
 
     // In progress
-    
+
     // /// Removes this `Device` from the view of both NVML and the NVIDIA kernal driver.
     // ///
     // /// This call only works if no other processes are attached. If other processes

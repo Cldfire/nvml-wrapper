@@ -1,10 +1,9 @@
-use super::ffi::*;
-use super::nvml_errors::*;
+use ffi::*;
+use nvml_errors::*;
 
 // TODO: Test everything in this module.
 // TODO: Check all of these things against local nvml.h
 // TODO: Improve the derive macro
-// TODO: Should platform-specific things be in their own modules?
 
 /// API types that allow changes to default permission restrictions.
 // Checked against local
@@ -394,30 +393,6 @@ pub enum PerformancePolicy {
     SyncBoost,
 }
 
-/// Unit fan state.
-// Checked against local
-#[derive(EnumWrapper, Debug)]
-#[wrap(c_enum = "nvmlFanState_t")]
-pub enum FanState {
-    /// Working properly
-    #[wrap(c_variant = "NVML_FAN_NORMAL")]
-    Normal,
-    #[wrap(c_variant = "NVML_FAN_FAILED")]
-    Failed,
-}
-
-// Checked against local
-#[derive(EnumWrapper, Debug)]
-#[wrap(c_enum = "nvmlLedColor_t")]
-pub enum LedColor {
-    /// Used to indicate good health.
-    #[wrap(c_variant = "NVML_LED_COLOR_GREEN")]
-    Green,
-    /// Used to indicate a problem.
-    #[wrap(c_variant = "NVML_LED_COLOR_AMBER")]
-    Amber,
-}
-
 /// `ExclusiveProcess` was added in CUDA 4.0. Earlier CUDA versions supported a single
 /// exclusive mode, which is equivalent to `ExclusiveThread` in CUDA 4.0 and beyond.
 // Checked against local
@@ -439,18 +414,4 @@ pub enum ComputeMode {
     /// Only one context per device, usable from multiple threads at a time.
     #[wrap(c_variant = "NVML_COMPUTEMODE_EXCLUSIVE_PROCESS")]
     ExclusiveProcess,
-}
-
-pub fn bool_from_state(state: nvmlEnableState_t) -> bool {
-    match state {
-        nvmlEnableState_t::NVML_FEATURE_DISABLED => false,
-        nvmlEnableState_t::NVML_FEATURE_ENABLED => true,
-    }
-}
-
-pub fn state_from_bool(bool_: bool) -> nvmlEnableState_t {
-    match bool_ {
-        false => nvmlEnableState_t::NVML_FEATURE_DISABLED,
-        true => nvmlEnableState_t::NVML_FEATURE_ENABLED,
-    }
 }

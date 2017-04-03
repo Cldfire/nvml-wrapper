@@ -1,6 +1,6 @@
 use ffi::*;
 use nvml_errors::*;
-use struct_wrappers::*;
+use struct_wrappers::event::*;
 use std::mem;
 use std::marker::PhantomData;
 use std::os::raw::c_uint;
