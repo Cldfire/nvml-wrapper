@@ -2473,7 +2473,7 @@ impl<'nvml> Device<'nvml> {
 #[allow(unused_variables, unused_imports)]
 mod test {
     use NVML;
-    use enum_wrappers::*;
+    use enum_wrappers::device::*;
     use test_utils::*;
 
     // Doesn't work right now

@@ -2,7 +2,7 @@
 
 use NVML;
 use device::Device;
-use enum_wrappers::{Brand};
+use enum_wrappers::device::Brand;
 use std::thread;
 use std::mem;
 use std::sync::Arc;
