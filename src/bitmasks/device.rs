@@ -1,0 +1,50 @@
+#![allow(deprecated)]
+
+use ffi::*;
+
+bitflags! {
+    /// Generic flags used to specify the default behavior of some functions.
+    // Checked against local
+    pub flags Behavior: u32 {
+        const DEFAULT = nvmlFlagDefault as u32,
+        const FORCE   = nvmlFlagForce as u32,
+    }
+}
+
+bitflags! {
+    /// Flags used to specify why a GPU is throttling.
+    // Checked against local
+    pub flags ThrottleReasons: u64 {
+        /// Nothing is running on the GPU.
+        ///
+        /// This limiter may be removed in a future release.
+        const GPU_IDLE                    = nvmlClocksThrottleReasonGpuIdle as u64,
+        /// GPU clocks are limited by the current applications clocks setting.
+        const APPLICATIONS_CLOCKS_SETTING = nvmlClocksThrottleReasonApplicationsClocksSetting as u64,
+        #[deprecated(note = "renamed to `APPLICATIONS_CLOCKS_SETTING`")]
+        const USER_DEFINED_CLOCKS         = nvmlClocksThrottleReasonUserDefinedClocks as u64,
+        /// Software power scaling algorithm is reducing clocks.
+        const SW_POWER_CAP                = nvmlClocksThrottleReasonSwPowerCap as u64,
+        /// Hardware slowdown (reducing the core clocks by a factor of 2 or more)
+        /// is engaged.
+        ///
+        /// This is an indicator of one of the following:
+        /// * temperature being too high
+        /// * External Power Brake Asseration is triggered (e.g. by the system power supply)
+        /// * Power draw is too high and Fast Trigger protection is reducing the clocks
+        /// * May also be reported during PState or clock change
+        ///     * This behavior may be removed in a later release.
+        const HW_SLOWDOWN                 = nvmlClocksThrottleReasonHwSlowdown as u64,
+        /// This GPU is being throttled by another GPU in its sync boost group.
+        ///
+        /// Sync boost groups can be used to maximize performance per watt. All GPUs
+        /// in a sync boost group will boost to the minimum possible clocks across
+        /// the entire group. Look at the throttle reasons for other GPUs in the
+        /// system to find out why this GPU is being held at lower clocks.
+        const SYNC_BOOST                  = nvmlClocksThrottleReasonSyncBoost as u64,
+        /// Some other unspecified factor is reducing the clocks.
+        const UNKNOWN                     = nvmlClocksThrottleReasonUnknown as u64,
+        /// Clocks are as high as possible and are not being throttled.
+        const NONE                        = nvmlClocksThrottleReasonNone as u64,
+    }
+}

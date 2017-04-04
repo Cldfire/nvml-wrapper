@@ -48,6 +48,7 @@ pub mod struct_wrappers;
 pub mod enums;
 pub mod enum_wrappers;
 pub mod event;
+pub mod bitmasks;
 #[cfg(test)]
 mod test_utils;
 
@@ -628,27 +629,101 @@ mod test {
         });
     }
 
-    // TODO: Gen tests for driver version
     #[test]
     fn driver_version() {
-        let test = NVML::init().expect("init call failed");
-        let version = test.sys_driver_version().expect("Could not get driver version");
+        single(|nvml| {
+            nvml.sys_driver_version().expect("driver version")
+        });
     }
 
-    // TODO: Gen tests for nvml version
+    #[test]
+    fn driver_version_multiple() {
+        multi(3, |nvml, i| {
+            nvml.sys_driver_version().expect(&format!("driver version {}", i));
+        });
+    }
+
+    #[test]
+    fn driver_version_multiple_threads() {
+        multi_thread(3, |nvml, i| {
+            nvml.sys_driver_version().expect(&format!("driver version {}", i));
+        });
+    }
+
+    #[test]
+    fn driver_version_multiple_threads_arc() {
+        multi_thread_arc(3, |nvml, i| {
+            nvml.sys_driver_version().expect(&format!("driver version {}", i));
+        });
+    }
+
     #[test]
     fn nvml_version() {
-        let test = NVML::init().expect("init call failed");
-        let version = test.sys_nvml_version().expect("Could not get NVML version");
+        single(|nvml| {
+            nvml.sys_nvml_version().expect("nvml version")
+        });
     }
 
-    // TODO: Gen tests for process_name
-    #[cfg(feature = "test-local")]
+    #[test]
+    fn nvml_version_multiple() {
+        multi(3, |nvml, i| {
+            nvml.sys_nvml_version().expect(&format!("nvml version {}", i));
+        });
+    }
+
+    #[test]
+    fn nvml_version_multiple_threads() {
+        multi_thread(3, |nvml, i| {
+            nvml.sys_nvml_version().expect(&format!("nvml version {}", i));
+        });
+    }
+
+    #[test]
+    fn nvml_version_multiple_threads_arc() {
+        multi_thread_arc(3, |nvml, i| {
+            nvml.sys_nvml_version().expect(&format!("nvml version {}", i));
+        });
+    }
+
+    // TODO: Some kind of way to externally verify that the returned name is correct?
     #[test]
     fn process_name() {
-        let test = NVML::init().expect("init call failed");
-        // TODO: This is stupid
-        let name = test.sys_process_name(25121, 80).expect("Could not get name for PID");
+        single(|nvml| {
+            let device = device(&nvml, 0);
+            let graphics_processes = device.running_graphics_processes(32).expect("graphics processes");
+
+            nvml.sys_process_name(graphics_processes[0].pid, 80).expect("process name")
+        });
+    }
+
+    #[test]
+    fn process_name_multiple() {
+        multi(3, |nvml, i| {
+            let device = device(&nvml, i);
+            let graphics_processes = device.running_graphics_processes(32).expect("graphics processes");
+
+            nvml.sys_process_name(graphics_processes[0].pid, 80).expect(&format!("process name {}", i));
+        });
+    }
+
+    #[test]
+    fn process_name_multiple_threads() {
+        multi_thread(3, |nvml, i| {
+            let device = device(&nvml, i);
+            let graphics_processes = device.running_graphics_processes(32).expect("graphics processes");
+
+            nvml.sys_process_name(graphics_processes[0].pid, 80).expect(&format!("process name {}", i));
+        });
+    }
+
+    #[test]
+    fn process_name_multiple_threads_arc() {
+        multi_thread_arc(3, |nvml, i| {
+            let device = device(&nvml, i);
+            let graphics_processes = device.running_graphics_processes(32).expect("graphics processes");
+
+            nvml.sys_process_name(graphics_processes[0].pid, 80).expect(&format!("process name {}", i));
+        });
     }
 
     // TODO: This test and others below are specific to a machine with a GPU

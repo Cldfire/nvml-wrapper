@@ -6,7 +6,7 @@ use nvml_errors::*;
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlNvLinkUtilizationCountUnits_t")]
 #[wrap(has_count = "NVML_NVLINK_COUNTER_UNIT_COUNT")]
-pub enum UtilizationCountUnits {
+pub enum UtilizationCountUnit {
     #[wrap(c_variant = "NVML_NVLINK_COUNTER_UNIT_CYCLES")]
     Cycles,
     #[wrap(c_variant = "NVML_NVLINK_COUNTER_UNIT_PACKETS")]
@@ -15,28 +15,48 @@ pub enum UtilizationCountUnits {
     Bytes,
 }
 
-/// Represents the NvLink utilization counter packet types that can be counted.
-///
-/// Only applica
+/// Represents queryable NvLink capabilities.
+// Checked against local
 #[derive(EnumWrapper, Debug)]
-#[wrap(c_enum = "nvmlNvLinkUtilizationCountPktTypes_t")]
-pub enum UtilizationCountPacketTypes {
-    #[wrap(c_variant = "NVML_NVLINK_COUNTER_PKTFILTER_NOP")]
-    NoOp,
-    #[wrap(c_variant = "NVML_NVLINK_COUNTER_PKTFILTER_READ")]
-    Read,
-    #[wrap(c_variant = "NVML_NVLINK_COUNTER_PKTFILTER_WRITE")]
-    Write,
-    #[wrap(c_variant = "NVML_NVLINK_COUNTER_PKTFILTER_RATOM")]
-    Ratom,
-    #[wrap(c_variant = "NVML_NVLINK_COUNTER_PKTFILTER_NRATOM")]
-    NRatom,
-    #[wrap(c_variant = "NVML_NVLINK_COUNTER_PKTFILTER_FLUSH")]
-    Flush,
-    #[wrap(c_variant = "NVML_NVLINK_COUNTER_PKTFILTER_RESPDATA")]
-    WithData,
-    #[wrap(c_variant = "NVML_NVLINK_COUNTER_PKTFILTER_RESPNODATA")]
-    NoData,
-    #[wrap(c_variant = "NVML_NVLINK_COUNTER_PKTFILTER_ALL")]
-    All,
+#[wrap(c_enum = "nvmlNvLinkCapability_t")]
+#[wrap(has_count = "NVML_NVLINK_CAP_COUNT")]
+pub enum Capability {
+    /// P2P over NVLink is supported.
+    #[wrap(c_variant = "NVML_NVLINK_CAP_P2P_SUPPORTED")]
+    P2p,
+    /// Access to system memory is supported.
+    #[wrap(c_variant = "NVML_NVLINK_CAP_SYSMEM_ACCESS")]
+    SysMemAccess,
+    /// P2P atomics are supported.
+    #[wrap(c_variant = "NVML_NVLINK_CAP_P2P_ATOMICS")]
+    P2pAtomics,
+    /// System memory atomics are supported.
+    #[wrap(c_variant = "NVML_NVLINK_CAP_SYSMEM_ATOMICS")]
+    SysMemAtomics,
+    /// SLI is supported over this link.
+    #[wrap(c_variant = "NVML_NVLINK_CAP_SLI_BRIDGE")]
+    SliBridge,
+    /// Link is supported on this device.
+    #[wrap(c_variant = "NVML_NVLINK_CAP_VALID")]
+    ValidLink,
+}
+
+/// Represents queryable NvLink error counters.
+// Checked against local
+#[derive(EnumWrapper, Debug)]
+#[wrap(c_enum = "nvmlNvLinkErrorCounter_t")]
+#[wrap(has_count = "NVML_NVLINK_ERROR_COUNT")]
+pub enum ErrorCounter {
+    /// Data link transmit replay error counter.
+    #[wrap(c_variant = "NVML_NVLINK_ERROR_DL_REPLAY")]
+    DlReplay,
+    /// Data link transmit recovery error counter.
+    #[wrap(c_variant = "NVML_NVLINK_ERROR_DL_RECOVERY")]
+    DlRecovery,
+    /// Data link receive flow control digit CRC error counter.
+    #[wrap(c_variant = "NVML_NVLINK_ERROR_DL_CRC_FLIT")]
+    DlCrcFlit,
+    /// Data link receive data CRC error counter.
+    #[wrap(c_variant = "NVML_NVLINK_ERROR_DL_CRC_DATA")]
+    DlCrcData,
 }

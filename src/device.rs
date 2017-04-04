@@ -4,6 +4,8 @@ use structs::device::*;
 use struct_wrappers::device::*;
 use enum_wrappers::*;
 use enum_wrappers::device::*;
+use event::EventSet;
+use bitmasks::event::EventTypes;
 use NVML;
 use std::marker::PhantomData;
 use std::ffi::CStr;
@@ -682,7 +684,7 @@ impl<'nvml> Device<'nvml> {
     /// This only returns information about graphics based processes (OpenGL, DirectX).
     ///
     /// Keep in mind that information returned by this call is dynamic and the number of elements
-    /// may change over time. Allocate more space for information in case new compute processes
+    /// may change over time. Allocate more space for information in case new graphics processes
     /// are spawned.
     ///
     /// # Errors
@@ -2296,20 +2298,22 @@ impl<'nvml> Device<'nvml> {
     /// Only supports Linux.
     // Checked against local
     // TODO: Is this a good way to handle the error cases here? (Unknown = should be freed)
-    #[cfg(platform = "linux")]
+    #[cfg(target_os = "linux")]
     #[inline]
     pub fn register_events(&self, events: &EventTypes, set: EventSet) -> Result<EventSet> {
         unsafe {
             match nvml_try(nvmlDeviceRegisterEvents(self.device, 
                                                     events.bits() as c_ulonglong, 
                                                     set.c_set())) {
-                Ok(()) => Ok(set),
-                Err(ErrorKind::Unknown) => {
+                // TODO: This is gonna be fun to figure out.
+                // Ok(()) => Ok(set),
+                Ok(()) => panic!(),
+                Err(Error(ErrorKind::Unknown, _)) => {
                     // NVIDIA says that if an Unknown error is returned, `set` will
                     // be in an undefined state and should be freed.
                     // TODO: Something better to match on instead of string?
-                    set.destroy().chain_err(|| "Error is from destroy call")?;
-                    Err(ErrorKind::Unknown)
+                    set.release_events().chain_err(|| "Error is from release call")?;
+                    bail!(ErrorKind::Unknown)
                 },
                 // TODO: Figure out how to return set in error case
                 Err(e) => Err(e)
@@ -2330,7 +2334,7 @@ impl<'nvml> Device<'nvml> {
     /// # Platform Support
     /// Only supports Linux.
     // TODO: examples of interpreting the returned flags
-    #[cfg(platform = "linux")]
+    #[cfg(target_os = "linux")]
     #[inline]
     pub fn supported_event_types(&self) -> Result<EventTypes> {
         unsafe {
@@ -2338,9 +2342,9 @@ impl<'nvml> Device<'nvml> {
             nvml_try(nvmlDeviceGetSupportedEventTypes(self.device, &mut flags))?;
 
             if let Some(f) = EventTypes::from_bits(flags as u64) {
-                f
+                Ok(f)
             } else {
-                Err(ErrorKind::IncorrectBits)
+                bail!(ErrorKind::IncorrectBits)
             }
         }
     }
@@ -2476,22 +2480,68 @@ mod test {
     use enum_wrappers::device::*;
     use test_utils::*;
 
-    // Doesn't work right now
     #[test]
-    fn topology() {
-        let test = NVML::init().expect("init call failed");
-        let device = test.device_by_index(0).expect("Could not get a device by index 0");
-
-        let vec = device.topology_nearest_gpus(TopologyLevel::System);
-        println!("{:?}", vec.unwrap());
+    fn running_graphics_processes() {
+        single(|nvml| {
+            let device = device(&nvml, 0);
+            device.running_graphics_processes(32).expect("graphics processes")
+        });
     }
 
     #[test]
-    fn running_compute_processes() {
-        let test = NVML::init().expect("init call failed");
-        let device = test.device_by_index(0).expect("Could not get a device by index 0");
+    fn running_graphics_processes_multiple() {
+        multi(3, |nvml, i| {
+            let device = device(&nvml, i);
+            device.running_graphics_processes(32).expect(&format!("graphics processes {}", i));
+        })
+    }
 
-        println!("{:?}", device.running_compute_processes(32).expect("You've failed"));
+    #[test]
+    fn running_graphics_processes_multiple_threads() {
+        multi_thread(3, |nvml, i| {
+            let device = device(&nvml, i);
+            device.running_graphics_processes(32).expect(&format!("graphics processes {}", i));
+        });
+    }
+
+    #[test]
+    fn running_graphics_processes_multiple_threads_arc() {
+        multi_thread_arc(3, |nvml, i| {
+            let device = device(&nvml, i);
+            device.running_graphics_processes(32).expect(&format!("graphics processes {}", i));
+        });
+    }
+
+    #[test]
+    fn vbios_version() {
+        single(|nvml| {
+            let device = device(&nvml, 0);
+            device.vbios_version().expect("version")
+        });
+    }
+
+    #[test]
+    fn vbios_version_multiple() {
+        multi(3, |nvml, i| {
+            let device = device(&nvml, i);
+            device.vbios_version().expect(&format!("version {}", i));
+        });
+    }
+
+    #[test]
+    fn vbios_version_multiple_threads() {
+        multi_thread(3, |nvml, i| {
+            let device = device(&nvml, i);
+            device.vbios_version().expect(&format!("version {}", i));
+        });
+    }
+
+    #[test]
+    fn vbios_version_multiple_threads_arc() {
+        multi_thread_arc(3, |nvml, i| {
+            let device = device(&nvml, i);
+            device.vbios_version().expect(&format!("version {}", i));
+        });
     }
 
     #[test]
@@ -2523,6 +2573,175 @@ mod test {
         multi_thread_arc(3, |nvml, i| {
             let device = device(&nvml, i);
             device.name().expect(&format!("Could not get name{}", i));
+        });
+    }
+
+    #[test]
+    fn uuid() {
+        single(|nvml| {
+            let device = device(&nvml, 0);
+            device.uuid().expect("uuid")
+        });
+    }
+
+    #[test]
+    fn uuid_multiple() {
+        multi(3, |nvml, i| {
+            let device = device(&nvml, i);
+            device.uuid().expect(&format!("uuid {}", i));
+        });
+    }
+
+    #[test]
+    fn uuid_multiple_threads() {
+        multi_thread(3, |nvml, i| {
+            let device = device(&nvml, i);
+            device.uuid().expect(&format!("uuid {}", i));
+        });
+    }
+
+    #[test]
+    fn uuid_multiple_threads_arc() {
+        multi_thread_arc(3, |nvml, i| {
+            let device = device(&nvml, i);
+            device.uuid().expect(&format!("uuid {}", i));
+        });
+    }
+
+    #[test]
+    fn utilization_rates() {
+        single(|nvml| {
+            let device = device(&nvml, 0);
+            device.utilization_rates().expect("rates")
+        });
+    }
+
+    #[test]
+    fn utilization_rates_multiple() {
+        multi(3, |nvml, i| {
+            let device = device(&nvml, i);
+            device.utilization_rates().expect(&format!("rates {}", i));
+        });
+    }
+
+    #[test]
+    fn utilization_rates_multiple_threads() {
+        multi_thread(3, |nvml, i| {
+            let device = device(&nvml, i);
+            device.utilization_rates().expect(&format!("rates {}", i));
+        });
+    }
+
+    #[test]
+    fn utilization_rates_multiple_threads_arc() {
+        multi_thread_arc(3, |nvml, i| {
+            let device = device(&nvml, i);
+            device.utilization_rates().expect(&format!("rates {}", i));
+        });
+    }
+
+    #[test]
+    fn temperature_thresholds() {
+        single(|nvml| {
+            let device = device(&nvml, 0);
+            let slowdown_temp = device.temperature_threshold(TemperatureThreshold::Slowdown)
+                .expect("slowdown temp");
+            let shutdown_temp = device.temperature_threshold(TemperatureThreshold::Shutdown)
+                .expect("shutdown temp");
+
+            #[cfg(feature = "test-local")]
+            {
+                assert_eq!(92, slowdown_temp);
+                assert_eq!(97, shutdown_temp);
+            }
+
+            print!("\n\n\tGPU slows down at: {} \
+                    \n\tGPU shuts down at: {}
+                    \n\t... ",
+                    slowdown_temp, shutdown_temp)
+        });
+    }
+
+    #[test]
+    fn temperature_thresholds_multiple() {
+        multi(3, |nvml, i| {
+            let device = device(&nvml, i);
+            let slowdown_temp = device.temperature_threshold(TemperatureThreshold::Slowdown)
+                .expect(&format!("slowdown temp {}", i));
+            let shutdown_temp = device.temperature_threshold(TemperatureThreshold::Shutdown)
+                .expect(&format!("shutdown temp {}", i));
+
+            #[cfg(feature = "test-local")]
+            {
+                assert_eq!(92, slowdown_temp);
+                assert_eq!(97, shutdown_temp);
+            }
+        });
+    }
+
+    #[test]
+    fn temperature_thresholds_multiple_threads() {
+        multi_thread(3, |nvml, i| {
+            let device = device(&nvml, i);
+            let slowdown_temp = device.temperature_threshold(TemperatureThreshold::Slowdown)
+                .expect(&format!("slowdown temp {}", i));
+            let shutdown_temp = device.temperature_threshold(TemperatureThreshold::Shutdown)
+                .expect(&format!("shutdown temp {}", i));
+
+            #[cfg(feature = "test-local")]
+            {
+                assert_eq!(92, slowdown_temp);
+                assert_eq!(97, shutdown_temp);
+            }
+        });
+    }
+
+    #[test]
+    fn temperature_thresholds_multiple_threads_arc() {
+        multi_thread_arc(3, |nvml, i| {
+            let device = device(&nvml, i);
+            let slowdown_temp = device.temperature_threshold(TemperatureThreshold::Slowdown)
+                .expect(&format!("slowdown temp {}", i));
+            let shutdown_temp = device.temperature_threshold(TemperatureThreshold::Shutdown)
+                .expect(&format!("shutdown temp {}", i));
+
+            #[cfg(feature = "test-local")]
+            {
+                assert_eq!(92, slowdown_temp);
+                assert_eq!(97, shutdown_temp);
+            }
+        });
+    }
+
+    #[test]
+    fn temperature() {
+        single(|nvml| {
+            let device = device(&nvml, 0);
+            device.temperature(TemperatureSensor::Gpu).expect("temp")
+        });
+    }
+
+    #[test]
+    fn temperature_multiple() {
+        multi(3, |nvml, i| {
+            let device = device(&nvml, i);
+            device.temperature(TemperatureSensor::Gpu).expect(&format!("temp {}", i));
+        });
+    }
+
+    #[test]
+    fn temperature_multiple_threads() {
+        multi_thread(3, |nvml, i| {
+            let device = device(&nvml, i);
+            device.temperature(TemperatureSensor::Gpu).expect(&format!("temp {}", i));
+        });
+    }
+
+    #[test]
+    fn temperature_multiple_threads_arc() {
+        multi_thread_arc(3, |nvml, i| {
+            let device = device(&nvml, i);
+            device.temperature(TemperatureSensor::Gpu).expect(&format!("temp {}", i));
         });
     }
 
@@ -2690,16 +2909,38 @@ mod test {
         });
     }
 
-    #[ignore]
     #[test]
-    // TODO: This is not supported for my GPU
     fn is_api_restricted() {
-        let test = NVML::init().expect("init call failed");
-        let device = test.device_by_index(0).expect("Could not get a device by index 0");
-        let is_restricted = device.is_api_restricted(Api::ApplicationClocks)
-            .expect("Failed to check ApplicationClocks");
-        let is_restricted2 = device.is_api_restricted(Api::AutoBoostedClocks)
-            .expect("Failed to check AutoBoostedClocks");
+        single(|nvml| {
+            let device = device(&nvml, 0);
+            device.is_api_restricted(Api::ApplicationClocks).expect("boolean")
+
+            // My GPU apparently does not support AutoBoostedClocks...
+        });
+    }
+
+    #[test]
+    fn is_api_restricted_multiple() {
+        multi(3, |nvml, i| {
+            let device = device(&nvml, i);
+            device.is_api_restricted(Api::ApplicationClocks).expect(&format!("boolean {}", i));
+        });
+    }
+
+    #[test]
+    fn is_api_restricted_multiple_threads() {
+        multi_thread(3, |nvml, i| {
+            let device = device(&nvml, i);
+            device.is_api_restricted(Api::ApplicationClocks).expect(&format!("boolean {}", i));
+        });
+    }
+
+    #[test]
+    fn is_api_restricted_multiple_threads_arc() {
+        multi_thread_arc(3, |nvml, i| {
+            let device = device(&nvml, i);
+            device.is_api_restricted(Api::ApplicationClocks).expect(&format!("boolean {}", i));
+        });
     }
 
     // TODO: Gen tests for pci_info

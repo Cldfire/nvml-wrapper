@@ -415,3 +415,42 @@ pub enum ComputeMode {
     #[wrap(c_variant = "NVML_COMPUTEMODE_EXCLUSIVE_PROCESS")]
     ExclusiveProcess,
 }
+
+/// P2P capability index status.
+// Checked against local
+#[derive(EnumWrapper, Debug)]
+#[wrap(c_enum = "nvmlGpuP2PStatus_t")]
+pub enum P2pStatus {
+    #[wrap(c_variant = "NVML_P2P_STATUS_OK")]
+    Ok,
+    #[wrap(c_variant = "NVML_P2P_STATUS_CHIPSET_NOT_SUPPORED")]
+    ChipsetNotSupported,
+    #[wrap(c_variant = "NVML_P2P_STATUS_GPU_NOT_SUPPORTED")]
+    GpuNotSupported,
+    #[wrap(c_variant = "NVML_P2P_STATUS_IOH_TOPOLOGY_NOT_SUPPORTED")]
+    IohTopologyNotSupported,
+    #[wrap(c_variant = "NVML_P2P_STATUS_DISABLED_BY_REGKEY")]
+    DisabledByRegkey,
+    #[wrap(c_variant = "NVML_P2P_STATUS_NOT_SUPPORTED")]
+    NotSupported,
+    #[wrap(c_variant = "NVML_P2P_STATUS_UNKNOWN")]
+    Unknown,
+}
+
+// Checked against local
+#[derive(EnumWrapper, Debug)]
+#[wrap(c_enum = "nvmlGpuP2PCapsIndex_t")]
+pub enum P2pCapabilitiesIndex {
+    #[wrap(c_variant = "NVML_P2P_CAPS_INDEX_READ")]
+    Read,
+    #[wrap(c_variant = "NVML_P2P_CAPS_INDEX_WRITE")]
+    Write,
+    #[wrap(c_variant = "NVML_P2P_CAPS_INDEX_NVLINK")]
+    NvLink,
+    #[wrap(c_variant = "NVML_P2P_CAPS_INDEX_ATOMICS")]
+    Atomics,
+    #[wrap(c_variant = "NVML_P2P_CAPS_INDEX_PROP")]
+    Prop,
+    #[wrap(c_variant = "NVML_P2P_CAPS_INDEX_UNKNOWN")]
+    Unknown,
+}

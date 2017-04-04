@@ -11,7 +11,7 @@ pub struct AutoBoostClocksEnabledInfo {
     pub is_enabled_default: bool,
 }
 
-/// Returned from `Device.decoder_utilization()`
+/// Returned from `Device.decoder_utilization()` and `Device.encoder_utilization()`.
 #[derive(Debug)]
 pub struct UtilizationInfo {
     pub utilization: u32,
