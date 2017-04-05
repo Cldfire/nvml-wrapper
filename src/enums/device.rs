@@ -1,6 +1,4 @@
-use ffi::*;
-use nvml_errors::*;
-use std::ffi::CStr;
+use ffi::bindings::*;
 
 // TODO: document try_froms
 
@@ -44,35 +42,29 @@ impl From<u64> for UsedGpuMemory {
     }
 }
 
-/// LED states for an S-class unit.
+/// Represents different types of sample values.
+// Checked against local
+#[cfg(feature = "nightly")]
 #[derive(Debug)]
-pub enum UnitLedState {
-    /// Indicates good health.
-    Green,
-    /// Indicates a problem along with the accompanying cause
-    Amber(String),
+pub enum SampleValue {
+    F64(f64),
+    U32(u32),
+    U64(u64),
 }
 
-impl UnitLedState {
-    /// Waiting for `TryFrom` to be stable. In the meantime, we do this.
-    pub fn try_from(struct_: nvmlLedState_t) -> Result<Self> {
-        match struct_.color {
-            nvmlLedColor_t::NVML_LED_COLOR_GREEN => Ok(UnitLedState::Green),
-            nvmlLedColor_t::NVML_LED_COLOR_AMBER => unsafe {
-                let cause_raw = CStr::from_ptr(struct_.cause.as_ptr());
-                Ok(UnitLedState::Amber(cause_raw.to_str()?.into()))
+#[cfg(feature = "nightly")]
+impl SampleValue {
+    pub fn from_tag_and_union(tag: &SampleValueType, union: nvmlValue_t) -> Self {
+        use SampleValueType::*;
+
+        unsafe {
+            match *tag {
+                Double            => SampleValue::F64(union.dVal as f64),
+                UnsignedInt       => SampleValue::U32(union.uiVal as u32),
+                // TODO: Is it okay to map ul => u32
+                UnsignedLong      => SampleValue::U32(union.ulVal as u32),
+                UnsignedLongLong  => SampleValue::U64(union.ullVal as u64),
             }
         }
     }
-}
-
-/// THe type of temperature reading to take for a `Unit`.
-///
-/// Available readings depend on the product.
-#[repr(u32)]
-#[derive(Debug)]
-pub enum UnitTemperatureReading {
-    Intake = 0,
-    Exhaust = 1,
-    Board = 2,
 }

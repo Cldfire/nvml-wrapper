@@ -1,4 +1,4 @@
-use ffi::*;
+use ffi::bindings::*;
 use nvml_errors::*;
 use struct_wrappers::event::*;
 use std::mem;

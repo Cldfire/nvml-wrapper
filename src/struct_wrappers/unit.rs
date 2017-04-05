@@ -1,4 +1,4 @@
-use ffi::*;
+use ffi::bindings::*;
 use nvml_errors::*;
 use enum_wrappers::unit::*;
 use std::ffi::CStr;

@@ -1,4 +1,4 @@
-use ffi::*;
+use ffi::bindings::*;
 use device::Device;
 
 // TODO: Should this be higher level. It probably should

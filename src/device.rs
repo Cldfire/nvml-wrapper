@@ -1,4 +1,4 @@
-use ffi::*;
+use ffi::bindings::*;
 use nvml_errors::*;
 use structs::device::*;
 use struct_wrappers::device::*;
@@ -6,6 +6,7 @@ use enum_wrappers::*;
 use enum_wrappers::device::*;
 use event::EventSet;
 use bitmasks::event::EventTypes;
+use bitmasks::device::*;
 use NVML;
 use std::marker::PhantomData;
 use std::ffi::CStr;
@@ -266,11 +267,81 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
+    /// Gets this `Device`'s current clock speed for the given `Clock` type and `ClockId`.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if this `Device` is invalid or `clock_type` is invalid (shouldn't occur?)
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Kepler and newer fully supported devices.
+    // Checked against local
+    #[inline]
+    pub fn clock(&self, clock_type: Clock, clock_id: ClockId) -> Result<u32> {
+        unsafe {
+            let mut clock: c_uint = mem::zeroed();
+            nvml_try(nvmlDeviceGetClock(self.device,
+                                        clock_type.into_c(),
+                                        clock_id.into_c(),
+                                        &mut clock))?;
+
+            Ok(clock as u32)
+        }
+    }
+
+    /// Gets this `Device`'s customer-defined maximum boost clock speed for the
+    /// given `Clock` type.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if this `Device` is invalid or `clock_type` is invalid (shouldn't occur?)
+    /// * `NotSupported`, if this `Device` or the `clock_type` on this `Device`
+    /// does not support this feature
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Maxwell and newer fully supported devices.
+    // Checked against local
+    #[inline]
+    pub fn max_customer_boost_clock(&self, clock_type: Clock) -> Result<u32> {
+        unsafe {
+            let mut clock: c_uint = mem::zeroed();
+            nvml_try(nvmlDeviceGetMaxCustomerBoostClock(self.device,
+                                                        clock_type.into_c(),
+                                                        &mut clock))?;
+
+            Ok(clock as u32)
+        }
+    }
+
+    /// Gets the current compute mode for this `Device`.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if this `Device` is invalid
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    // Checked against local
+    #[inline]
+    pub fn compute_mode(&self) -> Result<ComputeMode> {
+        unsafe {
+            let mut mode: nvmlComputeMode_t = mem::zeroed();
+            nvml_try(nvmlDeviceGetComputeMode(self.device, &mut mode))?;
+
+            Ok(ComputeMode::try_from(mode)?)
+        }
+    }
+
     /// Gets this `Device`'s current clock speed for the given `Clock` type.
     ///
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
-    /// * `InvalidArg`, if the device is invalid
+    /// * `InvalidArg`, if this `Device` is invalid
     /// * `NotSupported`, if this `Device` cannot report the specified clock
     /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     /// * `Unknown`, on any unexpected error
@@ -1344,11 +1415,55 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
-    // TODO: When I feel like trying to figure out how to work with untagged unions.
-    // nvmlDeviceGetSamples
-    // pub fn samples(&self, type: Sampling, last_seen_timestamp: u64) -> Result<Vec<>> {
+    /// Gets recent samples for this `Device`.
+    ///
+    /// `last_seen_timestamp` represents the CPU timestamp in μs. Passing in `None`
+    /// will fetch all samples maintained in the underlying buffer; you can
+    /// alternatively pass in a timestamp retrieved from the date of the previous
+    /// query in order to obtain more recent samples.
+    ///
+    /// The advantage of using this method for samples in contrast to polling via
+    /// existing methods is to get higher frequency data at a lower polling cost.
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, TODO: <---
+    /// * `NotSupported`, if this query is not supported by this `Device`
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `NotFound`, if sample entries are not found
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Kepler and newer fully supported devices.
+    ///
+    /// # Rustc Support
+    /// Only compiles on nightly due to use of the `untagged_unions` feature. See
+    /// [the tracking issue](https://github.com/rust-lang/rust/issues/32836).
+    // TODO: Complicated, figure out how to handle array allocation
+    #[cfg(feature = "nightly")]
+    pub fn samples<T>(&self, sample_type: Sampling, last_seen_timestamp: T) -> Result<Vec<Sample>>
+        where T: Into<Option<u64>> {
+            let timestamp = last_seen_timestamp.into().unwrap_or(0);
 
-    // }
+            unsafe {
+                let mut value_type: nvmlValueType_t = mem::zeroed();
+                let mut count: c_uint = mem::zeroed();
+                // TODO: Fairly sure this is completely wrong
+                let mut first_item: nvmlSample_t = mem::zeroed();
+
+                nvml_try(nvmlDeviceGetSamples(self.device, 
+                                              sample_type.into_c(), 
+                                              timestamp as c_ulonglong,
+                                              &mut value_type,
+                                              &mut count,
+                                              &mut first_item))?;
+
+                let value_type_rust = SampleValueType::try_from(value_type)?;
+                let array = slice::from_raw_parts(&first_item as *const nvmlSample_t, count as usize);
+                Ok(array.iter()
+                        .map(|s| Sample::from_tag_and_struct(&value_type_rust, *s))
+                        .collect())
+            }
+    }
 
     /// Gets the globally unique board serial number associated with this `Device`'s board
     /// as an alphanumeric string.
@@ -1376,7 +1491,78 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
-    // TODO: supportedclocksthrottlereasons. is bitmask stuff
+    /// Gets the board part number for this `Device`.
+    ///
+    /// The board part number is programmed into the board's infoROM.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `NotSupported`, if the necessary VBIOS fields have not been filled
+    /// * `GpuLost`, if the target GPU has fellen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    // Checked against local
+    #[inline]
+    pub fn board_part_number(&self) -> Result<String> {
+        unsafe {
+            let mut part_num_vec = Vec::with_capacity(NVML_DEVICE_PART_NUMBER_BUFFER_SIZE as usize);
+            nvml_try(nvmlDeviceGetBoardPartNumber(self.device, 
+                                                  part_num_vec.as_mut_ptr(), 
+                                                  NVML_DEVICE_PART_NUMBER_BUFFER_SIZE))?;
+
+            let part_num_raw = CStr::from_ptr(part_num_vec.as_ptr());
+            Ok(part_num_raw.to_str()?.into())
+        }
+    }
+
+    /// Gets current throttling reasons.
+    ///
+    /// Note that multiple reasons can be affecting clocks at once.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports all _fully supported_ devices.
+    // Checked against local.
+    #[inline]
+    pub fn current_throttle_reasons(&self) -> Result<ThrottleReasons> {
+        unsafe {
+            let mut reasons: c_ulonglong = mem::zeroed();
+            nvml_try(nvmlDeviceGetCurrentClocksThrottleReasons(self.device, &mut reasons))?;
+
+            ThrottleReasons::from_bits(reasons as u64)
+                .ok_or(Error::from_kind(ErrorKind::IncorrectBits))
+        }
+    } 
+
+    /// Gets a bitmask of the supported throttle reasons.
+    ///
+    /// These reasons can be returned by `.current_throttle_reasons()`.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports all _fully supported_ devices.
+    ///
+    /// # Environment Support
+    /// This method is not supported in virtualized GPU environments.
+    // Checked against local
+    #[inline]
+    pub fn supported_throttle_reasons(&self) -> Result<ThrottleReasons> {
+        unsafe {
+            let mut reasons: c_ulonglong = mem::zeroed();
+            nvml_try(nvmlDeviceGetSupportedClocksThrottleReasons(self.device, &mut reasons))?;
+
+            ThrottleReasons::from_bits(reasons as u64)
+                .ok_or(Error::from_kind(ErrorKind::IncorrectBits))
+        }
+    }
 
     /// Gets a `Vec` of possible graphics clocks that can be used as an arg for
     /// `set_applications_clocks()`.
@@ -1593,7 +1779,7 @@ impl<'nvml> Device<'nvml> {
 
     /// Gets the current utilization rates for this `Device`'s major subsystems.
     ///
-    /// Note: During driver intialization when ECC is enabled, one can see high GPU
+    /// Note: During driver initialization when ECC is enabled, one can see high GPU
     /// and memory utilization readings. This is caused by the ECC memory scrubbing
     /// mechanism that is performed during driver initialization.
     ///

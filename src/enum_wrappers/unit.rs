@@ -1,4 +1,4 @@
-use ffi::*;
+use ffi::bindings::*;
 
 /// Unit fan state.
 // Checked against local

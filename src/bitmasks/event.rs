@@ -1,4 +1,4 @@
-use ffi::*;
+use ffi::bindings::*;
 
 bitflags! {
     /// Event types that you can request to be notified about.

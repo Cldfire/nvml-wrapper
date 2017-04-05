@@ -1,4 +1,4 @@
-use ffi::nvmlNvLinkUtilizationCountPktTypes_t::*;
+use ffi::bindings::nvmlNvLinkUtilizationCountPktTypes_t::*;
 
 bitflags! {
     /// Represents the NvLink utilization counter packet types that can be counted.

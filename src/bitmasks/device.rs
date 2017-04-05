@@ -1,6 +1,6 @@
 #![allow(deprecated)]
 
-use ffi::*;
+use ffi::bindings::*;
 
 bitflags! {
     /// Generic flags used to specify the default behavior of some functions.

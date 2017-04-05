@@ -13,3 +13,4 @@ nvml-errors = { path = "nvml-errors" }
 [features]
 default = []
 test-local = []
+nightly = ["nvml-sys/nightly"]

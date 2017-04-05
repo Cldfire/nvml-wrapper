@@ -1,7 +1,7 @@
-use ffi::*;
+use ffi::bindings::*;
 use nvml_errors::*;
 use enum_wrappers::device::*;
-use enums::*;
+use enums::device::*;
 use std::mem;
 use std::os::raw::{c_uint, c_char};
 use std::ffi::{CStr, CString};
@@ -344,12 +344,33 @@ impl From<nvmlAccountingStats_t> for AccountingStats {
     }
 }
 
+#[cfg(feature = "nightly")]
+#[derive(Debug)]
+/// Sample info.
+// Checked against local
+pub struct Sample {
+    /// CPU timestamp in μs
+    timestamp: u64,
+    value: SampleValue,
+}
+
+#[cfg(feature = "nightly")]
+impl Sample {
+    /// Given a tag and an untagged union, returns a Rust enum with the correct union variant.
+    pub fn from_tag_and_struct(tag: &SampleValueType, struct_: nvmlSample_t) -> Self {
+        Sample {
+            timestamp: struct_.timeStamp as u64,
+            value: SampleValue::from_tag_and_union(tag, struct_.sampleValue),
+        }
+    }
+}
+
 #[cfg(test)]
 #[allow(unused_variables, unused_imports)]
 mod tests {
     use test_utils::*;
     use nvml_errors::*;
-    use ffi::*;
+    use ffi::bindings::*;
     use std::mem;
 
     #[test]

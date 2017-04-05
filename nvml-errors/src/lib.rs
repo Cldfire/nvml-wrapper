@@ -5,8 +5,8 @@
 extern crate error_chain;
 extern crate nvml_sys as ffi;
 
-use ffi::nvmlReturn_t;
-use ffi::nvmlReturn_t::*;
+use ffi::bindings::nvmlReturn_t;
+use ffi::bindings::nvmlReturn_t::*;
 
 error_chain! {
     foreign_links {
@@ -126,26 +126,26 @@ error_chain! {
 pub fn nvml_try(code: nvmlReturn_t) -> Result<()> {
     match code {
         NVML_SUCCESS                        => Ok(()),
-        NVML_ERROR_UNINITIALIZED            => bail!(ErrorKind::Uninitialized),
-        NVML_ERROR_INVALID_ARGUMENT         => bail!(ErrorKind::InvalidArg),
-        NVML_ERROR_NOT_SUPPORTED            => bail!(ErrorKind::NotSupported),
-        NVML_ERROR_NO_PERMISSION            => bail!(ErrorKind::NoPermission),
-        NVML_ERROR_ALREADY_INITIALIZED      => bail!(ErrorKind::AlreadyInitialized),
-        NVML_ERROR_NOT_FOUND                => bail!(ErrorKind::NotFound),
-        NVML_ERROR_INSUFFICIENT_SIZE        => bail!(ErrorKind::InsufficientSize),
-        NVML_ERROR_INSUFFICIENT_POWER       => bail!(ErrorKind::InsufficientPower),
-        NVML_ERROR_DRIVER_NOT_LOADED        => bail!(ErrorKind::DriverNotLoaded),
-        NVML_ERROR_TIMEOUT                  => bail!(ErrorKind::Timeout),
-        NVML_ERROR_IRQ_ISSUE                => bail!(ErrorKind::IrqIssue),
-        NVML_ERROR_LIBRARY_NOT_FOUND        => bail!(ErrorKind::LibraryNotFound),
-        NVML_ERROR_FUNCTION_NOT_FOUND       => bail!(ErrorKind::FunctionNotFound),
-        NVML_ERROR_CORRUPTED_INFOROM        => bail!(ErrorKind::CorruptedInfoROM),
-        NVML_ERROR_GPU_IS_LOST              => bail!(ErrorKind::GpuLost),
-        NVML_ERROR_RESET_REQUIRED           => bail!(ErrorKind::ResetRequired),
-        NVML_ERROR_OPERATING_SYSTEM         => bail!(ErrorKind::OperatingSystem),
-        NVML_ERROR_LIB_RM_VERSION_MISMATCH  => bail!(ErrorKind::LibRmVersionMismatch),
-        NVML_ERROR_IN_USE                   => bail!(ErrorKind::InUse),
-        NVML_ERROR_NO_DATA                  => bail!(ErrorKind::NoData),
-        NVML_ERROR_UNKNOWN                  => bail!(ErrorKind::Unknown)
+        NVML_ERROR_UNINITIALIZED            => Err(Error::from_kind(ErrorKind::Uninitialized)),
+        NVML_ERROR_INVALID_ARGUMENT         => Err(Error::from_kind(ErrorKind::InvalidArg)),
+        NVML_ERROR_NOT_SUPPORTED            => Err(Error::from_kind(ErrorKind::NotSupported)),
+        NVML_ERROR_NO_PERMISSION            => Err(Error::from_kind(ErrorKind::NoPermission)),
+        NVML_ERROR_ALREADY_INITIALIZED      => Err(Error::from_kind(ErrorKind::AlreadyInitialized)),
+        NVML_ERROR_NOT_FOUND                => Err(Error::from_kind(ErrorKind::NotFound)),
+        NVML_ERROR_INSUFFICIENT_SIZE        => Err(Error::from_kind(ErrorKind::InsufficientSize)),
+        NVML_ERROR_INSUFFICIENT_POWER       => Err(Error::from_kind(ErrorKind::InsufficientPower)),
+        NVML_ERROR_DRIVER_NOT_LOADED        => Err(Error::from_kind(ErrorKind::DriverNotLoaded)),
+        NVML_ERROR_TIMEOUT                  => Err(Error::from_kind(ErrorKind::Timeout)),
+        NVML_ERROR_IRQ_ISSUE                => Err(Error::from_kind(ErrorKind::IrqIssue)),
+        NVML_ERROR_LIBRARY_NOT_FOUND        => Err(Error::from_kind(ErrorKind::LibraryNotFound)),
+        NVML_ERROR_FUNCTION_NOT_FOUND       => Err(Error::from_kind(ErrorKind::FunctionNotFound)),
+        NVML_ERROR_CORRUPTED_INFOROM        => Err(Error::from_kind(ErrorKind::CorruptedInfoROM)),
+        NVML_ERROR_GPU_IS_LOST              => Err(Error::from_kind(ErrorKind::GpuLost)),
+        NVML_ERROR_RESET_REQUIRED           => Err(Error::from_kind(ErrorKind::ResetRequired)),
+        NVML_ERROR_OPERATING_SYSTEM         => Err(Error::from_kind(ErrorKind::OperatingSystem)),
+        NVML_ERROR_LIB_RM_VERSION_MISMATCH  => Err(Error::from_kind(ErrorKind::LibRmVersionMismatch)),
+        NVML_ERROR_IN_USE                   => Err(Error::from_kind(ErrorKind::InUse)),
+        NVML_ERROR_NO_DATA                  => Err(Error::from_kind(ErrorKind::NoData)),
+        NVML_ERROR_UNKNOWN                  => Err(Error::from_kind(ErrorKind::Unknown)),
     }
 }

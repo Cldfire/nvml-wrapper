@@ -6,6 +6,9 @@ build = "build.rs"
 
 [dependencies]
 
+[features]
+default = []
+nightly = []
+
 [build-dependencies]
-bindgen = "0.22"
 pkg-config = "0.3"

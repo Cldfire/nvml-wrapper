@@ -1,4 +1,4 @@
-use ffi::*;
+use ffi::bindings::*;
 use nvml_errors::*;
 
 // TODO: Test everything in this module.
@@ -453,4 +453,21 @@ pub enum P2pCapabilitiesIndex {
     Prop,
     #[wrap(c_variant = "NVML_P2P_CAPS_INDEX_UNKNOWN")]
     Unknown,
+}
+
+/// Represents types for returned sample values.
+// Checked against local
+#[cfg(feature = "nightly")]
+#[derive(EnumWrapper, Debug)]
+#[wrap(c_enum = "nvmlValueType_t")]
+#[wrap(has_count = "NVML_VALUE_TYPE_COUNT")]
+pub enum SampleValueType {
+    #[wrap(c_variant = "NVML_VALUE_TYPE_DOUBLE")]
+    Double,
+    #[wrap(c_variant = "NVML_VALUE_TYPE_UNSIGNED_INT")]
+    UnsignedInt,
+    #[wrap(c_variant = "NVML_VALUE_TYPE_UNSIGNED_LONG")]
+    UnsignedLong,
+    #[wrap(c_variant = "NVML_VALUE_TYPE_UNSIGNED_LONG_LONG")]
+    UnsignedLongLong,
 }

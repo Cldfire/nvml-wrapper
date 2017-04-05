@@ -1,4 +1,4 @@
-use ffi::*;
+use ffi::bindings::*;
 use nvml_errors::*;
 
 /// Represents the NvLink utilization counter packet units.

@@ -1,4 +1,4 @@
-use ffi::*;
+use ffi::bindings::*;
 use std::marker::PhantomData;
 use std::os::raw::c_uint;
 use std::slice;
@@ -6,7 +6,7 @@ use std::mem;
 use device::Device;
 use struct_wrappers::unit::*;
 use enum_wrappers::unit::*;
-use enums::*;
+use enums::unit::*;
 use nvml_errors::*;
 use NVML;
 

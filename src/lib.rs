@@ -53,7 +53,7 @@ pub mod bitmasks;
 mod test_utils;
 
 use nvml_errors::*;
-use ffi::*;
+use ffi::bindings::*;
 use device::Device;
 use unit::Unit;
 use event::EventSet;
