@@ -1,5 +1,5 @@
 use ffi::bindings::*;
-use nvml_errors::*;
+use error::*;
 use structs::device::*;
 use struct_wrappers::device::*;
 use enum_wrappers::*;
@@ -7,6 +7,7 @@ use enum_wrappers::device::*;
 use event::EventSet;
 use bitmasks::event::EventTypes;
 use bitmasks::device::*;
+use bitmasks::Behavior;
 use NVML;
 use std::marker::PhantomData;
 use std::ffi::CStr;
@@ -24,7 +25,7 @@ use std::slice;
 /// 
 /// Rust's lifetimes will ensure that the NVML instance this `Device` was created from is
 /// not allowed to be shutdown until this `Device` is dropped, meaning you shouldn't
-/// have to worry about calls returning `Uninitialized` errors. 
+/// have to worry about calls returning `Uninitialized` errors.
 // TODO: Use compiletest to ensure lifetime guarantees
 #[derive(Debug)]
 pub struct Device<'nvml> {
@@ -580,7 +581,7 @@ impl<'nvml> Device<'nvml> {
     pub fn is_display_connected(&self) -> Result<bool> {
         unsafe {
             let mut state: nvmlEnableState_t = mem::zeroed();
-            nvml_try(nvmlDeviceGetDisplayMode(self.device, &mut state))?;
+            nvml_try(nvmlDeviceGetDisplayMode(self.device, &mut state))?; 
 
             Ok(bool_from_state(state))
         }
@@ -1424,6 +1425,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// The advantage of using this method for samples in contrast to polling via
     /// existing methods is to get higher frequency data at a lower polling cost.
+    ///
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
     /// * `InvalidArg`, TODO: <---
@@ -1679,7 +1681,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     #[cfg(target_os = "linux")]
     #[inline]
-    pub fn topology_common_ancestor(&self, other_device: &Device) -> Result<TopologyLevel> {
+    pub fn topology_common_ancestor(&self, other_device: Device) -> Result<TopologyLevel> {
         unsafe {
             let mut level: nvmlGpuTopologyLevel_t = mem::zeroed();
             nvml_try(nvmlDeviceGetTopologyCommonAncestor(self.device, other_device.device, &mut level))?;
@@ -2330,19 +2332,42 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
-    // TODO: Finish docs for this and figure out how the flag stuff works
     /// Sets the driver model for this `Device`.
+    ///
+    /// This operation takes effect after the next reboot. The model may only be
+    /// set to WDDM when running in DEFAULT compute mode. Changing the model to
+    /// WDDM is not supported then the GPU doesn't support graphics acceleration
+    /// or will not support it after a reboot.
     ///
     /// On Windows platforms the device driver can run in either WDDM or WDM (TCC)
     /// mode. If a physical display is attached to a device it must run in WDDM mode.
     ///
     /// It is possible to force the change to WDM (TCC) while the display is still
-    /// attached with a force flag ()
+    /// attached with a `Behavior` of `FORCE`. This should only be done if the host
+    /// is subsequently powered down and the display is detached from this `Device`
+    /// before the next reboot.
+    ///
+    /// Requires root/admin permissions.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `InvalidArg`, if the `Device` is invalid or `model` is invalid (shouldn't occur?)
+    /// * `NotSupported`, if this `Device` does not support this feature
+    /// * `NoPermission`, if the user doesn't have permission to perform this operation
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Fermi and newer fully supported devices.
+    ///
+    /// # Platform Support
+    /// Only supports Windows.
+    // Checked against local
     #[cfg(target_os = "windows")]
     #[inline]
-    pub fn set_driver_model(&self, model: DriverModel) -> Result<()> {
+    pub fn set_driver_model(&self, model: DriverModel, flags: Behavior) -> Result<()> {
         unsafe {
-            nvml_try(nvmlDeviceSetDriverModel(self.device, model.into(), ))
+            nvml_try(nvmlDeviceSetDriverModel(self.device, model.into(), flags.bits()))
         }
     }
 
@@ -2486,7 +2511,7 @@ impl<'nvml> Device<'nvml> {
     // TODO: Is this a good way to handle the error cases here? (Unknown = should be freed)
     #[cfg(target_os = "linux")]
     #[inline]
-    pub fn register_events(&self, events: &EventTypes, set: EventSet) -> Result<EventSet> {
+    pub fn register_events(&self, events: EventTypes, set: EventSet) -> Result<EventSet> {
         unsafe {
             match nvml_try(nvmlDeviceRegisterEvents(self.device, 
                                                     events.bits() as c_ulonglong, 
@@ -2553,7 +2578,6 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
-    /// * `InvalidArg`, if the PCI info is invalid (maybe possible if stored?)
     /// * `NotSupported`, if this `Device` doesn't support this feature
     /// * `NoPermission`, if the calling process has insufficient permissions to perform
     /// this operation
@@ -2569,14 +2593,16 @@ impl<'nvml> Device<'nvml> {
     /// # Platform Support
     /// Only supports Linux.
     // TODO: Should there be a separate method to update storage
-    // TODO: Is this an ergonomic way to do this
+    // Checked against local
     #[cfg(target_os = "linux")]
     #[inline]
     pub fn set_drain(&mut self, enabled: bool, update_storage: bool) -> Result<()> {
         unsafe {
             if update_storage || self.pci_info.is_none() {
                 let mut pci_info: nvmlPciInfo_t = mem::zeroed();
-                nvml_try(nvmlDeviceGetPciInfo_v2(self.device, &mut pci_info))?;
+                nvml_try(nvmlDeviceGetPciInfo_v2(self.device, &mut pci_info))
+                    // TODO: Something better to match on here
+                    .chain_err(|| "Error from nvmlDeviceGetPciInfo call")?;
 
                 self.pci_info = Some(pci_info);
             }
@@ -2596,7 +2622,6 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Errors
     /// * `Uninitialized`, if the library has not been successfully initialized
-    /// * `InvalidArg`, if the PCI info is invalid (maybe possible if stored?)
     /// * `NotSupported`, if this `Device` doesn't support this feature
     /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     /// * `Unknown`, on any unexpected error
@@ -2608,6 +2633,7 @@ impl<'nvml> Device<'nvml> {
     ///
     /// # Platform Support
     /// Only supports Linux.
+    // Checked against local
     #[cfg(target_os = "linux")]
     #[inline]
     pub fn is_drain_enabled(&mut self, update_storage: bool) -> Result<bool> {
@@ -2629,27 +2655,56 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
-    // In progress
+    /// Removes this `Device` from the view of both NVML and the NVIDIA kernal driver.
+    ///
+    /// This call only works if no other processes are attached. If other processes
+    /// are attached when this is called, the `InUse` error will be returned and
+    /// this `Device` will return to its original draining state. The only situation
+    /// where this can occur is if a process was and is still using this `Device`
+    /// before the call to `set_drain()` was made and it was enabled. Note that
+    /// persistence mode counts as an attachment to this `Device` and thus must be
+    /// disabled prior to this call.
+    ///
+    /// For long-running NVML processes, please note that this will change the
+    /// enumeration of current GPUs. As an example, if there are four GPUs present
+    /// and the first is removed, the new enumeration will be 0-2. Device handles
+    /// for the removed GPU will be invalid.
+    ///
+    /// Must be run as administrator.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `NotSupported`, if this `Device` doesn't support this feature
+    /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    /// * `InUse`, if this `Device` is still in use and cannot be removed
+    ///
+    /// # Device Support
+    /// Supports Maxwell and newer fully supported devices.
+    ///
+    /// Some Kepler devices are also supported (that's all NVIDIA says, no specifics).
+    ///
+    /// # Platform Support
+    /// Only supports Linux.
+    // TODO: Figure out how to return device if handle is still valid
+    // Not a blocker for release
+    // Checked against local
+    #[cfg(target_os = "linux")]
+    #[inline]
+    pub fn remove(mut self, update_storage: bool) -> Result<()> {
+        unsafe {
+            if update_storage || self.pci_info.is_none() {
+                let mut pci_info: nvmlPciInfo_t = mem::zeroed();
+                nvml_try(nvmlDeviceGetPciInfo_v2(self.device, &mut pci_info))
+                    // TODO: Something better to match on here
+                    .chain_err(|| "Error from nvmlDeviceGetPciInfo call")?;
 
-    // /// Removes this `Device` from the view of both NVML and the NVIDIA kernal driver.
-    // ///
-    // /// This call only works if no other processes are attached. If other processes
-    // /// are attached when this is called, the `InUse` error will be returned and
-    // /// this `Device` will return to its original draining state.
-    // // TODO: Figure out how to return device if handle is still valid
-    // pub fn remove(mut self, update_storage: bool) -> Result<()> {
-    //     unsafe {
-    //         if update_storage || self.pci_info.is_none() {
-    //             let mut pci_info: nvmlPciInfo_t = mem::zeroed();
-    //             nvml_try(nvmlDeviceGetPciInfo_v2(self.device, &mut pci_info))?;
+                self.pci_info = Some(pci_info);
+            }
 
-    //             self.pci_info = Some(pci_info);
-    //         }
-
-    //         // Due to the above if, self.pci_info must be Some(), so we are free to unwrap here
-    //         nvml_try(nvmlDeviceRemoveGpu(&mut self.pci_info.unwrap()))
-    //     }
-    // }
+            // Due to the above if, self.pci_info must be Some(), so we are free to unwrap here
+            nvml_try(nvmlDeviceRemoveGpu(&mut self.pci_info.unwrap()))
+        }
+    }
 
     /// Only use this if it's absolutely necessary. 
     #[inline]

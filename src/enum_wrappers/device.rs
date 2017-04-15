@@ -1,5 +1,5 @@
 use ffi::bindings::*;
-use nvml_errors::*;
+use error::*;
 
 // TODO: Test everything in this module.
 // TODO: Check all of these things against local nvml.h

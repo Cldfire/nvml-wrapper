@@ -1,5 +1,5 @@
 use ffi::bindings::*;
-use nvml_errors::*;
+use error::*;
 use enum_wrappers::device::*;
 use enums::device::*;
 use std::mem;
@@ -369,7 +369,7 @@ impl Sample {
 #[allow(unused_variables, unused_imports)]
 mod tests {
     use test_utils::*;
-    use nvml_errors::*;
+    use error::*;
     use ffi::bindings::*;
     use std::mem;
 

@@ -1,13 +1,9 @@
-// quote! recursion limit
 #![recursion_limit = "1024"]
 
 extern crate proc_macro;
 extern crate syn;
 #[macro_use]
 extern crate quote;
-extern crate nvml_errors;
-#[macro_use]
-extern crate error_chain;
 
 use proc_macro::TokenStream;
 use quote::Tokens;
@@ -15,7 +11,6 @@ use syn::MetaItem::*;
 use syn::Lit::*;
 use syn::Body::*;
 use syn::NestedMetaItem::*;
-use nvml_errors::*;
 
 // TODO: Tests.
 // TODO: Try to turn this abhorrent code into something you can look at without losing your eyes.
@@ -88,11 +83,11 @@ impl VariantInfo {
 #[proc_macro_derive(EnumWrapper, attributes(wrap))]
 pub fn enum_wrapper(input: TokenStream) -> TokenStream {
     let source = input.to_string();
-    let ast = syn::parse_derive_input(&source).expect("Debug 1");
+    let ast = syn::parse_derive_input(&source).expect("Could not parse derive input");
 
     let expanded = wrap_enum(ast);
 
-    expanded.parse().expect("Debug 2")
+    expanded.parse().expect("Could not parse expanded output")
 }
 
 fn wrap_enum(ast: syn::DeriveInput) -> Tokens {
@@ -148,7 +143,7 @@ fn gen_impl(variant_slice: &[VariantInfo], count_variant: Option<syn::Ident>) ->
                 pub fn try_from(enum_: #c_name) -> Result<Self> {
                     match enum_ {
                         #(#try_from_arms)*
-                        #c_name::#v => bail!(ErrorKind::UnexpectedVariant),
+                        #c_name::#v => Err(Error::from_kind(ErrorKind::UnexpectedVariant)),
                     }
                 }
             }

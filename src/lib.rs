@@ -1,7 +1,8 @@
 //! Rust wrapper for the NVIDIA Management Library (NVML), a C-based programmatic interface 
-//! for monitoring and managing various states within NVIDIA (primarily Tesla) GPUs. It is
-//! intended to be a platform for building 3rd party applications, and is also the underlying
-//! library for NVIDIA's nvidia-smi tool.
+//! for monitoring and managing various states within NVIDIA (primarily Tesla) GPUs. 
+//!
+//! It is intended to be a platform for building 3rd party applications, and is also the 
+//! underlying library for NVIDIA's nvidia-smi tool.
 //!
 //! NVML supports the following platforms:
 //!
@@ -31,17 +32,20 @@
 
 // TODO: Finish module docs. Say something about device support.
 // TODO: Wrap device in arc as well for arc tests (to avoid sync / send issue)
+// TODO: Change into_c to as_c ?
+
+#![recursion_limit = "1024"]
 
 #[macro_use]
 extern crate error_chain;
 #[macro_use]
 extern crate bitflags;
-extern crate nvml_errors;
 #[macro_use]
 extern crate nvml_derive;
 extern crate nvml_sys as ffi;
 
 pub mod device;
+pub mod error;
 pub mod unit;
 pub mod structs;
 pub mod struct_wrappers;
@@ -52,7 +56,7 @@ pub mod bitmasks;
 #[cfg(test)]
 mod test_utils;
 
-use nvml_errors::*;
+use error::*;
 use ffi::bindings::*;
 use device::Device;
 use unit::Unit;
@@ -61,7 +65,10 @@ use std::os::raw::{c_uint, c_int};
 use std::ffi::{CStr, CString};
 use std::mem;
 use enum_wrappers::device::*;
+use struct_wrappers::device::PciInfo;
 use std::slice;
+use std::io;
+use std::io::Write;
 
 /// The main struct that this library revolves around.
 ///
@@ -74,7 +81,7 @@ use std::slice;
 /// being `Send` + `Sync`. You can `.clone()` an `Arc` wrapped `NVML` and enjoy using it on any thread.
 /// 
 /// NOTE: If you care about possible errors returned from `nvmlShutdown()`, use the `.shutdown()`
-/// method on this struct. _The `Drop` implementation ignores errors._
+/// method on this struct. **The `Drop` implementation ignores errors.**
 ///
 /// When reading documentation on this struct and its members, remember that a lot of it, 
 /// especially in regards to errors returned, is copied from NVIDIA's docs. While they can be found
@@ -272,7 +279,6 @@ impl NVML {
     pub fn device_by_pci_bus_id<S: AsRef<str>>(&self, pci_bus_id: S) -> Result<Device>
         where Vec<u8>: From<S> {
         unsafe {
-            // TODO: Do I need to do this?
             let c_string = CString::new(pci_bus_id)?;
             let mut device: nvmlDevice_t = mem::zeroed();
             nvml_try(nvmlDeviceGetHandleByPciBusId_v2(c_string.as_ptr(), &mut device))?;
@@ -456,6 +462,7 @@ impl NVML {
             let mut count: c_uint = 0;
             nvml_try(nvmlSystemGetTopologyGpuSet(cpu_number as c_uint, &mut count, &mut first_item))?;
 
+            // TODO:
             Ok(slice::from_raw_parts(&first_item as *const nvmlDevice_t, 
                                      count as usize)
                                      .iter()
@@ -504,6 +511,49 @@ impl NVML {
             Ok(set.into())
         }
     }
+
+    /// Request the OS and the NVIDIA kernel driver to rediscover a portion of the PCI
+    /// subsystem in search of GPUs that were previously removed.
+    ///
+    /// The portion of the PCI tree can be narrowed by specifying a domain, bus, and
+    /// device in the passed-in `pci_info`. **If all of these fields are zeroes, the
+    /// entire PCI tree will be searched.** Note that for long-running NVML processes,
+    /// the enumeration of devices will change based on how many GPUs are discovered
+    /// and where they are inserted in bus order.
+    ///
+    /// All newly discovered GPUs will be initialized and have their ECC scrubbed which
+    /// may take several seconds per GPU. **All device handles are no longer guaranteed
+    /// to be valid post discovery**. I am not sure if this means **all** device
+    /// handles, literally, or if NVIDIA is referring to handles that had previously
+    /// been obtained to devices that were then removed and have now been
+    /// re-discovered.
+    ///
+    /// Must be run as administrator.
+    ///
+    /// # Errors
+    /// * `Uninitialized`, if the library has not been successfully initialized
+    /// * `OperatingSystem`, if the operating system is denying this feature
+    /// * `NoPermission`, if the calling process has insufficient permissions to
+    /// perform this operation
+    /// * `NulError`, if an issue is encountered when trying to convert a Rust
+    /// `String` into a `CString`.
+    /// * `Unknown`, on any unexpected error
+    ///
+    /// # Device Support
+    /// Supports Maxwell and newer fully supported devices.
+    ///
+    /// Some Kepler devices are also supported (that's all NVIDIA says, no specifics).
+    ///
+    /// # Platform Support
+    /// Only supports Linux.
+    // Checked against local
+    #[cfg(target_os = "linux")]
+    #[inline]
+    pub fn discover_gpus(&self, pci_info: PciInfo) -> Result<()> {
+        unsafe {
+            nvml_try(nvmlDeviceDiscoverGpus(&mut pci_info.try_into_c()?))
+        }
+    }
 }
 
 /// This `Drop` implementation ignores errors! Use the `.shutdown()` method on the `NVML` struct
@@ -514,10 +564,9 @@ impl Drop for NVML {
             match nvml_try(nvmlShutdown()) {
                 Ok(()) => (),
                 Err(e) => {
-                    // TODO: stderr?
-                    println!("WARNING: Error returned by `nmvlShutdown()` in Drop implementation: {:?}", e);
-                    // TODO: Should I panic
-                    panic!("Error returned by `nmvlShutdown()` in Drop implementation: {:?}", e);
+                    io::stderr().write(&format!("WARNING: Error returned by \
+                        `nmvlShutdown()` in Drop implementation: {:?}", e).as_bytes())
+                        .expect("could not write to stderr");
                 }
             }
         }

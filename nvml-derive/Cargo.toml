@@ -6,8 +6,6 @@ authors = ["Cldfire"]
 [dependencies]
 syn = "0.11"
 quote = "0.3"
-nvml-errors = { path = "../nvml-errors" }
-error-chain = "0.10"
 
 [lib]
 proc-macro = true

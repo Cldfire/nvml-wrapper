@@ -3,15 +3,6 @@
 use ffi::bindings::*;
 
 bitflags! {
-    /// Generic flags used to specify the default behavior of some functions.
-    // Checked against local
-    pub flags Behavior: u32 {
-        const DEFAULT = nvmlFlagDefault as u32,
-        const FORCE   = nvmlFlagForce as u32,
-    }
-}
-
-bitflags! {
     /// Flags used to specify why a GPU is throttling.
     // Checked against local
     pub flags ThrottleReasons: u64 {

@@ -1,5 +1,5 @@
 use ffi::bindings::*;
-use nvml_errors::*;
+use error::*;
 
 /// Represents the NvLink utilization counter packet units.
 // Checked against local

@@ -1,5 +1,5 @@
 use ffi::bindings::*;
-use nvml_errors::*;
+use error::*;
 use std::ffi::CStr;
 
 // TODO: document try_froms

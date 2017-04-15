@@ -1,8 +1,0 @@
-[package]
-name = "nvml-errors"
-version = "0.1.0"
-authors = ["Cldfire"]
-
-[dependencies]
-error-chain = "0.10"
-nvml-sys = { path = "../nvml-sys" }

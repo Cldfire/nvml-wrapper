@@ -7,7 +7,7 @@ use device::Device;
 use struct_wrappers::unit::*;
 use enum_wrappers::unit::*;
 use enums::unit::*;
-use nvml_errors::*;
+use error::*;
 use NVML;
 
 /// Struct that represents a unit. 

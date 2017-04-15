@@ -1,9 +1,11 @@
 use ffi::bindings::*;
-use nvml_errors::*;
+use error::*;
 use struct_wrappers::event::*;
 use std::mem;
 use std::marker::PhantomData;
 use std::os::raw::c_uint;
+use std::io;
+use std::io::Write;
 use NVML;
 
 /// Handle to a set of events.
@@ -95,8 +97,9 @@ impl<'nvml> Drop for EventSet<'nvml> {
             match nvml_try(nvmlEventSetFree(self.set)) {
                 Ok(()) => (),
                 Err(e) => {
-                    // TODO: stderr?
-                    println!("WARNING: Error returned by `nvmlEventSetFree` in Drop implementation: {:?}", e);
+                    io::stderr().write(&format!("WARNING: Error returned by \
+                        `nmvlEventSetFree()` in Drop implementation: {:?}", e).as_bytes())
+                        .expect("could not write to stderr");
                 }
             }
         }

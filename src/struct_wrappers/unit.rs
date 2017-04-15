@@ -1,5 +1,5 @@
 use ffi::bindings::*;
-use nvml_errors::*;
+use error::*;
 use enum_wrappers::unit::*;
 use std::ffi::CStr;
 
