@@ -15,7 +15,7 @@ use NVML;
 /// Once again, Rust's lifetimes will ensure that this EventSet does not outlive the
 /// `NVML` instance that it was created from.
 // Checked against local
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct EventSet<'nvml> {
     set: nvmlEventSet_t,
     _phantom: PhantomData<&'nvml NVML>,

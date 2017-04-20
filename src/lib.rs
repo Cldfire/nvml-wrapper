@@ -150,6 +150,7 @@ impl NVML {
     /// * `Uninitialized`, if the library has not been successfully initialized
     /// * `Unknown`, on any unexpected error
     // Checked against local
+    // Tested
     #[inline]
     pub fn device_count(&self) -> Result<u32> {
         unsafe {
@@ -167,6 +168,7 @@ impl NVML {
     /// * `Uninitialized`, if the library has not been successfully initialized
     /// * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     // Checked against local
+    // Tested
     #[inline]
     pub fn sys_driver_version(&self) -> Result<String> {
         unsafe {
@@ -185,6 +187,7 @@ impl NVML {
     /// * `Uninitialized`, if the library has not been successfully initialized
     /// * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     // Checked against local
+    // Tested
     #[inline]
     pub fn sys_nvml_version(&self) -> Result<String> {
         unsafe {
@@ -209,6 +212,7 @@ impl NVML {
     /// * `Unknown`, on any unexpected error
     // TODO: The docs say the string is ANSI-encoded. Not sure if I should try to do anything about that
     // Checked against local
+    // Tested
     #[inline]
     pub fn sys_process_name(&self, pid: u32, length: usize) -> Result<String> {
         unsafe {
@@ -247,6 +251,7 @@ impl NVML {
     /// * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
     /// * `Unknown`, on any unexpected error
     // Checked against local
+    // Tested
     #[inline]
     pub fn device_by_index(&self, index: u32) -> Result<Device> {
         unsafe {
@@ -275,6 +280,7 @@ impl NVML {
     /// * `NulError`, for which you can read the docs on `std::ffi::NulError`
     /// * `Unknown`, on any unexpected error
     // Checked against local
+    // Tested
     #[inline]
     pub fn device_by_pci_bus_id<S: AsRef<str>>(&self, pci_bus_id: S) -> Result<Device>
         where Vec<u8>: From<S> {
@@ -287,7 +293,8 @@ impl NVML {
         }
     }
 
-    /// Not documenting this because it's deprecated. Read NVIDIA's docs if you must use it.
+    /// Not documenting this because it's deprecated and does not seem to work anymore.
+    // Tested (for panic)
     #[deprecated(note = "use `.device_by_uuid()`, this errors on dual GPU boards")]
     #[inline]
     pub fn device_by_serial<S: AsRef<str>>(&self, board_serial: S) -> Result<Device>
@@ -319,6 +326,7 @@ impl NVML {
     ///
     /// NVIDIA doesn't mention `NoPermission` for this one. Strange!
     // Checked against local
+    // Tested
     #[inline]
     pub fn device_by_uuid<S: AsRef<str>>(&self, uuid: S) -> Result<Device> 
         where Vec<u8>: From<S> {
@@ -411,6 +419,7 @@ impl NVML {
     /// # Device Support
     /// For S-class products.
     // Checked against local
+    // Tested (for a panic)
     #[inline]
     pub fn unit_by_index(&self, index: u32) -> Result<Unit> {
         unsafe {
@@ -483,6 +492,7 @@ impl NVML {
     /// # Device Support
     /// Supports S-class products.
     // Checked against local
+    // Tested
     #[inline]
     pub fn unit_count(&self) -> Result<u32> {
         unsafe {
@@ -502,6 +512,7 @@ impl NVML {
     /// # Device Support
     /// Supports Fermi and newer fully supported devices.
     // Checked against local
+    // Tested
     #[inline]
     pub fn create_event_set(&self) -> Result<EventSet> {
         unsafe {
@@ -517,6 +528,7 @@ impl NVML {
     ///
     /// The portion of the PCI tree can be narrowed by specifying a domain, bus, and
     /// device in the passed-in `pci_info`. **If all of these fields are zeroes, the
+    // TODO: constructor for default ^
     /// entire PCI tree will be searched.** Note that for long-running NVML processes,
     /// the enumeration of devices will change based on how many GPUs are discovered
     /// and where they are inserted in bus order.
@@ -582,229 +594,93 @@ mod test {
     use std::sync::Arc;
 
     #[test]
-    fn init_drop() {
-        let test = NVML::init().expect("init call failed");
-    }
-
-    #[test]
-    fn init_shutdown() {
-        single(|nvml| {
-            nvml.shutdown().expect("shutdown failed");
-        });
-    }
-
-    #[test]
-    fn init_drop_multiple() {
-        let test1 = NVML::init().expect("init call1 failed");
-        let test2 = NVML::init().expect("init call2 failed");
-        let test3 = NVML::init().expect("init call3 failed");
-    }
-
-    #[test]
-    fn init_shutdown_multiple() {
-        multi(3, |nvml, i| {
-            nvml.shutdown().expect(&format!("shutdown{} failed", i));
-        });
-    }
-
-    #[test]
-    fn init_drop_multiple_threads() {
-        let handle1 = thread::spawn(|| {
-            let test = NVML::init().expect("init call1 failed");
-        });
-
-        let handle2 = thread::spawn(|| {
-            let test = NVML::init().expect("init call2 failed");
-        });
-
-        let handle3 = thread::spawn(|| {
-            let test = NVML::init().expect("init call3 failed");
-        });
-        
-        let res1 = handle1.join().expect("handle1 join failed");
-        let res2 = handle2.join().expect("handle2 join failed");
-        let res3 = handle3.join().expect("handle3 join failed");
-    }
-
-    #[test]
-    fn init_shutdown_multiple_threads() {
-        multi_thread(3, |nvml, i| {
-            nvml.shutdown().expect(&format!("shutdown{} failed", i));
-        });
-    }
-
-    #[test]
     fn device_count() {
-        single(|nvml| {
-            let count = nvml.device_count().expect("Could not get device count");
-
-            #[cfg(feature = "test-local")]
-            {
-                assert_eq!(count, 1);
-            }
-        });
+        test(3, || {
+            nvml().device_count()
+        })
     }
 
     #[test]
-    fn device_count_multiple() {
-        multi(3, |nvml, i| {
-            let count = nvml.device_count().expect(&format!("Could not get device count{}", i));
-            #[cfg(feature = "test-local")]
-            {
-                assert_eq!(count, 1);
-            }
-        });
+    fn sys_driver_version() {
+        test(3, || {
+            nvml().sys_driver_version()
+        })
     }
 
     #[test]
-    fn device_count_multiple_threads() {
-        multi_thread(3, |nvml, i| {
-            let count = nvml.device_count().expect(&format!("Could not get device count{}", i));
-            #[cfg(feature = "test-local")]
-            {
-                assert_eq!(count, 1);
-            }
-        });
+    fn sys_nvml_version() {
+        test(3, || {
+            nvml().sys_nvml_version()
+        })
     }
 
     #[test]
-    fn device_count_multiple_threads_arc() {
-        multi_thread_arc(3, |nvml, i| {
-            let count = nvml.device_count().expect(&format!("Could not get device count{}", i));
-            #[cfg(feature = "test-local")]
-            {
-                assert_eq!(count, 1);
-            }
-        });
+    fn sys_process_name() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            let processes = device.running_graphics_processes(64)?;
+            nvml.sys_process_name(processes[0].pid, 64)
+        })
     }
 
     #[test]
-    fn driver_version() {
-        single(|nvml| {
-            nvml.sys_driver_version().expect("driver version")
-        });
-    }
-
-    #[test]
-    fn driver_version_multiple() {
-        multi(3, |nvml, i| {
-            nvml.sys_driver_version().expect(&format!("driver version {}", i));
-        });
-    }
-
-    #[test]
-    fn driver_version_multiple_threads() {
-        multi_thread(3, |nvml, i| {
-            nvml.sys_driver_version().expect(&format!("driver version {}", i));
-        });
-    }
-
-    #[test]
-    fn driver_version_multiple_threads_arc() {
-        multi_thread_arc(3, |nvml, i| {
-            nvml.sys_driver_version().expect(&format!("driver version {}", i));
-        });
-    }
-
-    #[test]
-    fn nvml_version() {
-        single(|nvml| {
-            nvml.sys_nvml_version().expect("nvml version")
-        });
-    }
-
-    #[test]
-    fn nvml_version_multiple() {
-        multi(3, |nvml, i| {
-            nvml.sys_nvml_version().expect(&format!("nvml version {}", i));
-        });
-    }
-
-    #[test]
-    fn nvml_version_multiple_threads() {
-        multi_thread(3, |nvml, i| {
-            nvml.sys_nvml_version().expect(&format!("nvml version {}", i));
-        });
-    }
-
-    #[test]
-    fn nvml_version_multiple_threads_arc() {
-        multi_thread_arc(3, |nvml, i| {
-            nvml.sys_nvml_version().expect(&format!("nvml version {}", i));
-        });
-    }
-
-    // TODO: Some kind of way to externally verify that the returned name is correct?
-    #[test]
-    fn process_name() {
-        single(|nvml| {
-            let device = device(&nvml, 0);
-            let graphics_processes = device.running_graphics_processes(32).expect("graphics processes");
-
-            nvml.sys_process_name(graphics_processes[0].pid, 80).expect("process name")
-        });
-    }
-
-    #[test]
-    fn process_name_multiple() {
-        multi(3, |nvml, i| {
-            let device = device(&nvml, i);
-            let graphics_processes = device.running_graphics_processes(32).expect("graphics processes");
-
-            nvml.sys_process_name(graphics_processes[0].pid, 80).expect(&format!("process name {}", i));
-        });
-    }
-
-    #[test]
-    fn process_name_multiple_threads() {
-        multi_thread(3, |nvml, i| {
-            let device = device(&nvml, i);
-            let graphics_processes = device.running_graphics_processes(32).expect("graphics processes");
-
-            nvml.sys_process_name(graphics_processes[0].pid, 80).expect(&format!("process name {}", i));
-        });
-    }
-
-    #[test]
-    fn process_name_multiple_threads_arc() {
-        multi_thread_arc(3, |nvml, i| {
-            let device = device(&nvml, i);
-            let graphics_processes = device.running_graphics_processes(32).expect("graphics processes");
-
-            nvml.sys_process_name(graphics_processes[0].pid, 80).expect(&format!("process name {}", i));
-        });
-    }
-
-    // TODO: This test and others below are specific to a machine with a GPU
-    // TODO: Why is this cfg thing not working?!?!?!??!?
-    #[test]
-    #[cfg_attr(not(feature = "test-local"), should_panic)]
     fn device_by_index() {
-        single(|nvml| {
-            let device = device(&nvml, 0);
-        });
+        let nvml = nvml();
+        test(3, || {
+            nvml.device_by_index(0)
+        })
     }
 
     #[test]
-    #[cfg_attr(not(feature = "test-local"), should_panic)]
-    fn device_by_index_multiple() {
-        multi(3, |nvml, i| {
-            let device = device(&nvml, i);
-        });
+    fn device_by_pci_bus_id() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            let id = device.pci_info()?.bus_id;
+            nvml.device_by_pci_bus_id(id)
+        })
     }
 
-    #[cfg_attr(not(feature = "test-local"), should_panic)]
+    // Panics on my machine
+    #[cfg_attr(feature = "test-local", should_panic)]
     #[test]
-    fn device_by_index_multiple_threads() {
-        multi_thread(3, |nvml, i| {
-            let device = device(&nvml, i);
-        });
+    fn device_by_serial() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            let serial = device.serial()?;
+            nvml.device_by_serial(serial)
+        })
     }
 
     #[test]
-    fn device_by_index_multiple_threads_arc() {
-        multi_thread_arc(3, |nvml, i| {
-            let device = device(&nvml, i);
-        });
+    fn device_by_uuid() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            let uuid = device.uuid()?;
+            nvml.device_by_uuid(uuid)
+        })
+    }
+
+    #[cfg_attr(feature = "test-local", should_panic)]
+    #[test]
+    fn unit_by_index() {
+        let nvml = nvml();
+        test(3, || {
+            nvml.unit_by_index(0)
+        })
+    }
+
+    #[test]
+    fn unit_count() {
+        test(3, || {
+            nvml().unit_count()
+        })
+    }
+
+    #[test]
+    fn create_event_set() {
+        let nvml = nvml();
+        test(3, || {
+            nvml.create_event_set()
+        })
     }
 }

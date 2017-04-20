@@ -11,6 +11,7 @@ use std::u32;
 
 /// PCI information about a GPU device.
 // Checked against local
+// Tested
 #[derive(Debug, Clone)]
 pub struct PciInfo {
     /// The bus on which the device resides, 0 to 0xff.
@@ -79,6 +80,7 @@ impl PciInfo {
 
 /// BAR1 memory allocation information for a device (in bytes)
 // Checked against local
+#[derive(Debug, Clone)]
 pub struct BAR1MemoryInfo {
     /// Unallocated
     pub free: u64,
@@ -100,6 +102,7 @@ impl From<nvmlBAR1Memory_t> for BAR1MemoryInfo {
 
 /// Information about a bridge chip.
 // Checked against local
+#[derive(Debug)]
 pub struct BridgeChipInfo {
     pub fw_version: FirmwareVersion,
     pub chip_type: BridgeChip,
@@ -122,6 +125,7 @@ impl From<nvmlBridgeChipInfo_t> for BridgeChipInfo {
 /// The immediate bridge is stored at index 0 of `chips_hierarchy`. The parent to 
 /// the immediate bridge is at index 1, and so forth.
 // Checked against local
+#[derive(Debug)]
 pub struct BridgeChipHierarchy {
     /// Hierarchy of bridge chips on the board.
     pub chips_hierarchy: Vec<BridgeChipInfo>,
@@ -375,8 +379,8 @@ mod tests {
 
     #[test]
     fn pci_info_from_to_c() {
-        single(|nvml| {
-            let device = device(&nvml, 0);
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
             let converted = device.pci_info()
                                   .expect("wrapped pci info")
                                   .try_into_c()
@@ -398,6 +402,8 @@ mod tests {
             assert_eq!(converted.reserved1, raw.reserved1);
             assert_eq!(converted.reserved2, raw.reserved2);
             assert_eq!(converted.reserved3, raw.reserved3);
+
+            Ok(())
         })
     }
 }

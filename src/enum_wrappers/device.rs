@@ -4,6 +4,7 @@ use error::*;
 // TODO: Test everything in this module.
 // TODO: Check all of these things against local nvml.h
 // TODO: Improve the derive macro
+// TODO: Fix inconsistent capitalization
 
 /// API types that allow changes to default permission restrictions.
 // Checked against local
