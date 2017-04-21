@@ -41,7 +41,7 @@ extern crate error_chain;
 #[macro_use]
 extern crate bitflags;
 #[macro_use]
-extern crate nvml_derive;
+extern crate wrapcenum_derive;
 extern crate nvml_sys as ffi;
 
 pub mod device;

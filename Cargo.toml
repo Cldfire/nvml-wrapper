@@ -7,7 +7,7 @@ authors = ["Cldfire"]
 error-chain = "0.10"
 bitflags = "0.8"
 nvml-sys = { path = "nvml-sys" }
-nvml-derive = { path = "nvml-derive" }
+wrapcenum-derive = { path = "../wrapcenum-derive" }
 
 [features]
 default = []

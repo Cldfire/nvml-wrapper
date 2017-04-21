@@ -1758,17 +1758,17 @@ impl<'nvml> Device<'nvml> {
     #[inline]
     pub fn topology_nearest_gpus(&self, level: TopologyLevel) -> Result<Vec<Device<'nvml>>> {
         unsafe {
-            let mut first_item: nvmlDevice_t = mem::zeroed();
+            let mut first_item: nvmlDevice_t = ::std::ptr::null_mut();
             // TODO: Fails if I pass 0? What?
-            let mut count: c_uint = 0;
+            // Will probably need to pull out some C to investigate this
+            let mut count: c_uint = 3;
             nvml_try(nvmlDeviceGetTopologyNearestGpus(self.device, 
                                                       level.into_c(), 
                                                       &mut count, 
                                                       &mut first_item))?;
             
             // TODO: Again I believe I'm doing every single one of these wrong. The array has
-            // already been malloc'd on the C side according to NVIDIA, meaning I'm probably
-            // responsible for freeing the memory or something? Which I'm not doing here?
+            // already been malloc'd on the C side according to NVIDIA. What does this mean for me?
             // Investigate?
             Ok(slice::from_raw_parts(&first_item as *const nvmlDevice_t, 
                                      count as usize)
@@ -3335,6 +3335,15 @@ mod test {
                 .chain_err(|| "shutdown")?;
             device.temperature_threshold(TemperatureThreshold::Slowdown)
                 .chain_err(|| "slowdown")
+        })
+    }
+
+    #[test]
+    fn topology_nearest_gpus() {
+        let nvml = nvml();
+        let device = device(&nvml);
+        test(3, || {
+            device.topology_nearest_gpus(TopologyLevel::System)
         })
     }
 }

@@ -368,7 +368,7 @@ pub enum TopologyLevel {
     /// All devices that need not traverse a host bridge.
     #[wrap(c_variant = "NVML_TOPOLOGY_MULTIPLE")]
     Multiple,
-    /// ALl devices that are connected to the same host bridge.
+    /// All devices that are connected to the same host bridge.
     #[wrap(c_variant = "NVML_TOPOLOGY_HOSTBRIDGE")]
     HostBridge,
     /// All devices that are connected to the same CPU but possibly multiple host
