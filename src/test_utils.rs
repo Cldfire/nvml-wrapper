@@ -65,6 +65,8 @@ impl ShouldPrint for PciInfo {}
 impl ShouldPrint for PerformanceState {}
 impl ShouldPrint for PowerManagementConstraints {}
 impl ShouldPrint for ThrottleReasons {}
+impl ShouldPrint for ViolationTime {}
+impl ShouldPrint for AccountingStats {}
 
 pub fn nvml() -> NVML {
     NVML::init().expect("init call failed")

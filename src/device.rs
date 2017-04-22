@@ -260,7 +260,7 @@ impl<'nvml> Device<'nvml> {
     /// # Device Support
     /// Supports all _fully supported_ devices.
     // Checked against local
-    // Tested (for panic)
+    // Tested on machines other than my own
     #[inline]
     pub fn bridge_chip_info(&self) -> Result<BridgeChipHierarchy> {
         unsafe {
@@ -1754,6 +1754,7 @@ impl<'nvml> Device<'nvml> {
     /// # Platform Support
     /// Only supports Linux.
     // Checked against local
+    // Tested
     #[cfg(target_os = "linux")]
     #[inline]
     pub fn topology_nearest_gpus(&self, level: TopologyLevel) -> Result<Vec<Device<'nvml>>> {
@@ -1794,6 +1795,7 @@ impl<'nvml> Device<'nvml> {
     /// Supports Fermi and newer fully supported devices. Requires NVML_INFOROM_ECC version 1.0
     /// or higher. Requires ECC mode to be enabled.
     // Checked against local
+    // Tested on machines other than my own
     #[inline]
     pub fn total_ecc_errors(&self, error_type: MemoryError, counter_type: EccCounter) -> Result<u64> {
         unsafe {
@@ -1822,6 +1824,7 @@ impl<'nvml> Device<'nvml> {
     /// * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     /// * `Unknown`, on any unexpected error
     // Checked against local
+    // Tested
     #[inline]
     pub fn uuid(&self) -> Result<String> {
         unsafe {
@@ -1849,6 +1852,7 @@ impl<'nvml> Device<'nvml> {
     /// # Device Support
     /// Supports Fermi and newer fully supported devices.
     // Checked against local
+    // Tested
     #[inline]
     pub fn utilization_rates(&self) -> Result<Utilization> {
         unsafe {
@@ -1871,6 +1875,7 @@ impl<'nvml> Device<'nvml> {
     /// * `Utf8Error`, if the string obtained from the C function is not valid UTF-8
     /// * `Unknown`, on any unexpected error
     // Checked against local
+    // Tested
     #[inline]
     pub fn vbios_version(&self) -> Result<String> {
         unsafe {
@@ -1899,11 +1904,10 @@ impl<'nvml> Device<'nvml> {
     /// * `NotSupported`, if this query is not supported by this `Device`
     /// * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     ///
-    /// ...and this for some reason is not documented to return `Unknown`. Okay?
-    ///
     /// # Device Support
     /// Supports Kepler or newer fully supported devices.
     // Checked against local
+    // Tested
     #[inline]
     pub fn violation_status(&self, perf_policy: PerformancePolicy) -> Result<ViolationTime> {
         unsafe {
@@ -2077,6 +2081,7 @@ impl<'nvml> Device<'nvml> {
     /// # Device Support
     /// Supports all devices with an infoROM.
     // Checked against local
+    // Tested on machines other than my own
     #[inline]
     pub fn validate_info_rom(&self) -> Result<()> {
         unsafe {
@@ -2124,6 +2129,7 @@ impl<'nvml> Device<'nvml> {
     /// # Device Support
     /// Supports Kepler and newer fully supported devices.
     // Checked against local
+    // Tested
     #[inline]
     pub fn accounting_buffer_size(&self) -> Result<u32> {
         unsafe {
@@ -2145,6 +2151,7 @@ impl<'nvml> Device<'nvml> {
     /// # Device Support
     /// Supports Kepler and newer fully supported devices.
     // Checked against local
+    // Tested
     #[inline]
     pub fn is_accounting_enabled(&self) -> Result<bool> {
         unsafe {
@@ -2170,6 +2177,11 @@ impl<'nvml> Device<'nvml> {
     // TODO: ^
     /// * `Unknown`, on any unexpected error
     // Checked against local
+    // Tested
+    // TODO: API for stuff like this should work like this:
+    // It should have a `max_size` param that would be Into<Option<usize>>. Passing
+    // None would mean no size limit. Call `GetAccountingPids` twice, first to get
+    // required size, second to actually get the PIDs (if size <= `max_size`).
     #[inline]
     pub fn accounting_pids(&self, size: usize) -> Result<Vec<u32>> {
         unsafe {
@@ -2179,12 +2191,8 @@ impl<'nvml> Device<'nvml> {
             let mut count: c_uint = size as c_uint;
             nvml_try(nvmlDeviceGetAccountingPids(self.device, &mut count, &mut first_item))?;
 
-            // TODO: is this safe, correct, is mapping this to u32 stupid
-            Ok(slice::from_raw_parts(first_item as *const c_uint,
-                                     count as usize)
-                                     .iter()
-                                     .map(|p| *p as u32)
-                                     .collect())
+            // TODO: is this safe, correct
+            Ok(slice::from_raw_parts(first_item as *const c_uint, count as usize).to_vec())
         }
     }
 
@@ -2221,6 +2229,7 @@ impl<'nvml> Device<'nvml> {
     /// On Kepler devices, per-process stats are accurate _only if_ there's one process
     /// running on this `Device`.
     // Checked against local
+    // Tested (for error)
     #[inline]
     pub fn accounting_stats_for(&self, process_id: u32) -> Result<AccountingStats> {
         unsafe {
@@ -2452,7 +2461,7 @@ impl<'nvml> Device<'nvml> {
 
     /// Sets the GPU operation mode for this `Device`.
     ///
-    /// Requires root/admin permissions. Chaning GOMs requires a reboot, a requirement
+    /// Requires root/admin permissions. Changing GOMs requires a reboot, a requirement
     /// that may be removed in the future.
     ///
     /// Compute only GOMs don't support graphics acceleration. Under Windows switching
@@ -2840,7 +2849,7 @@ mod test {
     // My machine does not support this call
     #[cfg(not(feature = "test-local"))]
     #[test]
-    fn bridge_chip_hierarchy() {
+    fn bridge_chip_info() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
             device.bridge_chip_info()
@@ -3344,6 +3353,93 @@ mod test {
         let device = device(&nvml);
         test(3, || {
             device.topology_nearest_gpus(TopologyLevel::System)
+        })
+    }
+
+    // My machine does not support this call
+    #[cfg(not(feature = "test-local"))]
+    #[test]
+    fn total_ecc_errors() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            device.total_ecc_errors(MemoryError::Corrected, EccCounter::Volatile)
+        })
+    }
+
+    #[test]
+    fn uuid() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            device.uuid()
+        })
+    }
+
+    #[test]
+    fn utilization_rates() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            device.utilization_rates()
+        })
+    }
+
+    #[test]
+    fn vbios_version() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            device.vbios_version()
+        })
+    }
+
+    #[test]
+    fn violation_status() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            device.violation_status(PerformancePolicy::Power)
+        })
+    }
+
+    // My machine does not support this call
+    #[cfg(not(feature = "test-local"))]
+    #[test]
+    fn validate_info_rom() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            device.validate_info_rom()
+        })
+    }
+
+    #[test]
+    fn accounting_buffer_size() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            device.accounting_buffer_size()
+        })
+    }
+
+    #[test]
+    fn is_accounting_enabled() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            device.is_accounting_enabled()
+        })
+    }
+
+    #[test]
+    fn accounting_pids() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            device.accounting_pids(64)
+        })
+    }
+
+    // We never enable accounting mode, so this should return a `NotFound` error
+    #[should_panic]
+    #[test]
+    fn accounting_stats_for() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            let processes = device.running_graphics_processes(64)?;
+            device.accounting_stats_for(processes[0].pid)
         })
     }
 }
