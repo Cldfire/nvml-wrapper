@@ -12,10 +12,12 @@ use error::*;
 #[wrap(c_enum = "nvmlRestrictedAPI_t")]
 #[wrap(has_count = "NVML_RESTRICTED_API_COUNT")]
 pub enum Api {
-    /// APIs that change application clocks.
-    ///
-    /// Applicable methods on `Device`: `.set_applications_clocks()`, 
-    /// `.reset_applications_clocks()`
+    /**
+    APIs that change application clocks.
+    
+    Applicable methods on `Device`: `.set_applications_clocks()`, 
+    `.reset_applications_clocks()`
+    */
     #[wrap(c_variant = "NVML_RESTRICTED_API_SET_APPLICATION_CLOCKS")]
     ApplicationClocks,
     /// APIs that enable/disable auto boosted clocks.
@@ -93,10 +95,12 @@ pub enum Brand {
     GeForce,
 }
 
-/// Represents type of a bridge chip.
-///
-/// NVIDIA does not provide docs (in the code, that is) explaining what each chip
-/// type is, so you're on your own there.
+/**
+Represents type of a bridge chip.
+
+NVIDIA does not provide docs (in the code, that is) explaining what each chip
+type is, so you're on your own there.
+*/
 // Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlBridgeChipType_t")]
@@ -113,27 +117,33 @@ pub enum BridgeChip {
 #[wrap(c_enum = "nvmlMemoryErrorType_t")]
 #[wrap(has_count = "NVML_MEMORY_ERROR_TYPE_COUNT")]
 pub enum MemoryError {
-    /// A memory error that was corrected.
-    ///
-    /// ECC error: single bit error.
-    /// Texture memory: error fixed by a resend.
+    /**
+    A memory error that was corrected.
+    
+    ECC error: single bit error.
+    Texture memory: error fixed by a resend.
+    */
     #[wrap(c_variant = "NVML_MEMORY_ERROR_TYPE_CORRECTED")]
     Corrected,
-    /// A memory error that was not corrected.
-    ///
-    /// ECC error: double bit error.
-    /// Texture memory: error occured and resend failed.
+    /**
+    A memory error that was not corrected.
+    
+    ECC error: double bit error.
+    Texture memory: error occured and resend failed.
+    */
     #[wrap(c_variant = "NVML_MEMORY_ERROR_TYPE_UNCORRECTED")]
     Uncorrected,
 }
 
-/// ECC counter types.
-///
-/// Note: Volatile counts are reset each time the driver loads. On Windows this is
-/// once per boot. On Linux this can be more frequent; the driver unloads when no
-/// active clients exist. If persistence mode is enabled or there is always a
-/// driver client active (such as X11), then Linux also sees per-boot behavior.
-/// If not, volatile counts are reset each time a compute app is run.
+/**
+ECC counter types.
+
+Note: Volatile counts are reset each time the driver loads. On Windows this is
+once per boot. On Linux this can be more frequent; the driver unloads when no
+active clients exist. If persistence mode is enabled or there is always a
+driver client active (such as X11), then Linux also sees per-boot behavior.
+If not, volatile counts are reset each time a compute app is run.
+*/
 // Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlEccCounterType_t")]
@@ -187,10 +197,12 @@ pub enum DriverModel {
     WDM,
 }
 
-/// GPU operation mode.
-///
-/// Allows for the reduction of power usage and optimization of GPU throughput
-/// by disabling GPU features. Each mode is designed to meet specific needs.
+/**
+GPU operation mode.
+
+Allows for the reduction of power usage and optimization of GPU throughput
+by disabling GPU features. Each mode is designed to meet specific needs.
+*/
 // Checked against local
 #[derive(EnumWrapper, Debug)]
 #[wrap(c_enum = "nvmlGpuOperationMode_t")]
@@ -236,14 +248,16 @@ pub enum PcieUtilCounter {
     Receive,
 }
 
-/// Allowed performance states.
-///
-/// ```text
-/// Value    Performance
-///   0           |
-///  ...          |
-///  15           ▼
-/// ```
+/**
+Allowed performance states.
+
+```text
+Value    Performance
+  0           |
+ ...          |
+ 15           ▼
+```
+*/
 // TODO: Make sure that looks right ^
 // Checked against local
 #[derive(EnumWrapper, Debug)]

@@ -10,18 +10,20 @@ use enums::unit::*;
 use error::*;
 use NVML;
 
-/// Struct that represents a unit. 
-///
-/// Obtain a `Unit` with the various methods available to you on the `NVML`
-/// struct.
-///
-/// I don't know what a unit is, but inferring from the docs leads me to believe 
-/// it's some kind of high-end something or other that 99% of users won't know 
-/// about either. That being said, I'm wrapping this whole library, so here you go.
-///
-/// Rust's lifetimes will ensure that the NVML instance this `Unit` was created from
-/// is not allowed to be shutdown until this `Unit` is dropped, meaning you shouldn't
-/// have to worry about calls returning `Uninitialized` errors.
+/**
+Struct that represents a unit. 
+
+Obtain a `Unit` with the various methods available to you on the `NVML`
+struct.
+
+I don't know what a unit is, but inferring from the docs leads me to believe 
+it's some kind of high-end something or other that 99% of users won't know 
+about either. That being said, I'm wrapping this whole library, so here you go.
+
+Rust's lifetimes will ensure that the NVML instance this `Unit` was created from
+is not allowed to be shutdown until this `Unit` is dropped, meaning you shouldn't
+have to worry about calls returning `Uninitialized` errors.
+*/
 // TODO: Use compiletest to ensure lifetime guarantees
 #[derive(Debug)]
 pub struct Unit<'nvml> {
@@ -43,17 +45,19 @@ impl<'nvml> From<nvmlUnit_t> for Unit<'nvml> {
 }
 
 impl<'nvml> Unit<'nvml> {
-    /// Gets the set of GPU devices that are attached to this `Unit`.
-    ///
-    /// # Errors
-    /// * `Uninitialized`, if the library has not been successfully initialized
-    /// * `InsufficientSize`, if `size` is not enough for the array of devices
-    // TODO: Validate? ^
-    /// * `InvalidArg`, if the unit is invalid
-    /// * `Unknown`, on any unexpected error
-    ///
-    /// # Device Support
-    /// For S-class products.
+    /**
+    Gets the set of GPU devices that are attached to this `Unit`.
+    
+    # Errors
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InsufficientSize`, if `size` is not enough for the array of devices
+    * `InvalidArg`, if the unit is invalid
+    * `Unknown`, on any unexpected error
+    
+    # Device Support
+    For S-class products.
+    */
+    // TODO: Validate insufficientsize? ^
     // Checked against local
     #[inline]
     pub fn devices(&self, size: usize) -> Result<Vec<Device>> {
@@ -71,16 +75,18 @@ impl<'nvml> Unit<'nvml> {
         }
     }
 
-    /// Gets fan information for this `Unit` (fan count and state + speed for each).
-    ///
-    /// # Errors
-    /// * `Uninitialized`, if the library has not been successfully initialized
-    /// * `InvalidArg`, if the unit is invalid
-    /// * `NotSupported`, if this is not an S-class product
-    /// * `Unknown`, on any unexpected error
-    ///
-    /// # Device Support
-    /// For S-class products.
+    /**
+    Gets fan information for this `Unit` (fan count and state + speed for each).
+    
+    # Errors
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if the unit is invalid
+    * `NotSupported`, if this is not an S-class product
+    * `Unknown`, on any unexpected error
+    
+    # Device Support
+    For S-class products.
+    */
     // Checked against local
     #[inline]
     pub fn fan_info(&self) -> Result<UnitFansInfo> {
@@ -92,17 +98,19 @@ impl<'nvml> Unit<'nvml> {
         }
     }
 
-    /// Gets the LED state associated with this `Unit`.
-    ///
-    /// # Errors
-    /// * `Uninitialized`, if the library has not been successfully initialized
-    /// * `InvalidArg`, if the unit is invalid
-    /// * `NotSupported`, if this is not an S-class product
-    /// * `Utf8Error`, if the string obtained from the C function is not valid Utf8
-    /// * `Unknown`, on any unexpected error
-    ///
-    /// # Device Support
-    /// For S-class products.
+    /**
+    Gets the LED state associated with this `Unit`.
+    
+    # Errors
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if the unit is invalid
+    * `NotSupported`, if this is not an S-class product
+    * `Utf8Error`, if the string obtained from the C function is not valid Utf8
+    * `Unknown`, on any unexpected error
+    
+    # Device Support
+    For S-class products.
+    */
     // Checked against local
     #[inline]
     pub fn led_state(&self) -> Result<UnitLedState> {
@@ -114,17 +122,19 @@ impl<'nvml> Unit<'nvml> {
         }
     }
 
-    /// Gets the PSU stats for this `Unit`.
-    ///
-    /// # Errors
-    /// * `Uninitialized`, if the library has not been successfully initialized
-    /// * `InvalidArg`, if the unit is invalid
-    /// * `NotSupported`, if this is not an S-class product
-    /// * `Utf8Error`, if the string obtained from the C function is not valid Utf8
-    /// * `Unknown`, on any unexpected error
-    ///
-    /// # Device Support
-    /// For S-class products.
+    /**
+    Gets the PSU stats for this `Unit`.
+    
+    # Errors
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if the unit is invalid
+    * `NotSupported`, if this is not an S-class product
+    * `Utf8Error`, if the string obtained from the C function is not valid Utf8
+    * `Unknown`, on any unexpected error
+    
+    # Device Support
+    For S-class products.
+    */
     // Checked against local
     #[inline]
     pub fn psu_info(&self) -> Result<UnitPsuInfo> {
@@ -136,18 +146,20 @@ impl<'nvml> Unit<'nvml> {
         }
     }
 
-    /// Gets the temperature for the specified `UnitTemperatureReading`, in °C.
-    ///
-    /// Available readings depend on the product.
-    ///
-    /// # Errors
-    /// * `Uninitialized`, if the library has not been successfully initialized
-    /// * `InvalidArg`, if the unit is invalid
-    /// * `NotSupported`, if this is not an S-class product
-    /// * `Unknown`, on any unexpected error
-    ///
-    /// # Device Support
-    /// For S-class products. Available readings depend on the product.
+    /**
+    Gets the temperature for the specified `UnitTemperatureReading`, in °C.
+    
+    Available readings depend on the product.
+    
+    # Errors
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if the unit is invalid
+    * `NotSupported`, if this is not an S-class product
+    * `Unknown`, on any unexpected error
+    
+    # Device Support
+    For S-class products. Available readings depend on the product.
+    */
     // Checked against local
     #[inline]
     pub fn temperature(&self, reading_type: UnitTemperatureReading) -> Result<u32> {
@@ -159,15 +171,17 @@ impl<'nvml> Unit<'nvml> {
         }
     }
 
-    /// Gets the static information associated with this `Unit`.
-    ///
-    /// # Errors
-    /// * `Uninitialized`, if the library has not been successfully initialized
-    /// * `InvalidArg`, if the unit is invalid
-    /// * `Utf8Error`, if the string obtained from the C function is not valid Utf8
-    ///
-    /// # Device Support
-    /// For S-class products.
+    /**
+    Gets the static information associated with this `Unit`.
+    
+    # Errors
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if the unit is invalid
+    * `Utf8Error`, if the string obtained from the C function is not valid Utf8
+    
+    # Device Support
+    For S-class products.
+    */
     // Checked against local
     #[inline]
     pub fn info(&self) -> Result<UnitInfo> {
@@ -181,23 +195,25 @@ impl<'nvml> Unit<'nvml> {
 
     // Unit commands starting here
 
-    /// Sets the LED color for this `Unit`.
-    ///
-    /// Requires root/admin permissions. This operation takes effect immediately.
-    ///
-    /// Note: Current S-class products don't provide unique LEDs for each unit. As such,
-    /// both front and back LEDs will be toggled in unison regardless of which unit is
-    /// specified with this method (aka the `Unit` represented by this struct).
-    ///
-    /// # Errors
-    /// * `Uninitialized`, if the library has not been successfully initialized
-    /// * `InvalidArg`, if the unit is invalid
-    /// * `NotSupported`, if this is not an S-class product
-    /// * `NoPermission`, if the user doesn't have permission to perform this operation
-    /// * `Unknown`, on any unexpected error
-    ///
-    /// # Device Support
-    /// For S-class products.
+    /**
+    Sets the LED color for this `Unit`.
+    
+    Requires root/admin permissions. This operation takes effect immediately.
+    
+    Note: Current S-class products don't provide unique LEDs for each unit. As such,
+    both front and back LEDs will be toggled in unison regardless of which unit is
+    specified with this method (aka the `Unit` represented by this struct).
+    
+    # Errors
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if the unit is invalid
+    * `NotSupported`, if this is not an S-class product
+    * `NoPermission`, if the user doesn't have permission to perform this operation
+    * `Unknown`, on any unexpected error
+    
+    # Device Support
+    For S-class products.
+    */
     // checked against local
     #[inline]
     pub fn set_led_color(&self, color: LedColor) -> Result<()> {

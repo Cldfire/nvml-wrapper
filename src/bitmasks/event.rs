@@ -1,10 +1,12 @@
 use ffi::bindings::*;
 
 bitflags! {
-    /// Event types that you can request to be notified about.
-    ///
-    /// Types can be combined with the Bitwise Or operator `|` when passed to
-    /// `Device.register_events()`.
+    /**
+    Event types that you can request to be notified about.
+    
+    Types can be combined with the Bitwise Or operator `|` when passed to
+    `Device.register_events()`.
+    */
     // TODO: Example(s)
     // Checked against local
     pub flags EventTypes: u64 {
@@ -14,13 +16,15 @@ bitflags! {
         /// An uncorrected texture memory error is not an ECC error, so it does not
         /// generate a double bit event.
         const DOUBLE_BIT_ECC_ERROR  = nvmlEventTypeDoubleBitEccError as u64,
-        /// Power state change event.
-        ///
-        /// On the Fermi architecture, a PState change is an indicator that the GPU
-        /// is throttling down due to no work being executed on the GPU, power
-        /// capping, or thermal capping. In a typical situation, Fermi-based
-        /// GPUs should stay in performance state zero for the duration of the
-        /// execution of a compute process.
+        /**
+        Power state change event.
+        
+        On the Fermi architecture, a PState change is an indicator that the GPU
+        is throttling down due to no work being executed on the GPU, power
+        capping, or thermal capping. In a typical situation, Fermi-based
+        GPUs should stay in performance state zero for the duration of the
+        execution of a compute process.
+        */
         const PSTATE_CHANGE         = nvmlEventTypePState as u64,
         const CRITICAL_XID_ERROR    = nvmlEventTypeXidCriticalError as u64,
         /// Only supports the Kepler architecture.

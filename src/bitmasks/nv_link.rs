@@ -1,12 +1,14 @@
 use ffi::bindings::nvmlNvLinkUtilizationCountPktTypes_t::*;
 
 bitflags! {
-    /// Represents the NvLink utilization counter packet types that can be counted.
-    ///
-    /// Only applicable when `UtilizationCountUnit`s are packets or bytes. All 
-    /// packet filter descriptions are target GPU centric.
-    ///
-    /// This can be "OR'd" together.
+    /**
+    Represents the NvLink utilization counter packet types that can be counted.
+    
+    Only applicable when `UtilizationCountUnit`s are packets or bytes. All 
+    packet filter descriptions are target GPU centric.
+    
+    This can be "OR'd" together.
+    */
     // Checked against local
     pub flags PacketTypes: u32 {
         const NO_OP      = NVML_NVLINK_COUNTER_PKTFILTER_NOP as u32,

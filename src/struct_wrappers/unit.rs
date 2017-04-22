@@ -41,21 +41,23 @@ impl From<nvmlUnitFanInfo_t> for FanInfo {
     }
 }
 
-/// Power usage information for an S-class unit. 
-///
-/// The power supply state is a human-readable string that equals "Normal" or contains 
-/// a combination of "Abnormal" plus one or more of the following (aka good luck matching 
-/// on it):
-///
-/// * High voltage
-/// * Fan failure
-/// * Heatsink temperature
-/// * Current limit
-/// * Voltage below UV alarm threshold
-/// * Low-voltage
-/// * SI2C remote off command
-/// * MOD_DISABLE input
-/// * Short pin transition
+/**
+Power usage information for an S-class unit. 
+
+The power supply state is a human-readable string that equals "Normal" or contains 
+a combination of "Abnormal" plus one or more of the following (aka good luck matching 
+on it):
+
+* High voltage
+* Fan failure
+* Heatsink temperature
+* Current limit
+* Voltage below UV alarm threshold
+* Low-voltage
+* SI2C remote off command
+* MOD_DISABLE input
+* Short pin transition
+*/
 // Checked against local
 #[derive(Debug)]
 pub struct UnitPsuInfo {

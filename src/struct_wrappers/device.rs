@@ -120,10 +120,12 @@ impl From<nvmlBridgeChipInfo_t> for BridgeChipInfo {
     }
 }
 
-/// This struct stores the complete hierarchy of the bridge chip within the board. 
-/// 
-/// The immediate bridge is stored at index 0 of `chips_hierarchy`. The parent to 
-/// the immediate bridge is at index 1, and so forth.
+/**
+This struct stores the complete hierarchy of the bridge chip within the board. 
+
+The immediate bridge is stored at index 0 of `chips_hierarchy`. The parent to 
+the immediate bridge is at index 1, and so forth.
+*/
 // Checked against local
 #[derive(Debug)]
 pub struct BridgeChipHierarchy {
@@ -284,20 +286,24 @@ impl HwbcEntry {
     }
 }
 
-/// Accounting statistics for a process.
-///
-/// There is a field: `unsigned int reserved[5]` present on the C struct that this wraps
-/// that NVIDIA says is "reserved for future use." If it ever gets used in the future,
-/// an equivalent wrapping field will have to be added to this struct.
+/**
+Accounting statistics for a process.
+
+There is a field: `unsigned int reserved[5]` present on the C struct that this wraps
+that NVIDIA says is "reserved for future use." If it ever gets used in the future,
+an equivalent wrapping field will have to be added to this struct.
+*/
 // Checked against local
 #[derive(Debug)]
 pub struct AccountingStats {
-    /// Percent of time over the process's lifetime during which one or more kernels was
-    /// executing on the GPU. This is just like what is returned by
-    /// `Device.utilization_rates()` except it is for the lifetime of a process (not just
-    /// the last sample period). 
-    ///
-    /// It will be `None` if `Device.utilization_rates()` is not supported.
+    /**
+    Percent of time over the process's lifetime during which one or more kernels was
+    executing on the GPU. This is just like what is returned by
+    `Device.utilization_rates()` except it is for the lifetime of a process (not just
+    the last sample period). 
+    
+    It will be `None` if `Device.utilization_rates()` is not supported.
+    */
     pub gpu_utilization: Option<u32>,
     /// Whether the process is running.
     pub is_running: bool,
@@ -306,10 +312,12 @@ pub struct AccountingStats {
     /// It will be `None` if `nvmlProcessInfo_t->usedGpuMemory` is not supported.
     // TODO: Eq rust name ^
     pub max_memory_usage: Option<u64>,
-    /// Percent of time over the process's lifetime during which global (device) memory
-    /// was being read from or written to.
-    ///
-    /// It will be `None` if `Device.utilization_rates()` is not supported.
+    /**
+    Percent of time over the process's lifetime during which global (device) memory
+    was being read from or written to.
+    
+    It will be `None` if `Device.utilization_rates()` is not supported.
+    */
     pub memory_utilization: Option<u32>,
     /// CPU timestamp in usec representing the start time for the process.
     pub start_time: u64,

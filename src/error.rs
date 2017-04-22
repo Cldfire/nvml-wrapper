@@ -8,20 +8,24 @@ error_chain! {
         NulError(::std::ffi::NulError);
     }
     errors {
-        /// Bits that did not correspond to a flag were encountered whilst attempting to
-        /// interpret them as bitflags.
-        ///
-        /// This error is specific to this Rust wrapper.
+        /**
+        Bits that did not correspond to a flag were encountered whilst attempting to
+        interpret them as bitflags.
+        
+        This error is specific to this Rust wrapper.
+        */
         IncorrectBits {
             description("Bits that did not correspond to a flag were encountered whilst attempting \
                         to interpret them as bitflags")
         }
-        /// An unexpected enum variant was encountered.
-        ///
-        /// This error is specific to this Rust wrapper. It is used to represent the
-        /// possibility that an enum variant that seems to be only used internally by 
-        /// the NVML lib gets returned by a function call. While I don't believe it will
-        /// ever happen, it's best to be complete.
+        /**
+        An unexpected enum variant was encountered.
+        
+        This error is specific to this Rust wrapper. It is used to represent the
+        possibility that an enum variant that seems to be only used internally by 
+        the NVML lib gets returned by a function call. While I don't believe it will
+        ever happen, it's best to be complete.
+        */
         UnexpectedVariant {
             description("An unexpected enum variant was encountered (wrapper error).")
         }
