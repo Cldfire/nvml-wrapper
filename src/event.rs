@@ -48,8 +48,9 @@ impl<'nvml> EventSet<'nvml> {
     #[inline]
     pub fn release_events(self) -> Result<()> {
         unsafe {
-            nvml_try(nvmlEventSetFree(self.set))
+            nvml_try(nvmlEventSetFree(self.set))?;
         }
+        Ok(mem::forget(self))
     }
 
     /**
@@ -79,16 +80,17 @@ impl<'nvml> EventSet<'nvml> {
     // TODO: Should I go higher level with this?
     // Should it be tied to the device and managed for you
     #[inline]
-    pub fn wait(&self, timeout_ms: u32) -> Result<EventData> {
+    pub fn wait(&self, timeout_ms: u32) -> Result<EventData<'nvml>> {
         unsafe {
             let mut data: nvmlEventData_t = mem::zeroed();
             nvml_try(nvmlEventSetWait(self.set, &mut data, timeout_ms as c_uint))?;
 
-            Ok(data.into())
+            Ok(EventData::try_from(data)?)
         }
     }
 
     /// Only use this if it's absolutely necessary.
+    // TODO: This should consume self
     #[inline]
     pub fn c_set(&self) -> nvmlEventSet_t {
         self.set
@@ -104,10 +106,45 @@ impl<'nvml> Drop for EventSet<'nvml> {
                 Ok(()) => (),
                 Err(e) => {
                     io::stderr().write(&format!("WARNING: Error returned by \
-                        `nmvlEventSetFree()` in Drop implementation: {:?}", e).as_bytes())
-                        .expect("could not write to stderr");
+                        `nmvlEventSetFree()` in Drop implementation: {:?}", e).as_bytes());
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use EventSet;
+    use test_utils::*;
+    use bitmasks::event::*;
+
+    #[test]
+    fn release_events() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            let set = nvml.create_event_set()?;
+            let set = device.register_events(PSTATE_CHANGE |
+                                             CRITICAL_XID_ERROR |
+                                             CLOCK_CHANGE,
+                                             set)?;
+
+            set.release_events()
+        })
+    }
+
+    #[cfg(feature = "test-local")]
+    #[test]
+    fn wait() {
+        let nvml = nvml();
+        let device = device(&nvml);
+        let set = nvml.create_event_set().expect("event set");
+        let set = device.register_events(PSTATE_CHANGE |
+                                         CRITICAL_XID_ERROR |
+                                         CLOCK_CHANGE,
+                                         set).expect("registration");
+
+        let data = set.wait(10_000).expect("event data");
+        print!("{:?} ...", data)
     }
 }

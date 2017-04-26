@@ -7,6 +7,7 @@ use enum_wrappers::device::*;
 use event::EventSet;
 use bitmasks::event::EventTypes;
 use bitmasks::device::*;
+#[cfg(target_os = "windows")]
 use bitmasks::Behavior;
 use NVML;
 use std::marker::PhantomData;
@@ -33,6 +34,7 @@ have to worry about calls returning `Uninitialized` errors.
 pub struct Device<'nvml> {
     device: nvmlDevice_t,
     // Storage for PCI info used in drain state calls
+    // TODO: This should be something threadsafe
     pci_info: Option<nvmlPciInfo_t>,
     _phantom: PhantomData<&'nvml NVML>,
 }
@@ -2749,17 +2751,16 @@ impl<'nvml> Device<'nvml> {
     Only supports Linux.
     */
     // Checked against local
-    // TODO: Is this a good way to handle the error cases here? (Unknown = should be freed)
+    // Tested
+    // Thanks to Thinkofname for helping resolve lifetime issues
     #[cfg(target_os = "linux")]
     #[inline]
-    pub fn register_events(&self, events: EventTypes, set: EventSet) -> Result<EventSet> {
+    pub fn register_events(&self, events: EventTypes, set: EventSet<'nvml>) -> Result<EventSet<'nvml>> {
         unsafe {
             match nvml_try(nvmlDeviceRegisterEvents(self.device, 
                                                     events.bits() as c_ulonglong, 
                                                     set.c_set())) {
-                // TODO: This is gonna be fun to figure out.
-                // Ok(()) => Ok(set),
-                Ok(()) => panic!(),
+                Ok(()) => Ok(set),
                 Err(Error(ErrorKind::Unknown, _)) => {
                     // NVIDIA says that if an Unknown error is returned, `set` will
                     // be in an undefined state and should be freed.
@@ -2788,6 +2789,7 @@ impl<'nvml> Device<'nvml> {
     Only supports Linux.
     */
     // TODO: examples of interpreting the returned flags
+    // Tested
     #[cfg(target_os = "linux")]
     #[inline]
     pub fn supported_event_types(&self) -> Result<EventTypes> {
@@ -2881,6 +2883,7 @@ impl<'nvml> Device<'nvml> {
     Only supports Linux.
     */
     // Checked against local
+    // Tested
     #[cfg(target_os = "linux")]
     #[inline]
     pub fn is_drain_enabled(&mut self, update_storage: bool) -> Result<bool> {
@@ -2963,12 +2966,12 @@ impl<'nvml> Device<'nvml> {
 }
 
 #[cfg(test)]
-#[cfg(feature = "test-local")]
 #[allow(unused_variables, unused_imports)]
 mod test {
     use NVML;
     use error::*;
     use enum_wrappers::device::*;
+    use bitmasks::event::*;
     use test_utils::*;
 
     #[test]
@@ -3526,10 +3529,12 @@ mod test {
     fn temperature_threshold() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
-            device.temperature_threshold(TemperatureThreshold::Shutdown)
+            let slowdown = device.temperature_threshold(TemperatureThreshold::Slowdown)
+                .chain_err(|| "slowdown")?;
+            let shutdown = device.temperature_threshold(TemperatureThreshold::Shutdown)
                 .chain_err(|| "shutdown")?;
-            device.temperature_threshold(TemperatureThreshold::Slowdown)
-                .chain_err(|| "slowdown")
+
+            Ok((slowdown, shutdown))
         })
     }
 
@@ -3627,5 +3632,34 @@ mod test {
             let processes = device.running_graphics_processes(64)?;
             device.accounting_stats_for(processes[0].pid)
         })
+    }
+
+    #[test]
+    fn register_events() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            let set = nvml.create_event_set()?;
+            let set = device.register_events(PSTATE_CHANGE |
+                                             CRITICAL_XID_ERROR |
+                                             CLOCK_CHANGE,
+                                             set)?;
+
+            Ok(())
+        })
+    }
+
+    #[test]
+    fn supported_event_types() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            device.supported_event_types()
+        })
+    }
+
+    #[test]
+    fn is_drain_enabled() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+        print!("{:?} ...", device.is_drain_enabled(false).expect("bool"));
     }
 }

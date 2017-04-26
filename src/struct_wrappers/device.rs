@@ -2,7 +2,6 @@ use ffi::bindings::*;
 use error::*;
 use enum_wrappers::device::*;
 use enums::device::*;
-use std::mem;
 use std::os::raw::{c_uint, c_char};
 use std::ffi::{CStr, CString};
 use std::u32;
@@ -136,22 +135,12 @@ pub struct BridgeChipHierarchy {
     pub chip_count: u8,
 }
 
-// TODO: profile this?
-// TODO: provide user with explicit option to choose how much mem they want to allocate in advance?
 impl From<nvmlBridgeChipHierarchy_t> for BridgeChipHierarchy {
     fn from(struct_: nvmlBridgeChipHierarchy_t) -> Self {
-        // Allocate 1/8 possible size in advance
-        // [BridgeChipInfo; 128] is currently (3-7-17) 1536 bytes
-        // This means we currently allocate 192 bytes
         // TODO: Check that order is correct here (very important that it is!)
-        // TODO: Why is this value not used?
-        let mut hierarchy: Vec<BridgeChipInfo>
-             = Vec::with_capacity(mem::size_of::<[BridgeChipInfo; NVML_MAX_PHYSICAL_BRIDGE as usize]>() / 8);
-        hierarchy = struct_.bridgeChipInfo.iter()
-                                          .map(|bci| BridgeChipInfo::from(*bci))
-                                          .collect();
-        // TODO: To shrink or not to shrink? Afaik it does not reallocate, so
-        hierarchy.shrink_to_fit();
+        let hierarchy = struct_.bridgeChipInfo.iter()
+                                              .map(|bci| BridgeChipInfo::from(*bci))
+                                              .collect();
 
         BridgeChipHierarchy {
             chips_hierarchy: hierarchy,

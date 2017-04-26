@@ -88,8 +88,10 @@ method on this struct. **The `Drop` implementation ignores errors.**
 
 When reading documentation on this struct and its members, remember that a lot of it, 
 especially in regards to errors returned, is copied from NVIDIA's docs. While they can be found
-online here (http://docs.nvidia.com/deploy/nvml-api/index.html), the hosted docs are outdated and
-do not accurately reflect the version of NVML that this library is written for. Beware.
+online [here](http://docs.nvidia.com/deploy/nvml-api/index.html), the hosted docs are outdated and
+do not accurately reflect the version of NVML that this library is written for; beware. You should
+ideally read the doc comments on an up-to-date NVML API header. Such a header can be downloaded
+as part of the [CUDA toolkit](https://developer.nvidia.com/cuda-downloads).
 */
 pub struct NVML;
 
@@ -314,7 +316,7 @@ impl NVML {
     }
 
     /// Not documenting this because it's deprecated and does not seem to work anymore.
-    // Tested (for panic)
+    // Tested (for an error)
     #[deprecated(note = "use `.device_by_uuid()`, this errors on dual GPU boards")]
     #[inline]
     pub fn device_by_serial<S: AsRef<str>>(&self, board_serial: S) -> Result<Device>
@@ -447,7 +449,7 @@ impl NVML {
     For S-class products.
     */
     // Checked against local
-    // Tested (for a panic)
+    // Tested (for an error)
     #[inline]
     pub fn unit_by_index(&self, index: u32) -> Result<Unit> {
         unsafe {
@@ -615,8 +617,7 @@ impl Drop for NVML {
                 Ok(()) => (),
                 Err(e) => {
                     io::stderr().write(&format!("WARNING: Error returned by \
-                        `nmvlShutdown()` in Drop implementation: {:?}", e).as_bytes())
-                        .expect("could not write to stderr");
+                        `nmvlShutdown()` in Drop implementation: {:?}", e).as_bytes());
                 }
             }
         }
@@ -678,7 +679,7 @@ mod test {
         })
     }
 
-    // Panics on my machine
+    // Errors on my machine
     #[cfg_attr(feature = "test-local", should_panic)]
     #[test]
     fn device_by_serial() {
@@ -698,6 +699,7 @@ mod test {
         })
     }
 
+    // Errors on my machine
     #[cfg_attr(feature = "test-local", should_panic)]
     #[test]
     fn unit_by_index() {
@@ -719,6 +721,18 @@ mod test {
         let nvml = nvml();
         test(3, || {
             nvml.create_event_set()
+        })
+    }
+
+    // TODO: Improve this test?
+    // Because we're not testing with admin perms
+    #[should_panic]
+    #[test]
+    fn discover_gpus() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            let pci_info = device.pci_info()?;
+            nvml.discover_gpus(pci_info)
         })
     }
 }

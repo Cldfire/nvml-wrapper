@@ -1,4 +1,6 @@
 use ffi::bindings::*;
+#[cfg(feature = "nightly")]
+use enum_wrappers::device::*;
 
 // TODO: document try_froms
 

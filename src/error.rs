@@ -119,6 +119,8 @@ error_chain! {
 }
 
 /// `?` enabler for nvmlReturn_t types.
+// TODO: Can't have unit tests to ensure that mapping is correct because error-chain
+// does not derive partialeq for errors (https://github.com/brson/error-chain/issues/134)
 #[doc(hidden)]
 pub fn nvml_try(code: nvmlReturn_t) -> Result<()> {
     match code {
@@ -144,5 +146,16 @@ pub fn nvml_try(code: nvmlReturn_t) -> Result<()> {
         NVML_ERROR_IN_USE                   => Err(Error::from_kind(ErrorKind::InUse)),
         NVML_ERROR_NO_DATA                  => Err(Error::from_kind(ErrorKind::NoData)),
         NVML_ERROR_UNKNOWN                  => Err(Error::from_kind(ErrorKind::Unknown)),
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn nvml_try_success() {
+        let res = nvml_try(NVML_SUCCESS);
+        assert_eq!(res.unwrap(), ())
     }
 }
