@@ -16,7 +16,6 @@ use std::mem;
 use std::os::raw::{c_uint, c_ulong, c_ulonglong, c_int};
 use std::slice;
 
-// TODO: Mark stuff that works on my 980 Ti but NVIDIA does not state should.
 // TODO: A number of things here that return Utf8Errors I have not documented.
 
 /**
@@ -33,9 +32,6 @@ have to worry about calls returning `Uninitialized` errors.
 #[derive(Debug)]
 pub struct Device<'nvml> {
     device: nvmlDevice_t,
-    // Storage for PCI info used in drain state calls
-    // TODO: This should be something threadsafe
-    pci_info: Option<nvmlPciInfo_t>,
     _phantom: PhantomData<&'nvml NVML>,
 }
 
@@ -46,7 +42,6 @@ impl<'nvml> From<nvmlDevice_t> for Device<'nvml> {
     fn from(device: nvmlDevice_t) -> Self {
         Device {
             device,
-            pci_info: None,
             _phantom: PhantomData,
         }
     }
@@ -2813,12 +2808,6 @@ impl<'nvml> Device<'nvml> {
     Enabling drain state forces this `Device` to no longer accept new incoming requests.
     Any new NVML processes will no longer see this `Device`.
     
-    **`nvmlDeviceGetPciInfo` is also called the first time a drain-state-related 
-    method is called in order to provide the drain call with the necessary PCI 
-    information.** After the first call it is stored in this `Device` struct for future 
-    calls. If you need to update the stored value for some reason, pass `true` for the 
-    `update_storage` argument.
-    
     Must be called as administrator. Persistence mode for this `Device` must be turned
     off before this call is made.
     
@@ -2830,6 +2819,10 @@ impl<'nvml> Device<'nvml> {
     * `InUse`, if this `Device` has persistence mode turned on
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     * `Unknown`, on any unexpected error
+
+    In addition, all of the errors returned by:
+    * `.pci_info()`
+    * `PciInfo.try_into_c()`
     
     # Device Support
     Supports Maxwell and newer fully supported devices.
@@ -2843,36 +2836,30 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     #[cfg(target_os = "linux")]
     #[inline]
-    pub fn set_drain(&mut self, enabled: bool, update_storage: bool) -> Result<()> {
+    pub fn set_drain<T: Into<Option<PciInfo>>>(&mut self, enabled: bool, pci_info: T) -> Result<()> {
+        let pci_info = if let Some(info) = pci_info.into() {
+            info
+        } else {
+            self.pci_info()?
+        };
+
         unsafe {
-            if update_storage || self.pci_info.is_none() {
-                let mut pci_info: nvmlPciInfo_t = mem::zeroed();
-                nvml_try(nvmlDeviceGetPciInfo_v2(self.device, &mut pci_info))
-                    // TODO: Something better to match on here
-                    .chain_err(|| "Error from nvmlDeviceGetPciInfo call")?;
-
-                self.pci_info = Some(pci_info);
-            }
-
-            // Due to the above if, self.pci_info must be Some(), so we are free to unwrap here
-            nvml_try(nvmlDeviceModifyDrainState(&mut self.pci_info.unwrap(), state_from_bool(enabled)))
+            nvml_try(nvmlDeviceModifyDrainState(&mut pci_info.try_into_c()?, state_from_bool(enabled)))
         }
     }
 
     /**
     Query the drain state of this `Device`.
     
-    **`nvmlDeviceGetPciInfo` is also called the first time a drain-state-related 
-    method is called in order to provide the drain call with the necessary PCI 
-    information.** After the first call it is stored in this `Device` struct for future 
-    calls. If you need to update the stored value for some reason, pass `true` for the 
-    `update_storage` argument.
-    
     # Errors
     * `Uninitialized`, if the library has not been successfully initialized
     * `NotSupported`, if this `Device` doesn't support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     * `Unknown`, on any unexpected error
+
+    In addition, all of the errors returned by:
+    * `.pci_info()`
+    * `PciInfo.try_into_c()`
     
     # Device Support
     Supports Maxwell and newer fully supported devices.
@@ -2884,23 +2871,18 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    // TODO: Interior mutability, don't take &mut self
     #[cfg(target_os = "linux")]
     #[inline]
-    pub fn is_drain_enabled(&mut self, update_storage: bool) -> Result<bool> {
-        unsafe {
-            if update_storage || self.pci_info.is_none() {
-                let mut pci_info: nvmlPciInfo_t = mem::zeroed();
-                nvml_try(nvmlDeviceGetPciInfo_v2(self.device, &mut pci_info))
-                    // TODO: Something better to match on here
-                    .chain_err(|| "Error from nvmlDeviceGetPciInfo call")?;
+    pub fn is_drain_enabled<T: Into<Option<PciInfo>>>(&self, pci_info: T) -> Result<bool> {
+        let pci_info = if let Some(info) = pci_info.into() {
+            info
+        } else {
+            self.pci_info()?
+        };
 
-                self.pci_info = Some(pci_info);
-            }
-            
+        unsafe {
             let mut state: nvmlEnableState_t = mem::zeroed();
-            // Due to the above if, self.pci_info must be Some(), so we are free to unwrap here
-            nvml_try(nvmlDeviceQueryDrainState(&mut self.pci_info.unwrap(), &mut state))?;
+            nvml_try(nvmlDeviceQueryDrainState(&mut pci_info.try_into_c()?, &mut state))?;
 
             Ok(bool_from_state(state))
         }
@@ -2929,6 +2911,10 @@ impl<'nvml> Device<'nvml> {
     * `NotSupported`, if this `Device` doesn't support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     * `InUse`, if this `Device` is still in use and cannot be removed
+
+    In addition, all of the errors returned by:
+    * `.pci_info()`
+    * `PciInfo.try_into_c()`
     
     # Device Support
     Supports Maxwell and newer fully supported devices.
@@ -2943,19 +2929,15 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     #[cfg(target_os = "linux")]
     #[inline]
-    pub fn remove(mut self, update_storage: bool) -> Result<()> {
+    pub fn remove<T: Into<Option<PciInfo>>>(self, pci_info: T) -> Result<()> {
+        let pci_info = if let Some(info) = pci_info.into() {
+            info
+        } else {
+            self.pci_info()?
+        };
+
         unsafe {
-            if update_storage || self.pci_info.is_none() {
-                let mut pci_info: nvmlPciInfo_t = mem::zeroed();
-                nvml_try(nvmlDeviceGetPciInfo_v2(self.device, &mut pci_info))
-                    // TODO: Something better to match on here
-                    .chain_err(|| "Error from nvmlDeviceGetPciInfo call")?;
-
-                self.pci_info = Some(pci_info);
-            }
-
-            // Due to the above if, self.pci_info must be Some(), so we are free to unwrap here
-            nvml_try(nvmlDeviceRemoveGpu(&mut self.pci_info.unwrap()))
+            nvml_try(nvmlDeviceRemoveGpu(&mut pci_info.try_into_c()?))
         }
     }
 
@@ -3693,7 +3675,7 @@ mod test {
     #[test]
     fn is_drain_enabled() {
         let nvml = nvml();
-        let mut device = device(&nvml);
-        print!("{:?} ...", device.is_drain_enabled(false).expect("bool"));
+        let device = device(&nvml);
+        print!("{:?} ...", device.is_drain_enabled(None).expect("bool"));
     }
 }
