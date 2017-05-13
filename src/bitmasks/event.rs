@@ -9,6 +9,7 @@ bitflags! {
     */
     // TODO: Example(s)
     // Checked against local
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub flags EventTypes: u64 {
         /// A corrected texture memory error is not an ECC error, so it does not
         /// generate a single bit event.

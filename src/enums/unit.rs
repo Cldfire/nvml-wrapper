@@ -5,7 +5,8 @@ use std::ffi::CStr;
 // TODO: document try_froms
 
 /// LED states for an S-class unit.
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum UnitLedState {
     /// Indicates good health.
     Green,
@@ -26,11 +27,12 @@ impl UnitLedState {
     }
 }
 
-/// THe type of temperature reading to take for a `Unit`.
+/// The type of temperature reading to take for a `Unit`.
 ///
 /// Available readings depend on the product.
 #[repr(u32)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum UnitTemperatureReading {
     Intake = 0,
     Exhaust = 1,

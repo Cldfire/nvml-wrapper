@@ -5,6 +5,7 @@ use ffi::bindings::*;
 bitflags! {
     /// Flags used to specify why a GPU is throttling.
     // Checked against local
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub flags ThrottleReasons: u64 {
         /// Nothing is running on the GPU.
         ///

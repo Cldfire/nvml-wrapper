@@ -45,7 +45,7 @@ unsafe impl<'nvml> Sync for Device<'nvml> {}
 impl<'nvml> From<nvmlDevice_t> for Device<'nvml> {
     fn from(device: nvmlDevice_t) -> Self {
         Device {
-            device: device,
+            device,
             pci_info: None,
             _phantom: PhantomData,
         }
@@ -1434,13 +1434,13 @@ impl<'nvml> Device<'nvml> {
     #[inline]
     pub fn power_management_limit_constraints(&self) -> Result<PowerManagementConstraints> {
         unsafe {
-            let mut min: c_uint = mem::zeroed();
-            let mut max: c_uint = mem::zeroed();
-            nvml_try(nvmlDeviceGetPowerManagementLimitConstraints(self.device, &mut min, &mut max))?;
+            let mut min_limit: c_uint = mem::zeroed();
+            let mut max_limit: c_uint = mem::zeroed();
+            nvml_try(nvmlDeviceGetPowerManagementLimitConstraints(self.device, &mut min_limit, &mut max_limit))?;
 
             Ok(PowerManagementConstraints {
-                min_limit: min as u32,
-                max_limit: max as u32,
+                min_limit,
+                max_limit,
             })
         }
     }
@@ -1696,7 +1696,7 @@ impl<'nvml> Device<'nvml> {
             nvml_try(nvmlDeviceGetCurrentClocksThrottleReasons(self.device, &mut reasons))?;
 
             ThrottleReasons::from_bits(reasons as u64)
-                .ok_or(Error::from_kind(ErrorKind::IncorrectBits))
+                .ok_or_else(|| ErrorKind::IncorrectBits.into())
         }
     } 
 
@@ -1725,7 +1725,7 @@ impl<'nvml> Device<'nvml> {
             nvml_try(nvmlDeviceGetSupportedClocksThrottleReasons(self.device, &mut reasons))?;
 
             ThrottleReasons::from_bits(reasons as u64)
-                .ok_or(Error::from_kind(ErrorKind::IncorrectBits))
+                .ok_or_else(|| ErrorKind::IncorrectBits.into())
         }
     }
 
@@ -2069,7 +2069,7 @@ impl<'nvml> Device<'nvml> {
     pub fn is_on_same_board_as(&self, other_device: &Device) -> Result<bool> {
         unsafe {
             let mut bool_int: c_int = mem::zeroed();
-            nvml_try(nvmlDeviceOnSameBoard(self.device, other_device.c_device(), &mut bool_int))?;
+            nvml_try(nvmlDeviceOnSameBoard(self.device, other_device.unsafe_raw(), &mut bool_int))?;
 
             match bool_int {
                 0 => Ok(false),
@@ -2757,9 +2757,9 @@ impl<'nvml> Device<'nvml> {
     #[inline]
     pub fn register_events(&self, events: EventTypes, set: EventSet<'nvml>) -> Result<EventSet<'nvml>> {
         unsafe {
-            match nvml_try(nvmlDeviceRegisterEvents(self.device, 
-                                                    events.bits() as c_ulonglong, 
-                                                    set.c_set())) {
+            match nvml_try(nvmlDeviceRegisterEvents(self.device,
+                                                    events.bits() as c_ulonglong,
+                                                    set.unsafe_raw())) {
                 Ok(()) => Ok(set),
                 Err(Error(ErrorKind::Unknown, _)) => {
                     // NVIDIA says that if an Unknown error is returned, `set` will
@@ -2884,6 +2884,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    // TODO: Interior mutability, don't take &mut self
     #[cfg(target_os = "linux")]
     #[inline]
     pub fn is_drain_enabled(&mut self, update_storage: bool) -> Result<bool> {
@@ -2958,9 +2959,27 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
-    /// Only use this if it's absolutely necessary. 
+    /// Consume the struct and obtain the raw device handle that it contains.
     #[inline]
-    pub fn c_device(&self) -> nvmlDevice_t {
+    pub fn into_raw(self) -> nvmlDevice_t {
+        self.device
+    }
+
+    /// Obtain a reference to the raw device handle contained in the struct.
+    #[inline]
+    pub fn as_raw(&self) -> &nvmlDevice_t {
+        &(self.device)
+    }
+
+    /// Obtain a mutable reference to the raw device handle contained in the struct.
+    #[inline]
+    pub fn as_mut_raw(&mut self) -> &mut nvmlDevice_t {
+        &mut (self.device)
+    }
+
+    /// Sometimes necessary for C interop. Use carefully.
+    #[inline]
+    pub unsafe fn unsafe_raw(&self) -> nvmlDevice_t {
         self.device
     }
 }
@@ -2969,10 +2988,21 @@ impl<'nvml> Device<'nvml> {
 #[allow(unused_variables, unused_imports)]
 mod test {
     use NVML;
+    use super::Device;
     use error::*;
     use enum_wrappers::device::*;
     use bitmasks::event::*;
     use test_utils::*;
+
+    #[test]
+    fn device_is_send() {
+        assert_send::<Device>()
+    }
+
+    #[test]
+    fn device_is_sync() {
+        assert_sync::<Device>()
+    }
 
     #[test]
     fn is_api_restricted() {
@@ -3423,6 +3453,8 @@ mod test {
     #[test]
     fn is_power_management_algo_active() {
         let nvml = nvml();
+
+        #[allow(deprecated)]
         test_with_device(3, &nvml, |device| {
             device.is_power_management_algo_active()
         })
@@ -3431,6 +3463,8 @@ mod test {
     #[test]
     fn power_state() {
         let nvml = nvml();
+
+        #[allow(deprecated)]
         test_with_device(3, &nvml, |device| {
             device.power_state()
         })

@@ -13,11 +13,11 @@ Handle to a set of events.
 
 **Operations on a set are not thread-safe.** It does not, therefore, implement `Sync`.
 
-Once again, Rust's lifetimes will ensure that this EventSet does not outlive the
+Once again, Rust's lifetimes will ensure that this `EventSet` does not outlive the
 `NVML` instance that it was created from.
 */
 // Checked against local
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct EventSet<'nvml> {
     set: nvmlEventSet_t,
     _phantom: PhantomData<&'nvml NVML>,
@@ -28,7 +28,7 @@ unsafe impl<'nvml> Send for EventSet<'nvml> {}
 impl<'nvml> From<nvmlEventSet_t> for EventSet<'nvml> {
     fn from(set: nvmlEventSet_t) -> Self {
         EventSet {
-            set: set,
+            set,
             _phantom: PhantomData,
         }
     }
@@ -89,10 +89,29 @@ impl<'nvml> EventSet<'nvml> {
         }
     }
 
-    /// Only use this if it's absolutely necessary.
-    // TODO: This should consume self
+    /// Consume the struct and obtain the raw set handle that it contains.
     #[inline]
-    pub fn c_set(&self) -> nvmlEventSet_t {
+    pub fn into_raw(self) -> nvmlEventSet_t {
+        let set = self.set;
+        mem::forget(self);
+        set
+    }
+
+    /// Obtain a reference to the raw set handle contained in the struct.
+    #[inline]
+    pub fn as_raw(&self) -> &nvmlEventSet_t {
+        &(self.set)
+    }
+
+    /// Obtain a mutable reference to the raw set handle contained in the struct.
+    #[inline]
+    pub fn as_mut_raw(&mut self) -> &mut nvmlEventSet_t {
+        &mut (self.set)
+    }
+
+    #[inline]
+    /// Sometimes necessary for C interop. Use carefully.
+    pub unsafe fn unsafe_raw(&self) -> nvmlEventSet_t {
         self.set
     }
 }
@@ -101,11 +120,12 @@ impl<'nvml> EventSet<'nvml> {
 /// struct if you care about handling them.
 impl<'nvml> Drop for EventSet<'nvml> {
     fn drop(&mut self) {
+        #[allow(unused_must_use)]
         unsafe {
             match nvml_try(nvmlEventSetFree(self.set)) {
                 Ok(()) => (),
                 Err(e) => {
-                    io::stderr().write(&format!("WARNING: Error returned by \
+                    io::stderr().write(format!("WARNING: Error returned by \
                         `nmvlEventSetFree()` in Drop implementation: {:?}", e).as_bytes());
                 }
             }
@@ -115,9 +135,23 @@ impl<'nvml> Drop for EventSet<'nvml> {
 
 #[cfg(test)]
 mod test {
-    use EventSet;
+    use super::EventSet;
     use test_utils::*;
     use bitmasks::event::*;
+
+    // Ensuring that double-free issues don't crop up here.
+    #[test]
+    fn into_raw() {
+        let nvml = nvml();
+        let raw;
+
+        {
+            let set = nvml.create_event_set().expect("set");
+            raw = set.into_raw();
+        }
+
+        EventSet::from(raw);
+    }
 
     #[test]
     fn release_events() {
@@ -133,6 +167,7 @@ mod test {
         })
     }
 
+    // TODO: This should not fail if a timeout error is returned
     #[cfg(feature = "test-local")]
     #[test]
     fn wait() {

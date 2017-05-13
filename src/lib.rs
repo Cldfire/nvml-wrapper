@@ -33,10 +33,10 @@ And the following products:
 */
 
 // TODO: Finish module docs. Say something about device support.
-// TODO: Wrap device in arc as well for arc tests (to avoid sync / send issue)
 // TODO: Change into_c to as_c ?
 
 #![recursion_limit = "1024"]
+#![cfg_attr(feature = "cargo-clippy", allow(doc_markdown))]
 
 #[macro_use]
 extern crate error_chain;
@@ -44,6 +44,9 @@ extern crate error_chain;
 extern crate bitflags;
 #[macro_use]
 extern crate wrapcenum_derive;
+#[cfg(feature = "serde")]
+#[macro_use]
+extern crate serde;
 extern crate nvml_sys as ffi;
 
 pub mod device;
@@ -93,6 +96,7 @@ do not accurately reflect the version of NVML that this library is written for; 
 ideally read the doc comments on an up-to-date NVML API header. Such a header can be downloaded
 as part of the [CUDA toolkit](https://developer.nvidia.com/cuda-downloads).
 */
+#[derive(Debug)]
 pub struct NVML;
 
 // Here to clarify that NVML does have these traits. I know they are implemented without this.
@@ -107,12 +111,6 @@ impl NVML {
     used at the same time. NVIDIA's docs state that "A reference count of the number of 
     initializations is maintained. Shutdown only occurs when the reference count reaches 
     zero."
-    
-    Be careful calling this excessively from multiple threads, however; I observed during
-    testing that calling `.init()` many times in parallel will not return an error from
-    `.init()` but will cause a subsequent call to a function requiring that the library is
-    initialized to fail (basically all of the methods on this struct). This is why tests
-    must be run with `RUST_TEST_THREADS=1`.
     
     In practice, there should be no need to create multiple `NVML` structs; wrap this struct
     in an `Arc` and go that route. 
@@ -148,8 +146,9 @@ impl NVML {
     #[inline]
     pub fn shutdown(self) -> Result<()> {
         unsafe {
-            nvml_try(nvmlShutdown())
+            nvml_try(nvmlShutdown())?;
         }
+        Ok(mem::forget(self))
     }
 
     /**
@@ -383,7 +382,7 @@ impl NVML {
     pub fn topology_common_ancestor(&self, device1: &Device, device2: &Device) -> Result<TopologyLevel> {
         unsafe {
             let mut level: nvmlGpuTopologyLevel_t = mem::zeroed();
-            nvml_try(nvmlDeviceGetTopologyCommonAncestor(device1.c_device(), device2.c_device(), &mut level))?;
+            nvml_try(nvmlDeviceGetTopologyCommonAncestor(device1.unsafe_raw(), device2.unsafe_raw(), &mut level))?;
 
             Ok(level.into())
         }
@@ -411,7 +410,7 @@ impl NVML {
             let mut first_item: nvmlDevice_t = mem::zeroed();
             // TODO: Fails if I pass 0? What?
             let mut count: c_uint = 0;
-            nvml_try(nvmlDeviceGetTopologyNearestGpus(device.c_device(), 
+            nvml_try(nvmlDeviceGetTopologyNearestGpus(device.unsafe_raw(), 
                                                       level.into_c(), 
                                                       &mut count, 
                                                       &mut first_item))?;
@@ -477,7 +476,7 @@ impl NVML {
     pub fn is_device_on_same_board_as(device1: &Device, device2: &Device) -> Result<bool> {
         unsafe {
             let mut bool_int: c_int = mem::zeroed();
-            nvml_try(nvmlDeviceOnSameBoard(device1.c_device(), device2.c_device(), &mut bool_int))?;
+            nvml_try(nvmlDeviceOnSameBoard(device1.unsafe_raw(), device2.unsafe_raw(), &mut bool_int))?;
 
             match bool_int {
                 0 => Ok(false),
@@ -612,11 +611,12 @@ impl NVML {
 /// if you care about handling them. 
 impl Drop for NVML {
     fn drop(&mut self) {
+        #[allow(unused_must_use)]
         unsafe {
             match nvml_try(nvmlShutdown()) {
                 Ok(()) => (),
                 Err(e) => {
-                    io::stderr().write(&format!("WARNING: Error returned by \
+                    io::stderr().write(format!("WARNING: Error returned by \
                         `nmvlShutdown()` in Drop implementation: {:?}", e).as_bytes());
                 }
             }
@@ -631,6 +631,16 @@ mod test {
     use test_utils::*;
     use std::thread;
     use std::sync::Arc;
+
+    #[test]
+    fn nvml_is_send() {
+        assert_send::<NVML>()
+    }
+
+    #[test]
+    fn nvml_is_sync() {
+        assert_sync::<NVML>()
+    }
 
     #[test]
     fn device_count() {
@@ -684,6 +694,8 @@ mod test {
     #[test]
     fn device_by_serial() {
         let nvml = nvml();
+
+        #[allow(deprecated)]
         test_with_device(3, &nvml, |device| {
             let serial = device.serial()?;
             nvml.device_by_serial(serial)

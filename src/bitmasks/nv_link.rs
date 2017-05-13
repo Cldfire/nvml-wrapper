@@ -10,6 +10,7 @@ bitflags! {
     This can be "OR'd" together.
     */
     // Checked against local
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub flags PacketTypes: u32 {
         const NO_OP      = NVML_NVLINK_COUNTER_PKTFILTER_NOP as u32,
         const READ       = NVML_NVLINK_COUNTER_PKTFILTER_READ as u32,

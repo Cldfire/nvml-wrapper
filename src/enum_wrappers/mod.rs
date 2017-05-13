@@ -11,9 +11,10 @@ pub fn bool_from_state(state: nvmlEnableState_t) -> bool {
     }
 }
 
-pub fn state_from_bool(bool_: bool) -> nvmlEnableState_t {
-    match bool_ {
-        false => nvmlEnableState_t::NVML_FEATURE_DISABLED,
-        true => nvmlEnableState_t::NVML_FEATURE_ENABLED,
+pub fn state_from_bool(enabled: bool) -> nvmlEnableState_t {
+    if enabled {
+        nvmlEnableState_t::NVML_FEATURE_ENABLED
+    } else {
+        nvmlEnableState_t::NVML_FEATURE_DISABLED
     }
 }

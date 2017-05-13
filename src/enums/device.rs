@@ -5,7 +5,8 @@ use enum_wrappers::device::*;
 // TODO: document try_froms
 
 /// Respresents possible variants for a firmware version.
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum FirmwareVersion {
     /// The version is unavailable.
     Unavailable,
@@ -23,7 +24,8 @@ impl From<u32> for FirmwareVersion {
 
 /// Represents possible variants for used GPU memory.
 // Checked
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum UsedGpuMemory {
     /// Under WDDM, `NVML_VALUE_NOT_AVAILABLE` is always reported because Windows KMD
     /// manages all the memory, not the NVIDIA driver.
@@ -47,7 +49,8 @@ impl From<u64> for UsedGpuMemory {
 /// Represents different types of sample values.
 // Checked against local
 #[cfg(feature = "nightly")]
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum SampleValue {
     F64(f64),
     U32(u32),

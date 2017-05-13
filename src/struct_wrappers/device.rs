@@ -11,7 +11,8 @@ use std::u32;
 /// PCI information about a GPU device.
 // Checked against local
 // Tested
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PciInfo {
     /// The bus on which the device resides, 0 to 0xff.
     pub bus: u32,
@@ -79,7 +80,8 @@ impl PciInfo {
 
 /// BAR1 memory allocation information for a device (in bytes)
 // Checked against local
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct BAR1MemoryInfo {
     /// Unallocated
     pub free: u64,
@@ -101,7 +103,8 @@ impl From<nvmlBAR1Memory_t> for BAR1MemoryInfo {
 
 /// Information about a bridge chip.
 // Checked against local
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct BridgeChipInfo {
     pub fw_version: FirmwareVersion,
     pub chip_type: BridgeChip,
@@ -126,7 +129,8 @@ The immediate bridge is stored at index 0 of `chips_hierarchy`. The parent to
 the immediate bridge is at index 1, and so forth.
 */
 // Checked against local
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct BridgeChipHierarchy {
     /// Hierarchy of bridge chips on the board.
     pub chips_hierarchy: Vec<BridgeChipInfo>,
@@ -149,9 +153,10 @@ impl From<nvmlBridgeChipHierarchy_t> for BridgeChipHierarchy {
     }
 }
 
-#[derive(Debug)]
 /// Information about compute processes running on the GPU.
 // Checked against local
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ProcessInfo {
     // Process ID.
     pub pid: u32,
@@ -168,9 +173,10 @@ impl From<nvmlProcessInfo_t> for ProcessInfo {
     }
 }
 
-#[derive(Debug)]
 /// Detailed ECC error counts for a device.
 // Checked against local
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct EccErrorCounts {
     pub device_memory: u64,
     pub l1_cache: u64,
@@ -189,9 +195,10 @@ impl From<nvmlEccErrorCounts_t> for EccErrorCounts {
     }
 }
 
-#[derive(Debug)]
 /// Memory allocation information for a device (in bytes).
 // Checked against local
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MemoryInfo {
     /// Unallocated FB memory.
     pub free: u64,
@@ -213,10 +220,11 @@ impl From<nvmlMemory_t> for MemoryInfo {
     }
 }
 
-#[derive(Debug)]
 /// Utilization information for a device. Each sample period may be between 1 second
 /// and 1/6 second, depending on the product being queried.
 // Checked against local
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Utilization {
     /// Percent of time over the past sample period during which one or more kernels
     /// was executing on the GPU.
@@ -235,9 +243,10 @@ impl From<nvmlUtilization_t> for Utilization {
     }
 }
 
-#[derive(Debug)]
 /// Performance policy violation status data.
 // Checked against local
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ViolationTime {
     /// Represents CPU timestamp in microseconds.
     pub reference_time: u64,
@@ -256,7 +265,8 @@ impl From<nvmlViolationTime_t> for ViolationTime {
 
 /// Description of an HWBC entry.
 // Checked against local
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct HwbcEntry {
     pub id: u32,
     pub firmware_version: String,
@@ -283,7 +293,8 @@ that NVIDIA says is "reserved for future use." If it ever gets used in the futur
 an equivalent wrapping field will have to be added to this struct.
 */
 // Checked against local
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct AccountingStats {
     /**
     Percent of time over the process's lifetime during which one or more kernels was
@@ -345,10 +356,11 @@ impl From<nvmlAccountingStats_t> for AccountingStats {
     }
 }
 
-#[cfg(feature = "nightly")]
-#[derive(Debug)]
 /// Sample info.
 // Checked against local
+#[cfg(feature = "nightly")]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Sample {
     /// CPU timestamp in μs
     timestamp: u64,
@@ -375,7 +387,7 @@ mod tests {
     use std::mem;
 
     #[test]
-    fn pci_info_from_to_c() {
+    fn pci_info_from_to_c() { 
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
             let converted = device.pci_info()
@@ -385,7 +397,7 @@ mod tests {
 
             let raw = unsafe {
                 let mut pci_info: nvmlPciInfo_t = mem::zeroed();
-                nvml_try(nvmlDeviceGetPciInfo_v2(device.c_device(), &mut pci_info)).expect("raw pci info");
+                nvml_try(nvmlDeviceGetPciInfo_v2(device.unsafe_raw(), &mut pci_info)).expect("raw pci info");
                 pci_info
             };
 

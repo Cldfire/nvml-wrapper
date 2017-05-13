@@ -5,7 +5,8 @@ use std::ffi::CStr;
 
 /// Fan information readings for an entire S-class unit.
 // Checked against local
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UnitFansInfo {
     /// Number of fans in the unit.
     pub count: u32,
@@ -24,7 +25,8 @@ impl From<nvmlUnitFanSpeeds_t> for UnitFansInfo {
 
 /// Fan info reading for a single fan in an S-class unit.
 // Checked against local
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct FanInfo {
     /// Fan speed (RPM).
     pub speed: u32,
@@ -59,7 +61,8 @@ on it):
 * Short pin transition
 */
 // Checked against local
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UnitPsuInfo {
     /// PSU current (in A)
     pub current: u32,
@@ -88,7 +91,8 @@ impl UnitPsuInfo {
 
 /// Static S-class unit info.
 // Checked against local
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UnitInfo {
     pub firmware_version: String,
     /// Product identifier.

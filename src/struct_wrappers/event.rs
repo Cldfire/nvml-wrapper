@@ -10,7 +10,7 @@ use error::*;
 #[derive(Debug)]
 pub struct EventData<'nvml> {
     /// Device where the event occurred.
-    // TODO: Need to be able to compare device handles for equality due to this
+    // TODO: Need to be able to compare device handles for equality due to this (?)
     pub device: Device<'nvml>,
     /// Information about what specific event occurred.
     pub event_type: EventTypes,

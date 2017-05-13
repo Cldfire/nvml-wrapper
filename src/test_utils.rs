@@ -81,6 +81,9 @@ pub fn device<'nvml>(nvml: &'nvml NVML) -> Device<'nvml> {
     nvml.device_by_index(0).expect("device")
 }
 
+pub fn assert_send<T: Send>() {}
+pub fn assert_sync<T: Sync>() {}
+
 /// Run all testing methods for the given test.
 pub fn test<T, R>(reps: usize, test: T)
     where T: Fn() -> (Result<R>),

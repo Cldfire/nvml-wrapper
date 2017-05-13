@@ -17,7 +17,7 @@ Obtain a `Unit` with the various methods available to you on the `NVML`
 struct.
 
 I don't know what a unit is, but inferring from the docs leads me to believe 
-it's some kind of high-end something or other that 99% of users won't know 
+it's some kind of high-end something-or-other that 99% of users won't know 
 about either. That being said, I'm wrapping this whole library, so here you go.
 
 Rust's lifetimes will ensure that the NVML instance this `Unit` was created from
@@ -38,7 +38,7 @@ unsafe impl<'nvml> Sync for Unit<'nvml> {}
 impl<'nvml> From<nvmlUnit_t> for Unit<'nvml> {
     fn from(unit: nvmlUnit_t) -> Self {
         Unit {
-            unit: unit,
+            unit,
             _phantom: PhantomData,
         }
     }
@@ -220,5 +220,29 @@ impl<'nvml> Unit<'nvml> {
         unsafe {
             nvml_try(nvmlUnitSetLedState(self.unit, color.into_c()))
         }
+    }
+
+    /// Consume the struct and obtain the raw unit handle that it contains.
+    #[inline]
+    pub fn into_raw(self) -> nvmlUnit_t {
+        self.unit
+    }
+
+    /// Obtain a reference to the raw unit handle contained in the struct.
+    #[inline]
+    pub fn as_raw(&self) -> &nvmlUnit_t {
+        &(self.unit)
+    }
+
+    /// Obtain a mutable reference to the raw unit handle contained in the struct.
+    #[inline]
+    pub fn as_mut_raw(&mut self) -> &mut nvmlUnit_t {
+        &mut (self.unit)
+    }
+
+    /// Sometimes necessary for C interop. Use carefully.
+    #[inline]
+    pub unsafe fn unsafe_raw(&self) -> nvmlUnit_t {
+        self.unit
     }
 }

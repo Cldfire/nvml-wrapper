@@ -3,7 +3,8 @@ use error::*;
 
 /// Represents the NvLink utilization counter packet units.
 // Checked against local
-#[derive(EnumWrapper, Debug)]
+#[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[wrap(c_enum = "nvmlNvLinkUtilizationCountUnits_t")]
 #[wrap(has_count = "NVML_NVLINK_COUNTER_UNIT_COUNT")]
 pub enum UtilizationCountUnit {
@@ -17,7 +18,8 @@ pub enum UtilizationCountUnit {
 
 /// Represents queryable NvLink capabilities.
 // Checked against local
-#[derive(EnumWrapper, Debug)]
+#[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[wrap(c_enum = "nvmlNvLinkCapability_t")]
 #[wrap(has_count = "NVML_NVLINK_CAP_COUNT")]
 pub enum Capability {
@@ -43,7 +45,8 @@ pub enum Capability {
 
 /// Represents queryable NvLink error counters.
 // Checked against local
-#[derive(EnumWrapper, Debug)]
+#[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[wrap(c_enum = "nvmlNvLinkErrorCounter_t")]
 #[wrap(has_count = "NVML_NVLINK_ERROR_COUNT")]
 pub enum ErrorCounter {

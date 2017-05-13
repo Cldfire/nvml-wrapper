@@ -6,6 +6,7 @@ authors = ["Cldfire"]
 [dependencies]
 error-chain = "0.10"
 bitflags = "0.8"
+serde = { version = "1.0", optional = true, features = ["derive"] }
 nvml-sys = { path = "nvml-sys" }
 wrapcenum-derive = { path = "../wrapcenum-derive" }
 
