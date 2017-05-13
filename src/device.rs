@@ -2135,7 +2135,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     #[inline]
-    pub fn set_auto_boosted_clocks(&self, enabled: bool) -> Result<()> {
+    pub fn set_auto_boosted_clocks(&mut self, enabled: bool) -> Result<()> {
         unsafe {
             nvml_try(nvmlDeviceSetAutoBoostedClocksEnabled(self.device, state_from_bool(enabled)))
         }
@@ -2163,7 +2163,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     #[cfg(target_os = "linux")]
     #[inline]
-    pub fn set_cpu_affinity(&self) -> Result<()> {
+    pub fn set_cpu_affinity(&mut self) -> Result<()> {
         unsafe {
             nvml_try(nvmlDeviceSetCpuAffinity(self.device))
         }
@@ -2199,7 +2199,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     #[inline]
-    pub fn set_auto_boosted_clocks_default(&self, enabled: bool) -> Result<()> {
+    pub fn set_auto_boosted_clocks_default(&mut self, enabled: bool) -> Result<()> {
         unsafe {
             // passing 0 because NVIDIA says flags are not supported yet
             nvml_try(nvmlDeviceSetDefaultAutoBoostedClocksEnabled(self.device, 
