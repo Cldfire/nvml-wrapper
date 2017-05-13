@@ -2417,7 +2417,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     #[inline]
-    pub fn set_accounting(&self, enabled: bool) -> Result<()> {
+    pub fn set_accounting(&mut self, enabled: bool) -> Result<()> {
         unsafe {
             nvml_try(nvmlDeviceSetAccountingMode(self.device, state_from_bool(enabled)))
         }
@@ -2478,7 +2478,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     #[inline]
-    pub fn set_api_restricted(&self, api_type: Api, restricted: bool) -> Result<()> {
+    pub fn set_api_restricted(&mut self, api_type: Api, restricted: bool) -> Result<()> {
         unsafe {
             nvml_try(nvmlDeviceSetAPIRestriction(self.device, 
                                                  api_type.into_c(), 
@@ -2519,7 +2519,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     #[inline]
-    pub fn set_applications_clocks(&self, mem_clock: u32, graphics_clock: u32) -> Result<()> {
+    pub fn set_applications_clocks(&mut self, mem_clock: u32, graphics_clock: u32) -> Result<()> {
         unsafe {
             nvml_try(nvmlDeviceSetApplicationsClocks(self.device, 
                                                      mem_clock as c_uint, 
@@ -2552,7 +2552,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     #[inline]
-    pub fn set_compute_mode(&self, mode: ComputeMode) -> Result<()> {
+    pub fn set_compute_mode(&mut self, mode: ComputeMode) -> Result<()> {
         unsafe {
             nvml_try(nvmlDeviceSetComputeMode(self.device, mode.into_c()))
         }
@@ -2593,7 +2593,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     #[cfg(target_os = "windows")]
     #[inline]
-    pub fn set_driver_model(&self, model: DriverModel, flags: Behavior) -> Result<()> {
+    pub fn set_driver_model(&mut self, model: DriverModel, flags: Behavior) -> Result<()> {
         unsafe {
             nvml_try(nvmlDeviceSetDriverModel(self.device, model.into(), flags.bits()))
         }
@@ -2620,7 +2620,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     #[inline]
-    pub fn set_ecc(&self, enabled: bool) -> Result<()> {
+    pub fn set_ecc(&mut self, enabled: bool) -> Result<()> {
         unsafe {
             nvml_try(nvmlDeviceSetEccMode(self.device, state_from_bool(enabled)))
         }
@@ -2651,7 +2651,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     #[inline]
-    pub fn set_gpu_op_mode(&self, mode: OperationMode) -> Result<()> {
+    pub fn set_gpu_op_mode(&mut self, mode: OperationMode) -> Result<()> {
         unsafe {
             nvml_try(nvmlDeviceSetGpuOperationMode(self.device, mode.into_c()))
         }
@@ -2681,7 +2681,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     #[cfg(target_os = "linux")]
     #[inline]
-    pub fn set_persistent(&self, enabled: bool) -> Result<()> {
+    pub fn set_persistent(&mut self, enabled: bool) -> Result<()> {
         unsafe {
             nvml_try(nvmlDeviceSetPersistenceMode(self.device, state_from_bool(enabled)))
         }
@@ -2711,7 +2711,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     #[inline]
-    pub fn set_power_management_limit(&self, limit: u32) -> Result<()> {
+    pub fn set_power_management_limit(&mut self, limit: u32) -> Result<()> {
         unsafe {
             nvml_try(nvmlDeviceSetPowerManagementLimit(self.device, limit as c_uint))
         }
@@ -3675,7 +3675,8 @@ mod test {
     #[test]
     fn is_drain_enabled() {
         let nvml = nvml();
-        let device = device(&nvml);
-        print!("{:?} ...", device.is_drain_enabled(None).expect("bool"));
+        test_with_device(3, &nvml, |device| {
+            device.is_drain_enabled(None)
+        })
     }
 }
