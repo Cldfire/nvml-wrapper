@@ -56,8 +56,11 @@ error_chain! {
             description("A query to find and object was unsuccessful.")
         }
         /// An input argument is not large enough.
-        InsufficientSize {
+        ///
+        /// The value contained is the size required for a successful call.
+        InsufficientSize(required_size: usize) {
             description("An input argument is not large enough.")
+            display("An input argument is not large enough. Required size: '{}'", required_size)
         }
         /// A device's external power cables are not properly attached.
         InsufficientPower {
@@ -131,7 +134,8 @@ pub fn nvml_try(code: nvmlReturn_t) -> Result<()> {
         NVML_ERROR_NO_PERMISSION            => Err(Error::from_kind(ErrorKind::NoPermission)),
         NVML_ERROR_ALREADY_INITIALIZED      => Err(Error::from_kind(ErrorKind::AlreadyInitialized)),
         NVML_ERROR_NOT_FOUND                => Err(Error::from_kind(ErrorKind::NotFound)),
-        NVML_ERROR_INSUFFICIENT_SIZE        => Err(Error::from_kind(ErrorKind::InsufficientSize)),
+        // TODO: Is returning 0 here sane. Is there a better way (unlikely)
+        NVML_ERROR_INSUFFICIENT_SIZE        => Err(Error::from_kind(ErrorKind::InsufficientSize(0))),
         NVML_ERROR_INSUFFICIENT_POWER       => Err(Error::from_kind(ErrorKind::InsufficientPower)),
         NVML_ERROR_DRIVER_NOT_LOADED        => Err(Error::from_kind(ErrorKind::DriverNotLoaded)),
         NVML_ERROR_TIMEOUT                  => Err(Error::from_kind(ErrorKind::Timeout)),

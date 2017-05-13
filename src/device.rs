@@ -96,7 +96,6 @@ impl<'nvml> Device<'nvml> {
     # Device Support
     Supports all _fully supported_ products.
     */
-    // TODO: Make sure there's a test case for when an error is returned and the mem::zeroed() values may be dropped
     // Checked against local
     // Tested (except for AutoBoostedClocks)
     #[inline]
@@ -1733,7 +1732,6 @@ impl<'nvml> Device<'nvml> {
     * `NotFound`, if the specified `for_mem_clock` is not a supported frequency
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` doesn't support this feature
-    * `InsufficientSize`, if `size` is too small
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     * `Unknown`, on any unexpected error
     
@@ -1741,22 +1739,36 @@ impl<'nvml> Device<'nvml> {
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
-    // TODO: Something is horribly wrong here
-    // Tested and seems like I'm doing bad things
+    // Tested
     #[inline]
-    pub fn supported_graphics_clocks(&self, for_mem_clock: u32, size: c_uint) -> Result<Vec<u32>> {
-        unsafe {
-            let mut first_item: c_uint = mem::zeroed();
-            // TODO: Convert all other function calls like this to take `size` param as c_uint
-            let mut count: c_uint = size;
-            nvml_try(nvmlDeviceGetSupportedGraphicsClocks(self.device, 
-                                                          for_mem_clock as c_uint, 
-                                                          &mut count, 
-                                                          &mut first_item))?;
-
-            let array = slice::from_raw_parts(&first_item as *const c_uint, count as usize);
-            Ok(array.to_vec())
+    pub fn supported_graphics_clocks(&self, for_mem_clock: u32) -> Result<Vec<u32>> {
+        match self.supported_graphics_clocks_manual(for_mem_clock, 128) {
+            Err(Error(ErrorKind::InsufficientSize(s), _)) => 
+                // `s` is the required size for the call; make the call a second time
+                return self.supported_graphics_clocks_manual(for_mem_clock, s),
+            value => value,
         }
+    }
+
+    // Removes code duplication in the above function.
+    fn supported_graphics_clocks_manual(&self, for_mem_clock: u32, size: usize) -> Result<Vec<u32>> {
+        let mut items = vec![0u32; size];
+        let mut count = size as c_uint;
+
+        unsafe {
+            match nvmlDeviceGetSupportedGraphicsClocks(self.device, 
+                                                       for_mem_clock as c_uint, 
+                                                       &mut count, 
+                                                       &mut items[0]) {
+                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => 
+                    // `count` is now the size that is required. Return it in the error.
+                    bail!(ErrorKind::InsufficientSize(count as usize)),
+                value => nvml_try(value)?,
+            }
+        }
+
+        items.truncate(count as usize);
+        Ok(items)
     }
 
     /**
@@ -1767,30 +1779,43 @@ impl<'nvml> Device<'nvml> {
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` doesn't support this feature
-    * `InsufficientSize`, if `size` is too small
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     * `Unknown`, on any unexpected error
     
     # Device Support
     Supports Kepler and newer fully supported devices.
     */
-    // TODO: ^ InsufficienSize
     // Checked against local
-    // TODO: I bet something is awfully wrong with this as well, like above
+    // Tested
     #[inline]
-    pub fn supported_memory_clocks(&self, size: c_uint) -> Result<Vec<u32>> {
-        unsafe {
-            let mut first_item: c_uint = mem::zeroed();
-            // TODO: Convert all other function calls like this to take `size` param as c_uint
-            // TODO: says count is set to the number of required elements if `InsufficientSize`?
-            let mut count: c_uint = size;
-            nvml_try(nvmlDeviceGetSupportedMemoryClocks(self.device, 
-                                                          &mut count, 
-                                                          &mut first_item))?;
-
-            let array = slice::from_raw_parts(&first_item as *const c_uint, count as usize);
-            Ok(array.to_vec())
+    pub fn supported_memory_clocks(&self) -> Result<Vec<u32>> {
+        match self.supported_memory_clocks_manual(16) {
+            Err(Error(ErrorKind::InsufficientSize(s), _)) => {
+                // `s` is the required size for the call; make the call a second time
+                return self.supported_memory_clocks_manual(s)
+            },
+            value => value,
         }
+    }
+
+    // Removes code duplication in the above function.
+    fn supported_memory_clocks_manual(&self, size: usize) -> Result<Vec<u32>> {
+        let mut items = vec![0u32; size];
+        let mut count = size as c_uint;
+
+        unsafe {
+            match nvmlDeviceGetSupportedMemoryClocks(self.device,
+                                                     &mut count,
+                                                     &mut items[0]) {
+                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => 
+                    // `count` is now the size that is required. Return it in the error.
+                    bail!(ErrorKind::InsufficientSize(count as usize)),
+                value => nvml_try(value)?,
+            }
+        }
+
+        items.truncate(count as usize);
+        Ok(items)
     }
 
     /**
@@ -3522,16 +3547,47 @@ mod test {
         })
     }
 
-    // TODO: Something is horribly wrong here
-    // #[test]
-    // fn supported_graphics_clocks() {
-    //     let nvml = nvml();
-    //     test_with_device(3, &nvml, |device| {
-    //         device.supported_graphics_clocks(3505, 128)
-    //     })
-    // }
+    #[test]
+    fn supported_graphics_clocks() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            let supported = device.supported_graphics_clocks(810)?;
 
-    // TODO: supported_memory_clocks
+            #[cfg(feature = "test-local")]
+            {
+                assert_eq!(supported, vec![1531, 1519, 1506, 1493, 1481, 1468, 1455,
+                                           1443, 1430, 1418, 1405, 1392, 1380, 1367,
+                                           1354, 1342, 1329, 1316, 1304, 1291, 1278,
+                                           1266, 1253, 1240, 1228, 1215, 1202, 1190,
+                                           1177, 1164, 1152, 1139, 1126, 1114, 1101,
+                                           1088, 1076, 1063, 1050, 1038, 1025, 1013,
+                                           1000, 988, 975, 963, 950, 938, 925, 913,
+                                           900, 888, 886, 873, 861, 848, 835, 823,
+                                           810, 797, 785, 772, 759, 747, 734, 721,
+                                           709, 696, 683, 671, 658, 645, 633, 620,
+                                           608, 595, 582, 570, 557, 544, 532, 519,
+                                           507, 494, 482, 469, 457, 444, 432, 419,
+                                           407, 405, 324, 270, 202, 162, 135])
+            }
+
+            Ok(())
+        })
+    }
+
+    #[test]
+    fn supported_memory_clocks() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            let supported = device.supported_memory_clocks()?;
+
+            #[cfg(feature = "test-local")]
+            {
+                assert_eq!(supported, vec![3505, 3304, 810, 405])
+            }
+
+            Ok(())
+        })
+    }
 
     #[test]
     fn temperature() {
