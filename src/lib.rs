@@ -397,7 +397,7 @@ impl NVML {
     # Errors
     * `InvalidArg`, if the device is invalid or `level` is invalid (shouldn't occur?)
     * `NotSupported`, if this `Device` or the OS does not support this feature
-    * `Unknown`, an error has occured in the underlying topology discovery
+    * `Unknown`, an error has occurred in the underlying topology discovery
     
     # Platform Support
     Only supports Linux.
@@ -491,7 +491,7 @@ impl NVML {
     # Errors
     * `InvalidArg`, if `cpu_number` is invalid
     * `NotSupported`, if this `Device` or the OS does not support this feature
-    * `Unknown`, an error has occured in the underlying topology discovery
+    * `Unknown`, an error has occurred in the underlying topology discovery
     
     # Platform Support
     Only supports Linux.

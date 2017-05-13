@@ -135,7 +135,7 @@ pub enum MemoryError {
     A memory error that was not corrected.
     
     ECC error: double bit error.
-    Texture memory: error occured and resend failed.
+    Texture memory: error occurred and resend failed.
     */
     #[wrap(c_variant = "NVML_MEMORY_ERROR_TYPE_UNCORRECTED")]
     Uncorrected,

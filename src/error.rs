@@ -114,9 +114,9 @@ error_chain! {
         NoData {
             description("No data.")
         }
-        /// An internal driver error occured.
+        /// An internal driver error occurred.
         Unknown {
-            description("An internal driver error occured.")
+            description("An internal driver error occurred.")
         }
     }
 }

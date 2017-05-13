@@ -138,6 +138,7 @@ mod test {
     use super::EventSet;
     use test_utils::*;
     use bitmasks::event::*;
+    use error::*;
 
     // Ensuring that double-free issues don't crop up here.
     #[test]
@@ -179,7 +180,12 @@ mod test {
                                          CLOCK_CHANGE,
                                          set).expect("registration");
 
-        let data = set.wait(10_000).expect("event data");
-        print!("{:?} ...", data)
+        let data = match set.wait(10_000) {
+            Err(Error(ErrorKind::Timeout, _)) => return (),
+            Ok(d) => d,
+            _ => panic!("An error other than `Timeout` occurred")
+        };
+
+        print!("{:?} ...", data);
     }
 }
