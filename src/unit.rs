@@ -99,17 +99,20 @@ impl<'nvml> Unit<'nvml> {
         unsafe {
             // NVIDIA doesn't even say that `count` will be set to the count if
             // `InsufficientSize` is returned. But we can assume sanity, right?
-            let mut count: c_uint = 0;
-            let devices: [nvmlDevice_t; 1] = [mem::zeroed()];
+            //
+            // The idea here is:
+            // If there are 0 devices, NVML_SUCCESS is returned, `count` is set
+            //   to 0. We return count, all good.
+            // If there is 1 device, NVML_SUCCESS is returned, `count` remains
+            //   0. We return count, all good.
+            // If there are >= 2 devices, NVML_INSUFFICIENT_SIZE is returned.
+            //  `count` is theoretically set to the actual count, and we
+            //   return it.
+            let mut count: c_uint = 1;
+            let mut devices: [nvmlDevice_t; 1] = [mem::zeroed()];
 
-            match nvmlUnitGetDevices(self.unit, &mut count, &mut devices[0]) {
-                // I'm assuming this is right... ?
-                nvmlReturn_t::NVML_SUCCESS => Ok(0),
-                // Also assuming this is right... ?
-                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
-                // We know that this will be an error
-                other => nvml_try(other).map(|_| 0),
-            }
+            nvmlUnitGetDevices(self.unit, &mut count, &mut devices[0])?;
+            Ok(count)
         }
     }
 
