@@ -389,47 +389,6 @@ impl NVML {
     }
 
     /**
-    Gets the set of GPUs that are nearest to the passed-in `Device` at a specific 
-    interconnectivity level.
-    
-    Note: this is the same as `Device.topology_nearest_gpus()`.
-    
-    # Errors
-    * `InvalidArg`, if the device is invalid or `level` is invalid (shouldn't occur?)
-    * `NotSupported`, if this `Device` or the OS does not support this feature
-    * `Unknown`, an error has occurred in the underlying topology discovery
-    
-    # Platform Support
-    Only supports Linux.
-    */
-    // Checked against local
-    #[cfg(target_os = "linux")]
-    #[inline]
-    pub fn topology_nearest_gpus(&self, device: &Device, level: TopologyLevel) -> Result<Vec<Device>> {
-        unsafe {
-            let mut first_item: nvmlDevice_t = mem::zeroed();
-            // TODO: Fails if I pass 0? What?
-            let mut count: c_uint = 0;
-            nvml_try(nvmlDeviceGetTopologyNearestGpus(device.unsafe_raw(), 
-                                                      level.into_c(), 
-                                                      &mut count, 
-                                                      &mut first_item))?;
-            
-            // TODO: Again I believe I'm doing every single one of these wrong. The array has
-            // already been malloc'd on the C side according to NVIDIA, meaning I'm probably
-            // responsible for freeing the memory or something? Which I'm not doing here?
-            // Investigate?
-            //
-            // Also other topo method below
-            Ok(slice::from_raw_parts(&first_item as *const nvmlDevice_t, 
-                                     count as usize)
-                                     .iter()
-                                     .map(|d| Device::from(*d))
-                                     .collect())
-        }
-    }
-
-    /**
     Acquire the handle for a particular `Unit` based on its index.
     
     Valid indices are derived from the count returned by `.unit_count()`.

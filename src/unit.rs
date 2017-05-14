@@ -31,7 +31,6 @@ pub struct Unit<'nvml> {
     _phantom: PhantomData<&'nvml NVML>,
 }
 
-// Here to clarify that Unit does have these traits. I know they are implemented without this.
 unsafe impl<'nvml> Send for Unit<'nvml> {}
 unsafe impl<'nvml> Sync for Unit<'nvml> {}
 
@@ -47,31 +46,70 @@ impl<'nvml> From<nvmlUnit_t> for Unit<'nvml> {
 impl<'nvml> Unit<'nvml> {
     /**
     Gets the set of GPU devices that are attached to this `Unit`.
+
+    **I do not have the hardware to test this call. Verify for yourself that it
+    works before you use it**. If it works, please let me know; if it doesn't,
+    I would love a PR. If NVML is sane this should work, but NVIDIA's docs
+    on this call are _anything_ but clear.
     
     # Errors
     * `Uninitialized`, if the library has not been successfully initialized
-    * `InsufficientSize`, if `size` is not enough for the array of devices
     * `InvalidArg`, if the unit is invalid
     * `Unknown`, on any unexpected error
     
     # Device Support
     For S-class products.
     */
-    // TODO: Validate insufficientsize? ^
     // Checked against local
     #[inline]
-    pub fn devices(&self, size: usize) -> Result<Vec<Device>> {
+    pub fn devices(&self) -> Result<Vec<Device>> {
         unsafe {
-            let mut first_item: nvmlDevice_t = mem::zeroed();
-            let mut count: c_uint = size as c_uint;
-            nvml_try(nvmlUnitGetDevices(self.unit, &mut count, &mut first_item))?;
+            let mut count: c_uint = match self.device_count()? {
+                0 => return Ok(vec![]),
+                value => value,
+            };
+            let mut devices: Vec<nvmlDevice_t> = vec![mem::zeroed(); count as usize];
 
-            // TODO: Is this correct, safe, etc.
-            Ok(slice::from_raw_parts(first_item as *const nvmlDevice_t,
-                                     count as usize)
-                                     .iter()
-                                     .map(|d| Device::from(*d))
-                                     .collect())
+            // Indexing 0 here is safe because we make sure `count` is not 0 above
+            nvml_try(nvmlUnitGetDevices(self.unit, &mut count, &mut devices[0]))?;
+            Ok(devices.iter()
+                      .map(|d| Device::from(*d))
+                      .collect())
+        }
+    }
+
+    /**
+    Gets the count of GPU devices that are attached to this `Unit`.
+
+    **I do not have the hardware to test this call. Verify for yourself that it
+    works before you use it**. If it works, please let me know; if it doesn't,
+    I would love a PR. If NVML is sane this should work, but NVIDIA's docs
+    on this call are _anything_ but clear.
+
+    # Errors
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if the unit is invalid
+    * `Unknown`, on any unexpected error
+
+    # Device Support
+    For S-class products.
+    */
+    #[inline]
+    pub fn device_count(&self) -> Result<u32> {
+        unsafe {
+            // NVIDIA doesn't even say that `count` will be set to the count if
+            // `InsufficientSize` is returned. But we can assume sanity, right?
+            let mut count: c_uint = 0;
+            let devices: [nvmlDevice_t; 1] = [mem::zeroed()];
+
+            match nvmlUnitGetDevices(self.unit, &mut count, &mut devices[0]) {
+                // I'm assuming this is right... ?
+                nvmlReturn_t::NVML_SUCCESS => Ok(0),
+                // Also assuming this is right... ?
+                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
+                // We know that this will be an error
+                other => nvml_try(other).map(|_| 0),
+            }
         }
     }
 
