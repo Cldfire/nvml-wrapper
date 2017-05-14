@@ -168,7 +168,6 @@ mod test {
         })
     }
 
-    // TODO: This should not fail if a timeout error is returned
     #[cfg(feature = "test-local")]
     #[test]
     fn wait() {

@@ -667,7 +667,7 @@ mod test {
     fn sys_process_name() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
-            let processes = device.running_graphics_processes(64)?;
+            let processes = device.running_graphics_processes()?;
             nvml.sys_process_name(processes[0].pid, 64)
         })
     }

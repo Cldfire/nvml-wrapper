@@ -12,6 +12,7 @@ use bitmasks::Behavior;
 use NVML;
 use std::marker::PhantomData;
 use std::ffi::CStr;
+use std::ptr;
 use std::mem;
 use std::os::raw::{c_uint, c_ulong, c_ulonglong, c_int};
 use std::slice;
@@ -390,54 +391,85 @@ impl<'nvml> Device<'nvml> {
     }
 
     /**
-    Gets information about processes with a compute context running on this `Device`,
-    allocating `size` amount of space.
+    Gets information about processes with a compute context running on this `Device`.
     
     This only returns information about running compute processes (such as a CUDA application
     with an active context). Graphics applications (OpenGL, DirectX) won't be listed by this
     function.
     
-    Keep in mind that information returned by this call is dynamic and the number of elements
-    may change over time. Allocate more space for information in case new compute processes
-    are spawned.
-    
     # Errors
     * `Uninitialized`, if the library has not been successfully initialized
-    * `InsufficientSize`, TODO: This
     * `InvalidArg`, if the device is invalid
-    * `NotSupported`, if this `Device` TODO: and this
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     * `Unknown`, on any unexpected error
     */
-    // TODO: Docs and function need work, not sure if what I'm doing is even safe or correct
-    // TODO: Handle passing 0 to just query with enum
-    // TODO: And, handle INSUFFICIENT_SIZE infocount being size needed to fill array... lots of todo here
     // Tested
     #[inline]
-    pub fn running_compute_processes(&self, size: usize) -> Result<Vec<ProcessInfo>> {
+    pub fn running_compute_processes(&self) -> Result<Vec<ProcessInfo>> {
         unsafe {
-            let mut first_item: nvmlProcessInfo_t = mem::zeroed();
-            // Passed in to designate size of returned array and after call is count of returned elements
-            let mut count: c_uint = size as c_uint;
-            nvml_try(nvmlDeviceGetComputeRunningProcesses(self.device, &mut count, &mut first_item))?;
+            let mut count: c_uint = match self.running_compute_processes_count()? {
+                0 => return Ok(vec![]),
+                value => value,
+            };
+            let mut processes: Vec<nvmlProcessInfo_t> = vec![mem::zeroed(); count as usize];
 
-            Ok(slice::from_raw_parts(&first_item as *const nvmlProcessInfo_t,
-                                     count as usize)
-                                     .iter()
-                                     .map(|info| ProcessInfo::from(*info))
-                                     .collect())
+            nvml_try(nvmlDeviceGetComputeRunningProcesses(self.device,
+                                                          &mut count,
+                                                          // because we make sure `count`
+                                                          // Indexing 0 here is safe
+                                                          // is not 0 above                                                        
+                                                          &mut processes[0]))?;
+
+            Ok(processes.iter()
+                        .map(|p| ProcessInfo::from(*p))
+                        .collect())
+        }
+    }
+
+    /**
+    Gets the number of processes with a compute context running on this `Device`.
+    
+    This only returns the count of running compute processes (such as a CUDA application
+    with an active context). Graphics applications (OpenGL, DirectX) won't be counted by this
+    function.
+    
+    # Errors
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if the device is invalid
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+    */
+    // Tested as part of `.running_compute_processes()`
+    #[inline]
+    pub fn running_compute_processes_count(&self) -> Result<u32> {
+        unsafe {
+            // Indicates that we want the count
+            let mut count: c_uint = 0;
+            // Passing null doesn't indicate that we want the count. It's just allowed.
+            // And if it's allowed, why not? Everyone loves passing null to things >:D
+            let processes: [*mut nvmlProcessInfo_t; 1] = [ptr::null_mut()];
+
+            match nvmlDeviceGetComputeRunningProcesses(self.device, &mut count, processes[0]) {
+                nvmlReturn_t::NVML_SUCCESS => Ok(0),
+                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
+                // We know that this wil be an error
+                other => nvml_try(other).map(|_| 0),
+            }
         }
     }
 
     /**
     Gets a `Vec` of bitmasks with the ideal CPU affinity for the device.
     
-    For example, if processors 0, 1, 32, and 33 are ideal for the device and `size` == 2,
-    result[0] = 0x3, result[1] = 0x3.
+    The results are sized to `size`. For example, if processors 0, 1, 32, and 33 are
+    ideal for the device and `size` == 2, result[0] = 0x3, result[1] = 0x3.
+
+    64 CPUs per unsigned long on 64-bit machines, 32 on 32-bit machines.
     
     # Errors
     * `Uninitialized`, if the library has not been successfully initialized
-    * `InvalidArg`, if the device is invalid or `size` is 0
+    * `InvalidArg`, if the device is invalid
+    * `InsufficientSize`, if the passed-in `size` is 0 (must be > 0)
     * `NotSupported`, if this `Device` does not support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     * `Unknown`, on any unexpected error
@@ -449,17 +481,21 @@ impl<'nvml> Device<'nvml> {
     Only supports Linux.
     */
     // Checked against local
-    // TODO: Why hello, SIGSEGV
+    // TODO: Should we trim zeros here or leave it to the caller?
     #[cfg(target_os = "linux")]
     #[inline]
-    pub fn cpu_affinity(&self, size: usize) -> Result<Vec<u64>> {
+    pub fn cpu_affinity(&self, size: usize) -> Result<Vec<c_ulong>> {
         unsafe {
-            let mut first_item: c_ulong = mem::zeroed();
-            nvml_try(nvmlDeviceGetCpuAffinity(self.device, size as c_uint, &mut first_item))?;
+            if size == 0 {
+                // Return an error containing the minimum size that can be passed.
+                bail!(ErrorKind::InsufficientSize(1));
+            }
 
-            // TODO: same as running_compute_processes, is this safe
-            let array = slice::from_raw_parts(first_item as *const c_ulong, size);
-            Ok(array.to_vec())
+            let mut affinities: Vec<c_ulong> = vec![mem::zeroed(); size];
+            nvml_try(nvmlDeviceGetCpuAffinity(self.device, size as c_uint, &mut affinities[0]))?;
+
+
+            Ok(affinities)
         }
     }
 
@@ -819,37 +855,66 @@ impl<'nvml> Device<'nvml> {
     }
 
     /**
-    Gets information about processes with a graphics context running on this `Device`,
-    allocating `size` amount of space.
+    Gets information about processes with a graphics context running on this `Device`.
     
     This only returns information about graphics based processes (OpenGL, DirectX).
     
-    Keep in mind that information returned by this call is dynamic and the number of elements
-    may change over time. Allocate more space for information in case new graphics processes
-    are spawned.
-    
     # Errors
     * `Uninitialized`, if the library has not been successfully initialized
-    * `InsufficientSize`, TODO: This
     * `InvalidArg`, if the device is invalid
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     * `Unknown`, on any unexpected error
     */
     // Tested
     #[inline]
-    pub fn running_graphics_processes(&self, size: usize) -> Result<Vec<ProcessInfo>> {
+    pub fn running_graphics_processes(&self) -> Result<Vec<ProcessInfo>> {
         unsafe {
-            let mut first_item: nvmlProcessInfo_t = mem::zeroed();
-            // Passed in to designate size of returned array and after call is count of returned elements
-            let mut count: c_uint = size as c_uint;
-            nvml_try(nvmlDeviceGetGraphicsRunningProcesses(self.device, &mut count, &mut first_item))?;
+            let mut count: c_uint = match self.running_graphics_processes_count()? {
+                0 => return Ok(vec![]),
+                value => value,
+            };
+            let mut processes: Vec<nvmlProcessInfo_t> = vec![mem::zeroed(); count as usize];
 
-            // TODO: Check along with compute
-            Ok(slice::from_raw_parts(&first_item as *const nvmlProcessInfo_t,
-                                     count as usize)
-                                     .iter()
-                                     .map(|info| ProcessInfo::from(*info))
-                                     .collect())
+            nvml_try(nvmlDeviceGetGraphicsRunningProcesses(self.device,
+                                                           &mut count,
+                                                           // Indexing 0 here is safe
+                                                           // because we make sure `count`
+                                                           // is not 0 above                                                        
+                                                           &mut processes[0]))?;
+
+            Ok(processes.iter()
+                        .map(|p| ProcessInfo::from(*p))
+                        .collect())
+        }
+    }
+
+    /**
+    Gets the number of processes with a graphics context running on this `Device`.
+    
+    This only returns the count of graphics based processes (OpenGL, DirectX).
+    
+    # Errors
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if the device is invalid
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+    */
+    // Tested as part of `.running_graphics_processes()`
+    #[inline]
+    pub fn running_graphics_processes_count(&self) -> Result<u32> {
+        unsafe {
+            // Indicates that we want the count
+            let mut count: c_uint = 0;
+            // Passing null doesn't indicate that we want the count. It's just allowed.
+            // And if it's allowed, why not? Everyone loves passing null to things >:D
+            let processes: [*mut nvmlProcessInfo_t; 1] = [ptr::null_mut()];
+
+            match nvmlDeviceGetGraphicsRunningProcesses(self.device, &mut count, processes[0]) {
+                nvmlReturn_t::NVML_SUCCESS => Ok(0),
+                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
+                // We know that this will be an error
+                other => nvml_try(other).map(|_| 0),
+            }
         }
     }
 
@@ -1175,7 +1240,6 @@ impl<'nvml> Device<'nvml> {
     # Device Support
     Supports Fermi or newer fully supported devices.
     */
-    // TODO: Figure out how to test this on platforms it supports
     // Checked against local
     // Tested
     #[inline]
@@ -1496,14 +1560,17 @@ impl<'nvml> Device<'nvml> {
 
     /**
     Gets the list of retired pages filtered by `cause`, including pages pending retirement.
+
+    **I cannot verify that this method will work because the call within is not supported
+    on my dev machine**. Please **verify for yourself** that it works before you use it.
+    If you are able to test it on your machine, please let me know if it works; if it
+    doesn't, I would love a PR.
     
     The address information provided by this API is the hardware address of the page that was
     retired. Note that this does not match the virtual address used in CUDA, but it will
     match the address information in XID 63.
     
     # Errors
-    * `InsufficientSize`, if
-    ODO: That ^
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` doesn't support this feature
@@ -1516,21 +1583,41 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested on machines other than my own
     #[inline]
-    pub fn retired_pages(&self, cause: RetirementCause, size: usize) -> Result<Vec<u64>> {
+    pub fn retired_pages(&self, cause: RetirementCause) -> Result<Vec<u64>> {
         unsafe {
-            // TODO: Encode into the type system that you can pass 0 to query
-            // TODO: This is also supposed to be the size required if the call fails. Ugh.
-            let mut page_count: c_uint = size as c_uint;
-            let mut first_item: c_ulonglong = mem::zeroed();
-            nvml_try(nvmlDeviceGetRetiredPages(self.device, 
-                                               cause.into_c(), 
-                                               &mut page_count, 
-                                               &mut first_item))?;
+            let mut count = match self.get_retired_pages_count(&cause)? {
+                0 => return Ok(vec![]),
+                value => value,
+            };
+            let mut causes: Vec<c_ulonglong> = vec![mem::zeroed(); count as usize];
+
+            nvml_try(nvmlDeviceGetRetiredPages(self.device,
+                                               cause.into_c(),
+                                               &mut count,
+                                               // Indexing 0 here is safe
+                                               // because we make sure `count`
+                                               // is not 0 above
+                                               &mut causes[0]))?;
             
-            // TODO: I really don't think I'm doing this right.
-            let array = slice::from_raw_parts(&first_item as *const c_ulonglong, page_count as usize);
-            Ok(array.to_vec())
+            Ok(causes)
+        }
+    }
+
+    // Helper for the above function. Returns # of samples that can be queried.
+    #[inline]
+    fn get_retired_pages_count(&self, cause: &RetirementCause) -> Result<c_uint> {
+        unsafe {
+            let mut count: c_uint = 0;
+            // All NVIDIA says is that the buffer pointer cannot be null. So...
+            // I guess we do this? ¯\_(ツ)_/¯
+            let mut causes: [c_ulonglong; 1] = [mem::zeroed()];
+
+            nvml_try(nvmlDeviceGetRetiredPages(self.device,
+                                               cause.into_c(),
+                                               &mut count,
+                                               &mut causes[0]))?;
             
+            Ok(count)
         }
     }
 
@@ -1585,31 +1672,58 @@ impl<'nvml> Device<'nvml> {
     Only compiles on nightly due to use of the `untagged_unions` feature. See
     [the tracking issue](https://github.com/rust-lang/rust/issues/32836).
     */
-    // TODO: Complicated, figure out how to handle array allocation
+    // Checked against local
+    // Tested
     #[cfg(feature = "nightly")]
+    #[inline]
     pub fn samples<T>(&self, sample_type: Sampling, last_seen_timestamp: T) -> Result<Vec<Sample>>
         where T: Into<Option<u64>> {
-            let timestamp = last_seen_timestamp.into().unwrap_or(0);
 
-            unsafe {
-                let mut value_type: nvmlValueType_t = mem::zeroed();
-                let mut count: c_uint = mem::zeroed();
-                // TODO: Fairly sure this is completely wrong
-                let mut first_item: nvmlSample_t = mem::zeroed();
+        let timestamp = last_seen_timestamp.into().unwrap_or(0);
+        unsafe {
+            let mut val_type: nvmlValueType_t = mem::zeroed();
+            let mut count = match self.get_samples_count(&sample_type, timestamp)? {
+                0 => return Ok(vec![]),
+                value => value,
+            };
+            let mut samples: Vec<nvmlSample_t> = vec![mem::zeroed(); count as usize];
 
-                nvml_try(nvmlDeviceGetSamples(self.device, 
-                                              sample_type.into_c(), 
-                                              timestamp as c_ulonglong,
-                                              &mut value_type,
-                                              &mut count,
-                                              &mut first_item))?;
+            nvml_try(nvmlDeviceGetSamples(self.device,
+                                            sample_type.into_c(),
+                                            timestamp as c_ulonglong,
+                                            &mut val_type,
+                                            &mut count,
+                                            // Indexing 0 here is safe
+                                            // because we make sure `count`
+                                            // is not 0 above                                            
+                                            &mut samples[0]))?;
 
-                let value_type_rust = SampleValueType::try_from(value_type)?;
-                let array = slice::from_raw_parts(&first_item as *const nvmlSample_t, count as usize);
-                Ok(array.iter()
-                        .map(|s| Sample::from_tag_and_struct(&value_type_rust, *s))
-                        .collect())
-            }
+            let val_type_rust = SampleValueType::try_from(val_type)?;
+            Ok(samples.iter()
+                      .map(|s| Sample::from_tag_and_struct(&val_type_rust, *s))
+                      .collect())
+        }
+    }
+
+    // Helper for the above function. Returns # of samples that can be queried.
+    #[cfg(feature = "nightly")]
+    #[inline]
+    fn get_samples_count(&self, sample_type: &Sampling, timestamp: u64) -> Result<c_uint> {
+        unsafe {
+            let mut val_type: nvmlValueType_t = mem::zeroed();
+            let mut count: c_uint = mem::zeroed();
+            // Passing null indicates that we want the sample count
+            let samples: [*mut nvmlSample_t; 1] = [ptr::null_mut()];
+
+            nvml_try(nvmlDeviceGetSamples(self.device,
+                                          sample_type.into_c(),
+                                          timestamp as c_ulonglong,
+                                          &mut val_type,
+                                          &mut count,
+                                          samples[0]))?;
+
+            Ok(count)
+        }
     }
 
     /**
@@ -1751,16 +1865,17 @@ impl<'nvml> Device<'nvml> {
     }
 
     // Removes code duplication in the above function.
+    #[inline]
     fn supported_graphics_clocks_manual(&self, for_mem_clock: u32, size: usize) -> Result<Vec<u32>> {
-        let mut items = vec![0u32; size];
+        let mut items: Vec<c_uint> = vec![0; size];
         let mut count = size as c_uint;
 
         unsafe {
-            match nvmlDeviceGetSupportedGraphicsClocks(self.device, 
-                                                       for_mem_clock as c_uint, 
-                                                       &mut count, 
+            match nvmlDeviceGetSupportedGraphicsClocks(self.device,
+                                                       for_mem_clock as c_uint,
+                                                       &mut count,
                                                        &mut items[0]) {
-                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => 
+                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE =>
                     // `count` is now the size that is required. Return it in the error.
                     bail!(ErrorKind::InsufficientSize(count as usize)),
                 value => nvml_try(value)?,
@@ -1800,7 +1915,7 @@ impl<'nvml> Device<'nvml> {
 
     // Removes code duplication in the above function.
     fn supported_memory_clocks_manual(&self, size: usize) -> Result<Vec<u32>> {
-        let mut items = vec![0u32; size];
+        let mut items: Vec<c_uint> = vec![0; size];
         let mut count = size as c_uint;
 
         unsafe {
@@ -1905,23 +2020,41 @@ impl<'nvml> Device<'nvml> {
     #[inline]
     pub fn topology_nearest_gpus(&self, level: TopologyLevel) -> Result<Vec<Device<'nvml>>> {
         unsafe {
-            let mut first_item: nvmlDevice_t = mem::zeroed();
-            // TODO: Fails if I pass 0? What?
-            // Will probably need to pull out some C to investigate this
-            let mut count: c_uint = 3;
-            nvml_try(nvmlDeviceGetTopologyNearestGpus(self.device, 
-                                                      level.into_c(), 
-                                                      &mut count, 
-                                                      &mut first_item))?;
+            let mut count = match self.get_top_nearest_gpus_count(&level)? {
+                0 => return Ok(vec![]),
+                value => value,
+            };
+            let mut gpus: Vec<nvmlDevice_t> = vec![mem::zeroed(); count as usize];
+
+            nvml_try(nvmlDeviceGetTopologyNearestGpus(self.device,
+                                                      level.into_c(),
+                                                      &mut count,
+                                                      // Indexing 0 here is safe
+                                                      // because we make sure `count`
+                                                      // is not 0 above
+                                                      &mut gpus[0]))?;
             
-            // TODO: Again I believe I'm doing every single one of these wrong. The array has
-            // already been malloc'd on the C side according to NVIDIA. What does this mean for me?
-            // Investigate?
-            Ok(slice::from_raw_parts(&first_item as *const nvmlDevice_t, 
-                                     count as usize)
-                                     .iter()
-                                     .map(|d| Device::from(*d))
-                                     .collect())
+            Ok(gpus.iter()
+                   .map(|d| Device::from(*d))
+                   .collect())
+        }
+    }
+
+    // Helper for the above function. Returns # of GPUs in the set.
+    #[cfg(target_os = "linux")]
+    #[inline]
+    fn get_top_nearest_gpus_count(&self, level: &TopologyLevel) -> Result<c_uint> {
+        unsafe {
+            let mut count: c_uint = 0;
+            // Passing null (I assume?) indicates that we want the GPU count
+            let gpus: [*mut nvmlDevice_t; 1] = [ptr::null_mut()];
+
+            nvml_try(nvmlDeviceGetTopologyNearestGpus(self.device,
+                                                      level.into_c(),
+                                                      &mut count,
+                                                      gpus[0]))?;
+
+            Ok(count)
         }
     }
 
@@ -3145,19 +3278,18 @@ mod test {
     fn running_compute_processes() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
-            device.running_compute_processes(64)
+            device.running_compute_processes()
         })
     }
 
-    // #[test]
-    // fn cpu_affinity() {
-    //     let nvml = nvml();
-    //     test_with_device(3, &nvml, |device| {
-    //         device.cpu_affinity(64)
-    //     })
-    // }
+    #[test]
+    fn cpu_affinity() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            device.cpu_affinity(64)
+        })
+    }
 
-    // TODO: Why is this saying 1
     #[test]
     fn current_pcie_link_gen() {
         let nvml = nvml();
@@ -3265,7 +3397,7 @@ mod test {
     fn running_graphics_processes() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
-            device.running_graphics_processes(64)
+            device.running_graphics_processes()
         })
     }
 
@@ -3491,9 +3623,9 @@ mod test {
     fn retired_pages() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
-            device.retired_pages(RetirementCause::MultipleSingleBitEccErrors, 64)
+            device.retired_pages(RetirementCause::MultipleSingleBitEccErrors)
                 .chain_err(|| "multiplesinglebit")?;
-            device.retired_pages(RetirementCause::DoubleBitEccError, 64)
+            device.retired_pages(RetirementCause::DoubleBitEccError)
                 .chain_err(|| "doublebit")
         })
     }
@@ -3508,7 +3640,14 @@ mod test {
         })
     }
 
-    // TODO: Test samples
+    #[test]
+    fn samples() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            device.samples(Sampling::ProcessorClock, None)?;
+            Ok(())
+        })
+    }
 
     // My machine does not support this call
     #[cfg(not(feature = "test-local"))]
@@ -3530,7 +3669,6 @@ mod test {
         })
     }
 
-    // TODO: Why is this printing ""
     #[test]
     fn current_throttle_reasons() {
         let nvml = nvml();
@@ -3701,7 +3839,7 @@ mod test {
     fn accounting_stats_for() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
-            let processes = device.running_graphics_processes(64)?;
+            let processes = device.running_graphics_processes()?;
             device.accounting_stats_for(processes[0].pid)
         })
     }

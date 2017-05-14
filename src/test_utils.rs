@@ -54,6 +54,8 @@ impl ShouldPrint for Vec<ProcessInfo> {}
 impl<'nvml> ShouldPrint for Vec<Device<'nvml>> {}
 impl ShouldPrint for Vec<u32> {}
 impl ShouldPrint for Vec<u64> {}
+#[cfg(feature = "nightly")]
+impl ShouldPrint for Vec<Sample> {}
 impl ShouldPrint for Utilization {}
 impl ShouldPrint for AutoBoostClocksEnabledInfo {}
 impl ShouldPrint for BAR1MemoryInfo {}

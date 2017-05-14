@@ -359,7 +359,7 @@ impl From<nvmlAccountingStats_t> for AccountingStats {
 /// Sample info.
 // Checked against local
 #[cfg(feature = "nightly")]
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Sample {
     /// CPU timestamp in μs
