@@ -63,8 +63,8 @@ impl ShouldPrint for BAR1MemoryInfo {}
 impl ShouldPrint for BridgeChipHierarchy {}
 impl ShouldPrint for ComputeMode {}
 impl ShouldPrint for UtilizationInfo {}
-impl ShouldPrint for EccModeInfo {}
-impl ShouldPrint for OperationModeInfo {}
+impl ShouldPrint for EccModeState {}
+impl ShouldPrint for OperationModeState {}
 impl ShouldPrint for InfoROM {}
 impl ShouldPrint for MemoryInfo {}
 impl ShouldPrint for PciInfo {}

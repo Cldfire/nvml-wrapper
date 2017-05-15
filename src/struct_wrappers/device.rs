@@ -141,7 +141,6 @@ pub struct BridgeChipHierarchy {
 
 impl From<nvmlBridgeChipHierarchy_t> for BridgeChipHierarchy {
     fn from(struct_: nvmlBridgeChipHierarchy_t) -> Self {
-        // TODO: Check that order is correct here (very important that it is!)
         let hierarchy = struct_.bridgeChipInfo.iter()
                                               .map(|bci| BridgeChipInfo::from(*bci))
                                               .collect();

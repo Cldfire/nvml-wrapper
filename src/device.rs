@@ -694,13 +694,13 @@ impl<'nvml> Device<'nvml> {
     // Tested
     #[cfg(target_os = "windows")]
     #[inline]
-    pub fn driver_model(&self) -> Result<DriverModel> {
+    pub fn driver_model(&self) -> Result<DriverModelState> {
         unsafe {
             let current: nvmlDriverModel_t = mem::zeroed();
             let pending: nvmlDriverModel_t = mem::zeroed();
             nvml_try(nvmlDeviceGetDriverModel(self.device, &mut current, &mut pending))?;
 
-            Ok(DriverModel{ current: current.into(), pending: pending.into() })
+            Ok(DriverModelState{ current: current.into(), pending: pending.into() })
         }
     }
 
@@ -725,14 +725,14 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested on machines other than my own
     #[inline]
-    pub fn is_ecc_enabled(&self) -> Result<EccModeInfo> {
+    pub fn is_ecc_enabled(&self) -> Result<EccModeState> {
         unsafe {
             let mut current: nvmlEnableState_t = mem::zeroed();
             let mut pending: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetEccMode(self.device, &mut current, &mut pending))?;
 
-            Ok(EccModeInfo{ currently_enabled: bool_from_state(current), 
-                            pending_enabled: bool_from_state(pending) })
+            Ok(EccModeState{ currently_enabled: bool_from_state(current), 
+                             pending_enabled: bool_from_state(pending) })
         }
     }
 
@@ -840,14 +840,14 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested on machines other than my own
     #[inline]
-    pub fn gpu_operation_mode(&self) -> Result<OperationModeInfo> {
+    pub fn gpu_operation_mode(&self) -> Result<OperationModeState> {
         unsafe {
             let mut current: nvmlGpuOperationMode_t = mem::zeroed();
             let mut pending: nvmlGpuOperationMode_t = mem::zeroed();
             nvml_try(nvmlDeviceGetGpuOperationMode(self.device, &mut current, &mut pending))?;
 
-            Ok(OperationModeInfo{ current: current.into(),
-                                  pending: pending.into() })
+            Ok(OperationModeState{ current: current.into(),
+                                   pending: pending.into() })
         }
     }
 

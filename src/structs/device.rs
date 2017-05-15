@@ -28,8 +28,7 @@ pub type EncoderUtilizationInfo = UtilizationInfo;
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg(target_os = "windows")]
-// TODO: Maybe a better name?
-pub struct DriverModels {
+pub struct DriverModelState {
     pub current: DriverModel,
     pub pending: DriverModel,
 }
@@ -37,7 +36,7 @@ pub struct DriverModels {
 /// Returned from `Device.is_ecc_enabled()`
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct EccModeInfo {
+pub struct EccModeState {
     pub currently_enabled: bool,
     pub pending_enabled: bool,
 }
@@ -45,7 +44,7 @@ pub struct EccModeInfo {
 /// Returned from `Device.gpu_operation_mode()`
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct OperationModeInfo {
+pub struct OperationModeState {
     pub current: OperationMode,
     pub pending: OperationMode,
 }
