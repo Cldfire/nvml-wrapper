@@ -15,7 +15,6 @@ use std::ffi::CStr;
 use std::ptr;
 use std::mem;
 use std::os::raw::{c_uint, c_ulong, c_ulonglong, c_int};
-use std::slice;
 
 // TODO: A number of things here that return Utf8Errors I have not documented.
 
@@ -547,8 +546,6 @@ impl<'nvml> Device<'nvml> {
             Ok(link_width as u32)
         }
     }
-
-    // TODO: GetCurrentClocksThrottleReasons. It returns a bitmask and I've never worked with those
 
     /**
     Gets the current utilization and sampling size (sampling size in μs) for the Decoder.
@@ -2481,27 +2478,40 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the `Device` is invalid
     * `NotSupported`, if this `Device` does not support this feature or accounting
     mode is disabled
-    * `InsufficientSize`,
     * `Unknown`, on any unexpected error
     */
-    // TODO: InsufficientSize ^
     // Checked against local
     // Tested
-    // TODO: API for stuff like this should work like this:
-    // It should have a `max_size` param that would be Into<Option<usize>>. Passing
-    // None would mean no size limit. Call `GetAccountingPids` twice, first to get
-    // required size, second to actually get the PIDs (if size <= `max_size`).
     #[inline]
-    pub fn accounting_pids(&self, size: usize) -> Result<Vec<u32>> {
+    pub fn accounting_pids(&self) -> Result<Vec<u32>> {
         unsafe {
-            let mut first_item: c_uint = mem::zeroed();
-            // TODO: Again, query with 0, if insufficientsize, count is supposed to be
-            // required size...
-            let mut count: c_uint = size as c_uint;
-            nvml_try(nvmlDeviceGetAccountingPids(self.device, &mut count, &mut first_item))?;
+            let mut count = match self.accounting_pids_count()? {
+                0 => return Ok(vec![]),
+                value => value,
+            };
+            let mut pids: Vec<c_uint> = vec![mem::zeroed(); count as usize];
 
-            // TODO: is this safe, correct
-            Ok(slice::from_raw_parts(first_item as *const c_uint, count as usize).to_vec())
+            nvml_try(nvmlDeviceGetAccountingPids(self.device, &mut count, &mut pids[0]))?;
+            Ok(pids)
+        }
+    }
+    
+    // Helper function for the above.
+    fn accounting_pids_count(&self) -> Result<c_uint> {
+        unsafe {
+            // Indicates that we want the count
+            let mut count: c_uint = 0;
+            // Also indicates that we want the count
+            let pids: [*mut c_uint; 1] = [ptr::null_mut()];
+
+            match nvmlDeviceGetAccountingPids(self.device, &mut count, pids[0]) {
+                // List is empty
+                nvmlReturn_t::NVML_SUCCESS => Ok(0),
+                // Count is set to pids count
+                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
+                // We know this is an error
+                other => nvml_try(other).map(|_| 0),
+            }
         }
     }
 
@@ -3827,7 +3837,7 @@ mod test {
     fn accounting_pids() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
-            device.accounting_pids(64)
+            device.accounting_pids()
         })
     }
 
