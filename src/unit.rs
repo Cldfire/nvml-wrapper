@@ -60,6 +60,7 @@ impl<'nvml> Unit<'nvml> {
     For S-class products.
     */
     // Checked against local
+    // Tested
     #[inline]
     pub fn devices(&self) -> Result<Vec<Device>> {
         unsafe {
@@ -93,6 +94,7 @@ impl<'nvml> Unit<'nvml> {
     # Device Support
     For S-class products.
     */
+    // Tested as part of the above
     #[inline]
     pub fn device_count(&self) -> Result<u32> {
         unsafe {
@@ -134,8 +136,9 @@ impl<'nvml> Unit<'nvml> {
     For S-class products.
     */
     // Checked against local
+    // Tested
     #[inline]
-    pub fn fan_info(&self) -> Result<UnitFansInfo> {
+    pub fn fan_info(&self) -> Result<FansInfo> {
         unsafe {
             let mut fans_info: nvmlUnitFanSpeeds_t = mem::zeroed();
             nvml_try(nvmlUnitGetFanSpeedInfo(self.unit, &mut fans_info))?;
@@ -158,13 +161,14 @@ impl<'nvml> Unit<'nvml> {
     For S-class products.
     */
     // Checked against local
+    // Tested
     #[inline]
-    pub fn led_state(&self) -> Result<UnitLedState> {
+    pub fn led_state(&self) -> Result<LedState> {
         unsafe {
             let mut state: nvmlLedState_t = mem::zeroed();
             nvml_try(nvmlUnitGetLedState(self.unit, &mut state))?;
 
-            Ok(UnitLedState::try_from(state)?)
+            Ok(LedState::try_from(state)?)
         }
     }
 
@@ -182,13 +186,14 @@ impl<'nvml> Unit<'nvml> {
     For S-class products.
     */
     // Checked against local
+    // Tested
     #[inline]
-    pub fn psu_info(&self) -> Result<UnitPsuInfo> {
+    pub fn psu_info(&self) -> Result<PsuInfo> {
         unsafe {
             let mut info: nvmlPSUInfo_t = mem::zeroed();
             nvml_try(nvmlUnitGetPsuInfo(self.unit, &mut info))?;
 
-            Ok(UnitPsuInfo::try_from(info)?)
+            Ok(PsuInfo::try_from(info)?)
         }
     }
 
@@ -207,8 +212,9 @@ impl<'nvml> Unit<'nvml> {
     For S-class products. Available readings depend on the product.
     */
     // Checked against local
+    // Tested
     #[inline]
-    pub fn temperature(&self, reading_type: UnitTemperatureReading) -> Result<u32> {
+    pub fn temperature(&self, reading_type: TemperatureReading) -> Result<u32> {
         unsafe {
             let mut temp: c_uint = mem::zeroed();
             nvml_try(nvmlUnitGetTemperature(self.unit, reading_type as c_uint, &mut temp))?;
@@ -229,6 +235,7 @@ impl<'nvml> Unit<'nvml> {
     For S-class products.
     */
     // Checked against local
+    // Tested
     #[inline]
     pub fn info(&self) -> Result<UnitInfo> {
         unsafe {
@@ -290,5 +297,60 @@ impl<'nvml> Unit<'nvml> {
     #[inline]
     pub unsafe fn unsafe_raw(&self) -> nvmlUnit_t {
         self.unit
+    }
+}
+
+// I do not have access to this hardware and cannot test anything
+#[cfg(not(feature = "test-local"))]
+#[cfg(test)]
+mod test {
+    use test_utils::*;
+    use enums::unit::TemperatureReading;
+
+    #[test]
+    fn devices() {
+        let nvml = nvml();
+        let unit = unit(&nvml);
+        unit.devices().expect("devices");
+    }
+
+    #[test]
+    fn fan_info() {
+        let nvml = nvml();
+        test_with_unit(3, &nvml, |unit| {
+            unit.fan_info()
+        })
+    }
+
+    #[test]
+    fn led_state() {
+        let nvml = nvml();
+        test_with_unit(3, &nvml, |unit| {
+            unit.led_state()
+        })
+    }
+
+    #[test]
+    fn psu_info() {
+        let nvml = nvml();
+        test_with_unit(3, &nvml, |unit| {
+            unit.psu_info()
+        })
+    }
+
+    #[test]
+    fn temperature() {
+        let nvml = nvml();
+        test_with_unit(3, &nvml, |unit| {
+            unit.temperature(TemperatureReading::Board)
+        })
+    }
+
+    #[test]
+    fn info() {
+        let nvml = nvml();
+        test_with_unit(3, &nvml, |unit| {
+            unit.info()
+        })
     }
 }

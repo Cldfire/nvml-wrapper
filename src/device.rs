@@ -3125,9 +3125,7 @@ impl<'nvml> Device<'nvml> {
 }
 
 #[cfg(test)]
-#[allow(unused_variables, unused_imports)]
 mod test {
-    use NVML;
     use super::Device;
     use error::*;
     use enum_wrappers::device::*;
@@ -3844,6 +3842,7 @@ mod test {
         })
     }
 
+    #[allow(unused_variables)]
     #[test]
     fn register_events() {
         let nvml = nvml();

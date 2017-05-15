@@ -1,5 +1,3 @@
-#![allow(dead_code, unused_variables)]
-
 use NVML;
 use unit::Unit;
 use event::EventSet;
@@ -10,6 +8,7 @@ use struct_wrappers::device::*;
 use struct_wrappers::event::*;
 use struct_wrappers::unit::*;
 use structs::device::*;
+use enums::unit::*;
 use bitmasks::device::*;
 use bitmasks::event::*;
 use std::fmt::Debug;
@@ -76,6 +75,10 @@ impl ShouldPrint for ViolationTime {}
 impl ShouldPrint for AccountingStats {}
 impl ShouldPrint for EventTypes {}
 impl<'nvml> ShouldPrint for EventData<'nvml> {}
+impl ShouldPrint for FansInfo {}
+impl ShouldPrint for LedState {}
+impl ShouldPrint for PsuInfo {}
+impl ShouldPrint for UnitInfo {}
 
 pub fn nvml() -> NVML {
     NVML::init().expect("initialized library")
@@ -83,6 +86,11 @@ pub fn nvml() -> NVML {
 
 pub fn device<'nvml>(nvml: &'nvml NVML) -> Device<'nvml> {
     nvml.device_by_index(0).expect("device")
+}
+
+#[cfg(not(feature = "test-local"))]
+pub fn unit<'nvml>(nvml: &'nvml NVML) -> Unit<'nvml> {
+    nvml.unit_by_index(0).expect("unit")
 }
 
 pub fn assert_send<T: Send>() {}
@@ -112,6 +120,21 @@ pub fn test_with_device<T, R>(reps: usize, nvml: &NVML, test: T)
 
     multi(reps, || {
         test(&device)
+    });
+}
+
+#[cfg(not(feature = "test-local"))]
+pub fn test_with_unit<T, R>(reps: usize, nvml: &NVML, test: T)
+    where T: Fn(&Unit) -> (Result<R>),
+          R: ShouldPrint {
+    let unit = unit(nvml);
+
+    single(|| {
+        test(&unit)
+    });
+
+    multi(reps, || {
+        test(&unit)
     });
 }
 

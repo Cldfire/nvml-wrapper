@@ -32,6 +32,7 @@ And the following products:
     * All GeForce products Fermi architecture and up
 */
 
+// TODO: #[should_panic] tests should not be #[should_panic] for obvious reasons
 // TODO: Finish module docs. Say something about device support.
 // TODO: Change into_c to as_c ?
 
@@ -667,12 +668,9 @@ impl Drop for NVML {
 }
 
 #[cfg(test)]
-#[allow(unused_variables, unused_imports)]
 mod test {
     use super::*;
     use test_utils::*;
-    use std::thread;
-    use std::sync::Arc;
 
     #[test]
     fn nvml_is_send() {
@@ -775,7 +773,7 @@ mod test {
     fn hic_version() {
         let nvml = nvml();
         test(3, || {
-            nvml.hic_version()
+            nvml.hic_versions()
         })
     }
 

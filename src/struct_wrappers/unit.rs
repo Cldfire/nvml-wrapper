@@ -7,16 +7,16 @@ use std::ffi::CStr;
 // Checked against local
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct UnitFansInfo {
+pub struct FansInfo {
     /// Number of fans in the unit.
     pub count: u32,
     /// Fan data for each fan.
     pub fans: Vec<FanInfo>,
 }
 
-impl From<nvmlUnitFanSpeeds_t> for UnitFansInfo {
+impl From<nvmlUnitFanSpeeds_t> for FansInfo {
     fn from(struct_: nvmlUnitFanSpeeds_t) -> Self {
-        UnitFansInfo {
+        FansInfo {
             count: struct_.count as u32,
             fans: struct_.fans.iter().map(|f| FanInfo::from(*f)).collect(),
         }
@@ -63,7 +63,7 @@ on it):
 // Checked against local
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct UnitPsuInfo {
+pub struct PsuInfo {
     /// PSU current (in A)
     pub current: u32,
     /// PSU power draw (in W)
@@ -74,12 +74,12 @@ pub struct UnitPsuInfo {
     pub voltage: u32,
 }
 
-impl UnitPsuInfo {
+impl PsuInfo {
     /// Waiting for `TryFrom` to be stable. In the meantime, we do this.
     pub fn try_from(struct_: nvmlPSUInfo_t) -> Result<Self> {
         unsafe {
             let state_raw = CStr::from_ptr(struct_.state.as_ptr());
-            Ok(UnitPsuInfo {
+            Ok(PsuInfo {
                 current: struct_.current as u32,
                 power_draw: struct_.power as u32,
                 state: state_raw.to_str()?.into(),
