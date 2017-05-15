@@ -263,28 +263,6 @@ impl From<nvmlViolationTime_t> for ViolationTime {
     }
 }
 
-/// Description of an HWBC entry.
-// Checked against local
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct HwbcEntry {
-    pub id: u32,
-    pub firmware_version: String,
-}
-
-impl HwbcEntry {
-    /// Waiting for `TryFrom` to be stable. In the meantime, we do this.
-    pub fn try_from(struct_: nvmlHwbcEntry_t) -> Result<Self> {
-        unsafe {
-            let version_raw = CStr::from_ptr(struct_.firmwareVersion.as_ptr());
-            Ok(HwbcEntry {
-                id: struct_.hwbcId as u32,
-                firmware_version: version_raw.to_str()?.into()
-            })
-        }
-    }
-}
-
 /**
 Accounting statistics for a process.
 

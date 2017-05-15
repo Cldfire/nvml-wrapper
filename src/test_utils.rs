@@ -8,6 +8,7 @@ use device::Device;
 use enum_wrappers::device::*;
 use struct_wrappers::device::*;
 use struct_wrappers::event::*;
+use struct_wrappers::unit::*;
 use structs::device::*;
 use bitmasks::device::*;
 use bitmasks::event::*;
@@ -56,6 +57,7 @@ impl ShouldPrint for Vec<u32> {}
 impl ShouldPrint for Vec<u64> {}
 #[cfg(feature = "nightly")]
 impl ShouldPrint for Vec<Sample> {}
+impl ShouldPrint for Vec<HwbcEntry> {}
 impl ShouldPrint for Utilization {}
 impl ShouldPrint for AutoBoostClocksEnabledInfo {}
 impl ShouldPrint for BAR1MemoryInfo {}

@@ -36,7 +36,7 @@ impl<'nvml> From<nvmlEventSet_t> for EventSet<'nvml> {
 
 impl<'nvml> EventSet<'nvml> {
     /**
-    Use this to release events in the set if you care about handling
+    Use this to release the set's events if you care about handling
     potential errors (*the `Drop` implementation ignores errors!*).
     
     # Errors
@@ -44,7 +44,6 @@ impl<'nvml> EventSet<'nvml> {
     * `Unknown`, on any unexpected error
     */
     // Checked against local
-    // TODO: Should this be a weaker name?
     #[inline]
     pub fn release_events(self) -> Result<()> {
         unsafe {

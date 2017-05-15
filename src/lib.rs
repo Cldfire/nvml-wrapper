@@ -68,10 +68,11 @@ use unit::Unit;
 use event::EventSet;
 use std::os::raw::{c_uint, c_int};
 use std::ffi::{CStr, CString};
+use std::ptr;
 use std::mem;
 use enum_wrappers::device::*;
 use struct_wrappers::device::PciInfo;
-use std::slice;
+use struct_wrappers::unit::HwbcEntry;
 use std::io;
 use std::io::Write;
 
@@ -431,6 +432,7 @@ impl NVML {
     * `Unknown`, on any unexpected error
     */
     // Checked against local
+    // TODO: Rename to `are_devices_on_same_board`
     #[inline]
     pub fn is_device_on_same_board_as(device1: &Device, device2: &Device) -> Result<bool> {
         unsafe {
@@ -455,25 +457,106 @@ impl NVML {
     # Platform Support
     Only supports Linux.
     */
+    // Tested
     #[cfg(target_os = "linux")]
     #[inline]
     pub fn topology_gpu_set(&self, cpu_number: u32) -> Result<Vec<Device>> {
         unsafe {
-            let mut first_item: nvmlDevice_t = mem::zeroed();
-            let mut count: c_uint = 0;
-            nvml_try(nvmlSystemGetTopologyGpuSet(cpu_number as c_uint, &mut count, &mut first_item))?;
+            let mut count = match self.topology_gpu_set_count(cpu_number)? {
+                0 => return Ok(vec![]),
+                value => value,
+            };
+            let mut devices: Vec<nvmlDevice_t> = vec![mem::zeroed(); count as usize];
 
-            // TODO:
-            Ok(slice::from_raw_parts(&first_item as *const nvmlDevice_t, 
-                                     count as usize)
-                                     .iter()
-                                     .map(|d| Device::from(*d))
-                                     .collect())
+            // Indexing 0 here is safe because we make sure `count` is not 0 above
+            nvml_try(nvmlSystemGetTopologyGpuSet(cpu_number, &mut count, &mut devices[0]))?;
+            Ok(devices.iter()
+                      .map(|d| Device::from(*d))
+                      .collect())
+        }
+    }
+    
+    // Helper function for the above.
+    // TODO: Fix other helper function names, shouldn't be `get`
+    #[cfg(target_os = "linux")]
+    #[inline]
+    fn topology_gpu_set_count(&self, cpu_number: u32) -> Result<c_uint> {
+        unsafe {
+            // Indicates that we want the count
+            let mut count: c_uint = 0;
+            // Passing null doesn't indicate that we want the count, just allowed
+            let processes: [*mut nvmlDevice_t; 1] = [ptr::null_mut()];
+            
+            nvml_try(nvmlSystemGetTopologyGpuSet(cpu_number, &mut count, processes[0]))?;
+            Ok(count)
         }
     }
 
-    // TODO: NVIDIA doesn't explain this very well...
-    // pub fn hic_version(&self) ->
+    /**
+    Gets the IDs and firmware versions for any Host Interface Cards in the system.
+
+    # Errors
+    * `Uninitialized`, if the library has not been successfully initialized
+
+    # Device Support
+    Supports S-class products.
+    */
+    // Checked against local
+    // Tested
+    #[inline]
+    pub fn hic_versions(&self) -> Result<Vec<HwbcEntry>> {
+        unsafe {
+            let mut count: c_uint = match self.hic_count()? {
+                0 => return Ok(vec![]),
+                value => value,
+            };
+            let mut hics: Vec<nvmlHwbcEntry_t> = vec![mem::zeroed(); count as usize];
+
+            // Indexing 0 here is safe because we make sure `count` is not 0 above
+            nvml_try(nvmlSystemGetHicVersion(&mut count, &mut hics[0]))?;
+            hics.iter()
+                .map(|h| HwbcEntry::try_from(*h))
+                .collect()
+        }
+    }
+
+    /**
+    Gets the count of Host Interface Cards in the system.
+
+    # Errors
+    * `Uninitialized`, if the library has not been successfully initialized
+
+    # Device Support
+    Supports S-class products.
+    */
+    // Tested as part of the above method
+    #[inline]
+    pub fn hic_count(&self) -> Result<u32> {
+        unsafe {
+            /*
+            NVIDIA doesn't even say that `count` will be set to the count if
+            `InsufficientSize` is returned. But we can assume sanity, right?
+            
+            The idea here is:
+            If there are 0 HICs, NVML_SUCCESS is returned, `count` is set
+              to 0. We return count, all good.
+            If there is 1 HIC, NVML_SUCCESS is returned, `count` is set to
+              1. We return count, all good.
+            If there are >= 2 HICs, NVML_INSUFFICIENT_SIZE is returned.
+             `count` is theoretically set to the actual count, and we
+              return it.
+            */
+            let mut count: c_uint = 1;
+            let mut hics: [nvmlHwbcEntry_t; 1] = [mem::zeroed()];
+
+            match nvmlSystemGetHicVersion(&mut count, &mut hics[0]) {
+                nvmlReturn_t::NVML_SUCCESS |
+                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
+                // We know that this will be an error
+                other => nvml_try(other).map(|_| 0),
+            }
+        }
+    }
 
     /**
     Gets the number of units in the system.
@@ -677,6 +760,22 @@ mod test {
         let nvml = nvml();
         test(3, || {
             nvml.unit_by_index(0)
+        })
+    }
+
+    #[test]
+    fn topology_gpu_set() {
+        let nvml = nvml();
+        test(3, || {
+            nvml.topology_gpu_set(0)
+        })
+    }
+
+    #[test]
+    fn hic_version() {
+        let nvml = nvml();
+        test(3, || {
+            nvml.hic_version()
         })
     }
 

@@ -1,7 +1,6 @@
 use ffi::bindings::*;
 use std::marker::PhantomData;
 use std::os::raw::c_uint;
-use std::slice;
 use std::mem;
 use device::Device;
 use struct_wrappers::unit::*;
@@ -97,22 +96,28 @@ impl<'nvml> Unit<'nvml> {
     #[inline]
     pub fn device_count(&self) -> Result<u32> {
         unsafe {
-            // NVIDIA doesn't even say that `count` will be set to the count if
-            // `InsufficientSize` is returned. But we can assume sanity, right?
-            //
-            // The idea here is:
-            // If there are 0 devices, NVML_SUCCESS is returned, `count` is set
-            //   to 0. We return count, all good.
-            // If there is 1 device, NVML_SUCCESS is returned, `count` remains
-            //   0. We return count, all good.
-            // If there are >= 2 devices, NVML_INSUFFICIENT_SIZE is returned.
-            //  `count` is theoretically set to the actual count, and we
-            //   return it.
+            /*
+            NVIDIA doesn't even say that `count` will be set to the count if
+            `InsufficientSize` is returned. But we can assume sanity, right?
+            
+            The idea here is:
+            If there are 0 devices, NVML_SUCCESS is returned, `count` is set
+              to 0. We return count, all good.
+            If there is 1 device, NVML_SUCCESS is returned, `count` is set to
+              1. We return count, all good.
+            If there are >= 2 devices, NVML_INSUFFICIENT_SIZE is returned.
+             `count` is theoretically set to the actual count, and we
+              return it.
+            */
             let mut count: c_uint = 1;
             let mut devices: [nvmlDevice_t; 1] = [mem::zeroed()];
 
-            nvmlUnitGetDevices(self.unit, &mut count, &mut devices[0])?;
-            Ok(count)
+            match nvmlUnitGetDevices(self.unit, &mut count, &mut devices[0]) {
+                nvmlReturn_t::NVML_SUCCESS |
+                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
+                // We know that this will be an error
+                other => nvml_try(other).map(|_| 0),
+            }
         }
     }
 
