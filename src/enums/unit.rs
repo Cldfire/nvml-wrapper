@@ -2,8 +2,6 @@ use ffi::bindings::*;
 use error::*;
 use std::ffi::CStr;
 
-// TODO: document try_froms
-
 /// LED states for an S-class unit.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -15,7 +13,12 @@ pub enum LedState {
 }
 
 impl LedState {
-    /// Waiting for `TryFrom` to be stable. In the meantime, we do this.
+    /**
+    Waiting for `TryFrom` to be stable. In the meantime, we do this.
+    
+    # Errors
+    * `Utf8Error`, if the string obtained from the C function is not valid Utf8
+    */
     pub fn try_from(struct_: nvmlLedState_t) -> Result<Self> {
         match struct_.color {
             nvmlLedColor_t::NVML_LED_COLOR_GREEN => Ok(LedState::Green),

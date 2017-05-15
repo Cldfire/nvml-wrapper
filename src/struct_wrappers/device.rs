@@ -135,7 +135,6 @@ pub struct BridgeChipHierarchy {
     /// Hierarchy of bridge chips on the board.
     pub chips_hierarchy: Vec<BridgeChipInfo>,
     /// Number of bridge chips on the board.
-    // TODO: Binding type is c_uchar, investigate
     pub chip_count: u8,
 }
 
@@ -286,8 +285,7 @@ pub struct AccountingStats {
     pub is_running: bool,
     /// Max total memory in bytes that was ever allocated by the process.
     ///
-    /// It will be `None` if `nvmlProcessInfo_t->usedGpuMemory` is not supported.
-    // TODO: Eq rust name ^
+    /// It will be `None` if `ProcessInfo.used_gpu_memory` is not supported.
     pub max_memory_usage: Option<u64>,
     /**
     Percent of time over the process's lifetime during which global (device) memory
