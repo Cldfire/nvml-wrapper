@@ -79,7 +79,7 @@ impl PciInfo {
         };
 
         bus_id_c.clone_from_slice(&bus_id.iter()
-                                         .map(|b| *b as i8)
+                                         .map(|b| *b as c_char)
                                          .collect::<Vec<_>>());
 
         Ok(nvmlPciInfo_t {

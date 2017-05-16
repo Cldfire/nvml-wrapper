@@ -412,11 +412,8 @@ impl<'nvml> Device<'nvml> {
             let mut processes: Vec<nvmlProcessInfo_t> = vec![mem::zeroed(); count as usize];
 
             nvml_try(nvmlDeviceGetComputeRunningProcesses(self.device,
-                                                          &mut count,
-                                                          // because we make sure `count`
-                                                          // Indexing 0 here is safe
-                                                          // is not 0 above                                                        
-                                                          &mut processes[0]))?;
+                                                          &mut count,                                             
+                                                          processes.as_mut_ptr()))?;
 
             Ok(processes.iter()
                         .map(|p| ProcessInfo::from(*p))
@@ -443,11 +440,9 @@ impl<'nvml> Device<'nvml> {
         unsafe {
             // Indicates that we want the count
             let mut count: c_uint = 0;
-            // Passing null doesn't indicate that we want the count. It's just allowed.
-            // And if it's allowed, why not? Everyone loves passing null to things >:D
-            let processes: [*mut nvmlProcessInfo_t; 1] = [ptr::null_mut()];
 
-            match nvmlDeviceGetComputeRunningProcesses(self.device, &mut count, processes[0]) {
+            // Passing null doesn't mean we want the count, it's just allowed
+            match nvmlDeviceGetComputeRunningProcesses(self.device, &mut count, ptr::null_mut()) {
                 nvmlReturn_t::NVML_SUCCESS => Ok(0),
                 nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
                 // We know that this wil be an error
@@ -490,7 +485,7 @@ impl<'nvml> Device<'nvml> {
             }
 
             let mut affinities: Vec<c_ulong> = vec![mem::zeroed(); size];
-            nvml_try(nvmlDeviceGetCpuAffinity(self.device, size as c_uint, &mut affinities[0]))?;
+            nvml_try(nvmlDeviceGetCpuAffinity(self.device, size as c_uint, affinities.as_mut_ptr()))?;
 
 
             Ok(affinities)
@@ -871,11 +866,8 @@ impl<'nvml> Device<'nvml> {
             let mut processes: Vec<nvmlProcessInfo_t> = vec![mem::zeroed(); count as usize];
 
             nvml_try(nvmlDeviceGetGraphicsRunningProcesses(self.device,
-                                                           &mut count,
-                                                           // Indexing 0 here is safe
-                                                           // because we make sure `count`
-                                                           // is not 0 above                                                        
-                                                           &mut processes[0]))?;
+                                                           &mut count,                                                
+                                                           processes.as_mut_ptr()))?;
 
             Ok(processes.iter()
                         .map(|p| ProcessInfo::from(*p))
@@ -900,11 +892,9 @@ impl<'nvml> Device<'nvml> {
         unsafe {
             // Indicates that we want the count
             let mut count: c_uint = 0;
-            // Passing null doesn't indicate that we want the count. It's just allowed.
-            // And if it's allowed, why not? Everyone loves passing null to things >:D
-            let processes: [*mut nvmlProcessInfo_t; 1] = [ptr::null_mut()];
 
-            match nvmlDeviceGetGraphicsRunningProcesses(self.device, &mut count, processes[0]) {
+            // Passing null doesn't indicate that we want the count. It's just allowed.
+            match nvmlDeviceGetGraphicsRunningProcesses(self.device, &mut count, ptr::null_mut()) {
                 nvmlReturn_t::NVML_SUCCESS => Ok(0),
                 nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
                 // We know that this will be an error
@@ -1000,6 +990,8 @@ impl<'nvml> Device<'nvml> {
                                                       version_vec.as_mut_ptr(), 
                                                       NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE))?;
             
+            // TODO: Think suggested on Discord to not use a CStr and just go straight from Vec to String
+            // Investigate
             let version_raw = CStr::from_ptr(version_vec.as_ptr());
             Ok(version_raw.to_str()?.into())
         }
@@ -1588,10 +1580,7 @@ impl<'nvml> Device<'nvml> {
             nvml_try(nvmlDeviceGetRetiredPages(self.device,
                                                cause.as_c(),
                                                &mut count,
-                                               // Indexing 0 here is safe
-                                               // because we make sure `count`
-                                               // is not 0 above
-                                               &mut causes[0]))?;
+                                               causes.as_mut_ptr()))?;
             
             Ok(causes)
         }
@@ -1602,14 +1591,13 @@ impl<'nvml> Device<'nvml> {
     fn get_retired_pages_count(&self, cause: &RetirementCause) -> Result<c_uint> {
         unsafe {
             let mut count: c_uint = 0;
-            // All NVIDIA says is that the buffer pointer cannot be null. So...
-            // I guess we do this? ¯\_(ツ)_/¯
-            let mut causes: [c_ulonglong; 1] = [mem::zeroed()];
 
             nvml_try(nvmlDeviceGetRetiredPages(self.device,
                                                cause.as_c(),
                                                &mut count,
-                                               &mut causes[0]))?;
+                                               // All NVIDIA says is that this
+                                               // can't be null.
+                                               &mut mem::zeroed()))?;
             
             Ok(count)
         }
@@ -1715,11 +1703,8 @@ impl<'nvml> Device<'nvml> {
                                           sample_type.as_c(),
                                           timestamp as c_ulonglong,
                                           &mut val_type,
-                                          &mut count,
-                                          // Indexing 0 here is safe
-                                          // because we make sure `count`
-                                          // is not 0 above                                            
-                                          &mut samples[0]))?;
+                                          &mut count,                                        
+                                          samples.as_mut_ptr()))?;
 
             let val_type_rust = SampleValueType::try_from(val_type)?;
             Ok(samples.iter()
@@ -1735,15 +1720,14 @@ impl<'nvml> Device<'nvml> {
         unsafe {
             let mut val_type: nvmlValueType_t = mem::zeroed();
             let mut count: c_uint = mem::zeroed();
-            // Passing null indicates that we want the sample count
-            let samples: [*mut nvmlSample_t; 1] = [ptr::null_mut()];
 
             nvml_try(nvmlDeviceGetSamples(self.device,
                                           sample_type.as_c(),
                                           timestamp as c_ulonglong,
                                           &mut val_type,
                                           &mut count,
-                                          samples[0]))?;
+                                          // Indicates that we want the count
+                                          ptr::null_mut()))?;
 
             Ok(count)
         }
@@ -1899,7 +1883,7 @@ impl<'nvml> Device<'nvml> {
             match nvmlDeviceGetSupportedGraphicsClocks(self.device,
                                                        for_mem_clock as c_uint,
                                                        &mut count,
-                                                       &mut items[0]) {
+                                                       items.as_mut_ptr()) {
                 nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE =>
                     // `count` is now the size that is required. Return it in the error.
                     bail!(ErrorKind::InsufficientSize(count as usize)),
@@ -1946,7 +1930,7 @@ impl<'nvml> Device<'nvml> {
         unsafe {
             match nvmlDeviceGetSupportedMemoryClocks(self.device,
                                                      &mut count,
-                                                     &mut items[0]) {
+                                                     items.as_mut_ptr()) {
                 nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => 
                     // `count` is now the size that is required. Return it in the error.
                     bail!(ErrorKind::InsufficientSize(count as usize)),
@@ -2054,10 +2038,7 @@ impl<'nvml> Device<'nvml> {
             nvml_try(nvmlDeviceGetTopologyNearestGpus(self.device,
                                                       level.as_c(),
                                                       &mut count,
-                                                      // Indexing 0 here is safe
-                                                      // because we make sure `count`
-                                                      // is not 0 above
-                                                      &mut gpus[0]))?;
+                                                      gpus.as_mut_ptr()))?;
             
             Ok(gpus.iter()
                    .map(|d| Device::from(*d))
@@ -2071,13 +2052,14 @@ impl<'nvml> Device<'nvml> {
     fn get_top_nearest_gpus_count(&self, level: &TopologyLevel) -> Result<c_uint> {
         unsafe {
             let mut count: c_uint = 0;
-            // Passing null (I assume?) indicates that we want the GPU count
-            let gpus: [*mut nvmlDevice_t; 1] = [ptr::null_mut()];
 
             nvml_try(nvmlDeviceGetTopologyNearestGpus(self.device,
                                                       level.as_c(),
                                                       &mut count,
-                                                      gpus[0]))?;
+                                                      // Passing null (I assume?)
+                                                      // indicates that we want the
+                                                      // GPU count
+                                                      ptr::null_mut()))?;
 
             Ok(count)
         }
@@ -2540,7 +2522,7 @@ impl<'nvml> Device<'nvml> {
             };
             let mut pids: Vec<c_uint> = vec![mem::zeroed(); count as usize];
 
-            nvml_try(nvmlDeviceGetAccountingPids(self.device, &mut count, &mut pids[0]))?;
+            nvml_try(nvmlDeviceGetAccountingPids(self.device, &mut count, pids.as_mut_ptr()))?;
             Ok(pids)
         }
     }
@@ -2550,10 +2532,9 @@ impl<'nvml> Device<'nvml> {
         unsafe {
             // Indicates that we want the count
             let mut count: c_uint = 0;
-            // Also indicates that we want the count
-            let pids: [*mut c_uint; 1] = [ptr::null_mut()];
 
-            match nvmlDeviceGetAccountingPids(self.device, &mut count, pids[0]) {
+            // Null also indicates that we want the count
+            match nvmlDeviceGetAccountingPids(self.device, &mut count, ptr::null_mut()) {
                 // List is empty
                 nvmlReturn_t::NVML_SUCCESS => Ok(0),
                 // Count is set to pids count
