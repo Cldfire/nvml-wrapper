@@ -1,8 +1,6 @@
 use ffi::bindings::*;
 use error::*;
 
-// TODO: Fix inconsistent capitalization
-
 /// API types that allow changes to default permission restrictions.
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]

@@ -34,7 +34,6 @@ And the following products:
 
 // TODO: #[should_panic] tests should not be #[should_panic] for obvious reasons
 // TODO: Finish module docs. Say something about device support.
-// TODO: Change into_c to as_c ?
 
 #![recursion_limit = "1024"]
 #![cfg_attr(feature = "cargo-clippy", allow(doc_markdown))]

@@ -271,7 +271,7 @@ impl<'nvml> Unit<'nvml> {
     #[inline]
     pub fn set_led_color(&mut self, color: LedColor) -> Result<()> {
         unsafe {
-            nvml_try(nvmlUnitSetLedState(self.unit, color.into_c()))
+            nvml_try(nvmlUnitSetLedState(self.unit, color.as_c()))
         }
     }
 
