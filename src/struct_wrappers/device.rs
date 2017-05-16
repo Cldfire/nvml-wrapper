@@ -6,8 +6,6 @@ use std::os::raw::{c_uint, c_char};
 use std::ffi::{CStr, CString};
 use std::u32;
 
-// TODO: Document errors for try_froms and try_intos
-
 /// PCI information about a GPU device.
 // Checked against local
 // Tested
@@ -29,7 +27,12 @@ pub struct PciInfo {
 }
 
 impl PciInfo {
-    /// Waiting for `TryFrom` to be stable. In the meantime, we do this.
+    /**
+    Waiting for `TryFrom` to be stable. In the meantime, we do this.
+
+    # Errors
+    * `Utf8Error`, if the string obtained from the C function is not valid Utf8
+    */
     pub fn try_from(struct_: nvmlPciInfo_t) -> Result<Self> {
         unsafe {
             let bus_id_raw = CStr::from_ptr(struct_.busId.as_ptr());
@@ -44,17 +47,33 @@ impl PciInfo {
         }
     }
 
-    /// Waiting to `TryInto` to be stable. In the meantime, we do this.
+    /**
+    Waiting for `TryInto` to be stable. In the meantime, we do this.
+
+    # Errors
+    * `NulError`, if a nul byte was found in the bus_id (shouldn't occur?)
+    * `StringTooLong`, if `bus_id.len()` exceeded the length of
+    `NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE`. This should (?) only be able to
+    occur if the user modifies `bus_id` in some fashion. We return an error
+    rather than panicking.
+    */
+    // Tested
     pub fn try_into_c(self) -> Result<nvmlPciInfo_t> {
-        // TODO: Is my method of getting the c_char array from the stored string correct
-        // TODO: If it is do it better
-        let mut bus_id_c: [c_char; 16] = [0; 16];
+        use NVML_DEVICE_PCI_BUS_ID_BUFFER_SIZE as _buf_size;
+
+        // This is more readable than spraying `buf_size as usize` everywhere
+        fn buf_size() -> usize {
+            _buf_size as usize
+        }
+
+        // ...but const fn though.
+        let mut bus_id_c: [c_char; _buf_size as usize] = [0; _buf_size as usize];
         let mut bus_id = CString::new(self.bus_id)?.into_bytes_with_nul();
 
-        if bus_id.len() > 16 {
-            panic!("length was > 16")
-        } else if bus_id.len() < 16 {
-            while bus_id.len() != 16 {
+        if bus_id.len() > buf_size() {
+            bail!(ErrorKind::StringTooLong(buf_size(), bus_id.len()))
+        } else if bus_id.len() < buf_size() {
+            while bus_id.len() != buf_size() {
                 bus_id.push(0);
             }
         };

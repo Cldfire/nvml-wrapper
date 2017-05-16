@@ -65,7 +65,7 @@ impl ShouldPrint for ComputeMode {}
 impl ShouldPrint for UtilizationInfo {}
 impl ShouldPrint for EccModeState {}
 impl ShouldPrint for OperationModeState {}
-impl ShouldPrint for InfoROM {}
+impl ShouldPrint for InfoRom {}
 impl ShouldPrint for MemoryInfo {}
 impl ShouldPrint for PciInfo {}
 impl ShouldPrint for PerformanceState {}

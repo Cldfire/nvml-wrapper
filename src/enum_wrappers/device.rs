@@ -1,9 +1,6 @@
 use ffi::bindings::*;
 use error::*;
 
-// TODO: Test everything in this module.
-// TODO: Check all of these things against local nvml.h
-// TODO: Improve the derive macro
 // TODO: Fix inconsistent capitalization
 
 /// API types that allow changes to default permission restrictions.
@@ -23,8 +20,7 @@ pub enum Api {
     ApplicationClocks,
     /// APIs that enable/disable auto boosted clocks.
     ///
-    /// Applicable methods on `Device`: `.set_auto_boosted_clocks_enabled()`
-    // TODO: does that exist ^
+    /// Applicable methods on `Device`: `.set_auto_boosted_clocks()`
     #[wrap(c_variant = "NVML_RESTRICTED_API_SET_AUTO_BOOSTED_CLOCKS")]
     AutoBoostedClocks,
 }
@@ -235,7 +231,7 @@ pub enum OperationMode {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[wrap(c_enum = "nvmlInforomObject_t")]
 #[wrap(has_count = "NVML_INFOROM_COUNT")]
-pub enum InfoROM {
+pub enum InfoRom {
     /// An object defined by OEM.
     #[wrap(c_variant = "NVML_INFOROM_OEM")]
     OEM,
@@ -270,7 +266,6 @@ Value    Performance
  15           ▼
 ```
 */
-// TODO: Make sure that looks right ^
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

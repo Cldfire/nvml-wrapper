@@ -9,6 +9,16 @@ error_chain! {
     }
     errors {
         /**
+        A String was too long to fit into an array.
+
+        This error is specific to this Rust wrapper.
+        */
+        StringTooLong(max_len: usize, actual_len: usize) {
+            description("A String was too long to fit into an array")
+            display("The max String length was '{}', but the actual String \
+                     length was '{}'", max_len, actual_len)
+        }
+        /**
         Bits that did not correspond to a flag were encountered whilst attempting to
         interpret them as bitflags.
         

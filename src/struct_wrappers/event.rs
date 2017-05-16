@@ -4,13 +4,16 @@ use bitmasks::event::*;
 use error::*;
 
 // TODO: Should this be higher level. It probably should
-// Store specific event flag ^
 /// Information about an event that has occurred.
 // Checked against local
 #[derive(Debug)]
 pub struct EventData<'nvml> {
-    /// Device where the event occurred.
-    // TODO: Need to be able to compare device handles for equality due to this (?)
+    /**
+    Device where the event occurred.
+    
+    See `Device.uuid()` for a way to compare this `Device` to another `Device`
+    and find out if they represent the same physical device.
+    */
     pub device: Device<'nvml>,
     /// Information about what specific event occurred.
     pub event_type: EventTypes,
@@ -26,6 +29,7 @@ impl<'nvml> EventData<'nvml> {
             device: struct_.device.into(),
             event_type: match EventTypes::from_bits(struct_.eventType as u64) {
                 Some(t) => t,
+                // TODO: Send incorrect bits back in error
                 None    => bail!(ErrorKind::IncorrectBits),
             },
             event_data: struct_.eventData as u64,

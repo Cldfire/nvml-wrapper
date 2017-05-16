@@ -563,13 +563,13 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested
     #[inline]
-    pub fn decoder_utilization(&self) -> Result<DecoderUtilizationInfo> {
+    pub fn decoder_utilization(&self) -> Result<UtilizationInfo> {
         unsafe {
             let mut utilization: c_uint = mem::zeroed();
             let mut sampling_period: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetDecoderUtilization(self.device, &mut utilization, &mut sampling_period))?;
 
-            Ok(DecoderUtilizationInfo {
+            Ok(UtilizationInfo {
                 utilization: utilization as u32,
                 sampling_period: sampling_period as u32,
             })
@@ -719,9 +719,8 @@ impl<'nvml> Device<'nvml> {
     
     # Device Support
     Supports Fermi and newer fully supported devices. Only applicable to devices with
-    ECC. Requires NVML_INFOROM_ECC version 1.0 or higher.
+    ECC. Requires `InfoRom::ECC` version 1.0 or higher.
     */
-    // TODO: Expose that somehow? ^
     // Checked against local
     // Tested on machines other than my own
     #[inline]
@@ -752,14 +751,14 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested
     #[inline]
-    pub fn encoder_utilization(&self) -> Result<EncoderUtilizationInfo> {
+    pub fn encoder_utilization(&self) -> Result<UtilizationInfo> {
         unsafe {
             let mut utilization: c_uint = mem::zeroed();
             let mut sampling_period: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetEncoderUtilization(self.device, &mut utilization, &mut sampling_period))?;
 
-            Ok(EncoderUtilizationInfo{ utilization: utilization as u32, 
-                                       sampling_period: sampling_period as u32 })
+            Ok(UtilizationInfo{ utilization: utilization as u32, 
+                                sampling_period: sampling_period as u32 })
         }
     }
 
@@ -1029,7 +1028,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested on machines other than my own
     #[inline]
-    pub fn info_rom_version(&self, object: InfoROM) -> Result<String> {
+    pub fn info_rom_version(&self, object: InfoRom) -> Result<String> {
         unsafe {
             let mut version_vec = Vec::with_capacity(NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE as usize);
             nvml_try(nvmlDeviceGetInforomVersion(self.device,
@@ -1140,9 +1139,9 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
-    Supports Fermi and newer fully supported devices. Requires `NVML_INFOROM_ECC` version
+    Supports Fermi and newer fully supported devices. Requires `InfoRom::ECC` version
     2.0 or higher to report aggregate location-based memory error counts. Requires
-    `NVML_INFOROM_ECC` version 1.0 or higher to report all other memory error counts.
+    `InfoRom::ECC version 1.0 or higher to report all other memory error counts.
     */
     // Checked against local
     // Tested on machines other than my own
@@ -1856,7 +1855,7 @@ impl<'nvml> Device<'nvml> {
         match self.supported_graphics_clocks_manual(for_mem_clock, 128) {
             Err(Error(ErrorKind::InsufficientSize(s), _)) => 
                 // `s` is the required size for the call; make the call a second time
-                return self.supported_graphics_clocks_manual(for_mem_clock, s),
+                self.supported_graphics_clocks_manual(for_mem_clock, s),
             value => value,
         }
     }
@@ -1904,7 +1903,7 @@ impl<'nvml> Device<'nvml> {
         match self.supported_memory_clocks_manual(16) {
             Err(Error(ErrorKind::InsufficientSize(s), _)) => {
                 // `s` is the required size for the call; make the call a second time
-                return self.supported_memory_clocks_manual(s)
+                self.supported_memory_clocks_manual(s)
             },
             value => value,
         }
@@ -2069,7 +2068,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
-    Supports Fermi and newer fully supported devices. Requires NVML_INFOROM_ECC version 1.0
+    Supports Fermi and newer fully supported devices. Requires `InfoRom::ECC` version 1.0
     or higher. Requires ECC mode to be enabled.
     */
     // Checked against local
@@ -2102,6 +2101,24 @@ impl<'nvml> Device<'nvml> {
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     * `Unknown`, on any unexpected error
+
+    # Examples
+    The UUID can be used to compare two `Device`s and find out if they represent
+    the same physical device:
+
+    ```no_run
+    # use nvml::NVML;
+    # use nvml::error::*;
+    # fn test() -> Result<()> {
+    # let nvml = NVML::init()?;
+    # let device1 = nvml.device_by_index(0)?;
+    # let device2 = nvml.device_by_index(1)?;
+    if device1.uuid()? == device2.uuid()? {
+        println!("`device1` represents the same physical device that `device2` does");
+    }
+    # Ok(())
+    # }
+    ```
     */
     // Checked against local
     // Tested
@@ -2611,8 +2628,8 @@ impl<'nvml> Device<'nvml> {
     
     # Device Support
     Supports Kepler and newer fully supported devices. Only applicable to devices with
-    ECC. Requires `NVML_INFOROM_ECC` version 2.0 or higher to clear aggregate
-    location-based ECC counts. Requires `NVML_INFOROM_ECC` version 1.0 or higher to
+    ECC. Requires `InfoRom::ECC` version 2.0 or higher to clear aggregate
+    location-based ECC counts. Requires `InfoRom::ECC` version 1.0 or higher to
     clear all other ECC counts.
     */
     // Checked against local
@@ -2783,7 +2800,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
-    Supports Kepler and newer fully supported devices. Requires NVML_INFOROM_ECC version
+    Supports Kepler and newer fully supported devices. Requires `InfoRom::ECC` version
     1.0 or higher.
     */
     // Checked against local

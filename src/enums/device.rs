@@ -2,8 +2,6 @@ use ffi::bindings::*;
 #[cfg(feature = "nightly")]
 use enum_wrappers::device::*;
 
-// TODO: document try_froms
-
 /// Respresents possible variants for a firmware version.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -39,7 +37,6 @@ impl From<u64> for UsedGpuMemory {
         let not_available = (NVML_VALUE_NOT_AVAILABLE) as u64;
 
         match value {
-            // Believe it or not, it took me half an hour to figure out how to do this.
             v if v == not_available => UsedGpuMemory::Unavailable,
             _ => UsedGpuMemory::Used(value),
         }

@@ -21,9 +21,6 @@ pub struct UtilizationInfo {
     pub sampling_period: u32,
 }
 
-pub type DecoderUtilizationInfo = UtilizationInfo;
-pub type EncoderUtilizationInfo = UtilizationInfo;
-
 /// Returned from `Device.driver_model()`
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

@@ -433,9 +433,8 @@ impl NVML {
     * `Unknown`, on any unexpected error
     */
     // Checked against local
-    // TODO: Rename to `are_devices_on_same_board`
     #[inline]
-    pub fn is_device_on_same_board_as(device1: &Device, device2: &Device) -> Result<bool> {
+    pub fn are_devices_on_same_board(device1: &Device, device2: &Device) -> Result<bool> {
         unsafe {
             let mut bool_int: c_int = mem::zeroed();
             nvml_try(nvmlDeviceOnSameBoard(device1.unsafe_raw(), device2.unsafe_raw(), &mut bool_int))?;
