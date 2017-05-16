@@ -29,8 +29,7 @@ impl<'nvml> EventData<'nvml> {
             device: struct_.device.into(),
             event_type: match EventTypes::from_bits(struct_.eventType as u64) {
                 Some(t) => t,
-                // TODO: Send incorrect bits back in error
-                None    => bail!(ErrorKind::IncorrectBits),
+                None    => bail!(ErrorKind::IncorrectBits(Bits::U64(struct_.eventType))),
             },
             event_data: struct_.eventData as u64,
         })

@@ -1,6 +1,13 @@
 use ffi::bindings::nvmlReturn_t;
 use ffi::bindings::nvmlReturn_t::*;
 
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum Bits {
+    U32(u32),
+    U64(u64),
+}
+
 error_chain! {
     foreign_links {
         IntoStringError(::std::ffi::IntoStringError);
@@ -24,9 +31,11 @@ error_chain! {
         
         This error is specific to this Rust wrapper.
         */
-        IncorrectBits {
+        IncorrectBits(bits: Bits) {
             description("Bits that did not correspond to a flag were encountered whilst attempting \
                         to interpret them as bitflags")
+            display("Bits that did not correspond to a flag were encountered whilst attempting \
+                     to interpret them as bitflags: '{:?}'", bits)
         }
         /**
         An unexpected enum variant was encountered.
@@ -39,9 +48,9 @@ error_chain! {
         UnexpectedVariant {
             description("An unexpected enum variant was encountered (wrapper error).")
         }
-        /// NVML was not first initialized with `nvmlInit()`.
+        /// NVML was not first initialized with `NVML::init()`.
         Uninitialized {
-            description("NVML was not first initialized with `nvmlInit()`.")
+            description("NVML was not first initialized with `NVML::init()`.")
         }
         /// A supplied argument is invalid.
         InvalidArg {

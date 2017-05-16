@@ -137,7 +137,6 @@ mod test {
     use super::EventSet;
     use test_utils::*;
     use bitmasks::event::*;
-    use error::*;
 
     // Ensuring that double-free issues don't crop up here.
     #[test]
@@ -170,6 +169,8 @@ mod test {
     #[cfg(feature = "test-local")]
     #[test]
     fn wait() {
+        use error::*;
+        
         let nvml = nvml();
         let device = device(&nvml);
         let set = nvml.create_event_set().expect("event set");

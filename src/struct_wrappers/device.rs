@@ -357,8 +357,8 @@ impl From<nvmlAccountingStats_t> for AccountingStats {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Sample {
     /// CPU timestamp in μs
-    timestamp: u64,
-    value: SampleValue,
+    pub timestamp: u64,
+    pub value: SampleValue,
 }
 
 #[cfg(feature = "nightly")]

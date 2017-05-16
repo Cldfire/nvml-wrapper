@@ -16,8 +16,6 @@ use std::ptr;
 use std::mem;
 use std::os::raw::{c_uint, c_ulong, c_ulonglong, c_int};
 
-// TODO: A number of things here that return Utf8Errors I have not documented.
-
 /**
 Struct that represents a device on the system. 
 
@@ -350,6 +348,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if this `Device` is invalid
     * `NotSupported`, if this `Device` does not support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, check that error's docs for more info
     * `Unknown`, on any unexpected error
     */
     // Checked against local
@@ -1655,10 +1654,11 @@ impl<'nvml> Device<'nvml> {
     
     # Errors
     * `Uninitialized`, if the library has not been successfully initialized
-    * `InvalidArg`, TODO: <---
+    * `InvalidArg`, if this `Device` is invalid
     * `NotSupported`, if this query is not supported by this `Device`
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     * `NotFound`, if sample entries are not found
+    * `UnexpectedVariant`, check that error's docs for more info
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -1667,6 +1667,34 @@ impl<'nvml> Device<'nvml> {
     # Rustc Support
     Only compiles on nightly due to use of the `untagged_unions` feature. See
     [the tracking issue](https://github.com/rust-lang/rust/issues/32836).
+
+    # Examples
+    ```
+    # use nvml::NVML;
+    # use nvml::error::*;
+    # fn main() {
+    # match test() {
+    # Err(Error(ErrorKind::NotFound, _)) => {},
+    # other => other.unwrap(),
+    # }
+    # }
+    # fn test() -> Result<()> {
+    # let nvml = NVML::init()?;
+    # let device = nvml.device_by_index(0)?;
+    use nvml::enum_wrappers::device::Sampling;
+
+    // Passing `None` indicates that we want all `Power` samples in the sample buffer
+    let power_samples = device.samples(Sampling::Power, None)?;
+
+    // Take the first sample from the vector, if it exists...
+    if let Some(sample) = power_samples.get(0) {
+        // ...and now we can get all `ProcessorClock` samples that exist with a later
+        // timestamp than the `Power` sample.
+        let newer_clock_samples = device.samples(Sampling::ProcessorClock, sample.timestamp)?;
+    }
+    # Ok(())
+    # }
+    ```
     */
     // Checked against local
     // Tested
@@ -1733,6 +1761,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` doesn't support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -1760,6 +1789,7 @@ impl<'nvml> Device<'nvml> {
     * `Uninitialized`, if the library has not been successfully initialized
     * `NotSupported`, if the necessary VBIOS fields have not been filled
     * `GpuLost`, if the target GPU has fellen off the bus or is otherwise inaccessible
+    * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     * `Unknown`, on any unexpected error
     */
     // Checked against local
@@ -1800,7 +1830,7 @@ impl<'nvml> Device<'nvml> {
             nvml_try(nvmlDeviceGetCurrentClocksThrottleReasons(self.device, &mut reasons))?;
 
             ThrottleReasons::from_bits(reasons as u64)
-                .ok_or_else(|| ErrorKind::IncorrectBits.into())
+                .ok_or_else(|| ErrorKind::IncorrectBits(Bits::U64(reasons)).into())
         }
     } 
 
@@ -1829,7 +1859,7 @@ impl<'nvml> Device<'nvml> {
             nvml_try(nvmlDeviceGetSupportedClocksThrottleReasons(self.device, &mut reasons))?;
 
             ThrottleReasons::from_bits(reasons as u64)
-                .ok_or_else(|| ErrorKind::IncorrectBits.into())
+                .ok_or_else(|| ErrorKind::IncorrectBits(Bits::U64(reasons)).into())
         }
     }
 
@@ -2109,12 +2139,15 @@ impl<'nvml> Device<'nvml> {
     ```no_run
     # use nvml::NVML;
     # use nvml::error::*;
+    # fn main() {
+    # test().unwrap();
+    # }
     # fn test() -> Result<()> {
     # let nvml = NVML::init()?;
     # let device1 = nvml.device_by_index(0)?;
     # let device2 = nvml.device_by_index(1)?;
     if device1.uuid()? == device2.uuid()? {
-        println!("`device1` represents the same physical device that `device2` does");
+        println!("`device1` represents the same physical device that `device2` does.");
     }
     # Ok(())
     # }
@@ -2774,6 +2807,24 @@ impl<'nvml> Device<'nvml> {
     
     # Platform Support
     Only supports Windows.
+
+    # Examples
+    ```no_run
+    # use nvml::NVML;
+    # use nvml::error::*;
+    # fn test() -> Result<()> {
+    # let nvml = NVML::init()?;
+    # let mut device = nvml.device_by_index(0)?;
+    use nvml::bitmasks::*;
+    use nvml::enum_wrappers::device::DriverModel;
+
+    device.set_driver_model(DriverModel::WDM, DEFAULT)?;
+
+    // Force the change to WDM (TCC)
+    device.set_driver_model(DriverModel::WDM, FORCE)?;
+    # Ok(())
+    # }
+    ```
     */
     // Checked against local
     #[cfg(target_os = "windows")]
@@ -2929,6 +2980,33 @@ impl<'nvml> Device<'nvml> {
     
     # Platform Support
     Only supports Linux.
+
+    # Examples
+    ```
+    # use nvml::NVML;
+    # use nvml::error::*;
+    # fn main() {
+    # test().unwrap();    
+    # }
+    # fn test() -> Result<()> {
+    # let nvml = NVML::init()?;
+    # let device = nvml.device_by_index(0)?;
+    use nvml::bitmasks::event::*;
+
+    let set = nvml.create_event_set()?;
+
+    /*
+    Register both `CLOCK_CHANGE` and `PSTATE_CHANGE`.
+
+    `let set = ...` is a quick way to re-bind the set to the same variable, since
+    `.register_events()` consumes the set in order to enforce safety and returns it
+    if everything went well. It does *not* require `set` to be mutable as nothing
+    is being mutated.
+    */
+    let set = device.register_events(CLOCK_CHANGE | PSTATE_CHANGE, set)?;
+    # Ok(())
+    # }
+    ```
     */
     // Checked against local
     // Tested
@@ -2967,6 +3045,29 @@ impl<'nvml> Device<'nvml> {
     
     # Platform Support
     Only supports Linux.
+
+    # Examples
+    ```
+    # use nvml::NVML;
+    # use nvml::error::*;
+    # fn main() {
+    # test().unwrap();    
+    # }
+    # fn test() -> Result<()> {
+    # let nvml = NVML::init()?;
+    # let device = nvml.device_by_index(0)?;
+    use nvml::bitmasks::event::*;
+
+    let supported = device.supported_event_types()?;
+
+    if supported.contains(CLOCK_CHANGE) {
+        println!("The `CLOCK_CHANGE` event is supported.");
+    } else if supported.contains(SINGLE_BIT_ECC_ERROR | DOUBLE_BIT_ECC_ERROR) {
+        println!("All ECC error event types are supported.");
+    }
+    # Ok(())
+    # }
+    ```
     */
     // TODO: examples of interpreting the returned flags
     // Tested
@@ -2980,7 +3081,7 @@ impl<'nvml> Device<'nvml> {
             if let Some(f) = EventTypes::from_bits(flags as u64) {
                 Ok(f)
             } else {
-                bail!(ErrorKind::IncorrectBits)
+                bail!(ErrorKind::IncorrectBits(Bits::U64(flags)))
             }
         }
     }
@@ -2989,6 +3090,9 @@ impl<'nvml> Device<'nvml> {
 
     /**
     Enable or disable drain state for this `Device`.
+
+    If you pass `None` as `pci_info`, `.pci_info()` will be called in order to obtain
+    `PciInfo` to be used within this method.
     
     Enabling drain state forces this `Device` to no longer accept new incoming requests.
     Any new NVML processes will no longer see this `Device`.
@@ -3006,6 +3110,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
 
     In addition, all of the errors returned by:
+
     * `.pci_info()`
     * `PciInfo.try_into_c()`
     
@@ -3016,8 +3121,25 @@ impl<'nvml> Device<'nvml> {
     
     # Platform Support
     Only supports Linux.
+
+    # Examples
+    ```no_run
+    # use nvml::NVML;
+    # use nvml::error::*;
+    # fn test() -> Result<()> {
+    # let nvml = NVML::init()?;
+    # let mut device = nvml.device_by_index(0)?;
+    // Pass `None`, `.set_drain()` call will grab `PciInfo` for us
+    device.set_drain(true, None)?;
+
+    let pci_info = device.pci_info()?;
+
+    // Pass in our own `PciInfo`, call will use it instead
+    device.set_drain(true, pci_info)?;
+    # Ok(())
+    # }
+    ```
     */
-    // TODO: Should there be a separate method to update storage
     // Checked against local
     #[cfg(target_os = "linux")]
     #[inline]
@@ -3035,6 +3157,9 @@ impl<'nvml> Device<'nvml> {
 
     /**
     Query the drain state of this `Device`.
+
+    If you pass `None` as `pci_info`, `.pci_info()` will be called in order to obtain
+    `PciInfo` to be used within this method.
     
     # Errors
     * `Uninitialized`, if the library has not been successfully initialized
@@ -3043,6 +3168,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
 
     In addition, all of the errors returned by:
+
     * `.pci_info()`
     * `PciInfo.try_into_c()`
     
@@ -3053,6 +3179,27 @@ impl<'nvml> Device<'nvml> {
     
     # Platform Support
     Only supports Linux.
+
+    # Examples
+    ```
+    # use nvml::NVML;
+    # use nvml::error::*;
+    # fn main() {
+    # test().unwrap();    
+    # }
+    # fn test() -> Result<()> {
+    # let nvml = NVML::init()?;
+    # let mut device = nvml.device_by_index(0)?;
+    // Pass `None`, `.is_drain_enabled()` call will grab `PciInfo` for us
+    device.is_drain_enabled(None)?;
+
+    let pci_info = device.pci_info()?;
+
+    // Pass in our own `PciInfo`, call will use it instead
+    device.is_drain_enabled(pci_info)?;
+    # Ok(())
+    # }
+    ```
     */
     // Checked against local
     // Tested
@@ -3074,7 +3221,10 @@ impl<'nvml> Device<'nvml> {
     }
 
     /**
-    Removes this `Device` from the view of both NVML and the NVIDIA kernal driver.
+    Removes this `Device` from the view of both NVML and the NVIDIA kernel driver.
+
+    If you pass `None` as `pci_info`, `.pci_info()` will be called in order to obtain
+    `PciInfo` to be used within this method.
     
     This call only works if no other processes are attached. If other processes
     are attached when this is called, the `InUse` error will be returned and
@@ -3098,6 +3248,7 @@ impl<'nvml> Device<'nvml> {
     * `InUse`, if this `Device` is still in use and cannot be removed
 
     In addition, all of the errors returned by:
+
     * `.pci_info()`
     * `PciInfo.try_into_c()`
     
@@ -3108,9 +3259,28 @@ impl<'nvml> Device<'nvml> {
     
     # Platform Support
     Only supports Linux.
+
+    # Examples
+    ```no_run
+    # use nvml::NVML;
+    # use nvml::error::*;
+    # fn test() -> Result<()> {
+    # let nvml = NVML::init()?;
+    # let mut device = nvml.device_by_index(0)?;
+    // Pass `None`, `.remove()` call will grab `PciInfo` for us
+    device.remove(None)?;
+
+    # let mut device2 = nvml.device_by_index(0)?;
+    // Different `Device` because `.remove()` consumes the `Device`
+    let pci_info = device2.pci_info()?;
+
+    // Pass in our own `PciInfo`, call will use it instead
+    device2.remove(pci_info)?;
+    # Ok(())
+    # }
+    ```
     */
     // TODO: Figure out how to return device if handle is still valid
-    // Not a blocker for release
     // Checked against local
     #[cfg(target_os = "linux")]
     #[inline]
@@ -3460,11 +3630,11 @@ mod test {
     fn info_rom_version() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
-            device.info_rom_version(InfoROM::OEM)
+            device.info_rom_version(InfoRom::OEM)
                 .chain_err(|| "oem")?;
-            device.info_rom_version(InfoROM::ECC)
+            device.info_rom_version(InfoRom::ECC)
                 .chain_err(|| "ecc")?;
-            device.info_rom_version(InfoROM::Power)
+            device.info_rom_version(InfoRom::Power)
                 .chain_err(|| "power")
         })
     }
@@ -3665,6 +3835,7 @@ mod test {
         })
     }
 
+    #[cfg(feature = "nightly")]
     #[test]
     fn samples() {
         let nvml = nvml();
