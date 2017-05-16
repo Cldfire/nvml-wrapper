@@ -27,11 +27,11 @@ impl<'nvml> EventData<'nvml> {
     pub fn try_from(struct_: nvmlEventData_t) -> Result<Self> {
         Ok(EventData {
             device: struct_.device.into(),
-            event_type: match EventTypes::from_bits(struct_.eventType as u64) {
+            event_type: match EventTypes::from_bits(struct_.eventType) {
                 Some(t) => t,
                 None    => bail!(ErrorKind::IncorrectBits(Bits::U64(struct_.eventType))),
             },
-            event_data: struct_.eventData as u64,
+            event_data: struct_.eventData,
         })
     }
 }

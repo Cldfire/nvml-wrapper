@@ -70,8 +70,7 @@ impl<'nvml> Unit<'nvml> {
             };
             let mut devices: Vec<nvmlDevice_t> = vec![mem::zeroed(); count as usize];
 
-            // Indexing 0 here is safe because we make sure `count` is not 0 above
-            nvml_try(nvmlUnitGetDevices(self.unit, &mut count, &mut devices[0]))?;
+            nvml_try(nvmlUnitGetDevices(self.unit, &mut count, devices.as_mut_ptr()))?;
             Ok(devices.iter()
                       .map(|d| Device::from(*d))
                       .collect())
@@ -114,7 +113,7 @@ impl<'nvml> Unit<'nvml> {
             let mut count: c_uint = 1;
             let mut devices: [nvmlDevice_t; 1] = [mem::zeroed()];
 
-            match nvmlUnitGetDevices(self.unit, &mut count, &mut devices[0]) {
+            match nvmlUnitGetDevices(self.unit, &mut count, devices.as_mut_ptr()) {
                 nvmlReturn_t::NVML_SUCCESS |
                 nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
                 // We know that this will be an error
@@ -219,7 +218,7 @@ impl<'nvml> Unit<'nvml> {
             let mut temp: c_uint = mem::zeroed();
             nvml_try(nvmlUnitGetTemperature(self.unit, reading_type as c_uint, &mut temp))?;
 
-            Ok(temp as u32)
+            Ok(temp)
         }
     }
 

@@ -17,7 +17,7 @@ pub struct FansInfo {
 impl From<nvmlUnitFanSpeeds_t> for FansInfo {
     fn from(struct_: nvmlUnitFanSpeeds_t) -> Self {
         FansInfo {
-            count: struct_.count as u32,
+            count: struct_.count,
             fans: struct_.fans.iter().map(|f| FanInfo::from(*f)).collect(),
         }
     }
@@ -37,7 +37,7 @@ pub struct FanInfo {
 impl From<nvmlUnitFanInfo_t> for FanInfo {
     fn from(struct_: nvmlUnitFanInfo_t) -> Self {
         FanInfo {
-            speed: struct_.speed as u32,
+            speed: struct_.speed,
             state: struct_.state.into(),
         }
     }
@@ -80,10 +80,10 @@ impl PsuInfo {
         unsafe {
             let state_raw = CStr::from_ptr(struct_.state.as_ptr());
             Ok(PsuInfo {
-                current: struct_.current as u32,
-                power_draw: struct_.power as u32,
+                current: struct_.current,
+                power_draw: struct_.power,
                 state: state_raw.to_str()?.into(),
-                voltage: struct_.voltage as u32,
+                voltage: struct_.voltage,
             })
         }
     }
@@ -136,7 +136,7 @@ impl HwbcEntry {
         unsafe {
             let version_raw = CStr::from_ptr(struct_.firmwareVersion.as_ptr());
             Ok(HwbcEntry {
-                id: struct_.hwbcId as u32,
+                id: struct_.hwbcId,
                 firmware_version: version_raw.to_str()?.into()
             })
         }

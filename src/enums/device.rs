@@ -61,11 +61,10 @@ impl SampleValue {
 
         unsafe {
             match *tag {
-                Double            => SampleValue::F64(union.dVal as f64),
-                UnsignedInt       => SampleValue::U32(union.uiVal as u32),
-                // TODO: Is it okay to map ul => u32
-                UnsignedLong      => SampleValue::U32(union.ulVal as u32),
-                UnsignedLongLong  => SampleValue::U64(union.ullVal as u64),
+                Double            => SampleValue::F64(union.dVal),
+                UnsignedInt       => SampleValue::U32(union.uiVal),
+                UnsignedLong      => SampleValue::U64(union.ulVal),
+                UnsignedLongLong  => SampleValue::U64(union.ullVal),
             }
         }
     }

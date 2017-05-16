@@ -9,7 +9,7 @@ bitflags! {
     // Checked against local
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub flags Behavior: u32 {
-        const DEFAULT = nvmlFlagDefault as u32,
-        const FORCE   = nvmlFlagForce as u32,
+        const DEFAULT = nvmlFlagDefault,
+        const FORCE   = nvmlFlagForce,
     }
 }

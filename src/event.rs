@@ -3,7 +3,6 @@ use error::*;
 use struct_wrappers::event::*;
 use std::mem;
 use std::marker::PhantomData;
-use std::os::raw::c_uint;
 use std::io;
 use std::io::Write;
 use NVML;
@@ -82,7 +81,7 @@ impl<'nvml> EventSet<'nvml> {
     pub fn wait(&self, timeout_ms: u32) -> Result<EventData<'nvml>> {
         unsafe {
             let mut data: nvmlEventData_t = mem::zeroed();
-            nvml_try(nvmlEventSetWait(self.set, &mut data, timeout_ms as c_uint))?;
+            nvml_try(nvmlEventSetWait(self.set, &mut data, timeout_ms))?;
 
             Ok(EventData::try_from(data)?)
         }
@@ -170,7 +169,7 @@ mod test {
     #[test]
     fn wait() {
         use error::*;
-        
+
         let nvml = nvml();
         let device = device(&nvml);
         let set = nvml.create_event_set().expect("event set");

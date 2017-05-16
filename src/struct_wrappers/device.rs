@@ -2,7 +2,7 @@ use ffi::bindings::*;
 use error::*;
 use enum_wrappers::device::*;
 use enums::device::*;
-use std::os::raw::{c_uint, c_char};
+use std::os::raw::c_char;
 use std::ffi::{CStr, CString};
 use std::u32;
 
@@ -37,12 +37,12 @@ impl PciInfo {
         unsafe {
             let bus_id_raw = CStr::from_ptr(struct_.busId.as_ptr());
             Ok(PciInfo {
-                bus: struct_.bus as u32,
+                bus: struct_.bus,
                 bus_id: bus_id_raw.to_str()?.into(),
-                device: struct_.device as u32,
-                domain: struct_.domain as u32,
-                pci_device_id: struct_.pciDeviceId as u32,
-                pci_sub_system_id: struct_.pciSubSystemId as u32,
+                device: struct_.device,
+                domain: struct_.domain,
+                pci_device_id: struct_.pciDeviceId,
+                pci_sub_system_id: struct_.pciSubSystemId,
             })
         }
     }
@@ -84,15 +84,15 @@ impl PciInfo {
 
         Ok(nvmlPciInfo_t {
             busId: bus_id_c,
-            domain: self.domain as c_uint,
-            bus: self.bus as c_uint,
-            device: self.device as c_uint,
-            pciDeviceId: self.pci_device_id as c_uint,
-            pciSubSystemId: self.pci_sub_system_id as c_uint,
-            reserved0: u32::MAX as c_uint,
-            reserved1: u32::MAX as c_uint,
-            reserved2: u32::MAX as c_uint,
-            reserved3: u32::MAX as c_uint,
+            domain: self.domain,
+            bus: self.bus,
+            device: self.device,
+            pciDeviceId: self.pci_device_id,
+            pciSubSystemId: self.pci_sub_system_id,
+            reserved0: u32::MAX,
+            reserved1: u32::MAX,
+            reserved2: u32::MAX,
+            reserved3: u32::MAX,
         })
     }
 }
@@ -113,9 +113,9 @@ pub struct BAR1MemoryInfo {
 impl From<nvmlBAR1Memory_t> for BAR1MemoryInfo {
     fn from(struct_: nvmlBAR1Memory_t) -> Self {
         BAR1MemoryInfo {
-            free: struct_.bar1Free as u64,
-            total: struct_.bar1Total as u64,
-            used: struct_.bar1Used as u64,
+            free: struct_.bar1Free,
+            total: struct_.bar1Total,
+            used: struct_.bar1Used,
         }
     }
 }
@@ -131,7 +131,7 @@ pub struct BridgeChipInfo {
 
 impl From<nvmlBridgeChipInfo_t> for BridgeChipInfo {
     fn from(struct_: nvmlBridgeChipInfo_t) -> Self {
-        let fw_version = FirmwareVersion::from(struct_.fwVersion as u32);
+        let fw_version = FirmwareVersion::from(struct_.fwVersion);
         let chip_type = BridgeChip::from(struct_.type_);
 
         BridgeChipInfo {
@@ -204,10 +204,10 @@ pub struct EccErrorCounts {
 impl From<nvmlEccErrorCounts_t> for EccErrorCounts {
     fn from(struct_: nvmlEccErrorCounts_t) -> Self {
         EccErrorCounts {
-            device_memory: struct_.deviceMemory as u64,
-            l1_cache: struct_.l1Cache as u64,
-            l2_cache: struct_.l2Cache as u64,
-            register_file: struct_.registerFile as u64,
+            device_memory: struct_.deviceMemory,
+            l1_cache: struct_.l1Cache,
+            l2_cache: struct_.l2Cache,
+            register_file: struct_.registerFile,
         }
     }
 }
@@ -230,9 +230,9 @@ pub struct MemoryInfo {
 impl From<nvmlMemory_t> for MemoryInfo {
     fn from(struct_: nvmlMemory_t) -> Self {
         MemoryInfo {
-            free: struct_.free as u64,
-            total: struct_.total as u64,
-            used: struct_.used as u64,
+            free: struct_.free,
+            total: struct_.total,
+            used: struct_.used,
         }
     }
 }
@@ -254,8 +254,8 @@ pub struct Utilization {
 impl From<nvmlUtilization_t> for Utilization {
     fn from(struct_: nvmlUtilization_t) -> Self {
         Utilization {
-            gpu: struct_.gpu as u32,
-            memory: struct_.memory as u32,
+            gpu: struct_.gpu,
+            memory: struct_.memory,
         }
     }
 }
@@ -274,8 +274,8 @@ pub struct ViolationTime {
 impl From<nvmlViolationTime_t> for ViolationTime {
     fn from(struct_: nvmlViolationTime_t) -> Self {
         ViolationTime {
-            reference_time: struct_.referenceTime as u64,
-            violation_time: struct_.violationTime as u64,
+            reference_time: struct_.referenceTime,
+            violation_time: struct_.violationTime,
         }
     }
 }
@@ -326,9 +326,9 @@ impl From<nvmlAccountingStats_t> for AccountingStats {
         let not_avail_u32 = (NVML_VALUE_NOT_AVAILABLE) as u32;
 
         AccountingStats {
-            gpu_utilization: match struct_.gpuUtilization as u32 {
+            gpu_utilization: match struct_.gpuUtilization {
                 v if v == not_avail_u32 => None,
-                _ => Some(struct_.gpuUtilization as u32),
+                _ => Some(struct_.gpuUtilization),
             },
             is_running: match struct_.isRunning {
                 0 => false,
@@ -336,16 +336,16 @@ impl From<nvmlAccountingStats_t> for AccountingStats {
                 // else warrants an error (or a panic), so
                 _ => true,
             },
-            max_memory_usage: match struct_.maxMemoryUsage as u64 {
+            max_memory_usage: match struct_.maxMemoryUsage {
                 v if v == not_avail_u64 => None,
-                _ => Some(struct_.maxMemoryUsage as u64),
+                _ => Some(struct_.maxMemoryUsage),
             },
-            memory_utilization: match struct_.memoryUtilization as u32 {
+            memory_utilization: match struct_.memoryUtilization {
                 v if v == not_avail_u32 => None,
-                _ => Some(struct_.memoryUtilization as u32),
+                _ => Some(struct_.memoryUtilization),
             },
-            start_time: struct_.startTime as u64,
-            time: struct_.time as u64,
+            start_time: struct_.startTime,
+            time: struct_.time,
         }
     }
 }
@@ -366,7 +366,7 @@ impl Sample {
     /// Given a tag and an untagged union, returns a Rust enum with the correct union variant.
     pub fn from_tag_and_struct(tag: &SampleValueType, struct_: nvmlSample_t) -> Self {
         Sample {
-            timestamp: struct_.timeStamp as u64,
+            timestamp: struct_.timeStamp,
             value: SampleValue::from_tag_and_union(tag, struct_.sampleValue),
         }
     }

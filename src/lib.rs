@@ -235,7 +235,7 @@ impl NVML {
     pub fn sys_process_name(&self, pid: u32, length: usize) -> Result<String> {
         unsafe {
             let mut name_vec = Vec::with_capacity(length);
-            nvml_try(nvmlSystemGetProcessName(pid as c_uint, name_vec.as_mut_ptr(), length as c_uint))?;
+            nvml_try(nvmlSystemGetProcessName(pid, name_vec.as_mut_ptr(), length as c_uint))?;
 
             let name_raw = CStr::from_ptr(name_vec.as_ptr());
             Ok(name_raw.to_str()?.into())
@@ -276,7 +276,7 @@ impl NVML {
     pub fn device_by_index(&self, index: u32) -> Result<Device> {
         unsafe {
             let mut device: nvmlDevice_t = mem::zeroed();
-            nvml_try(nvmlDeviceGetHandleByIndex_v2(index as c_uint, &mut device))?;
+            nvml_try(nvmlDeviceGetHandleByIndex_v2(index, &mut device))?;
 
             Ok(device.into())
         }
@@ -468,7 +468,7 @@ impl NVML {
             let mut devices: Vec<nvmlDevice_t> = vec![mem::zeroed(); count as usize];
 
             // Indexing 0 here is safe because we make sure `count` is not 0 above
-            nvml_try(nvmlSystemGetTopologyGpuSet(cpu_number, &mut count, &mut devices[0]))?;
+            nvml_try(nvmlSystemGetTopologyGpuSet(cpu_number, &mut count, devices.as_mut_ptr()))?;
             Ok(devices.iter()
                       .map(|d| Device::from(*d))
                       .collect())
@@ -483,10 +483,9 @@ impl NVML {
         unsafe {
             // Indicates that we want the count
             let mut count: c_uint = 0;
+
             // Passing null doesn't indicate that we want the count, just allowed
-            let processes: [*mut nvmlDevice_t; 1] = [ptr::null_mut()];
-            
-            nvml_try(nvmlSystemGetTopologyGpuSet(cpu_number, &mut count, processes[0]))?;
+            nvml_try(nvmlSystemGetTopologyGpuSet(cpu_number, &mut count, ptr::null_mut()))?;
             Ok(count)
         }
     }
@@ -512,7 +511,7 @@ impl NVML {
             let mut hics: Vec<nvmlHwbcEntry_t> = vec![mem::zeroed(); count as usize];
 
             // Indexing 0 here is safe because we make sure `count` is not 0 above
-            nvml_try(nvmlSystemGetHicVersion(&mut count, &mut hics[0]))?;
+            nvml_try(nvmlSystemGetHicVersion(&mut count, hics.as_mut_ptr()))?;
             hics.iter()
                 .map(|h| HwbcEntry::try_from(*h))
                 .collect()
@@ -548,7 +547,7 @@ impl NVML {
             let mut count: c_uint = 1;
             let mut hics: [nvmlHwbcEntry_t; 1] = [mem::zeroed()];
 
-            match nvmlSystemGetHicVersion(&mut count, &mut hics[0]) {
+            match nvmlSystemGetHicVersion(&mut count, hics.as_mut_ptr()) {
                 nvmlReturn_t::NVML_SUCCESS |
                 nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
                 // We know that this will be an error
@@ -575,7 +574,7 @@ impl NVML {
             let mut count: c_uint = mem::zeroed();
             nvml_try(nvmlUnitGetCount(&mut count))?;
 
-            Ok(count as u32)
+            Ok(count)
         }
     }
 
