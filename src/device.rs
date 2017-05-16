@@ -1299,7 +1299,6 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
-    // TODO: What is this
     /**
     Gets the PCIe replay counter.
     
@@ -2959,6 +2958,12 @@ impl<'nvml> Device<'nvml> {
     /**
     Starts recording the given `EventTypes` for this `Device` and adding them
     to the specified `EventSet`.
+
+    **Unfortunately, due to the way `error-chain` works, there is no way to
+    return the set if it is still valid after an error has occured with the
+    register call.** The set that you passed in will be freed if any error
+    occurs and will not be returned to you. This is not desired behavior
+    and I will fix it as soon as it is possible to do so.
     
     All events that occurred before this call was made will not be recorded.
     
@@ -3022,12 +3027,18 @@ impl<'nvml> Device<'nvml> {
                 Err(Error(ErrorKind::Unknown, _)) => {
                     // NVIDIA says that if an Unknown error is returned, `set` will
                     // be in an undefined state and should be freed.
-                    // TODO: Something better to match on instead of string?
-                    set.release_events().chain_err(|| "Error is from release call")?;
+                    set.release_events().chain_err(|| ErrorKind::SetReleaseFailed)?;
                     bail!(ErrorKind::Unknown)
                 },
-                // TODO: Figure out how to return set in error case
-                Err(e) => Err(e)
+                Err(e) => {
+                    // TODO: So... unfortunately error-chain provides us with no way
+                    // to return the set here, even if it's still valid.
+                    //
+                    // For now we just... get rid of it and force you to create
+                    // another one.
+                    set.release_events().chain_err(|| ErrorKind::SetReleaseFailed)?;
+                    Err(e)
+                }
             }
         }
     }
@@ -3069,7 +3080,6 @@ impl<'nvml> Device<'nvml> {
     # }
     ```
     */
-    // TODO: examples of interpreting the returned flags
     // Tested
     #[cfg(target_os = "linux")]
     #[inline]
@@ -3240,6 +3250,16 @@ impl<'nvml> Device<'nvml> {
     for the removed GPU will be invalid.
     
     Must be run as administrator.
+
+    # Bad Ergonomics Explanation
+    Ideally the `Device` would be returned within the `Error` in the case of an
+    error occuring during this call. Unfortunately, `error-chain` / `quick-error`
+    do not support generic lifetime parameters, meaning I cannot return the
+    `Device` in an `ErrorKind` variant.
+
+    Not being able to recover the `Device` after an error in this call would
+    break the functionality, so I worked around this limitation with a
+    less-than-satisfactory solution.
     
     # Errors
     * `Uninitialized`, if the library has not been successfully initialized
@@ -3261,6 +3281,24 @@ impl<'nvml> Device<'nvml> {
     Only supports Linux.
 
     # Examples
+    How to handle error case:
+
+    ```no_run
+    # use nvml::NVML;
+    # use nvml::error::*;
+    # fn test() -> Result<()> {
+    # let nvml = NVML::init()?;
+    # let mut device = nvml.device_by_index(0)?;
+    match device.remove(None) {
+        (Ok(()), None) => println!("Successful call, `Device` removed"),
+        (Err(e), Some(d)) => println!("Unsuccessful call. `Device`: {:?}", d),
+        _ => println!("Something else",)
+    }
+    # Ok(())
+    # }
+    ```
+    Demonstration of the `pci_info` parameter's use:
+
     ```no_run
     # use nvml::NVML;
     # use nvml::error::*;
@@ -3268,31 +3306,46 @@ impl<'nvml> Device<'nvml> {
     # let nvml = NVML::init()?;
     # let mut device = nvml.device_by_index(0)?;
     // Pass `None`, `.remove()` call will grab `PciInfo` for us
-    device.remove(None)?;
+    device.remove(None).0?;
 
     # let mut device2 = nvml.device_by_index(0)?;
     // Different `Device` because `.remove()` consumes the `Device`
     let pci_info = device2.pci_info()?;
 
     // Pass in our own `PciInfo`, call will use it instead
-    device2.remove(pci_info)?;
+    device2.remove(pci_info).0?;
     # Ok(())
     # }
     ```
     */
-    // TODO: Figure out how to return device if handle is still valid
     // Checked against local
+    // TODO: Fix ergonomics here when possible.
+    // TODO: Chain errors on pci_info calls
     #[cfg(target_os = "linux")]
     #[inline]
-    pub fn remove<T: Into<Option<PciInfo>>>(self, pci_info: T) -> Result<()> {
+    pub fn remove<T: Into<Option<PciInfo>>>(self, pci_info: T) 
+        -> (Result<()>, Option<Device<'nvml>>) {
         let pci_info = if let Some(info) = pci_info.into() {
             info
         } else {
-            self.pci_info()?
+            match self.pci_info() {
+                Ok(i) => i,
+                Err(e) => return (Err(e), Some(self)),
+            }
+        };
+
+        let mut raw_pci_info = match pci_info.try_into_c() {
+            Ok(i) => i,
+            Err(e) => return (Err(e), Some(self)),
         };
 
         unsafe {
-            nvml_try(nvmlDeviceRemoveGpu(&mut pci_info.try_into_c()?))
+            match nvml_try(nvmlDeviceRemoveGpu(&mut raw_pci_info)) {
+                // `Device` removed; call was successful, no `Device` to return
+                Ok(()) => (Ok(()), None),
+                // `Device` has not been removed; unsuccessful call, return `Device`
+                Err(e) => (Err(e), Some(self)),
+            }
         }
     }
 

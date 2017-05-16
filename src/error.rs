@@ -16,6 +16,16 @@ error_chain! {
     }
     errors {
         /**
+        An error used to pinpoint error cause within a function to a call to
+        `EventSet`.release_events()`.
+
+        This error is specific to this Rust wrapper.
+        */
+        SetReleaseFailed {
+            description("An error used to pinpoint error cause within a function to \
+                        a call to `EventSet.release_events()`")
+        }
+        /**
         A String was too long to fit into an array.
 
         This error is specific to this Rust wrapper.
