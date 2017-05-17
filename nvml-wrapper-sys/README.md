@@ -49,11 +49,16 @@ between Windows and Linux, however.
 The NVML library dll can be found at `%ProgramW6432%\NVIDIA Corporation\NVSMI\`
 (which is `C:\Program Files\NVIDIA Corporation\NVSMI\` on my machine). You will need
 to add this folder to your `PATH` in order to have everything work properly at
-runtime.
+runtime; alternatively, place a copy of the dll in the same folder as your executable.
 
 ### Linux
 
-// TODO
+The NVML library can be found at `/usr/lib/nvidia-<driver-version>/libnvidia-ml.so`; on my system with driver version 375.51 installed, this puts the library at
+`/usr/lib/nvidia-375/libnvidia-ml.so`. You will need to create a symbolic link:
+
+```bash
+sudo ln -s /usr/lib/nvidia-<driver-version>/libnvidia-ml.so /usr/lib
+```
 
 ## Rustc Support
 
