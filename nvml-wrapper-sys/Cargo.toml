@@ -1,0 +1,26 @@
+[package]
+name = "nvml-wrapper-sys"
+version = "0.1.0"
+authors = ["Cldfire"]
+description = "Generated bindings to the NVIDIA Management Library."
+readme = "README.md"
+documentation = "https://docs.rs/nvml-wrapper-sys"
+repository = "https://github.com/Cldfire/nvml-wrapper"
+license = "MIT/Apache-2.0"
+
+keywords = ["nvidia", "gpu", "managment", "monitoring", "hardware"]
+categories = ["external-ffi-bindings", "hardware-support"]
+
+exclude = [
+    "Cargo.lock",
+    "target/*"
+]
+
+[dependencies]
+
+[features]
+default = []
+nightly = []
+
+[build-dependencies]
+pkg-config = "0.3"

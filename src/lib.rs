@@ -1,38 +1,99 @@
 /*!
-Rust wrapper for the NVIDIA Management Library (NVML), a C-based programmatic interface 
-for monitoring and managing various states within NVIDIA (primarily Tesla) GPUs. 
+A complete, safe, and ergonomic Rust wrapper for the
+[NVIDIA Management Library] (https://developer.nvidia.com/nvidia-management-library-nvml)
+(NVML), a C-based programmatic interface for monitoring and managing various states within
+NVIDIA (primarily Tesla) GPUs.
 
-It is intended to be a platform for building 3rd party applications, and is also the 
+```
+# use nvml_wrapper::NVML;
+# use nvml_wrapper::error::*;
+# fn main() {
+# test().unwrap();    
+# }
+# fn test() -> Result<()> {
+let nvml = NVML::init()?;
+// Get the first `Device` (GPU) in the system
+let device = nvml.device_by_index(0)?;
+
+let brand = device.brand()?; // GeForce on my system
+let fan_speed = device.fan_speed()?; // Currently 17% on my system
+let power_limit = device.enforced_power_limit()?; // 275k milliwatts on my system
+let encoder_utilization = device.encoder_utilization()?; // Currently 0 on my system; I'm not encoding anything
+let memory_info = device.memory_info()?; // Currently 1.63/6.37 GB used on my system
+
+// ... and there's a whole lot more you can do. Everything in NVML is wrapped and ready to go
+// (except for a few (~9) NvLink-related items that I will get to soon)
+# Ok(())
+# }
+```
+
+NVML is intended to be a platform for building 3rd-party applications, and is also the 
 underlying library for NVIDIA's nvidia-smi tool.
 
-NVML supports the following platforms:
+It supports the following platforms:
 
 * Windows
-    * Windows Server 2008 R2 64-bit
-    * Windows Server 2012 R2 64-bit
-    * Windows 7 64-bit 
-    * Windows 8 64-bit
-    * Windows 10 64-bit
+  * Windows Server 2008 R2 64-bit
+  * Windows Server 2012 R2 64-bit
+  * Windows 7 64-bit 
+  * Windows 8 64-bit
+  * Windows 10 64-bit
 * Linux
-    * 64-bit
-    * 32-bit
+  * 64-bit
+  * 32-bit
 * Hypervisors
-    * Windows Server 2008R2/2012 Hyper-V 64-bit
-    * Citrix XenServer 6.2 SP1+
-    * VMware ESX 5.1/5.5
+  * Windows Server 2008R2/2012 Hyper-V 64-bit
+  * Citrix XenServer 6.2 SP1+
+  * VMware ESX 5.1/5.5
 
 And the following products:
 
 * Full Support
-    * Tesla products Fermi architecture and up
-    * Quadro products Fermi architecture and up
-    * GRID products Kepler architecture and up
-    * Select GeForce Titan products
+  * Tesla products Fermi architecture and up
+  * Quadro products Fermi architecture and up
+  * GRID products Kepler architecture and up
+  * Select GeForce Titan products
 * Limited Support
-    * All GeForce products Fermi architecture and up
-*/
+  * All GeForce products Fermi architecture and up
 
-// TODO: Finish module docs. Say something about device support.
+Although NVIDIA does not explicitly support it, most of the functionality offered
+by NVML works on my dev machine (980 Ti). Even if your device is not on the list,
+try it out and see what works:
+
+```bash
+cargo test
+```
+
+## Compilation
+
+This dependency should be a no-effort addition to your `Cargo.toml`. The NVML library
+comes with the NVIDIA drivers and is essentially present on any system with a
+functioning NVIDIA graphics card.
+
+The `nvml-wrapper-sys` crate should take care of correctly finding and linking to
+the NVML library on both Windows and Linux; if it does not, please file an issue.
+
+## Rustc Support
+
+Currently supports rustc 1.17.0 or greater. The target version is the **latest**
+stable version; I do not intend to pin to an older one at any time.
+
+A small amount of NVML features involve dealing with untagged unions over FFI; a
+rustc nightly-only type is used in order to facilitate this. If you require use
+of the nightly-only functionality, compile with the `nightly` feature toggled on
+(and of course, with a nightly compiler):
+
+```bash
+cargo build --features "nightly"
+```
+
+## Cargo Features
+
+The `nightly` feature can be toggled on to enable nightly-only features; read above.
+
+The `serde` feature can be toggled on in order to `#[derive(Serialize, Deserialize)]`
+for every NVML data structure.
+*/
 
 #![recursion_limit = "1024"]
 #![cfg_attr(feature = "cargo-clippy", allow(doc_markdown))]
@@ -46,7 +107,7 @@ extern crate wrapcenum_derive;
 #[cfg(feature = "serde")]
 #[macro_use]
 extern crate serde;
-extern crate nvml_sys as ffi;
+extern crate nvml_wrapper_sys as ffi;
 
 pub mod device;
 pub mod error;

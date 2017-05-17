@@ -1655,8 +1655,8 @@ impl<'nvml> Device<'nvml> {
 
     # Examples
     ```
-    # use nvml::NVML;
-    # use nvml::error::*;
+    # use nvml_wrapper::NVML;
+    # use nvml_wrapper::error::*;
     # fn main() {
     # match test() {
     # Err(Error(ErrorKind::NotFound, _)) => {},
@@ -1666,7 +1666,7 @@ impl<'nvml> Device<'nvml> {
     # fn test() -> Result<()> {
     # let nvml = NVML::init()?;
     # let device = nvml.device_by_index(0)?;
-    use nvml::enum_wrappers::device::Sampling;
+    use nvml_wrapper::enum_wrappers::device::Sampling;
 
     // Passing `None` indicates that we want all `Power` samples in the sample buffer
     let power_samples = device.samples(Sampling::Power, None)?;
@@ -2116,8 +2116,8 @@ impl<'nvml> Device<'nvml> {
     the same physical device:
 
     ```no_run
-    # use nvml::NVML;
-    # use nvml::error::*;
+    # use nvml_wrapper::NVML;
+    # use nvml_wrapper::error::*;
     # fn main() {
     # test().unwrap();
     # }
@@ -2788,8 +2788,8 @@ impl<'nvml> Device<'nvml> {
 
     # Examples
     ```no_run
-    # use nvml::NVML;
-    # use nvml::error::*;
+    # use nvml_wrapper::NVML;
+    # use nvml_wrapper::error::*;
     # fn test() -> Result<()> {
     # let nvml = NVML::init()?;
     # let mut device = nvml.device_by_index(0)?;
@@ -2966,15 +2966,15 @@ impl<'nvml> Device<'nvml> {
 
     # Examples
     ```
-    # use nvml::NVML;
-    # use nvml::error::*;
+    # use nvml_wrapper::NVML;
+    # use nvml_wrapper::error::*;
     # fn main() {
     # test().unwrap();    
     # }
     # fn test() -> Result<()> {
     # let nvml = NVML::init()?;
     # let device = nvml.device_by_index(0)?;
-    use nvml::bitmasks::event::*;
+    use nvml_wrapper::bitmasks::event::*;
 
     let set = nvml.create_event_set()?;
 
@@ -3037,15 +3037,15 @@ impl<'nvml> Device<'nvml> {
 
     # Examples
     ```
-    # use nvml::NVML;
-    # use nvml::error::*;
+    # use nvml_wrapper::NVML;
+    # use nvml_wrapper::error::*;
     # fn main() {
     # test().unwrap();    
     # }
     # fn test() -> Result<()> {
     # let nvml = NVML::init()?;
     # let device = nvml.device_by_index(0)?;
-    use nvml::bitmasks::event::*;
+    use nvml_wrapper::bitmasks::event::*;
 
     let supported = device.supported_event_types()?;
 
@@ -3112,8 +3112,8 @@ impl<'nvml> Device<'nvml> {
 
     # Examples
     ```no_run
-    # use nvml::NVML;
-    # use nvml::error::*;
+    # use nvml_wrapper::NVML;
+    # use nvml_wrapper::error::*;
     # fn test() -> Result<()> {
     # let nvml = NVML::init()?;
     # let mut device = nvml.device_by_index(0)?;
@@ -3170,8 +3170,8 @@ impl<'nvml> Device<'nvml> {
 
     # Examples
     ```
-    # use nvml::NVML;
-    # use nvml::error::*;
+    # use nvml_wrapper::NVML;
+    # use nvml_wrapper::error::*;
     # fn main() {
     # test().unwrap();    
     # }
@@ -3262,8 +3262,8 @@ impl<'nvml> Device<'nvml> {
     How to handle error case:
 
     ```no_run
-    # use nvml::NVML;
-    # use nvml::error::*;
+    # use nvml_wrapper::NVML;
+    # use nvml_wrapper::error::*;
     # fn test() -> Result<()> {
     # let nvml = NVML::init()?;
     # let mut device = nvml.device_by_index(0)?;
@@ -3278,8 +3278,8 @@ impl<'nvml> Device<'nvml> {
     Demonstration of the `pci_info` parameter's use:
 
     ```no_run
-    # use nvml::NVML;
-    # use nvml::error::*;
+    # use nvml_wrapper::NVML;
+    # use nvml_wrapper::error::*;
     # fn test() -> Result<()> {
     # let nvml = NVML::init()?;
     # let mut device = nvml.device_by_index(0)?;
