@@ -16,6 +16,26 @@ error_chain! {
     }
     errors {
         /**
+        An error used to pinpoint error cause within a function to \
+        `PciInfo.try_into_c()`.
+
+        This error is specific to this Rust wrapper.
+        */
+        PciInfoToCFailed {
+            description("An error used to pinpoint error cause within a function to \
+                         a call to `PciInfo.try_into_c()`.")
+        }
+        /**
+        An error used to pinpoint error cause within a function to a call to
+        `Device.pci_info()`.'
+
+        This error is specific to this Rust wrapper.
+        */
+        GetPciInfoFailed {
+            description("An error used to pinpoint error cause within a function to \
+                         a call to `Device.pci_info()`.")
+        }
+        /**
         An error used to pinpoint error cause within a function to a call to
         `EventSet`.release_events()`.
 
@@ -23,7 +43,7 @@ error_chain! {
         */
         SetReleaseFailed {
             description("An error used to pinpoint error cause within a function to \
-                        a call to `EventSet.release_events()`")
+                         a call to `EventSet.release_events()`.")
         }
         /**
         A String was too long to fit into an array.
@@ -31,9 +51,9 @@ error_chain! {
         This error is specific to this Rust wrapper.
         */
         StringTooLong(max_len: usize, actual_len: usize) {
-            description("A String was too long to fit into an array")
+            description("A String was too long to fit into an array.")
             display("The max String length was '{}', but the actual String \
-                     length was '{}'", max_len, actual_len)
+                     length was '{}'.", max_len, actual_len)
         }
         /**
         Bits that did not correspond to a flag were encountered whilst attempting to
@@ -43,9 +63,9 @@ error_chain! {
         */
         IncorrectBits(bits: Bits) {
             description("Bits that did not correspond to a flag were encountered whilst attempting \
-                        to interpret them as bitflags")
+                        to interpret them as bitflags.")
             display("Bits that did not correspond to a flag were encountered whilst attempting \
-                     to interpret them as bitflags: '{:?}'", bits)
+                     to interpret them as bitflags: '{:?}'.", bits)
         }
         /**
         An unexpected enum variant was encountered.

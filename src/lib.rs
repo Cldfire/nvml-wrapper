@@ -32,7 +32,6 @@ And the following products:
     * All GeForce products Fermi architecture and up
 */
 
-// TODO: #[should_panic] tests should not be #[should_panic] for obvious reasons
 // TODO: Finish module docs. Say something about device support.
 
 #![recursion_limit = "1024"]
@@ -369,14 +368,13 @@ impl NVML {
     Note: this is the same as `Device.topology_common_ancestor()`.
     
     # Errors
-    * `InvalidArg`, if the device is invalid or `threshold_type` is invalid (shouldn't occur?)
+    * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` or the OS does not support this feature
     * `Unknown`, on any unexpected error
     
     # Platform Support
     Only supports Linux.
     */
-    // TODO: Investigate this and the method on device more
     // Checked against local
     #[cfg(target_os = "linux")]
     #[inline]
@@ -476,7 +474,6 @@ impl NVML {
     }
     
     // Helper function for the above.
-    // TODO: Fix other helper function names, shouldn't be `get`
     #[cfg(target_os = "linux")]
     #[inline]
     fn topology_gpu_set_count(&self, cpu_number: u32) -> Result<c_uint> {
@@ -726,8 +723,8 @@ mod test {
         })
     }
 
-    // Errors on my machine
-    #[cfg_attr(feature = "test-local", should_panic)]
+    // Can't get serial on my machine
+    #[cfg(not(feature = "test-local"))]
     #[test]
     fn device_by_serial() {
         let nvml = nvml();
@@ -749,12 +746,16 @@ mod test {
     }
 
     // Errors on my machine
-    #[cfg_attr(feature = "test-local", should_panic)]
+    #[cfg_attr(feature = "test-local", should_panic(expected = "InvalidArg"))]
     #[test]
     fn unit_by_index() {
         let nvml = nvml();
         test(3, || {
-            nvml.unit_by_index(0)
+            match nvml.unit_by_index(0) {
+                // I have no unit to test with
+                Err(Error(ErrorKind::InvalidArg, _)) => panic!("InvalidArg"),
+                other => other,
+            }
         })
     }
 
@@ -789,15 +790,18 @@ mod test {
         })
     }
 
-    // TODO: Improve this test?
-    // Because we're not testing with admin perms
-    #[should_panic]
+    #[should_panic(expected = "NoPermission")]
     #[test]
     fn discover_gpus() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
             let pci_info = device.pci_info()?;
-            nvml.discover_gpus(pci_info)
+
+            // We don't test with admin perms and therefore expect an error
+            match nvml.discover_gpus(pci_info) {
+                Err(Error(ErrorKind::NoPermission, _)) => panic!("NoPermission"),
+                other => other,
+            }
         })
     }
 }

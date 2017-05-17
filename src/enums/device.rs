@@ -63,7 +63,9 @@ impl SampleValue {
             match *tag {
                 Double            => SampleValue::F64(union.dVal),
                 UnsignedInt       => SampleValue::U32(union.uiVal),
-                UnsignedLong      => SampleValue::U64(union.ulVal),
+                // Methodology: NVML supports 32-bit Linux. UL is u32 on that platform.
+                // NVML wouldn't return anything larger
+                UnsignedLong      => SampleValue::U32(union.ulVal as u32),
                 UnsignedLongLong  => SampleValue::U64(union.ullVal),
             }
         }

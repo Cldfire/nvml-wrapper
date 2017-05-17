@@ -1569,7 +1569,7 @@ impl<'nvml> Device<'nvml> {
     #[inline]
     pub fn retired_pages(&self, cause: RetirementCause) -> Result<Vec<u64>> {
         unsafe {
-            let mut count = match self.get_retired_pages_count(&cause)? {
+            let mut count = match self.retired_pages_count(&cause)? {
                 0 => return Ok(vec![]),
                 value => value,
             };
@@ -1586,7 +1586,7 @@ impl<'nvml> Device<'nvml> {
 
     // Helper for the above function. Returns # of samples that can be queried.
     #[inline]
-    fn get_retired_pages_count(&self, cause: &RetirementCause) -> Result<c_uint> {
+    fn retired_pages_count(&self, cause: &RetirementCause) -> Result<c_uint> {
         unsafe {
             let mut count: c_uint = 0;
 
@@ -1691,7 +1691,7 @@ impl<'nvml> Device<'nvml> {
         let timestamp = last_seen_timestamp.into().unwrap_or(0);
         unsafe {
             let mut val_type: nvmlValueType_t = mem::zeroed();
-            let mut count = match self.get_samples_count(&sample_type, timestamp)? {
+            let mut count = match self.samples_count(&sample_type, timestamp)? {
                 0 => return Ok(vec![]),
                 value => value,
             };
@@ -1714,7 +1714,7 @@ impl<'nvml> Device<'nvml> {
     // Helper for the above function. Returns # of samples that can be queried.
     #[cfg(feature = "nightly")]
     #[inline]
-    fn get_samples_count(&self, sample_type: &Sampling, timestamp: u64) -> Result<c_uint> {
+    fn samples_count(&self, sample_type: &Sampling, timestamp: u64) -> Result<c_uint> {
         unsafe {
             let mut val_type: nvmlValueType_t = mem::zeroed();
             let mut count: c_uint = mem::zeroed();
@@ -2027,7 +2027,7 @@ impl<'nvml> Device<'nvml> {
     #[inline]
     pub fn topology_nearest_gpus(&self, level: TopologyLevel) -> Result<Vec<Device<'nvml>>> {
         unsafe {
-            let mut count = match self.get_top_nearest_gpus_count(&level)? {
+            let mut count = match self.top_nearest_gpus_count(&level)? {
                 0 => return Ok(vec![]),
                 value => value,
             };
@@ -2047,7 +2047,7 @@ impl<'nvml> Device<'nvml> {
     // Helper for the above function. Returns # of GPUs in the set.
     #[cfg(target_os = "linux")]
     #[inline]
-    fn get_top_nearest_gpus_count(&self, level: &TopologyLevel) -> Result<c_uint> {
+    fn top_nearest_gpus_count(&self, level: &TopologyLevel) -> Result<c_uint> {
         unsafe {
             let mut count: c_uint = 0;
 
@@ -2932,7 +2932,6 @@ impl<'nvml> Device<'nvml> {
     }
 
     // Event handling methods
-    // TODO: Figure out what to do about platform support situation for these
 
     /**
     Starts recording the given `EventTypes` for this `Device` and adding them
@@ -3299,7 +3298,6 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // TODO: Fix ergonomics here when possible.
-    // TODO: Chain errors on pci_info calls
     #[cfg(target_os = "linux")]
     #[inline]
     pub fn remove<T: Into<Option<PciInfo>>>(self, pci_info: T) 
@@ -3309,13 +3307,15 @@ impl<'nvml> Device<'nvml> {
         } else {
             match self.pci_info() {
                 Ok(i) => i,
-                Err(e) => return (Err(e), Some(self)),
+                Err(e) => return (Err(e).chain_err(|| ErrorKind::GetPciInfoFailed),
+                                  Some(self)),
             }
         };
 
         let mut raw_pci_info = match pci_info.try_into_c() {
             Ok(i) => i,
-            Err(e) => return (Err(e), Some(self)),
+            Err(e) => return (Err(e).chain_err(|| ErrorKind::PciInfoToCFailed),
+                              Some(self)),
         };
 
         unsafe {
@@ -3327,6 +3327,8 @@ impl<'nvml> Device<'nvml> {
             }
         }
     }
+
+    // TODO: NvLink methods
 
     /// Consume the struct and obtain the raw device handle that it contains.
     #[inline]
@@ -4061,14 +4063,18 @@ mod test {
         })
     }
 
-    // We never enable accounting mode, so this should return a `NotFound` error
-    #[should_panic]
+    #[should_panic(expected = "NotFound")]
     #[test]
     fn accounting_stats_for() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
             let processes = device.running_graphics_processes()?;
-            device.accounting_stats_for(processes[0].pid)
+
+            // We never enable accounting mode, so this should return a `NotFound` error
+            match device.accounting_stats_for(processes[0].pid) {
+                Err(Error(ErrorKind::NotFound, _)) => panic!("NotFound"),
+                other => other,
+            }
         })
     }
 

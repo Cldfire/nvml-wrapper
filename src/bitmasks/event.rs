@@ -7,7 +7,6 @@ bitflags! {
     Types can be combined with the Bitwise Or operator `|` when passed to
     `Device.register_events()`.
     */
-    // TODO: Example(s)
     // Checked against local
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub flags EventTypes: u64 {
