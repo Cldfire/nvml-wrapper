@@ -20,7 +20,7 @@ error-chain = "0.10"
 bitflags = "0.8"
 serde = { version = "1.0", optional = true, features = ["derive"] }
 nvml-wrapper-sys = { path = "nvml-wrapper-sys" }
-wrapcenum-derive = { path = "../wrapcenum-derive" }
+wrapcenum-derive = { git = "https://github.com/cldfire/wrapcenum-derive" }
 
 [features]
 default = []

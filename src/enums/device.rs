@@ -57,7 +57,7 @@ pub enum SampleValue {
 #[cfg(feature = "nightly")]
 impl SampleValue {
     pub fn from_tag_and_union(tag: &SampleValueType, union: nvmlValue_t) -> Self {
-        use SampleValueType::*;
+        use self::SampleValueType::*;
 
         unsafe {
             match *tag {

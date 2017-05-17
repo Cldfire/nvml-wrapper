@@ -135,6 +135,7 @@ impl<'nvml> Drop for EventSet<'nvml> {
 mod test {
     use super::EventSet;
     use test_utils::*;
+    #[cfg(target_os = "linux")]
     use bitmasks::event::*;
 
     // Ensuring that double-free issues don't crop up here.
@@ -151,6 +152,7 @@ mod test {
         EventSet::from(raw);
     }
 
+    #[cfg(target_os = "linux")]
     #[test]
     fn release_events() {
         let nvml = nvml();
@@ -165,6 +167,7 @@ mod test {
         })
     }
 
+    #[cfg(target_os = "linux")]
     #[cfg(feature = "test-local")]
     #[test]
     fn wait() {

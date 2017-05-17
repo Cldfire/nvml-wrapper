@@ -13,6 +13,9 @@ use bitmasks::device::*;
 use bitmasks::event::*;
 use std::fmt::Debug;
 
+#[cfg(target_os = "windows")]
+use structs::device::DriverModelState;
+
 pub trait ShouldPrint: Debug {
     fn should_print(&self) -> bool {
         true
@@ -79,6 +82,9 @@ impl ShouldPrint for FansInfo {}
 impl ShouldPrint for LedState {}
 impl ShouldPrint for PsuInfo {}
 impl ShouldPrint for UnitInfo {}
+
+#[cfg(target_os = "windows")]
+impl ShouldPrint for DriverModelState {}
 
 pub fn nvml() -> NVML {
     NVML::init().expect("initialized library")

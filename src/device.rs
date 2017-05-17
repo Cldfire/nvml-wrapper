@@ -4,7 +4,9 @@ use structs::device::*;
 use struct_wrappers::device::*;
 use enum_wrappers::*;
 use enum_wrappers::device::*;
+#[cfg(target_os = "linux")]
 use event::EventSet;
+#[cfg(target_os = "linux")]
 use bitmasks::event::EventTypes;
 use bitmasks::device::*;
 #[cfg(target_os = "windows")]
@@ -14,7 +16,9 @@ use std::marker::PhantomData;
 use std::ffi::CStr;
 use std::ptr;
 use std::mem;
-use std::os::raw::{c_uint, c_ulong, c_ulonglong, c_int};
+use std::os::raw::{c_uint, c_ulonglong, c_int};
+#[cfg(target_os = "linux")]
+use std::os::raw::c_ulong;
 
 /**
 Struct that represents a device on the system. 
@@ -690,8 +694,8 @@ impl<'nvml> Device<'nvml> {
     #[inline]
     pub fn driver_model(&self) -> Result<DriverModelState> {
         unsafe {
-            let current: nvmlDriverModel_t = mem::zeroed();
-            let pending: nvmlDriverModel_t = mem::zeroed();
+            let mut current: nvmlDriverModel_t = mem::zeroed();
+            let mut pending: nvmlDriverModel_t = mem::zeroed();
             nvml_try(nvmlDeviceGetDriverModel(self.device, &mut current, &mut pending))?;
 
             Ok(DriverModelState{ current: current.into(), pending: pending.into() })
@@ -2793,8 +2797,8 @@ impl<'nvml> Device<'nvml> {
     # fn test() -> Result<()> {
     # let nvml = NVML::init()?;
     # let mut device = nvml.device_by_index(0)?;
-    use nvml::bitmasks::*;
-    use nvml::enum_wrappers::device::DriverModel;
+    use nvml_wrapper::bitmasks::*;
+    use nvml_wrapper::enum_wrappers::device::DriverModel;
 
     device.set_driver_model(DriverModel::WDM, DEFAULT)?;
 
@@ -2809,7 +2813,7 @@ impl<'nvml> Device<'nvml> {
     #[inline]
     pub fn set_driver_model(&mut self, model: DriverModel, flags: Behavior) -> Result<()> {
         unsafe {
-            nvml_try(nvmlDeviceSetDriverModel(self.device, model.into(), flags.bits()))
+            nvml_try(nvmlDeviceSetDriverModel(self.device, model.as_c(), flags.bits()))
         }
     }
 
@@ -3360,6 +3364,7 @@ mod test {
     use super::Device;
     use error::*;
     use enum_wrappers::device::*;
+    #[cfg(target_os = "linux")]
     use bitmasks::event::*;
     use test_utils::*;
 
@@ -3511,6 +3516,7 @@ mod test {
         })
     }
 
+    #[cfg(target_os = "linux")]
     #[test]
     fn cpu_affinity() {
         let nvml = nvml();
@@ -3727,6 +3733,7 @@ mod test {
         })
     }
 
+    #[cfg(target_os = "linux")]
     #[test]
     fn minor_number() {
         let nvml = nvml();
@@ -3786,6 +3793,7 @@ mod test {
         })
     }
 
+    #[cfg(target_os = "linux")]
     #[test]
     fn is_in_persistent_mode() {
         let nvml = nvml();
@@ -3978,6 +3986,7 @@ mod test {
         })
     }
 
+    #[cfg(target_os = "linux")]
     #[test]
     fn topology_nearest_gpus() {
         let nvml = nvml();
@@ -4078,6 +4087,7 @@ mod test {
         })
     }
 
+    #[cfg(target_os = "linux")]
     #[allow(unused_variables)]
     #[test]
     fn register_events() {
@@ -4093,6 +4103,7 @@ mod test {
         })
     }
 
+    #[cfg(target_os = "linux")]
     #[test]
     fn supported_event_types() {
         let nvml = nvml();
@@ -4101,6 +4112,7 @@ mod test {
         })
     }
 
+    #[cfg(target_os = "linux")]
     #[test]
     fn is_drain_enabled() {
         let nvml = nvml();

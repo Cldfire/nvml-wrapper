@@ -66,12 +66,20 @@ cargo test
 
 ## Compilation
 
-This dependency should be a no-effort addition to your `Cargo.toml`. The NVML library
-comes with the NVIDIA drivers and is essentially present on any system with a
-functioning NVIDIA graphics card.
+The NVML library comes with the NVIDIA drivers and is essentially present on any
+system with a functioning NVIDIA graphics card. The compilation steps vary
+between Windows and Linux, however.
 
-The `nvml-wrapper-sys` crate should take care of correctly finding and linking to
-the NVML library on both Windows and Linux; if it does not, please file an issue.
+### Windows
+
+The NVML library dll can be found at `%ProgramW6432%\NVIDIA Corporation\NVSMI\`
+(which is `C:\Program Files\NVIDIA Corporation\NVSMI\` on my machine). You will need
+to add this folder to your `PATH` in order to have everything work properly at
+runtime.
+
+### Linux
+
+// TODO
 
 ## Rustc Support
 
@@ -128,9 +136,12 @@ use unit::Unit;
 use event::EventSet;
 use std::os::raw::{c_uint, c_int};
 use std::ffi::{CStr, CString};
+#[cfg(target_os = "linux")]
 use std::ptr;
 use std::mem;
+#[cfg(target_os = "linux")]
 use enum_wrappers::device::*;
+#[cfg(target_os = "linux")]
 use struct_wrappers::device::PciInfo;
 use struct_wrappers::unit::HwbcEntry;
 use std::io;
@@ -820,6 +831,7 @@ mod test {
         })
     }
 
+    #[cfg(target_os = "linux")]
     #[test]
     fn topology_gpu_set() {
         let nvml = nvml();
@@ -851,6 +863,7 @@ mod test {
         })
     }
 
+    #[cfg(target_os = "linux")]
     #[should_panic(expected = "NoPermission")]
     #[test]
     fn discover_gpus() {

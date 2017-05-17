@@ -1,7 +1,12 @@
 extern crate pkg_config;
 
+#[cfg(target_os = "windows")]
 fn main() {
-    pkg_config::Config::new().atleast_version("8.0")
-                             .probe("nvml-8.0")
-                             .expect("NVML library >= 8.0 not found");
+    println!("cargo:rustc-link-lib=dylib=nvml");
+    println!("cargo:rustc-link-search=C:\\Program Files\\NVIDIA Corporation\\NVSMI");
+}
+
+#[cfg(target_os = "linux")]
+fn main() {
+
 }

@@ -40,12 +40,20 @@ And the following products:
 
 ## Compilation
 
-This dependency should be a no-effort addition to your `Cargo.toml`. The NVML library
-comes with the NVIDIA drivers and is essentially present on any system with a
-functioning NVIDIA graphics card.
+The NVML library comes with the NVIDIA drivers and is essentially present on any
+system with a functioning NVIDIA graphics card. The compilation steps vary
+between Windows and Linux, however.
 
-This crate should take care of correctly finding and linking to the NVML library
-on both Windows and Linux; if it does not, please file an issue.
+### Windows
+
+The NVML library dll can be found at `%ProgramW6432%\NVIDIA Corporation\NVSMI\`
+(which is `C:\Program Files\NVIDIA Corporation\NVSMI\` on my machine). You will need
+to add this folder to your `PATH` in order to have everything work properly at
+runtime.
+
+### Linux
+
+// TODO
 
 ## Rustc Support
 
