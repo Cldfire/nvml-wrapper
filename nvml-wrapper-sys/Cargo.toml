@@ -21,6 +21,3 @@ exclude = [
 [features]
 default = []
 nightly = []
-
-[build-dependencies]
-pkg-config = "0.3"

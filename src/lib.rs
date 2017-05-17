@@ -134,11 +134,13 @@ pub mod bitmasks;
 #[cfg(test)]
 mod test_utils;
 
+// Re-exports for convenience
+pub use device::Device;
+pub use unit::Unit;
+pub use event::EventSet;
+
 use error::*;
 use ffi::bindings::*;
-use device::Device;
-use unit::Unit;
-use event::EventSet;
 use std::os::raw::{c_uint, c_int};
 use std::ffi::{CStr, CString};
 #[cfg(target_os = "linux")]
