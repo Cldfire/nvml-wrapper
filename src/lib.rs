@@ -18,7 +18,7 @@ let device = nvml.device_by_index(0)?;
 let brand = device.brand()?; // GeForce on my system
 let fan_speed = device.fan_speed()?; // Currently 17% on my system
 let power_limit = device.enforced_power_limit()?; // 275k milliwatts on my system
-let encoder_utilization = device.encoder_utilization()?; // Currently 0 on my system; I'm not encoding anything
+let encoder_util = device.encoder_utilization()?; // Currently 0 on my system; Not encoding anything
 let memory_info = device.memory_info()?; // Currently 1.63/6.37 GB used on my system
 
 // ... and there's a whole lot more you can do. Everything in NVML is wrapped and ready to go
