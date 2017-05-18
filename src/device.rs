@@ -510,6 +510,7 @@ impl<'nvml> Device<'nvml> {
     Supports Fermi or newer fully supported devices.
     */
     // Checked against local
+    // Tested
     #[inline]
     pub fn current_pcie_link_gen(&self) -> Result<u32> {
         unsafe {
@@ -3530,6 +3531,14 @@ mod test {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
             device.current_pcie_link_gen()
+        })
+    }
+
+    #[test]
+    fn current_pcie_link_width() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            device.current_pcie_link_width()
         })
     }
 
