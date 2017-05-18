@@ -2764,7 +2764,7 @@ impl<'nvml> Device<'nvml> {
     
     This operation takes effect after the next reboot. The model may only be
     set to WDDM when running in DEFAULT compute mode. Changing the model to
-    WDDM is not supported then the GPU doesn't support graphics acceleration
+    WDDM is not supported when the GPU doesn't support graphics acceleration
     or will not support it after a reboot.
     
     On Windows platforms the device driver can run in either WDDM or WDM (TCC)
