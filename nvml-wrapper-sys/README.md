@@ -60,6 +60,12 @@ The NVML library can be found at `/usr/lib/nvidia-<driver-version>/libnvidia-ml.
 sudo ln -s /usr/lib/nvidia-<driver-version>/libnvidia-ml.so /usr/lib
 ```
 
+## NVML Support
+
+These bindings were generated for NVML version 8. Each new version of NVML is
+guaranteed to be backwards-compatible according to NVIDIA, so these bindings
+should be useful regardless of NVML version bumps.
+
 ## Rustc Support
 
 Currently supports rustc 1.17.0 or greater. The target version is the **latest**
