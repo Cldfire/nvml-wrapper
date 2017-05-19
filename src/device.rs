@@ -5,13 +5,14 @@ use struct_wrappers::device::*;
 use enum_wrappers::*;
 use enum_wrappers::device::*;
 #[cfg(target_os = "linux")]
-use event::EventSet;
+use EventSet;
 #[cfg(target_os = "linux")]
 use bitmasks::event::EventTypes;
 use bitmasks::device::*;
 #[cfg(target_os = "windows")]
 use bitmasks::Behavior;
 use NVML;
+use NvLink;
 use std::marker::PhantomData;
 use std::ffi::CStr;
 use std::ptr;
@@ -2286,6 +2287,7 @@ impl<'nvml> Device<'nvml> {
     GeForce devices.
     */
     // Checked against local
+    // TODO: This should probably require &mut self
     #[inline]
     pub fn reset_applications_clocks(&self) -> Result<()> {
         unsafe {
@@ -3333,7 +3335,22 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
-    // TODO: NvLink methods
+    // NvLink
+
+    /**
+    Obtain a struct that represents an NvLink.
+
+    NVIDIA does not provide any information as to how to obtain a valid NvLink
+    value, so you're on your own there.
+    */
+    // TODO: Validate up-front that the link is valid
+    #[inline]
+    pub fn link_wrapper_for(&self, link: u32) -> NvLink {
+        NvLink {
+            device: self,
+            link,
+        }
+    }
 
     /// Consume the struct and obtain the raw device handle that it contains.
     #[inline]

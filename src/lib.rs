@@ -138,6 +138,7 @@ pub mod enums;
 pub mod enum_wrappers;
 pub mod event;
 pub mod bitmasks;
+pub mod nvlink;
 #[cfg(test)]
 mod test_utils;
 
@@ -145,6 +146,7 @@ mod test_utils;
 pub use device::Device;
 pub use unit::Unit;
 pub use event::EventSet;
+pub use nvlink::NvLink;
 
 use error::*;
 use ffi::bindings::*;
