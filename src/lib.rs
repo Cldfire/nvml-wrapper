@@ -231,6 +231,7 @@ impl NVML {
     */
     // Thanks to `sorear` on IRC for suggesting this approach
     // Checked against local
+    // Tested
     #[inline]
     pub fn shutdown(self) -> Result<()> {
         unsafe {
@@ -464,6 +465,7 @@ impl NVML {
     Only supports Linux.
     */
     // Checked against local
+    // Tested
     #[cfg(target_os = "linux")]
     #[inline]
     pub fn topology_common_ancestor(&self, device1: &Device, device2: &Device) -> Result<TopologyLevel> {
@@ -518,8 +520,9 @@ impl NVML {
     * `Unknown`, on any unexpected error
     */
     // Checked against local
+    // Tested
     #[inline]
-    pub fn are_devices_on_same_board(device1: &Device, device2: &Device) -> Result<bool> {
+    pub fn are_devices_on_same_board(&self, device1: &Device, device2: &Device) -> Result<bool> {
         unsafe {
             let mut bool_int: c_int = mem::zeroed();
             nvml_try(nvmlDeviceOnSameBoard(device1.unsafe_raw(), device2.unsafe_raw(), &mut bool_int))?;
@@ -721,6 +724,7 @@ impl NVML {
     */
     // TODO: constructor for default pci_infos ^
     // Checked against local
+    // Tested
     #[cfg(target_os = "linux")]
     #[inline]
     pub fn discover_gpus(&self, pci_info: PciInfo) -> Result<()> {
@@ -760,6 +764,13 @@ mod test {
     #[test]
     fn nvml_is_sync() {
         assert_sync::<NVML>()
+    }
+
+    #[test]
+    fn shutdown() {
+        test(3, || {
+            nvml().shutdown()
+        })
     }
 
     #[test]
@@ -831,6 +842,17 @@ mod test {
         })
     }
 
+    // I don't have 2 devices
+    #[cfg(not(feature = "test-local"))]
+    #[test]
+    fn topology_common_ancestor() {
+        let nvml = nvml();
+        let device1 = device(&nvml);
+        let device2 = nvml.device_by_index(1).expect("device");
+
+        nvml.topology_common_ancestor(&device1, &device2).expect("TopologyLevel");
+    }
+
     // Errors on my machine
     #[cfg_attr(feature = "test-local", should_panic(expected = "InvalidArg"))]
     #[test]
@@ -843,6 +865,17 @@ mod test {
                 other => other,
             }
         })
+    }
+
+    // I don't have 2 devices
+    #[cfg(not(feature = "test-local"))]
+    #[test]
+    fn are_devices_on_same_board() {
+        let nvml = nvml();
+        let device1 = device(&nvml);
+        let device2 = nvml.device_by_index(1).expect("device");
+
+        nvml.are_devices_on_same_board(&device1, &device2).expect("bool");
     }
 
     #[cfg(target_os = "linux")]
