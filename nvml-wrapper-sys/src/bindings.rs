@@ -300,19 +300,34 @@ pub enum nvmlNvLinkUtilizationCountUnits_enum {
 }
 pub use self::nvmlNvLinkUtilizationCountUnits_enum as
         nvmlNvLinkUtilizationCountUnits_t;
-#[repr(u32)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub enum nvmlNvLinkUtilizationCountPktTypes_enum {
-    NVML_NVLINK_COUNTER_PKTFILTER_NOP = 1,
-    NVML_NVLINK_COUNTER_PKTFILTER_READ = 2,
-    NVML_NVLINK_COUNTER_PKTFILTER_WRITE = 4,
-    NVML_NVLINK_COUNTER_PKTFILTER_RATOM = 8,
-    NVML_NVLINK_COUNTER_PKTFILTER_NRATOM = 16,
-    NVML_NVLINK_COUNTER_PKTFILTER_FLUSH = 32,
-    NVML_NVLINK_COUNTER_PKTFILTER_RESPDATA = 64,
-    NVML_NVLINK_COUNTER_PKTFILTER_RESPNODATA = 128,
-    NVML_NVLINK_COUNTER_PKTFILTER_ALL = 255,
-}
+pub const PKT_TYPES_NVML_NVLINK_COUNTER_PKTFILTER_NOP:
+          nvmlNvLinkUtilizationCountPktTypes_enum =
+    1;
+pub const PKT_TYPES_NVML_NVLINK_COUNTER_PKTFILTER_READ:
+          nvmlNvLinkUtilizationCountPktTypes_enum =
+    2;
+pub const PKT_TYPES_NVML_NVLINK_COUNTER_PKTFILTER_WRITE:
+          nvmlNvLinkUtilizationCountPktTypes_enum =
+    4;
+pub const PKT_TYPES_NVML_NVLINK_COUNTER_PKTFILTER_RATOM:
+          nvmlNvLinkUtilizationCountPktTypes_enum =
+    8;
+pub const PKT_TYPES_NVML_NVLINK_COUNTER_PKTFILTER_NRATOM:
+          nvmlNvLinkUtilizationCountPktTypes_enum =
+    16;
+pub const PKT_TYPES_NVML_NVLINK_COUNTER_PKTFILTER_FLUSH:
+          nvmlNvLinkUtilizationCountPktTypes_enum =
+    32;
+pub const PKT_TYPES_NVML_NVLINK_COUNTER_PKTFILTER_RESPDATA:
+          nvmlNvLinkUtilizationCountPktTypes_enum =
+    64;
+pub const PKT_TYPES_NVML_NVLINK_COUNTER_PKTFILTER_RESPNODATA:
+          nvmlNvLinkUtilizationCountPktTypes_enum =
+    128;
+pub const PKT_TYPES_NVML_NVLINK_COUNTER_PKTFILTER_ALL:
+          nvmlNvLinkUtilizationCountPktTypes_enum =
+    255;
+pub type nvmlNvLinkUtilizationCountPktTypes_enum = ::std::os::raw::c_uint;
 pub use self::nvmlNvLinkUtilizationCountPktTypes_enum as
         nvmlNvLinkUtilizationCountPktTypes_t;
 #[repr(C)]

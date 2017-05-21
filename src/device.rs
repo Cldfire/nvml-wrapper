@@ -2256,10 +2256,10 @@ impl<'nvml> Device<'nvml> {
             let mut bool_int: c_int = mem::zeroed();
             nvml_try(nvmlDeviceOnSameBoard(self.device, other_device.unsafe_raw(), &mut bool_int))?;
 
-            match bool_int {
-                0 => Ok(false),
-                _ => Ok(true),
-            }
+            Ok(match bool_int {
+                0 => false,
+                _ => true,
+            })
         }
     }
 

@@ -135,8 +135,8 @@ impl From<nvmlBridgeChipInfo_t> for BridgeChipInfo {
         let chip_type = BridgeChip::from(struct_.type_);
 
         BridgeChipInfo {
-            fw_version: fw_version,
-            chip_type: chip_type,
+            fw_version,
+            chip_type,
         }
     }
 }
