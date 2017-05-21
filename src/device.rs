@@ -71,7 +71,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     #[cfg(target_os = "linux")]
     #[inline]
-    pub fn clear_cpu_affinity(&self) -> Result<()> {
+    pub fn clear_cpu_affinity(&mut self) -> Result<()> {
         unsafe {
             nvml_try(nvmlDeviceClearCpuAffinity(self.device)) 
         }
@@ -2287,9 +2287,8 @@ impl<'nvml> Device<'nvml> {
     GeForce devices.
     */
     // Checked against local
-    // TODO: This should probably require &mut self
     #[inline]
-    pub fn reset_applications_clocks(&self) -> Result<()> {
+    pub fn reset_applications_clocks(&mut self) -> Result<()> {
         unsafe {
             nvml_try(nvmlDeviceResetApplicationsClocks(self.device))
         }
@@ -2442,7 +2441,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     #[inline]
-    pub fn clear_accounting_pids(&self) -> Result<()> {
+    pub fn clear_accounting_pids(&mut self) -> Result<()> {
         unsafe {
             nvml_try(nvmlDeviceClearAccountingPids(self.device))
         }
@@ -2652,7 +2651,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     #[inline]
-    pub fn clear_ecc_error_counts(&self, counter_type: EccCounter) -> Result<()> {
+    pub fn clear_ecc_error_counts(&mut self, counter_type: EccCounter) -> Result<()> {
         unsafe {
             nvml_try(nvmlDeviceClearEccErrorCounts(self.device, counter_type.as_c()))
         }

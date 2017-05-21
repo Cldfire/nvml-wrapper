@@ -553,7 +553,6 @@ impl NVML {
             };
             let mut devices: Vec<nvmlDevice_t> = vec![mem::zeroed(); count as usize];
 
-            // Indexing 0 here is safe because we make sure `count` is not 0 above
             nvml_try(nvmlSystemGetTopologyGpuSet(cpu_number, &mut count, devices.as_mut_ptr()))?;
             Ok(devices.iter()
                       .map(|d| Device::from(*d))
@@ -595,7 +594,6 @@ impl NVML {
             };
             let mut hics: Vec<nvmlHwbcEntry_t> = vec![mem::zeroed(); count as usize];
 
-            // Indexing 0 here is safe because we make sure `count` is not 0 above
             nvml_try(nvmlSystemGetHicVersion(&mut count, hics.as_mut_ptr()))?;
             hics.iter()
                 .map(|h| HwbcEntry::try_from(*h))
