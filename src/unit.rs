@@ -267,6 +267,7 @@ impl<'nvml> Unit<'nvml> {
     For S-class products.
     */
     // checked against local
+    // Tested (no-run)
     #[inline]
     pub fn set_led_color(&mut self, color: LedColor) -> Result<()> {
         unsafe {
@@ -305,6 +306,7 @@ impl<'nvml> Unit<'nvml> {
 mod test {
     use test_utils::*;
     use enums::unit::TemperatureReading;
+    use enum_wrappers::unit::LedColor;
 
     #[test]
     fn devices() {
@@ -351,5 +353,15 @@ mod test {
         test_with_unit(3, &nvml, |unit| {
             unit.info()
         })
+    }
+
+    // This modifies unit state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    #[deny(unused_mut)]
+    fn set_led_color() {
+        let nvml = nvml();
+        let mut unit = unit(&nvml);
+
+        unit.set_led_color(LedColor::Amber).expect("set to true")
     }
 }

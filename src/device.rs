@@ -69,6 +69,7 @@ impl<'nvml> Device<'nvml> {
     Only supports Linux. 
     */
     // Checked against local
+    // Tested (no-run)
     #[cfg(target_os = "linux")]
     #[inline]
     pub fn clear_cpu_affinity(&mut self) -> Result<()> {
@@ -479,6 +480,7 @@ impl<'nvml> Device<'nvml> {
     Only supports Linux.
     */
     // Checked against local
+    // Tested
     // TODO: Should we trim zeros here or leave it to the caller?
     #[cfg(target_os = "linux")]
     #[inline]
@@ -2005,6 +2007,7 @@ impl<'nvml> Device<'nvml> {
     Only supports Linux.
     */
     // Checked against local
+    // Tested
     #[cfg(target_os = "linux")]
     #[inline]
     pub fn topology_common_ancestor(&self, other_device: Device) -> Result<TopologyLevel> {
@@ -2250,6 +2253,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     */
     // Checked against local
+    // Tested
     #[inline]
     pub fn is_on_same_board_as(&self, other_device: &Device) -> Result<bool> {
         unsafe {
@@ -2287,6 +2291,7 @@ impl<'nvml> Device<'nvml> {
     GeForce devices.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
     pub fn reset_applications_clocks(&mut self) -> Result<()> {
         unsafe {
@@ -2324,6 +2329,7 @@ impl<'nvml> Device<'nvml> {
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
     pub fn set_auto_boosted_clocks(&mut self, enabled: bool) -> Result<()> {
         unsafe {
@@ -2351,6 +2357,7 @@ impl<'nvml> Device<'nvml> {
     Only supports Linux.
     */
     // Checked against local
+    // Tested (no-run)
     #[cfg(target_os = "linux")]
     #[inline]
     pub fn set_cpu_affinity(&mut self) -> Result<()> {
@@ -2388,10 +2395,11 @@ impl<'nvml> Device<'nvml> {
     GeForce devices.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
     pub fn set_auto_boosted_clocks_default(&mut self, enabled: bool) -> Result<()> {
         unsafe {
-            // passing 0 because NVIDIA says flags are not supported yet
+            // Passing 0 because NVIDIA says flags are not supported yet
             nvml_try(nvmlDeviceSetDefaultAutoBoostedClocksEnabled(self.device, 
                                                                   state_from_bool(enabled), 
                                                                   0))
@@ -2440,6 +2448,7 @@ impl<'nvml> Device<'nvml> {
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
     pub fn clear_accounting_pids(&mut self) -> Result<()> {
         unsafe {
@@ -2618,6 +2627,7 @@ impl<'nvml> Device<'nvml> {
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
     pub fn set_accounting(&mut self, enabled: bool) -> Result<()> {
         unsafe {
@@ -2650,6 +2660,7 @@ impl<'nvml> Device<'nvml> {
     clear all other ECC counts.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
     pub fn clear_ecc_error_counts(&mut self, counter_type: EccCounter) -> Result<()> {
         unsafe {
@@ -2679,6 +2690,7 @@ impl<'nvml> Device<'nvml> {
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
     pub fn set_api_restricted(&mut self, api_type: Api, restricted: bool) -> Result<()> {
         unsafe {
@@ -2720,6 +2732,7 @@ impl<'nvml> Device<'nvml> {
     GeForce devices.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
     pub fn set_applications_clocks(&mut self, mem_clock: u32, graphics_clock: u32) -> Result<()> {
         unsafe {
@@ -2753,6 +2766,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
     pub fn set_compute_mode(&mut self, mode: ComputeMode) -> Result<()> {
         unsafe {
@@ -2811,6 +2825,7 @@ impl<'nvml> Device<'nvml> {
     ```
     */
     // Checked against local
+    // Tested (no-run)
     #[cfg(target_os = "windows")]
     #[inline]
     pub fn set_driver_model(&mut self, model: DriverModel, flags: Behavior) -> Result<()> {
@@ -2839,6 +2854,7 @@ impl<'nvml> Device<'nvml> {
     1.0 or higher.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
     pub fn set_ecc(&mut self, enabled: bool) -> Result<()> {
         unsafe {
@@ -2870,6 +2886,7 @@ impl<'nvml> Device<'nvml> {
     supported on Quadro and Tesla C-class products.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
     pub fn set_gpu_op_mode(&mut self, mode: OperationMode) -> Result<()> {
         unsafe {
@@ -2899,6 +2916,7 @@ impl<'nvml> Device<'nvml> {
     Only supports Linux.
     */
     // Checked against local
+    // Tested (no-run)
     #[cfg(target_os = "linux")]
     #[inline]
     pub fn set_persistent(&mut self, enabled: bool) -> Result<()> {
@@ -2930,6 +2948,7 @@ impl<'nvml> Device<'nvml> {
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
     pub fn set_power_management_limit(&mut self, limit: u32) -> Result<()> {
         unsafe {
@@ -3393,6 +3412,15 @@ mod test {
     #[test]
     fn device_is_sync() {
         assert_sync::<Device>()
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn clear_cpu_affinity() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.clear_cpu_affinity().unwrap();
     }
 
     #[test]
@@ -4011,6 +4039,17 @@ mod test {
         })
     }
 
+    // I do not have 2 devices
+    #[cfg(not(feature = "test-local"))]
+    #[test]
+    fn topology_common_ancestor() {
+        let nvml = nvml();
+        let device1 = device(&nvml);
+        let device2 = nvml.device_by_index(1).expect("device");
+
+        device1.topology_common_ancestor(device2).expect("TopologyLevel");
+    }
+
     #[cfg(target_os = "linux")]
     #[test]
     fn topology_nearest_gpus() {
@@ -4063,6 +4102,57 @@ mod test {
         })
     }
 
+    // I do not have 2 devices
+    #[cfg(not(feature = "test-local"))]
+    #[test]
+    fn is_on_same_board_as() {
+        let nvml = nvml();
+        let device1 = device(&nvml);
+        let device2 = nvml.device_by_index(1).expect("device");
+
+        device1.is_on_same_board_as(&device2).expect("bool");
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    #[deny(unused_mut)]
+    fn reset_applications_clocks() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.reset_applications_clocks().expect("reset clocks")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    #[deny(unused_mut)]
+    fn set_auto_boosted_clocks() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_auto_boosted_clocks(true).expect("set to true")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    #[deny(unused_mut)]
+    fn set_cpu_affinity() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_cpu_affinity().expect("ideal affinity set")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    #[deny(unused_mut)]
+    fn set_auto_boosted_clocks_default() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_auto_boosted_clocks_default(true).expect("set to true")
+    }
+
     // My machine does not support this call
     #[cfg(not(feature = "test-local"))]
     #[test]
@@ -4071,6 +4161,16 @@ mod test {
         test_with_device(3, &nvml, |device| {
             device.validate_info_rom()
         })
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    #[deny(unused_mut)]
+    fn clear_accounting_pids() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.clear_accounting_pids().expect("cleared")
     }
 
     #[test]
@@ -4110,6 +4210,107 @@ mod test {
                 other => other,
             }
         })
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    #[deny(unused_mut)]
+    fn set_accounting() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_accounting(true).expect("set to true")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    #[deny(unused_mut)]
+    fn clear_ecc_error_counts() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.clear_ecc_error_counts(EccCounter::Aggregate).expect("set to true")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    #[deny(unused_mut)]
+    fn set_api_restricted() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_api_restricted(Api::ApplicationClocks, true).expect("set to true")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    #[deny(unused_mut)]
+    fn set_applications_clocks() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_applications_clocks(32, 32).expect("set to true")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    #[deny(unused_mut)]
+    fn set_compute_mode() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_compute_mode(ComputeMode::Default).expect("set to true")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[cfg(target_os = "windows")]
+    #[allow(dead_code)]
+    #[deny(unused_mut)]
+    fn set_driver_model() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_driver_model(EccCounter::Aggregate).expect("set to true")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    #[deny(unused_mut)]
+    fn set_ecc() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_ecc(true).expect("set to true")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    #[deny(unused_mut)]
+    fn set_gpu_op_mode() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_gpu_op_mode(OperationMode::AllOn).expect("set to true")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    #[deny(unused_mut)]
+    fn set_persistent() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_persistent(true).expect("set to true")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    #[deny(unused_mut)]
+    fn set_power_management_limit() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_power_management_limit(250000).expect("set to true")
     }
 
     #[cfg(target_os = "linux")]
