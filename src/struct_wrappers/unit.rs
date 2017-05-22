@@ -14,12 +14,23 @@ pub struct FansInfo {
     pub fans: Vec<FanInfo>,
 }
 
-impl From<nvmlUnitFanSpeeds_t> for FansInfo {
-    fn from(struct_: nvmlUnitFanSpeeds_t) -> Self {
-        FansInfo {
+impl FansInfo {
+    /**
+    Construct `FansInfo` from the corresponding C struct.
+
+    # Errors
+    * `UnexpectedVariant`, for which you can read the docs for
+    */
+    pub fn try_from(struct_: nvmlUnitFanSpeeds_t) -> Result<Self> {
+        let fans: Result<Vec<FanInfo>> = 
+            struct_.fans.iter().map(|f| FanInfo::try_from(*f)).collect();
+
+        let fans = fans?;
+
+        Ok(FansInfo {
             count: struct_.count,
-            fans: struct_.fans.iter().map(|f| FanInfo::from(*f)).collect(),
-        }
+            fans,
+        })
     }
 }
 
@@ -34,12 +45,18 @@ pub struct FanInfo {
     pub state: FanState,
 }
 
-impl From<nvmlUnitFanInfo_t> for FanInfo {
-    fn from(struct_: nvmlUnitFanInfo_t) -> Self {
-        FanInfo {
+impl FanInfo {
+    /**
+    Construct `FanInfo` from the corresponding C struct.
+
+    # Errors
+    * `UnexpectedVariant`, for which you can read the docs for
+    */
+    pub fn try_from(struct_: nvmlUnitFanInfo_t) -> Result<Self> {
+        Ok(FanInfo {
             speed: struct_.speed,
-            state: struct_.state.into(),
-        }
+            state: FanState::try_from(struct_.state)?,
+        })
     }
 }
 

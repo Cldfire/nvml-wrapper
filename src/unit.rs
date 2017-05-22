@@ -114,8 +114,8 @@ impl<'nvml> Unit<'nvml> {
             let mut devices: [nvmlDevice_t; 1] = [mem::zeroed()];
 
             match nvmlUnitGetDevices(self.unit, &mut count, devices.as_mut_ptr()) {
-                nvmlReturn_t::NVML_SUCCESS |
-                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
+                nvmlReturn_enum_NVML_SUCCESS |
+                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
                 // We know that this will be an error
                 other => nvml_try(other).map(|_| 0),
             }
@@ -129,6 +129,7 @@ impl<'nvml> Unit<'nvml> {
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the unit is invalid
     * `NotSupported`, if this is not an S-class product
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -142,7 +143,7 @@ impl<'nvml> Unit<'nvml> {
             let mut fans_info: nvmlUnitFanSpeeds_t = mem::zeroed();
             nvml_try(nvmlUnitGetFanSpeedInfo(self.unit, &mut fans_info))?;
 
-            Ok(fans_info.into())
+            Ok(FansInfo::try_from(fans_info)?)
         }
     }
 

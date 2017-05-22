@@ -117,6 +117,7 @@ for every NVML data structure.
 
 #![recursion_limit = "1024"]
 #![cfg_attr(feature = "cargo-clippy", allow(doc_markdown))]
+#![allow(non_upper_case_globals)]
 
 #[macro_use]
 extern crate error_chain;
@@ -459,6 +460,7 @@ impl NVML {
     # Errors
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` or the OS does not support this feature
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Platform Support
@@ -473,7 +475,7 @@ impl NVML {
             let mut level: nvmlGpuTopologyLevel_t = mem::zeroed();
             nvml_try(nvmlDeviceGetTopologyCommonAncestor(device1.unsafe_raw(), device2.unsafe_raw(), &mut level))?;
 
-            Ok(level.into())
+            Ok(TopologyLevel::try_from(level)?)
         }
     }
 
@@ -634,8 +636,8 @@ impl NVML {
             let mut hics: [nvmlHwbcEntry_t; 1] = [mem::zeroed()];
 
             match nvmlSystemGetHicVersion(&mut count, hics.as_mut_ptr()) {
-                nvmlReturn_t::NVML_SUCCESS |
-                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
+                nvmlReturn_enum_NVML_SUCCESS |
+                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
                 // We know that this will be an error
                 other => nvml_try(other).map(|_| 0),
             }

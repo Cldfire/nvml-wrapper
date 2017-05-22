@@ -95,6 +95,7 @@ impl<'nvml> Device<'nvml> {
     does not support the feature that is being queried (e.g. enabling/disabling auto
     boosted clocks is not supported by this `Device`).
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -108,7 +109,7 @@ impl<'nvml> Device<'nvml> {
             let mut restricted_state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetAPIRestriction(self.device, api.as_c(), &mut restricted_state))?;
 
-            Ok(bool_from_state(restricted_state))
+            Ok(bool_from_state(restricted_state)?)
         }
     }
 
@@ -156,6 +157,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support auto boosted clocks
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -170,8 +172,8 @@ impl<'nvml> Device<'nvml> {
             let mut is_enabled_default: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetAutoBoostedClocksEnabled(self.device, &mut is_enabled, &mut is_enabled_default))?;
 
-            Ok(AutoBoostClocksEnabledInfo{ is_enabled: bool_from_state(is_enabled), 
-                                           is_enabled_default: bool_from_state(is_enabled_default) })
+            Ok(AutoBoostClocksEnabledInfo{ is_enabled: bool_from_state(is_enabled)?, 
+                                           is_enabled_default: bool_from_state(is_enabled_default)? })
         }
     }
 
@@ -272,6 +274,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -285,7 +288,7 @@ impl<'nvml> Device<'nvml> {
             let mut info: nvmlBridgeChipHierarchy_t = mem::zeroed();
             nvml_try(nvmlDeviceGetBridgeChipInfo(self.device, &mut info))?;
 
-            Ok(BridgeChipHierarchy::from(info))
+            Ok(BridgeChipHierarchy::try_from(info)?)
         }
     }
 
@@ -449,8 +452,8 @@ impl<'nvml> Device<'nvml> {
 
             // Passing null doesn't mean we want the count, it's just allowed
             match nvmlDeviceGetComputeRunningProcesses(self.device, &mut count, ptr::null_mut()) {
-                nvmlReturn_t::NVML_SUCCESS => Ok(0),
-                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
+                nvmlReturn_enum_NVML_SUCCESS => Ok(0),
+                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
                 // We know that this wil be an error
                 other => nvml_try(other).map(|_| 0),
             }
@@ -633,6 +636,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     */
     // Checked against local
@@ -643,7 +647,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetDisplayActive(self.device, &mut state))?;
 
-            Ok(bool_from_state(state))
+            Ok(bool_from_state(state)?)
         }
     }
 
@@ -658,6 +662,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     */
     // Checked against local
@@ -668,7 +673,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetDisplayMode(self.device, &mut state))?; 
 
-            Ok(bool_from_state(state))
+            Ok(bool_from_state(state)?)
         }
     }
 
@@ -717,6 +722,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -732,8 +738,8 @@ impl<'nvml> Device<'nvml> {
             let mut pending: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetEccMode(self.device, &mut current, &mut pending))?;
 
-            Ok(EccModeState{ currently_enabled: bool_from_state(current), 
-                             pending_enabled: bool_from_state(pending) })
+            Ok(EccModeState{ currently_enabled: bool_from_state(current)?, 
+                             pending_enabled: bool_from_state(pending)? })
         }
     }
 
@@ -831,6 +837,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -847,8 +854,8 @@ impl<'nvml> Device<'nvml> {
             let mut pending: nvmlGpuOperationMode_t = mem::zeroed();
             nvml_try(nvmlDeviceGetGpuOperationMode(self.device, &mut current, &mut pending))?;
 
-            Ok(OperationModeState{ current: current.into(),
-                                   pending: pending.into() })
+            Ok(OperationModeState{ current: OperationMode::try_from(current)?,
+                                   pending: OperationMode::try_from(pending)? })
         }
     }
 
@@ -892,6 +899,7 @@ impl<'nvml> Device<'nvml> {
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     */
     // Tested as part of `.running_graphics_processes()`
@@ -903,8 +911,8 @@ impl<'nvml> Device<'nvml> {
 
             // Passing null doesn't indicate that we want the count. It's just allowed.
             match nvmlDeviceGetGraphicsRunningProcesses(self.device, &mut count, ptr::null_mut()) {
-                nvmlReturn_t::NVML_SUCCESS => Ok(0),
-                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
+                nvmlReturn_enum_NVML_SUCCESS => Ok(0),
+                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
                 // We know that this will be an error
                 other => nvml_try(other).map(|_| 0),
             }
@@ -1361,6 +1369,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -1374,7 +1383,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlPstates_t = mem::zeroed();
             nvml_try(nvmlDeviceGetPerformanceState(self.device, &mut state))?;
 
-            Ok(state.into())
+            Ok(PerformanceState::try_from(state)?)
         }
     } 
 
@@ -1389,6 +1398,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Platform Support
@@ -1403,7 +1413,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetPersistenceMode(self.device, &mut state))?;
 
-            Ok(bool_from_state(state))
+            Ok(bool_from_state(state)?)
         }
     }
 
@@ -1504,7 +1514,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetPowerManagementMode(self.device, &mut state))?;
 
-            Ok(bool_from_state(state))
+            Ok(bool_from_state(state)?)
         }
     }
 
@@ -1517,7 +1527,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlPstates_t = mem::zeroed();
             nvml_try(nvmlDeviceGetPowerState(self.device, &mut state))?;
 
-            Ok(state.into())
+            Ok(PerformanceState::try_from(state)?)
         }
     }
 
@@ -1617,6 +1627,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` doesn't support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -1630,7 +1641,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetRetiredPagesPendingStatus(self.device, &mut state))?;
 
-            Ok(bool_from_state(state))
+            Ok(bool_from_state(state)?)
         }
     }
 
@@ -1890,7 +1901,7 @@ impl<'nvml> Device<'nvml> {
                                                        for_mem_clock,
                                                        &mut count,
                                                        items.as_mut_ptr()) {
-                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE =>
+                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE =>
                     // `count` is now the size that is required. Return it in the error.
                     bail!(ErrorKind::InsufficientSize(count as usize)),
                 value => nvml_try(value)?,
@@ -1937,7 +1948,7 @@ impl<'nvml> Device<'nvml> {
             match nvmlDeviceGetSupportedMemoryClocks(self.device,
                                                      &mut count,
                                                      items.as_mut_ptr()) {
-                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => 
+                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => 
                     // `count` is now the size that is required. Return it in the error.
                     bail!(ErrorKind::InsufficientSize(count as usize)),
                 value => nvml_try(value)?,
@@ -2001,6 +2012,7 @@ impl<'nvml> Device<'nvml> {
     # Errors
     * `InvalidArg`, if either `Device` is invalid
     * `NotSupported`, if this `Device` or the OS does not support this feature
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, an error has occurred in the underlying topology discovery
     
     # Platform Support
@@ -2015,7 +2027,7 @@ impl<'nvml> Device<'nvml> {
             let mut level: nvmlGpuTopologyLevel_t = mem::zeroed();
             nvml_try(nvmlDeviceGetTopologyCommonAncestor(self.device, other_device.device, &mut level))?;
 
-            Ok(level.into())
+            Ok(TopologyLevel::try_from(level)?)
         }
     }
 
@@ -2493,6 +2505,7 @@ impl<'nvml> Device<'nvml> {
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `Device` is invalid
     * `NotSupported`, if this `Device` does not support this feature
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -2506,7 +2519,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetAccountingMode(self.device, &mut state))?;
 
-            Ok(bool_from_state(state))
+            Ok(bool_from_state(state)?)
         }
     }
 
@@ -2549,9 +2562,9 @@ impl<'nvml> Device<'nvml> {
             // Null also indicates that we want the count
             match nvmlDeviceGetAccountingPids(self.device, &mut count, ptr::null_mut()) {
                 // List is empty
-                nvmlReturn_t::NVML_SUCCESS => Ok(0),
+                nvmlReturn_enum_NVML_SUCCESS => Ok(0),
                 // Count is set to pids count
-                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
+                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
                 // We know this is an error
                 other => nvml_try(other).map(|_| 0),
             }
@@ -3178,6 +3191,7 @@ impl<'nvml> Device<'nvml> {
     * `Uninitialized`, if the library has not been successfully initialized
     * `NotSupported`, if this `Device` doesn't support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
 
     In addition, all of the errors returned by:
@@ -3229,7 +3243,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceQueryDrainState(&mut pci_info.try_into_c()?, &mut state))?;
 
-            Ok(bool_from_state(state))
+            Ok(bool_from_state(state)?)
         }
     }
 

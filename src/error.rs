@@ -1,5 +1,4 @@
-use ffi::bindings::nvmlReturn_t;
-use ffi::bindings::nvmlReturn_t::*;
+use ffi::bindings::*;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -70,12 +69,13 @@ error_chain! {
         An unexpected enum variant was encountered.
         
         This error is specific to this Rust wrapper. It is used to represent the
-        possibility that an enum variant that seems to be only used internally by 
-        the NVML lib gets returned by a function call. While I don't believe it will
-        ever happen, it's best to be complete.
+        possibility that an enum variant that is not defined within the Rust bindings
+        can be returned from a C call.
+
+        See https://github.com/rust-lang/rust/issues/36927
         */
         UnexpectedVariant {
-            description("An unexpected enum variant was encountered (wrapper error).")
+            description("An unexpected enum variant was encountered.")
         }
         /// NVML was not first initialized with `NVML::init()`.
         Uninitialized {
@@ -175,29 +175,52 @@ error_chain! {
 #[doc(hidden)]
 pub fn nvml_try(code: nvmlReturn_t) -> Result<()> {
     match code {
-        NVML_SUCCESS                        => Ok(()),
-        NVML_ERROR_UNINITIALIZED            => Err(Error::from_kind(ErrorKind::Uninitialized)),
-        NVML_ERROR_INVALID_ARGUMENT         => Err(Error::from_kind(ErrorKind::InvalidArg)),
-        NVML_ERROR_NOT_SUPPORTED            => Err(Error::from_kind(ErrorKind::NotSupported)),
-        NVML_ERROR_NO_PERMISSION            => Err(Error::from_kind(ErrorKind::NoPermission)),
-        NVML_ERROR_ALREADY_INITIALIZED      => Err(Error::from_kind(ErrorKind::AlreadyInitialized)),
-        NVML_ERROR_NOT_FOUND                => Err(Error::from_kind(ErrorKind::NotFound)),
-        // TODO: Is returning 0 here sane. Is there a better way (unlikely)
-        NVML_ERROR_INSUFFICIENT_SIZE        => Err(Error::from_kind(ErrorKind::InsufficientSize(0))),
-        NVML_ERROR_INSUFFICIENT_POWER       => Err(Error::from_kind(ErrorKind::InsufficientPower)),
-        NVML_ERROR_DRIVER_NOT_LOADED        => Err(Error::from_kind(ErrorKind::DriverNotLoaded)),
-        NVML_ERROR_TIMEOUT                  => Err(Error::from_kind(ErrorKind::Timeout)),
-        NVML_ERROR_IRQ_ISSUE                => Err(Error::from_kind(ErrorKind::IrqIssue)),
-        NVML_ERROR_LIBRARY_NOT_FOUND        => Err(Error::from_kind(ErrorKind::LibraryNotFound)),
-        NVML_ERROR_FUNCTION_NOT_FOUND       => Err(Error::from_kind(ErrorKind::FunctionNotFound)),
-        NVML_ERROR_CORRUPTED_INFOROM        => Err(Error::from_kind(ErrorKind::CorruptedInfoROM)),
-        NVML_ERROR_GPU_IS_LOST              => Err(Error::from_kind(ErrorKind::GpuLost)),
-        NVML_ERROR_RESET_REQUIRED           => Err(Error::from_kind(ErrorKind::ResetRequired)),
-        NVML_ERROR_OPERATING_SYSTEM         => Err(Error::from_kind(ErrorKind::OperatingSystem)),
-        NVML_ERROR_LIB_RM_VERSION_MISMATCH  => Err(Error::from_kind(ErrorKind::LibRmVersionMismatch)),
-        NVML_ERROR_IN_USE                   => Err(Error::from_kind(ErrorKind::InUse)),
-        NVML_ERROR_NO_DATA                  => Err(Error::from_kind(ErrorKind::NoData)),
-        NVML_ERROR_UNKNOWN                  => Err(Error::from_kind(ErrorKind::Unknown)),
+        nvmlReturn_enum_NVML_SUCCESS                        
+            => Ok(()),
+        nvmlReturn_enum_NVML_ERROR_UNINITIALIZED            
+            => Err(Error::from_kind(ErrorKind::Uninitialized)),
+        nvmlReturn_enum_NVML_ERROR_INVALID_ARGUMENT         
+            => Err(Error::from_kind(ErrorKind::InvalidArg)),
+        nvmlReturn_enum_NVML_ERROR_NOT_SUPPORTED            
+            => Err(Error::from_kind(ErrorKind::NotSupported)),
+        nvmlReturn_enum_NVML_ERROR_NO_PERMISSION            
+            => Err(Error::from_kind(ErrorKind::NoPermission)),
+        nvmlReturn_enum_NVML_ERROR_ALREADY_INITIALIZED      
+            => Err(Error::from_kind(ErrorKind::AlreadyInitialized)),
+        nvmlReturn_enum_NVML_ERROR_NOT_FOUND                
+            => Err(Error::from_kind(ErrorKind::NotFound)),
+        nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE
+        // TODO: Don't return 0, return None
+            => Err(Error::from_kind(ErrorKind::InsufficientSize(0))),
+        nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_POWER       
+            => Err(Error::from_kind(ErrorKind::InsufficientPower)),
+        nvmlReturn_enum_NVML_ERROR_DRIVER_NOT_LOADED        
+            => Err(Error::from_kind(ErrorKind::DriverNotLoaded)),
+        nvmlReturn_enum_NVML_ERROR_TIMEOUT                  
+            => Err(Error::from_kind(ErrorKind::Timeout)),
+        nvmlReturn_enum_NVML_ERROR_IRQ_ISSUE                
+            => Err(Error::from_kind(ErrorKind::IrqIssue)),
+        nvmlReturn_enum_NVML_ERROR_LIBRARY_NOT_FOUND        
+            => Err(Error::from_kind(ErrorKind::LibraryNotFound)),
+        nvmlReturn_enum_NVML_ERROR_FUNCTION_NOT_FOUND       
+            => Err(Error::from_kind(ErrorKind::FunctionNotFound)),
+        nvmlReturn_enum_NVML_ERROR_CORRUPTED_INFOROM        
+            => Err(Error::from_kind(ErrorKind::CorruptedInfoROM)),
+        nvmlReturn_enum_NVML_ERROR_GPU_IS_LOST              
+            => Err(Error::from_kind(ErrorKind::GpuLost)),
+        nvmlReturn_enum_NVML_ERROR_RESET_REQUIRED           
+            => Err(Error::from_kind(ErrorKind::ResetRequired)),
+        nvmlReturn_enum_NVML_ERROR_OPERATING_SYSTEM         
+            => Err(Error::from_kind(ErrorKind::OperatingSystem)),
+        nvmlReturn_enum_NVML_ERROR_LIB_RM_VERSION_MISMATCH  
+            => Err(Error::from_kind(ErrorKind::LibRmVersionMismatch)),
+        nvmlReturn_enum_NVML_ERROR_IN_USE                   
+            => Err(Error::from_kind(ErrorKind::InUse)),
+        nvmlReturn_enum_NVML_ERROR_NO_DATA                  
+            => Err(Error::from_kind(ErrorKind::NoData)),
+        nvmlReturn_enum_NVML_ERROR_UNKNOWN                  
+            => Err(Error::from_kind(ErrorKind::Unknown)),
+        _   => Err(Error::from_kind(ErrorKind::UnexpectedVariant)),
     }
 }
 
@@ -207,7 +230,7 @@ mod test {
 
     #[test]
     fn nvml_try_success() {
-        let res = nvml_try(NVML_SUCCESS);
+        let res = nvml_try(nvmlReturn_enum_NVML_SUCCESS);
         assert_eq!(res.unwrap(), ())
     }
 }

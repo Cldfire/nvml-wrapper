@@ -129,15 +129,21 @@ pub struct BridgeChipInfo {
     pub chip_type: BridgeChip,
 }
 
-impl From<nvmlBridgeChipInfo_t> for BridgeChipInfo {
-    fn from(struct_: nvmlBridgeChipInfo_t) -> Self {
-        let fw_version = FirmwareVersion::from(struct_.fwVersion);
-        let chip_type = BridgeChip::from(struct_.type_);
+impl BridgeChipInfo {
+    /**
+    Construct `BridgeChipInfo` from the corresponding C struct.
 
-        BridgeChipInfo {
+    # Errors
+    * `UnexpectedVariant`, for which you can read the docs for
+    */
+    pub fn try_from(struct_: nvmlBridgeChipInfo_t) -> Result<Self> {
+        let fw_version = FirmwareVersion::from(struct_.fwVersion);
+        let chip_type = BridgeChip::try_from(struct_.type_)?;
+
+        Ok(BridgeChipInfo {
             fw_version,
             chip_type,
-        }
+        })
     }
 }
 
@@ -157,16 +163,25 @@ pub struct BridgeChipHierarchy {
     pub chip_count: u8,
 }
 
-impl From<nvmlBridgeChipHierarchy_t> for BridgeChipHierarchy {
-    fn from(struct_: nvmlBridgeChipHierarchy_t) -> Self {
-        let hierarchy = struct_.bridgeChipInfo.iter()
-                                              .map(|bci| BridgeChipInfo::from(*bci))
-                                              .collect();
+impl BridgeChipHierarchy {
+    /**
+    Construct `BridgeChipHierarchy` from the corresponding C struct.
 
-        BridgeChipHierarchy {
-            chips_hierarchy: hierarchy,
+    # Errors
+    * `UnexpectedVariant`, for which you can read the docs for
+    */
+    pub fn try_from(struct_: nvmlBridgeChipHierarchy_t) -> Result<Self> {
+        let chips_hierarchy: Result<Vec<BridgeChipInfo>> =
+            struct_.bridgeChipInfo.iter()
+                .map(|bci| BridgeChipInfo::try_from(*bci))
+                .collect();
+
+        let chips_hierarchy = chips_hierarchy?;
+
+        Ok(BridgeChipHierarchy {
+            chips_hierarchy,
             chip_count: struct_.bridgeCount,
-        }
+        })
     }
 }
 
