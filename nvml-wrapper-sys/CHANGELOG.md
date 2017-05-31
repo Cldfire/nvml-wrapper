@@ -12,6 +12,8 @@ Rust `enum`s were removed in favor of numerical constants for C enums. This was 
 
 * Rust `enum`s replaced with numerical constants
 * Replaced `::std::os::raw::x` paths with `raw::x` paths for readability
+* Removed `Copy` and `Clone` from structs where they did not make sense
+  * Forgot about this before
 
 ## 0.1.0 (released 5-7-17)
 

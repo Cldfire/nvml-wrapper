@@ -40,7 +40,7 @@ pub const NVML_DEVICE_NAME_BUFFER_SIZE: raw::c_uint = 64;
 pub const NVML_DEVICE_SERIAL_BUFFER_SIZE: raw::c_uint = 30;
 pub const NVML_DEVICE_VBIOS_VERSION_BUFFER_SIZE: raw::c_uint = 32;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 pub struct nvmlDevice_st {
     _unused: [u8; 0],
 }
@@ -876,7 +876,7 @@ pub const nvmlRestrictedAPI_enum_NVML_RESTRICTED_API_COUNT:
 pub type nvmlRestrictedAPI_enum = raw::c_uint;
 pub use self::nvmlRestrictedAPI_enum as nvmlRestrictedAPI_t;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 pub struct nvmlUnit_st {
     _unused: [u8; 0],
 }
@@ -1066,13 +1066,13 @@ impl Clone for nvmlUnitFanSpeeds_st {
 }
 pub type nvmlUnitFanSpeeds_t = nvmlUnitFanSpeeds_st;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 pub struct nvmlEventSet_st {
     _unused: [u8; 0],
 }
 pub type nvmlEventSet_t = *mut nvmlEventSet_st;
 #[repr(C)]
-#[derive(Debug, Copy)]
+#[derive(Debug)]
 pub struct nvmlEventData_st {
     pub device: nvmlDevice_t,
     pub eventType: raw::c_ulonglong,
@@ -1099,9 +1099,6 @@ fn bindgen_test_layout_nvmlEventData_st() {
                 const _ as usize } , 16usize , concat ! (
                 "Alignment of field: " , stringify ! ( nvmlEventData_st ) ,
                 "::" , stringify ! ( eventData ) ));
-}
-impl Clone for nvmlEventData_st {
-    fn clone(&self) -> Self { *self }
 }
 pub type nvmlEventData_t = nvmlEventData_st;
 #[repr(C)]
