@@ -22,7 +22,6 @@ let encoder_util = device.encoder_utilization()?; // Currently 0 on my system; N
 let memory_info = device.memory_info()?; // Currently 1.63/6.37 GB used on my system
 
 // ... and there's a whole lot more you can do. Everything in NVML is wrapped and ready to go
-// (except for a few (~9) NvLink-related items that I will get to soon)
 # Ok(())
 # }
 ```
