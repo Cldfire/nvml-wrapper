@@ -18,6 +18,9 @@ Obtain this via `Device.link_wrapper_for()`.
 Rust's lifetimes will ensure both that the contained `Device` is valid for the
 lifetime of the `NvLink` struct and that the `NVML` instance will be valid for
 the duration of both.
+
+Note that I cannot test any `NvLink` methods myself as I do not have access to
+such a link setup. **Test the functionality in this module before you use it**.
 */
 #[derive(Debug)]
 pub struct NvLink<'device, 'nvml: 'device> {
@@ -40,6 +43,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     # Device Support
     Supports Maxwell or newer fully supported devices.
     */
+    // Test written
     #[inline]
     pub fn is_active(&self) -> Result<bool> {
         unsafe {
@@ -66,6 +70,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     # Device Support
     Supports Maxwell or newer fully supported devices.
     */
+    // Test written
     #[inline]
     pub fn version(&self) -> Result<u32> {
         unsafe {
@@ -92,6 +97,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     # Device Support
     Supports Maxwell or newer fully supported devices.
     */
+    // Test written
     #[inline]
     pub fn has_capability(&self, cap_type: Capability) -> Result<bool> {
         unsafe {
@@ -124,6 +130,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     # Device Support
     Supports Maxwell or newer fully supported devices.
     */
+    // Test written
     #[inline]
     pub fn remote_pci_info(&self) -> Result<PciInfo> {
         unsafe {
@@ -150,6 +157,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     # Device Support
     Supports Maxwell or newer fully supported devices.
     */
+    // Test written
     #[inline]
     pub fn error_counter(&self, counter: ErrorCounter) -> Result<u64> {
         unsafe {
@@ -177,6 +185,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     # Device Support
     Supports Maxwell or newer fully supported devices.
     */
+    // No-run test written
     #[inline]
     pub fn reset_error_counters(&mut self) -> Result<()> {
         unsafe {
@@ -201,6 +210,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     # Device Support
     Supports Maxwell or newer fully supported devices.
     */
+    // No-run test written
     #[inline]
     pub fn set_utilization_control(&mut self,
                                    counter: Counter,
@@ -237,6 +247,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     # Device Support
     Supports Maxwell or newer fully supported devices.
     */
+    // Test written
     #[inline]
     pub fn utilization_control(&self, counter: Counter) 
         -> Result<UtilizationControl> {
@@ -282,6 +293,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     # Device Support
     Supports Maxwell or newer fully supported devices.
     */
+    // No-run test written
     pub fn utilization_counter(&self, counter: Counter)
         -> Result<UtilizationCounter> {
         unsafe {
@@ -317,7 +329,33 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     # Device Support
     Supports Maxwell or newer fully supported devices.
     */
-    pub fn freeze_utilization_counter(&mut self,
+    // No-run test written
+    pub fn freeze_utilization_counter(&mut self, counter: Counter) -> Result<()> {
+        self.set_utilization_counter_frozen(counter, true)
+    }
+
+    /**
+    Unfreezes the specified NvLink utilization `Counter`.
+
+    Both the receive and send counters will be unfrozen (if I'm reading NVIDIA's
+    meaning correctly).
+
+    # Errors
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if the `link` or `Device` within this `NvLink` struct instance
+    is invalid
+    * `NotSupported`, if this `Device` doesn't support this feature
+    * `Unknown`, on any unexpected error
+
+    # Device Support
+    Supports Maxwell or newer fully supported devices.
+    */
+    // No-run test written
+    pub fn unfreeze_utilization_counter(&mut self, counter: Counter) -> Result<()> {
+        self.set_utilization_counter_frozen(counter, false)
+    }
+
+    fn set_utilization_counter_frozen(&mut self,
                                       counter: Counter,
                                       frozen: bool)
                                       -> Result<()> {
@@ -345,11 +383,138 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     # Device Support
     Supports Maxwell or newer fully supported devices.
     */
+    // No-run test written
     pub fn reset_utilization_counter(&mut self, counter: Counter) -> Result<()> {
         unsafe {
             nvml_try(nvmlDeviceResetNvLinkUtilizationCounter(self.device.unsafe_raw(),
                                                              self.link,
                                                              counter as c_uint))
         }
+    }
+}
+
+#[cfg(test)]
+#[cfg(not(feature = "test-local"))]
+mod test {
+    use test_utils::*;
+    use enums::nv_link::*;
+    use enum_wrappers::nv_link::*;
+    use struct_wrappers::nv_link::*;
+    use bitmasks::nv_link::*;
+
+    #[test]
+    fn is_active() {
+        let nvml = nvml();
+        test_with_link(3, &nvml, |link| {
+            link.is_active()
+        })
+    }
+
+    #[test]
+    fn version() {
+        let nvml = nvml();
+        test_with_link(3, &nvml, |link| {
+            link.version()
+        })
+    }
+
+    #[test]
+    fn has_capability() {
+        let nvml = nvml();
+        test_with_link(3, &nvml, |link| {
+            link.has_capability(Capability::P2p)
+        })
+    }
+
+    #[test]
+    fn remote_pci_info() {
+        let nvml = nvml();
+        test_with_link(3, &nvml, |link| {
+            let info = link.remote_pci_info()?;
+            assert_eq!(info.pci_sub_system_id, None);
+            Ok(info)
+        })
+    }
+
+    #[test]
+    fn error_counter() {
+        let nvml = nvml();
+        test_with_link(3, &nvml, |link| {
+            link.error_counter(ErrorCounter::DlRecovery)
+        })
+    }
+
+    // This modifies link state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn reset_error_counters() {
+        let nvml = nvml();
+        let device = device(&nvml);
+        let mut link = device.link_wrapper_for(0);
+
+        link.reset_error_counters().unwrap();
+    }
+
+    // This modifies link state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn set_utilization_control() {
+        let nvml = nvml();
+        let device = device(&nvml);
+        let mut link = device.link_wrapper_for(0);
+
+        let settings = UtilizationControl {
+            units: UtilizationCountUnit::Cycles,
+            packet_filter: NO_OP | READ | WRITE | RATOM | WITH_DATA,
+        };
+
+        link.set_utilization_control(Counter::One, settings, false).unwrap()
+    }
+
+    #[test]
+    fn utilization_control() {
+        let nvml = nvml();
+        test_with_link(3, &nvml, |link| {
+            link.utilization_control(Counter::One)
+        })
+    }
+
+    // This shouldn't be called without modifying link state, so we don't want
+    // to actually run the test
+    #[allow(dead_code)]
+    fn utilization_counter() {
+        let nvml = nvml();
+        let device = device(&nvml);
+        let mut link = device.link_wrapper_for(0);
+
+        link.utilization_counter(Counter::One).unwrap();
+    }
+
+    // This modifies link state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn freeze_utilization_counter() {
+        let nvml = nvml();
+        let device = device(&nvml);
+        let mut link = device.link_wrapper_for(0);
+
+        link.freeze_utilization_counter(Counter::One).unwrap();
+    }
+
+    // This modifies link state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn unfreeze_utilization_counter() {
+        let nvml = nvml();
+        let device = device(&nvml);
+        let mut link = device.link_wrapper_for(0);
+
+        link.unfreeze_utilization_counter(Counter::One).unwrap();
+    }
+
+    // This modifies link state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn reset_utilization_counter() {
+        let nvml = nvml();
+        let device = device(&nvml);
+        let mut link = device.link_wrapper_for(0);
+
+        link.reset_utilization_counter(Counter::One).unwrap();
     }
 }

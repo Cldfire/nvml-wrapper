@@ -1300,7 +1300,7 @@ impl<'nvml> Device<'nvml> {
         unsafe {
             let mut pci_info: nvmlPciInfo_t = mem::zeroed();
             nvml_try(nvmlDeviceGetPciInfo_v2(self.device, &mut pci_info))?;
-            
+
             Ok(PciInfo::try_from(pci_info, true)?)
         }
     }
@@ -3375,7 +3375,6 @@ impl<'nvml> Device<'nvml> {
     NVIDIA does not provide any information as to how to obtain a valid NvLink
     value, so you're on your own there.
     */
-    // TODO: Validate up-front that the link is valid
     #[inline]
     pub fn link_wrapper_for(&self, link: u32) -> NvLink {
         NvLink {
