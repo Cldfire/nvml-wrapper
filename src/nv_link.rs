@@ -3,6 +3,7 @@ use error::*;
 use enum_wrappers::*;
 use enum_wrappers::nv_link::*;
 use struct_wrappers::nv_link::*;
+use struct_wrappers::device::PciInfo;
 use enums::nv_link::Counter;
 use structs::nv_link::UtilizationCounter;
 use Device;
@@ -110,7 +111,31 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
         }
     }
 
-    // TODO: remotePciInfo
+    /**
+    Gets the PCI information for this `NvLink`'s remote node.
+
+    # Errors
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if the `link` or `Device` within this `NvLink` struct instance
+    is invalid
+    * `NotSupported`, if this `Device` doesn't support this feature
+    * `Unknown`, on any unexpected error
+
+    # Device Support
+    Supports Maxwell or newer fully supported devices.
+    */
+    #[inline]
+    pub fn remote_pci_info(&self) -> Result<PciInfo> {
+        unsafe {
+            let mut pci_info: nvmlPciInfo_t = mem::zeroed();
+
+            nvml_try(nvmlDeviceGetNvLinkRemotePciInfo(self.device.unsafe_raw(),
+                                                      self.link,
+                                                      &mut pci_info))?;
+
+            Ok(PciInfo::try_from(pci_info, false)?)
+        }
+    }
 
     /**
     Gets the specified `ErrorCounter` value.

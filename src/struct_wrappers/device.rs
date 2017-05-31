@@ -18,22 +18,31 @@ pub struct PciInfo {
     pub bus_id: String,
     /// The device's ID on the bus, 0 to 31.
     pub device: u32,
-    /// The PCI domain on which the device's bus resides, 0 to 0xffff. 
+    /// The PCI domain on which the device's bus resides, 0 to 0xffff.
     pub domain: u32,
     /// The combined 16-bit device ID and 16-bit vendor ID.
     pub pci_device_id: u32,
-    /// The 32-bit Sub System Device ID.
-    pub pci_sub_system_id: u32,
+    /**
+    The 32-bit Sub System Device ID.
+    
+    Will always be `None` if this `PciInfo` was obtained from `NvLink.remote_pci_info()`.
+    NVIDIA says that the C field that this corresponds to "is not filled ... and
+    is indeterminate" when being returned from that specific call.
+    */
+    pub pci_sub_system_id: Option<u32>,
 }
 
 impl PciInfo {
     /**
     Waiting for `TryFrom` to be stable. In the meantime, we do this.
 
+    Passing `false` for `sub_sys_id_present` will set the `pci_sub_system_id` field to
+    `None`. See the field docs for more.
+
     # Errors
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     */
-    pub fn try_from(struct_: nvmlPciInfo_t) -> Result<Self> {
+    pub fn try_from(struct_: nvmlPciInfo_t, sub_sys_id_present: bool) -> Result<Self> {
         unsafe {
             let bus_id_raw = CStr::from_ptr(struct_.busId.as_ptr());
             Ok(PciInfo {
@@ -42,7 +51,11 @@ impl PciInfo {
                 device: struct_.device,
                 domain: struct_.domain,
                 pci_device_id: struct_.pciDeviceId,
-                pci_sub_system_id: struct_.pciSubSystemId,
+                pci_sub_system_id: if sub_sys_id_present {
+                    Some(struct_.pciSubSystemId)
+                } else {
+                    None
+                },
             })
         }
     }
@@ -88,7 +101,13 @@ impl PciInfo {
             bus: self.bus,
             device: self.device,
             pciDeviceId: self.pci_device_id,
-            pciSubSystemId: self.pci_sub_system_id,
+            pciSubSystemId: if let Some(id) = self.pci_sub_system_id {
+                id
+            } else {
+                // This seems the most correct thing to do? Since this should only
+                // be none if obtained from `NvLink.remote_pci_info()`.
+                0   
+            },
             reserved0: u32::MAX,
             reserved1: u32::MAX,
             reserved2: u32::MAX,
