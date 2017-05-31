@@ -491,7 +491,7 @@ impl<'nvml> Device<'nvml> {
         unsafe {
             if size == 0 {
                 // Return an error containing the minimum size that can be passed.
-                bail!(ErrorKind::InsufficientSize(1));
+                bail!(ErrorKind::InsufficientSize(Some(1)));
             }
 
             let mut affinities: Vec<c_ulong> = vec![mem::zeroed(); size];
@@ -1883,7 +1883,7 @@ impl<'nvml> Device<'nvml> {
     #[inline]
     pub fn supported_graphics_clocks(&self, for_mem_clock: u32) -> Result<Vec<u32>> {
         match self.supported_graphics_clocks_manual(for_mem_clock, 128) {
-            Err(Error(ErrorKind::InsufficientSize(s), _)) => 
+            Err(Error(ErrorKind::InsufficientSize(Some(s)), _)) =>
                 // `s` is the required size for the call; make the call a second time
                 self.supported_graphics_clocks_manual(for_mem_clock, s),
             value => value,
@@ -1903,7 +1903,7 @@ impl<'nvml> Device<'nvml> {
                                                        items.as_mut_ptr()) {
                 nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE =>
                     // `count` is now the size that is required. Return it in the error.
-                    bail!(ErrorKind::InsufficientSize(count as usize)),
+                    bail!(ErrorKind::InsufficientSize(Some(count as usize))),
                 value => nvml_try(value)?,
             }
         }
@@ -1931,7 +1931,7 @@ impl<'nvml> Device<'nvml> {
     #[inline]
     pub fn supported_memory_clocks(&self) -> Result<Vec<u32>> {
         match self.supported_memory_clocks_manual(16) {
-            Err(Error(ErrorKind::InsufficientSize(s), _)) => {
+            Err(Error(ErrorKind::InsufficientSize(Some(s)), _)) => {
                 // `s` is the required size for the call; make the call a second time
                 self.supported_memory_clocks_manual(s)
             },
@@ -1950,7 +1950,7 @@ impl<'nvml> Device<'nvml> {
                                                      items.as_mut_ptr()) {
                 nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => 
                     // `count` is now the size that is required. Return it in the error.
-                    bail!(ErrorKind::InsufficientSize(count as usize)),
+                    bail!(ErrorKind::InsufficientSize(Some(count as usize))),
                 value => nvml_try(value)?,
             }
         }

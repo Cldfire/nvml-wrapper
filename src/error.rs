@@ -103,12 +103,15 @@ error_chain! {
         NotFound {
             description("A query to find and object was unsuccessful.")
         }
-        /// An input argument is not large enough.
-        ///
-        /// The value contained is the size required for a successful call.
-        InsufficientSize(required_size: usize) {
+        /**
+        An input argument is not large enough.
+        
+        The value contained is the size required for a successful call (if `Some`)
+        and `None` if not explicitly set.
+        */
+        InsufficientSize(required_size: Option<usize>) {
             description("An input argument is not large enough.")
-            display("An input argument is not large enough. Required size: '{}'", required_size)
+            display("An input argument is not large enough. Required size: '{:?}'", required_size)
         }
         /// A device's external power cables are not properly attached.
         InsufficientPower {
@@ -190,8 +193,7 @@ pub fn nvml_try(code: nvmlReturn_t) -> Result<()> {
         nvmlReturn_enum_NVML_ERROR_NOT_FOUND                
             => Err(Error::from_kind(ErrorKind::NotFound)),
         nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE
-        // TODO: Don't return 0, return None
-            => Err(Error::from_kind(ErrorKind::InsufficientSize(0))),
+            => Err(Error::from_kind(ErrorKind::InsufficientSize(None))),
         nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_POWER       
             => Err(Error::from_kind(ErrorKind::InsufficientPower)),
         nvmlReturn_enum_NVML_ERROR_DRIVER_NOT_LOADED        
