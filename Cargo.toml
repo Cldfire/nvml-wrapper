@@ -25,4 +25,5 @@ wrapcenum-derive = { path = "../wrapcenum-derive" }
 [features]
 default = []
 test-local = []
+ci = ["nvml-wrapper-sys/ci"]
 nightly = ["nvml-wrapper-sys/nightly"]

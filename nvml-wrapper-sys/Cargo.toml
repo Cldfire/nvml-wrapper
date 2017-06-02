@@ -21,3 +21,4 @@ exclude = [
 [features]
 default = []
 nightly = []
+ci = []

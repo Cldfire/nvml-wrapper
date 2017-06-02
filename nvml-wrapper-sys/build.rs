@@ -4,13 +4,18 @@
 // --raw-line "#![allow(dead_code)]"  --raw-line "use std::os::raw;" -o
 // genned_bindings.rs nvml.h
 
-#[cfg(target_os = "windows")]
 fn main() {
-    println!("cargo:rustc-link-lib=nvml");
-    println!("cargo:rustc-link-search=C:\\Program Files\\NVIDIA Corporation\\NVSMI");
-}
+    #[cfg(not(feature = "ci"))]
+    {
+        #[cfg(target_os = "windows")]
+        {
+            println!("cargo:rustc-link-lib=nvml");
+            println!("cargo:rustc-link-search=C:\\Program Files\\NVIDIA Corporation\\NVSMI");
+        }
 
-#[cfg(target_os = "linux")]
-fn main() {
-    println!("cargo:rustc-link-lib=nvidia-ml");
+        #[cfg(target_os = "linux")]
+        {
+            println!("cargo:rustc-link-lib=nvidia-ml");
+        }
+    }
 }
