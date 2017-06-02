@@ -42,7 +42,8 @@ install:
 
 # TODO This is the "test phase", tweak it as you see fit
 test_script:
-  - if ($Env:RUST_VERSION -eq 'nightly') (
+  - ps: >- 
+    if ($Env:RUST_VERSION -eq 'nightly') (
       cargo build --target %TARGET% --features "nightly ci" &&
       cargo build --target %TARGET% --release --features "nightly ci" &&
       cargo build --target %TARGET% --features "nightly ci serde" &&
