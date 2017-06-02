@@ -43,7 +43,7 @@ install:
 # TODO This is the "test phase", tweak it as you see fit
 test_script:
   - ps: >- 
-    if ($Env:RUST_VERSION -eq 'nightly') (
+    if ($Env:RUST_VERSION -eq 'nightly') {
       cargo build --target %TARGET% --features "nightly ci" &&
       cargo build --target %TARGET% --release --features "nightly ci" &&
       cargo build --target %TARGET% --features "nightly ci serde" &&
@@ -52,7 +52,7 @@ test_script:
       cargo test --target %TARGET% --release --features "test-local ci nightly" --no-run &&
       cargo test --target %TARGET% --features "nightly ci" --no-run &&
       cargo test --target %TARGET% --release --features "nightly ci" --no-run
-    ) else (
+    } else {
       cargo build --target %TARGET% --features "ci" &&
       cargo build --target %TARGET% --release --features "ci" &&
       cargo build --target %TARGET% --features "serde ci" &&
@@ -61,7 +61,7 @@ test_script:
       cargo test --target %TARGET% --release --features "test-local ci" --no-run &&
       cargo test --target %TARGET% --no-run --features "ci" &&
       cargo test --target %TARGET% --release --features "ci" --no-run
-    )
+    }
 
 cache:
   - C:\Users\appveyor\.cargo\registry
