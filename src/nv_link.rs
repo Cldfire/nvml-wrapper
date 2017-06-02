@@ -29,6 +29,18 @@ pub struct NvLink<'device, 'nvml: 'device> {
 }
 
 impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
+    /// Obtain the `Device` reference stored within this struct.
+    #[inline]
+    pub fn device(&self) -> &Device {
+        self.device
+    }
+
+    /// Obtain the value of this struct's `link` field.
+    #[inline]
+    pub fn link(&self) -> u32 {
+        self.link
+    }
+
     /**
     Gets whether or not this `Device`'s NvLink is active.
 

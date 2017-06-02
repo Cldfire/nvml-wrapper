@@ -2,7 +2,7 @@
 
 This file describes the changes / additions / fixes between bindings releases.
 
-## 0.2.0 (release 6-8-17)
+## 0.2.0 (released 6-8-17)
 
 ### Release Summary
 
