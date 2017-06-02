@@ -4,10 +4,11 @@ set -ex
 
 # TODO This is the "test phase", tweak it as you see fit
 main() {
+      echo hello
       cross build --target $TARGET --features "ci"
-#     echo "running script"
+#     echo running script
 #     if [ $RUST_VER = nightly ]; then
-#             echo "nightly"
+#             echo nightly
 #             cross build --target $TARGET --features "nightly ci"
 #             cross build --target $TARGET --release --features "nightly ci"
 
@@ -20,7 +21,7 @@ main() {
 #             cross test --target $TARGET --features "nightly ci" --no-run
 #             cross test --target $TARGET --release --features "nightly ci" --no-run
 #     else
-#             echo "stable"
+#             echo stable
 #             cross build --target $TARGET --features "ci"
 #             cross build --target $TARGET --features "ci" --release
 
