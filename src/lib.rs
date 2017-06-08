@@ -845,6 +845,7 @@ mod test {
 
     // I don't have 2 devices
     #[cfg(not(feature = "test-local"))]
+    #[cfg(target_os = "linux")]
     #[test]
     fn topology_common_ancestor() {
         let nvml = nvml();

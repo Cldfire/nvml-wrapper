@@ -689,6 +689,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if the platform is not Windows
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -707,7 +708,8 @@ impl<'nvml> Device<'nvml> {
             let mut pending: nvmlDriverModel_t = mem::zeroed();
             nvml_try(nvmlDeviceGetDriverModel(self.device, &mut current, &mut pending))?;
 
-            Ok(DriverModelState{ current: current.into(), pending: pending.into() })
+            Ok(DriverModelState{ current: DriverModel::try_from(current)?,
+                                 pending: DriverModel::try_from(pending)? })
         }
     }
 
@@ -3416,6 +3418,8 @@ mod test {
     use enum_wrappers::device::*;
     #[cfg(target_os = "linux")]
     use bitmasks::event::*;
+    #[cfg(target_os = "windows")]
+    use bitmasks::DEFAULT;
     use test_utils::*;
 
     #[test]
@@ -3430,6 +3434,7 @@ mod test {
 
     // This modifies device state, so we don't want to actually run the test
     #[allow(dead_code)]
+    #[cfg(target_os = "linux")]
     fn clear_cpu_affinity() {
         let nvml = nvml();
         let mut device = device(&nvml);
@@ -4055,6 +4060,7 @@ mod test {
 
     // I do not have 2 devices
     #[cfg(not(feature = "test-local"))]
+    #[cfg(target_os = "linux")]
     #[test]
     fn topology_common_ancestor() {
         let nvml = nvml();
@@ -4147,6 +4153,7 @@ mod test {
 
     // This modifies device state, so we don't want to actually run the test
     #[allow(dead_code)]
+    #[cfg(target_os = "linux")]
     fn set_cpu_affinity() {
         let nvml = nvml();
         let mut device = device(&nvml);
@@ -4273,7 +4280,7 @@ mod test {
         let nvml = nvml();
         let mut device = device(&nvml);
 
-        device.set_driver_model(EccCounter::Aggregate).expect("set to true")
+        device.set_driver_model(DriverModel::WDM, DEFAULT).expect("set to wdm")
     }
 
     // This modifies device state, so we don't want to actually run the test
@@ -4296,6 +4303,7 @@ mod test {
 
     // This modifies device state, so we don't want to actually run the test
     #[allow(dead_code)]
+    #[cfg(target_os = "linux")]
     fn set_persistent() {
         let nvml = nvml();
         let mut device = device(&nvml);

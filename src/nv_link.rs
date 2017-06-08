@@ -496,7 +496,7 @@ mod test {
     fn utilization_counter() {
         let nvml = nvml();
         let device = device(&nvml);
-        let mut link = device.link_wrapper_for(0);
+        let link = device.link_wrapper_for(0);
 
         link.utilization_counter(Counter::One).unwrap();
     }
