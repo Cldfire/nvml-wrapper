@@ -5,13 +5,14 @@ use struct_wrappers::device::*;
 use enum_wrappers::*;
 use enum_wrappers::device::*;
 #[cfg(target_os = "linux")]
-use event::EventSet;
+use EventSet;
 #[cfg(target_os = "linux")]
 use bitmasks::event::EventTypes;
 use bitmasks::device::*;
 #[cfg(target_os = "windows")]
 use bitmasks::Behavior;
 use NVML;
+use NvLink;
 use std::marker::PhantomData;
 use std::ffi::CStr;
 use std::ptr;
@@ -68,9 +69,10 @@ impl<'nvml> Device<'nvml> {
     Only supports Linux. 
     */
     // Checked against local
+    // Tested (no-run)
     #[cfg(target_os = "linux")]
     #[inline]
-    pub fn clear_cpu_affinity(&self) -> Result<()> {
+    pub fn clear_cpu_affinity(&mut self) -> Result<()> {
         unsafe {
             nvml_try(nvmlDeviceClearCpuAffinity(self.device)) 
         }
@@ -93,6 +95,7 @@ impl<'nvml> Device<'nvml> {
     does not support the feature that is being queried (e.g. enabling/disabling auto
     boosted clocks is not supported by this `Device`).
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -106,7 +109,7 @@ impl<'nvml> Device<'nvml> {
             let mut restricted_state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetAPIRestriction(self.device, api.as_c(), &mut restricted_state))?;
 
-            Ok(bool_from_state(restricted_state))
+            Ok(bool_from_state(restricted_state)?)
         }
     }
 
@@ -154,6 +157,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support auto boosted clocks
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -168,8 +172,8 @@ impl<'nvml> Device<'nvml> {
             let mut is_enabled_default: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetAutoBoostedClocksEnabled(self.device, &mut is_enabled, &mut is_enabled_default))?;
 
-            Ok(AutoBoostClocksEnabledInfo{ is_enabled: bool_from_state(is_enabled), 
-                                           is_enabled_default: bool_from_state(is_enabled_default) })
+            Ok(AutoBoostClocksEnabledInfo{ is_enabled: bool_from_state(is_enabled)?, 
+                                           is_enabled_default: bool_from_state(is_enabled_default)? })
         }
     }
 
@@ -270,6 +274,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -283,7 +288,7 @@ impl<'nvml> Device<'nvml> {
             let mut info: nvmlBridgeChipHierarchy_t = mem::zeroed();
             nvml_try(nvmlDeviceGetBridgeChipInfo(self.device, &mut info))?;
 
-            Ok(BridgeChipHierarchy::from(info))
+            Ok(BridgeChipHierarchy::try_from(info)?)
         }
     }
 
@@ -447,8 +452,8 @@ impl<'nvml> Device<'nvml> {
 
             // Passing null doesn't mean we want the count, it's just allowed
             match nvmlDeviceGetComputeRunningProcesses(self.device, &mut count, ptr::null_mut()) {
-                nvmlReturn_t::NVML_SUCCESS => Ok(0),
-                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
+                nvmlReturn_enum_NVML_SUCCESS => Ok(0),
+                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
                 // We know that this wil be an error
                 other => nvml_try(other).map(|_| 0),
             }
@@ -478,6 +483,7 @@ impl<'nvml> Device<'nvml> {
     Only supports Linux.
     */
     // Checked against local
+    // Tested
     // TODO: Should we trim zeros here or leave it to the caller?
     #[cfg(target_os = "linux")]
     #[inline]
@@ -485,7 +491,7 @@ impl<'nvml> Device<'nvml> {
         unsafe {
             if size == 0 {
                 // Return an error containing the minimum size that can be passed.
-                bail!(ErrorKind::InsufficientSize(1));
+                bail!(ErrorKind::InsufficientSize(Some(1)));
             }
 
             let mut affinities: Vec<c_ulong> = vec![mem::zeroed(); size];
@@ -630,6 +636,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     */
     // Checked against local
@@ -640,7 +647,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetDisplayActive(self.device, &mut state))?;
 
-            Ok(bool_from_state(state))
+            Ok(bool_from_state(state)?)
         }
     }
 
@@ -655,6 +662,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     */
     // Checked against local
@@ -665,7 +673,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetDisplayMode(self.device, &mut state))?; 
 
-            Ok(bool_from_state(state))
+            Ok(bool_from_state(state)?)
         }
     }
 
@@ -681,6 +689,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if the platform is not Windows
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -699,7 +708,8 @@ impl<'nvml> Device<'nvml> {
             let mut pending: nvmlDriverModel_t = mem::zeroed();
             nvml_try(nvmlDeviceGetDriverModel(self.device, &mut current, &mut pending))?;
 
-            Ok(DriverModelState{ current: current.into(), pending: pending.into() })
+            Ok(DriverModelState{ current: DriverModel::try_from(current)?,
+                                 pending: DriverModel::try_from(pending)? })
         }
     }
 
@@ -714,6 +724,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -729,8 +740,8 @@ impl<'nvml> Device<'nvml> {
             let mut pending: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetEccMode(self.device, &mut current, &mut pending))?;
 
-            Ok(EccModeState{ currently_enabled: bool_from_state(current), 
-                             pending_enabled: bool_from_state(pending) })
+            Ok(EccModeState{ currently_enabled: bool_from_state(current)?, 
+                             pending_enabled: bool_from_state(pending)? })
         }
     }
 
@@ -828,6 +839,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -844,8 +856,8 @@ impl<'nvml> Device<'nvml> {
             let mut pending: nvmlGpuOperationMode_t = mem::zeroed();
             nvml_try(nvmlDeviceGetGpuOperationMode(self.device, &mut current, &mut pending))?;
 
-            Ok(OperationModeState{ current: current.into(),
-                                   pending: pending.into() })
+            Ok(OperationModeState{ current: OperationMode::try_from(current)?,
+                                   pending: OperationMode::try_from(pending)? })
         }
     }
 
@@ -889,6 +901,7 @@ impl<'nvml> Device<'nvml> {
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     */
     // Tested as part of `.running_graphics_processes()`
@@ -900,8 +913,8 @@ impl<'nvml> Device<'nvml> {
 
             // Passing null doesn't indicate that we want the count. It's just allowed.
             match nvmlDeviceGetGraphicsRunningProcesses(self.device, &mut count, ptr::null_mut()) {
-                nvmlReturn_t::NVML_SUCCESS => Ok(0),
-                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
+                nvmlReturn_enum_NVML_SUCCESS => Ok(0),
+                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
                 // We know that this will be an error
                 other => nvml_try(other).map(|_| 0),
             }
@@ -1290,7 +1303,7 @@ impl<'nvml> Device<'nvml> {
             let mut pci_info: nvmlPciInfo_t = mem::zeroed();
             nvml_try(nvmlDeviceGetPciInfo_v2(self.device, &mut pci_info))?;
 
-            Ok(PciInfo::try_from(pci_info)?)
+            Ok(PciInfo::try_from(pci_info, true)?)
         }
     }
 
@@ -1358,6 +1371,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -1371,7 +1385,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlPstates_t = mem::zeroed();
             nvml_try(nvmlDeviceGetPerformanceState(self.device, &mut state))?;
 
-            Ok(state.into())
+            Ok(PerformanceState::try_from(state)?)
         }
     } 
 
@@ -1386,6 +1400,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Platform Support
@@ -1400,7 +1415,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetPersistenceMode(self.device, &mut state))?;
 
-            Ok(bool_from_state(state))
+            Ok(bool_from_state(state)?)
         }
     }
 
@@ -1501,7 +1516,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetPowerManagementMode(self.device, &mut state))?;
 
-            Ok(bool_from_state(state))
+            Ok(bool_from_state(state)?)
         }
     }
 
@@ -1514,7 +1529,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlPstates_t = mem::zeroed();
             nvml_try(nvmlDeviceGetPowerState(self.device, &mut state))?;
 
-            Ok(state.into())
+            Ok(PerformanceState::try_from(state)?)
         }
     }
 
@@ -1614,6 +1629,7 @@ impl<'nvml> Device<'nvml> {
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` doesn't support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -1627,7 +1643,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetRetiredPagesPendingStatus(self.device, &mut state))?;
 
-            Ok(bool_from_state(state))
+            Ok(bool_from_state(state)?)
         }
     }
 
@@ -1869,7 +1885,7 @@ impl<'nvml> Device<'nvml> {
     #[inline]
     pub fn supported_graphics_clocks(&self, for_mem_clock: u32) -> Result<Vec<u32>> {
         match self.supported_graphics_clocks_manual(for_mem_clock, 128) {
-            Err(Error(ErrorKind::InsufficientSize(s), _)) => 
+            Err(Error(ErrorKind::InsufficientSize(Some(s)), _)) =>
                 // `s` is the required size for the call; make the call a second time
                 self.supported_graphics_clocks_manual(for_mem_clock, s),
             value => value,
@@ -1887,9 +1903,9 @@ impl<'nvml> Device<'nvml> {
                                                        for_mem_clock,
                                                        &mut count,
                                                        items.as_mut_ptr()) {
-                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE =>
+                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE =>
                     // `count` is now the size that is required. Return it in the error.
-                    bail!(ErrorKind::InsufficientSize(count as usize)),
+                    bail!(ErrorKind::InsufficientSize(Some(count as usize))),
                 value => nvml_try(value)?,
             }
         }
@@ -1917,7 +1933,7 @@ impl<'nvml> Device<'nvml> {
     #[inline]
     pub fn supported_memory_clocks(&self) -> Result<Vec<u32>> {
         match self.supported_memory_clocks_manual(16) {
-            Err(Error(ErrorKind::InsufficientSize(s), _)) => {
+            Err(Error(ErrorKind::InsufficientSize(Some(s)), _)) => {
                 // `s` is the required size for the call; make the call a second time
                 self.supported_memory_clocks_manual(s)
             },
@@ -1934,9 +1950,9 @@ impl<'nvml> Device<'nvml> {
             match nvmlDeviceGetSupportedMemoryClocks(self.device,
                                                      &mut count,
                                                      items.as_mut_ptr()) {
-                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => 
+                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => 
                     // `count` is now the size that is required. Return it in the error.
-                    bail!(ErrorKind::InsufficientSize(count as usize)),
+                    bail!(ErrorKind::InsufficientSize(Some(count as usize))),
                 value => nvml_try(value)?,
             }
         }
@@ -1998,12 +2014,14 @@ impl<'nvml> Device<'nvml> {
     # Errors
     * `InvalidArg`, if either `Device` is invalid
     * `NotSupported`, if this `Device` or the OS does not support this feature
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, an error has occurred in the underlying topology discovery
     
     # Platform Support
     Only supports Linux.
     */
     // Checked against local
+    // Tested
     #[cfg(target_os = "linux")]
     #[inline]
     pub fn topology_common_ancestor(&self, other_device: Device) -> Result<TopologyLevel> {
@@ -2011,7 +2029,7 @@ impl<'nvml> Device<'nvml> {
             let mut level: nvmlGpuTopologyLevel_t = mem::zeroed();
             nvml_try(nvmlDeviceGetTopologyCommonAncestor(self.device, other_device.device, &mut level))?;
 
-            Ok(level.into())
+            Ok(TopologyLevel::try_from(level)?)
         }
     }
 
@@ -2249,16 +2267,17 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     */
     // Checked against local
+    // Tested
     #[inline]
     pub fn is_on_same_board_as(&self, other_device: &Device) -> Result<bool> {
         unsafe {
             let mut bool_int: c_int = mem::zeroed();
             nvml_try(nvmlDeviceOnSameBoard(self.device, other_device.unsafe_raw(), &mut bool_int))?;
 
-            match bool_int {
-                0 => Ok(false),
-                _ => Ok(true),
-            }
+            Ok(match bool_int {
+                0 => false,
+                _ => true,
+            })
         }
     }
 
@@ -2286,8 +2305,9 @@ impl<'nvml> Device<'nvml> {
     GeForce devices.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
-    pub fn reset_applications_clocks(&self) -> Result<()> {
+    pub fn reset_applications_clocks(&mut self) -> Result<()> {
         unsafe {
             nvml_try(nvmlDeviceResetApplicationsClocks(self.device))
         }
@@ -2323,6 +2343,7 @@ impl<'nvml> Device<'nvml> {
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
     pub fn set_auto_boosted_clocks(&mut self, enabled: bool) -> Result<()> {
         unsafe {
@@ -2350,6 +2371,7 @@ impl<'nvml> Device<'nvml> {
     Only supports Linux.
     */
     // Checked against local
+    // Tested (no-run)
     #[cfg(target_os = "linux")]
     #[inline]
     pub fn set_cpu_affinity(&mut self) -> Result<()> {
@@ -2387,10 +2409,11 @@ impl<'nvml> Device<'nvml> {
     GeForce devices.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
     pub fn set_auto_boosted_clocks_default(&mut self, enabled: bool) -> Result<()> {
         unsafe {
-            // passing 0 because NVIDIA says flags are not supported yet
+            // Passing 0 because NVIDIA says flags are not supported yet
             nvml_try(nvmlDeviceSetDefaultAutoBoostedClocksEnabled(self.device, 
                                                                   state_from_bool(enabled), 
                                                                   0))
@@ -2439,8 +2462,9 @@ impl<'nvml> Device<'nvml> {
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
-    pub fn clear_accounting_pids(&self) -> Result<()> {
+    pub fn clear_accounting_pids(&mut self) -> Result<()> {
         unsafe {
             nvml_try(nvmlDeviceClearAccountingPids(self.device))
         }
@@ -2483,6 +2507,7 @@ impl<'nvml> Device<'nvml> {
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `Device` is invalid
     * `NotSupported`, if this `Device` does not support this feature
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -2496,7 +2521,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetAccountingMode(self.device, &mut state))?;
 
-            Ok(bool_from_state(state))
+            Ok(bool_from_state(state)?)
         }
     }
 
@@ -2539,9 +2564,9 @@ impl<'nvml> Device<'nvml> {
             // Null also indicates that we want the count
             match nvmlDeviceGetAccountingPids(self.device, &mut count, ptr::null_mut()) {
                 // List is empty
-                nvmlReturn_t::NVML_SUCCESS => Ok(0),
+                nvmlReturn_enum_NVML_SUCCESS => Ok(0),
                 // Count is set to pids count
-                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
+                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
                 // We know this is an error
                 other => nvml_try(other).map(|_| 0),
             }
@@ -2617,6 +2642,7 @@ impl<'nvml> Device<'nvml> {
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
     pub fn set_accounting(&mut self, enabled: bool) -> Result<()> {
         unsafe {
@@ -2649,8 +2675,9 @@ impl<'nvml> Device<'nvml> {
     clear all other ECC counts.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
-    pub fn clear_ecc_error_counts(&self, counter_type: EccCounter) -> Result<()> {
+    pub fn clear_ecc_error_counts(&mut self, counter_type: EccCounter) -> Result<()> {
         unsafe {
             nvml_try(nvmlDeviceClearEccErrorCounts(self.device, counter_type.as_c()))
         }
@@ -2678,6 +2705,7 @@ impl<'nvml> Device<'nvml> {
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
     pub fn set_api_restricted(&mut self, api_type: Api, restricted: bool) -> Result<()> {
         unsafe {
@@ -2719,6 +2747,7 @@ impl<'nvml> Device<'nvml> {
     GeForce devices.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
     pub fn set_applications_clocks(&mut self, mem_clock: u32, graphics_clock: u32) -> Result<()> {
         unsafe {
@@ -2752,6 +2781,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
     pub fn set_compute_mode(&mut self, mode: ComputeMode) -> Result<()> {
         unsafe {
@@ -2810,6 +2840,7 @@ impl<'nvml> Device<'nvml> {
     ```
     */
     // Checked against local
+    // Tested (no-run)
     #[cfg(target_os = "windows")]
     #[inline]
     pub fn set_driver_model(&mut self, model: DriverModel, flags: Behavior) -> Result<()> {
@@ -2838,6 +2869,7 @@ impl<'nvml> Device<'nvml> {
     1.0 or higher.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
     pub fn set_ecc(&mut self, enabled: bool) -> Result<()> {
         unsafe {
@@ -2869,6 +2901,7 @@ impl<'nvml> Device<'nvml> {
     supported on Quadro and Tesla C-class products.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
     pub fn set_gpu_op_mode(&mut self, mode: OperationMode) -> Result<()> {
         unsafe {
@@ -2898,6 +2931,7 @@ impl<'nvml> Device<'nvml> {
     Only supports Linux.
     */
     // Checked against local
+    // Tested (no-run)
     #[cfg(target_os = "linux")]
     #[inline]
     pub fn set_persistent(&mut self, enabled: bool) -> Result<()> {
@@ -2929,6 +2963,7 @@ impl<'nvml> Device<'nvml> {
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
+    // Tested (no-run)
     #[inline]
     pub fn set_power_management_limit(&mut self, limit: u32) -> Result<()> {
         unsafe {
@@ -3158,6 +3193,7 @@ impl<'nvml> Device<'nvml> {
     * `Uninitialized`, if the library has not been successfully initialized
     * `NotSupported`, if this `Device` doesn't support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
 
     In addition, all of the errors returned by:
@@ -3209,7 +3245,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceQueryDrainState(&mut pci_info.try_into_c()?, &mut state))?;
 
-            Ok(bool_from_state(state))
+            Ok(bool_from_state(state)?)
         }
     }
 
@@ -3333,7 +3369,21 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
-    // TODO: NvLink methods
+    // NvLink
+
+    /**
+    Obtain a struct that represents an NvLink.
+
+    NVIDIA does not provide any information as to how to obtain a valid NvLink
+    value, so you're on your own there.
+    */
+    #[inline]
+    pub fn link_wrapper_for(&self, link: u32) -> NvLink {
+        NvLink {
+            device: self,
+            link,
+        }
+    }
 
     /// Consume the struct and obtain the raw device handle that it contains.
     #[inline]
@@ -3361,12 +3411,15 @@ impl<'nvml> Device<'nvml> {
 }
 
 #[cfg(test)]
+#[deny(unused_mut)]
 mod test {
     use super::Device;
     use error::*;
     use enum_wrappers::device::*;
     #[cfg(target_os = "linux")]
     use bitmasks::event::*;
+    #[cfg(target_os = "windows")]
+    use bitmasks::DEFAULT;
     use test_utils::*;
 
     #[test]
@@ -3377,6 +3430,16 @@ mod test {
     #[test]
     fn device_is_sync() {
         assert_sync::<Device>()
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    #[cfg(target_os = "linux")]
+    fn clear_cpu_affinity() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.clear_cpu_affinity().unwrap();
     }
 
     #[test]
@@ -3995,6 +4058,18 @@ mod test {
         })
     }
 
+    // I do not have 2 devices
+    #[cfg(not(feature = "test-local"))]
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn topology_common_ancestor() {
+        let nvml = nvml();
+        let device1 = device(&nvml);
+        let device2 = nvml.device_by_index(1).expect("device");
+
+        device1.topology_common_ancestor(device2).expect("TopologyLevel");
+    }
+
     #[cfg(target_os = "linux")]
     #[test]
     fn topology_nearest_gpus() {
@@ -4047,6 +4122,54 @@ mod test {
         })
     }
 
+    // I do not have 2 devices
+    #[cfg(not(feature = "test-local"))]
+    #[test]
+    fn is_on_same_board_as() {
+        let nvml = nvml();
+        let device1 = device(&nvml);
+        let device2 = nvml.device_by_index(1).expect("device");
+
+        device1.is_on_same_board_as(&device2).expect("bool");
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn reset_applications_clocks() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.reset_applications_clocks().expect("reset clocks")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn set_auto_boosted_clocks() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_auto_boosted_clocks(true).expect("set to true")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    #[cfg(target_os = "linux")]
+    fn set_cpu_affinity() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_cpu_affinity().expect("ideal affinity set")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn set_auto_boosted_clocks_default() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_auto_boosted_clocks_default(true).expect("set to true")
+    }
+
     // My machine does not support this call
     #[cfg(not(feature = "test-local"))]
     #[test]
@@ -4055,6 +4178,15 @@ mod test {
         test_with_device(3, &nvml, |device| {
             device.validate_info_rom()
         })
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn clear_accounting_pids() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.clear_accounting_pids().expect("cleared")
     }
 
     #[test]
@@ -4094,6 +4226,98 @@ mod test {
                 other => other,
             }
         })
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn set_accounting() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_accounting(true).expect("set to true")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn clear_ecc_error_counts() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.clear_ecc_error_counts(EccCounter::Aggregate).expect("set to true")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn set_api_restricted() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_api_restricted(Api::ApplicationClocks, true).expect("set to true")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn set_applications_clocks() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_applications_clocks(32, 32).expect("set to true")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn set_compute_mode() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_compute_mode(ComputeMode::Default).expect("set to true")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[cfg(target_os = "windows")]
+    #[allow(dead_code)]
+    fn set_driver_model() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_driver_model(DriverModel::WDM, DEFAULT).expect("set to wdm")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn set_ecc() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_ecc(true).expect("set to true")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn set_gpu_op_mode() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_gpu_op_mode(OperationMode::AllOn).expect("set to true")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    #[cfg(target_os = "linux")]
+    fn set_persistent() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_persistent(true).expect("set to true")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn set_power_management_limit() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_power_management_limit(250000).expect("set to true")
     }
 
     #[cfg(target_os = "linux")]

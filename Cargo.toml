@@ -1,6 +1,6 @@
 [package]
 name = "nvml-wrapper"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Cldfire"]
 description = "A complete, safe, and ergonomic Rust wrapper for the NVIDIA Management Library."
 readme = "README.md"
@@ -17,12 +17,16 @@ exclude = [
 
 [dependencies]
 error-chain = "0.10"
-bitflags = "0.8"
+bitflags = "0.9"
 serde = { version = "1.0", optional = true, features = ["derive"] }
-nvml-wrapper-sys = "0.1"
-wrapcenum-derive = "0.1"
+nvml-wrapper-sys = "0.2.0"
+wrapcenum-derive = "0.2.0"
 
 [features]
 default = []
 test-local = []
 nightly = ["nvml-wrapper-sys/nightly"]
+
+[package.metadata.docs.rs]
+features = ["nightly"]
+all-features = false

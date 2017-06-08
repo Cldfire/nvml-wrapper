@@ -114,8 +114,8 @@ impl<'nvml> Unit<'nvml> {
             let mut devices: [nvmlDevice_t; 1] = [mem::zeroed()];
 
             match nvmlUnitGetDevices(self.unit, &mut count, devices.as_mut_ptr()) {
-                nvmlReturn_t::NVML_SUCCESS |
-                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
+                nvmlReturn_enum_NVML_SUCCESS |
+                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
                 // We know that this will be an error
                 other => nvml_try(other).map(|_| 0),
             }
@@ -129,6 +129,7 @@ impl<'nvml> Unit<'nvml> {
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the unit is invalid
     * `NotSupported`, if this is not an S-class product
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Device Support
@@ -142,7 +143,7 @@ impl<'nvml> Unit<'nvml> {
             let mut fans_info: nvmlUnitFanSpeeds_t = mem::zeroed();
             nvml_try(nvmlUnitGetFanSpeedInfo(self.unit, &mut fans_info))?;
 
-            Ok(fans_info.into())
+            Ok(FansInfo::try_from(fans_info)?)
         }
     }
 
@@ -267,6 +268,7 @@ impl<'nvml> Unit<'nvml> {
     For S-class products.
     */
     // checked against local
+    // Tested (no-run)
     #[inline]
     pub fn set_led_color(&mut self, color: LedColor) -> Result<()> {
         unsafe {
@@ -300,11 +302,13 @@ impl<'nvml> Unit<'nvml> {
 }
 
 // I do not have access to this hardware and cannot test anything
-#[cfg(not(feature = "test-local"))]
 #[cfg(test)]
+#[cfg(not(feature = "test-local"))]
+#[deny(unused_mut)]
 mod test {
     use test_utils::*;
     use enums::unit::TemperatureReading;
+    use enum_wrappers::unit::LedColor;
 
     #[test]
     fn devices() {
@@ -351,5 +355,14 @@ mod test {
         test_with_unit(3, &nvml, |unit| {
             unit.info()
         })
+    }
+
+    // This modifies unit state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn set_led_color() {
+        let nvml = nvml();
+        let mut unit = unit(&nvml);
+
+        unit.set_led_color(LedColor::Amber).expect("set to true")
     }
 }

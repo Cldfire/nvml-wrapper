@@ -5,8 +5,7 @@ use error::*;
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlRestrictedAPI_t")]
-#[wrap(has_count = "NVML_RESTRICTED_API_COUNT")]
+#[wrap(c_enum = "nvmlRestrictedAPI_enum")]
 pub enum Api {
     /**
     APIs that change application clocks.
@@ -27,8 +26,7 @@ pub enum Api {
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlClockType_t")]
-#[wrap(has_count = "NVML_CLOCK_COUNT")]
+#[wrap(c_enum = "nvmlClockType_enum")]
 pub enum Clock {
     /// Graphics clock domain.
     #[wrap(c_variant = "NVML_CLOCK_GRAPHICS")]
@@ -50,8 +48,7 @@ pub enum Clock {
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlClockId_t")]
-#[wrap(has_count = "NVML_CLOCK_ID_COUNT")]
+#[wrap(c_enum = "nvmlClockId_enum")]
 pub enum ClockId {
     /// Current actual clock value.
     #[wrap(c_variant = "NVML_CLOCK_ID_CURRENT")]
@@ -71,8 +68,7 @@ pub enum ClockId {
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlBrandType_t")]
-#[wrap(has_count = "NVML_BRAND_COUNT")]
+#[wrap(c_enum = "nvmlBrandType_enum")]
 pub enum Brand {
     #[wrap(c_variant = "NVML_BRAND_UNKNOWN")]
     Unknown,
@@ -102,7 +98,7 @@ type is, so you're on your own there.
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlBridgeChipType_t")]
+#[wrap(c_enum = "nvmlBridgeChipType_enum")]
 pub enum BridgeChip {
     #[wrap(c_variant = "NVML_BRIDGE_CHIP_PLX")]
     PLX,
@@ -114,8 +110,7 @@ pub enum BridgeChip {
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlMemoryErrorType_t")]
-#[wrap(has_count = "NVML_MEMORY_ERROR_TYPE_COUNT")]
+#[wrap(c_enum = "nvmlMemoryErrorType_enum")]
 pub enum MemoryError {
     /**
     A memory error that was corrected.
@@ -147,8 +142,7 @@ If not, volatile counts are reset each time a compute app is run.
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlEccCounterType_t")]
-#[wrap(has_count = "NVML_ECC_COUNTER_TYPE_COUNT")]
+#[wrap(c_enum = "nvmlEccCounterType_enum")]
 pub enum EccCounter {
     /// Volatile counts are reset each time the driver loads.
     #[wrap(c_variant = "NVML_VOLATILE_ECC")]
@@ -162,8 +156,7 @@ pub enum EccCounter {
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlMemoryLocation_t")]
-#[wrap(has_count = "NVML_MEMORY_LOCATION_COUNT")]
+#[wrap(c_enum = "nvmlMemoryLocation_enum")]
 pub enum MemoryLocation {
     /// GPU L1 cache.
     #[wrap(c_variant = "NVML_MEMORY_LOCATION_L1_CACHE")]
@@ -189,7 +182,7 @@ pub enum MemoryLocation {
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlDriverModel_t")]
+#[wrap(c_enum = "nvmlDriverModel_enum")]
 #[cfg(target_os = "windows")]
 pub enum DriverModel {
     /// GPU treated as a display device.
@@ -209,7 +202,7 @@ by disabling GPU features. Each mode is designed to meet specific needs.
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlGpuOperationMode_t")]
+#[wrap(c_enum = "nvmlGom_enum")]
 pub enum OperationMode {
     /// Everything is enabled and running at full speed.
     #[wrap(c_variant = "NVML_GOM_ALL_ON")]
@@ -227,8 +220,7 @@ pub enum OperationMode {
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlInforomObject_t")]
-#[wrap(has_count = "NVML_INFOROM_COUNT")]
+#[wrap(c_enum = "nvmlInforomObject_enum")]
 pub enum InfoRom {
     /// An object defined by OEM.
     #[wrap(c_variant = "NVML_INFOROM_OEM")]
@@ -245,8 +237,7 @@ pub enum InfoRom {
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlPcieUtilCounter_t")]
-#[wrap(has_count = "NVML_PCIE_UTIL_COUNT")]
+#[wrap(c_enum = "nvmlPcieUtilCounter_enum")]
 pub enum PcieUtilCounter {
     #[wrap(c_variant = "NVML_PCIE_UTIL_TX_BYTES")]
     Send,
@@ -267,7 +258,7 @@ Value    Performance
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlPstates_t")]
+#[wrap(c_enum = "nvmlPStates_enum")]
 pub enum PerformanceState {
     /// Maximum performance.            
     #[wrap(c_variant = "NVML_PSTATE_0")]
@@ -312,8 +303,7 @@ pub enum PerformanceState {
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlPageRetirementCause_t")]
-#[wrap(has_count = "NVML_PAGE_RETIREMENT_CAUSE_COUNT")]
+#[wrap(c_enum = "nvmlPageRetirementCause_enum")]
 pub enum RetirementCause {
     /// Page was retired due to multiple single bit ECC errors.
     #[wrap(c_variant = "NVML_PAGE_RETIREMENT_CAUSE_MULTIPLE_SINGLE_BIT_ECC_ERRORS")]
@@ -327,8 +317,7 @@ pub enum RetirementCause {
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlSamplingType_t")]
-#[wrap(has_count = "NVML_SAMPLINGTYPE_COUNT")]
+#[wrap(c_enum = "nvmlSamplingType_enum")]
 pub enum Sampling {
     /// Total power drawn by GPU.
     #[wrap(c_variant = "NVML_TOTAL_POWER_SAMPLES")]
@@ -356,8 +345,7 @@ pub enum Sampling {
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlTemperatureSensors_t")]
-#[wrap(has_count = "NVML_TEMPERATURE_COUNT")]
+#[wrap(c_enum = "nvmlTemperatureSensors_enum")]
 pub enum TemperatureSensor {
     /// Sensor for the GPU die.
     #[wrap(c_variant = "NVML_TEMPERATURE_GPU")]
@@ -367,8 +355,7 @@ pub enum TemperatureSensor {
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlTemperatureThresholds_t")]
-#[wrap(has_count = "NVML_TEMPERATURE_THRESHOLD_COUNT")]
+#[wrap(c_enum = "nvmlTemperatureThresholds_enum")]
 pub enum TemperatureThreshold {
     /// Temperature at which the GPU will shut down for hardware protection.
     #[wrap(c_variant = "NVML_TEMPERATURE_THRESHOLD_SHUTDOWN")]
@@ -382,7 +369,7 @@ pub enum TemperatureThreshold {
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlGpuTopologyLevel_t")]
+#[wrap(c_enum = "nvmlGpuLevel_enum")]
 pub enum TopologyLevel {
     /// e.g. Tesla K80.
     #[wrap(c_variant = "NVML_TOPOLOGY_INTERNAL")]
@@ -409,8 +396,7 @@ pub enum TopologyLevel {
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlPerfPolicyType_t")]
-#[wrap(has_count = "NVML_PERF_POLICY_COUNT")]
+#[wrap(c_enum = "nvmlPerfPolicyType_enum")]
 pub enum PerformancePolicy {
     #[wrap(c_variant = "NVML_PERF_POLICY_POWER")]
     Power,
@@ -425,8 +411,7 @@ pub enum PerformancePolicy {
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlComputeMode_t")]
-#[wrap(has_count = "NVML_COMPUTEMODE_COUNT")]
+#[wrap(c_enum = "nvmlComputeMode_enum")]
 pub enum ComputeMode {
     /// Multiple contexts per device.
     #[wrap(c_variant = "NVML_COMPUTEMODE_DEFAULT")]
@@ -448,7 +433,7 @@ pub enum ComputeMode {
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlGpuP2PStatus_t")]
+#[wrap(c_enum = "nvmlGpuP2PStatus_enum")]
 pub enum P2pStatus {
     #[wrap(c_variant = "NVML_P2P_STATUS_OK")]
     Ok,
@@ -469,7 +454,7 @@ pub enum P2pStatus {
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlGpuP2PCapsIndex_t")]
+#[wrap(c_enum = "nvmlGpuP2PCapsIndex_enum")]
 pub enum P2pCapabilitiesIndex {
     #[wrap(c_variant = "NVML_P2P_CAPS_INDEX_READ")]
     Read,
@@ -490,8 +475,7 @@ pub enum P2pCapabilitiesIndex {
 #[cfg(feature = "nightly")]
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlValueType_t")]
-#[wrap(has_count = "NVML_VALUE_TYPE_COUNT")]
+#[wrap(c_enum = "nvmlValueType_enum")]
 pub enum SampleValueType {
     #[wrap(c_variant = "NVML_VALUE_TYPE_DOUBLE")]
     Double,

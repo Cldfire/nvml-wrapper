@@ -21,7 +21,6 @@ let encoder_util = device.encoder_utilization()?; // Currently 0 on my system; N
 let memory_info = device.memory_info()?; // Currently 1.63/6.37 GB used on my system
 
 // ... and there's a whole lot more you can do. Everything in NVML is wrapped and ready to go
-// (except for a few (~9) NvLink-related items that I will get to soon)
 ```
 
 NVML is intended to be a platform for building 3rd-party applications, and is
@@ -58,7 +57,7 @@ NVML version bumps.
 
 ## Rustc Support
 
-Currently supports rustc 1.17.0 or greater. The target version is the **latest**
+Currently supports rustc 1.18.0 or greater. The target version is the **latest**
 stable version; I do not intend to pin to an older one at any time.
 
 A small amount of NVML features involve dealing with untagged unions over FFI; a

@@ -22,7 +22,6 @@ let encoder_util = device.encoder_utilization()?; // Currently 0 on my system; N
 let memory_info = device.memory_info()?; // Currently 1.63/6.37 GB used on my system
 
 // ... and there's a whole lot more you can do. Everything in NVML is wrapped and ready to go
-// (except for a few (~9) NvLink-related items that I will get to soon)
 # Ok(())
 # }
 ```
@@ -95,7 +94,7 @@ NVML version bumps.
 
 ## Rustc Support
 
-Currently supports rustc 1.17.0 or greater. The target version is the **latest**
+Currently supports rustc 1.18.0 or greater. The target version is the **latest**
 stable version; I do not intend to pin to an older one at any time.
 
 A small amount of NVML features involve dealing with untagged unions over FFI; a
@@ -117,6 +116,7 @@ for every NVML data structure.
 
 #![recursion_limit = "1024"]
 #![cfg_attr(feature = "cargo-clippy", allow(doc_markdown))]
+#![allow(non_upper_case_globals)]
 
 #[macro_use]
 extern crate error_chain;
@@ -138,6 +138,7 @@ pub mod enums;
 pub mod enum_wrappers;
 pub mod event;
 pub mod bitmasks;
+pub mod nv_link;
 #[cfg(test)]
 mod test_utils;
 
@@ -145,6 +146,7 @@ mod test_utils;
 pub use device::Device;
 pub use unit::Unit;
 pub use event::EventSet;
+pub use nv_link::NvLink;
 
 use error::*;
 use ffi::bindings::*;
@@ -229,6 +231,7 @@ impl NVML {
     */
     // Thanks to `sorear` on IRC for suggesting this approach
     // Checked against local
+    // Tested
     #[inline]
     pub fn shutdown(self) -> Result<()> {
         unsafe {
@@ -456,12 +459,14 @@ impl NVML {
     # Errors
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` or the OS does not support this feature
+    * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Platform Support
     Only supports Linux.
     */
     // Checked against local
+    // Tested
     #[cfg(target_os = "linux")]
     #[inline]
     pub fn topology_common_ancestor(&self, device1: &Device, device2: &Device) -> Result<TopologyLevel> {
@@ -469,7 +474,7 @@ impl NVML {
             let mut level: nvmlGpuTopologyLevel_t = mem::zeroed();
             nvml_try(nvmlDeviceGetTopologyCommonAncestor(device1.unsafe_raw(), device2.unsafe_raw(), &mut level))?;
 
-            Ok(level.into())
+            Ok(TopologyLevel::try_from(level)?)
         }
     }
 
@@ -516,8 +521,9 @@ impl NVML {
     * `Unknown`, on any unexpected error
     */
     // Checked against local
+    // Tested
     #[inline]
-    pub fn are_devices_on_same_board(device1: &Device, device2: &Device) -> Result<bool> {
+    pub fn are_devices_on_same_board(&self, device1: &Device, device2: &Device) -> Result<bool> {
         unsafe {
             let mut bool_int: c_int = mem::zeroed();
             nvml_try(nvmlDeviceOnSameBoard(device1.unsafe_raw(), device2.unsafe_raw(), &mut bool_int))?;
@@ -551,7 +557,6 @@ impl NVML {
             };
             let mut devices: Vec<nvmlDevice_t> = vec![mem::zeroed(); count as usize];
 
-            // Indexing 0 here is safe because we make sure `count` is not 0 above
             nvml_try(nvmlSystemGetTopologyGpuSet(cpu_number, &mut count, devices.as_mut_ptr()))?;
             Ok(devices.iter()
                       .map(|d| Device::from(*d))
@@ -593,7 +598,6 @@ impl NVML {
             };
             let mut hics: Vec<nvmlHwbcEntry_t> = vec![mem::zeroed(); count as usize];
 
-            // Indexing 0 here is safe because we make sure `count` is not 0 above
             nvml_try(nvmlSystemGetHicVersion(&mut count, hics.as_mut_ptr()))?;
             hics.iter()
                 .map(|h| HwbcEntry::try_from(*h))
@@ -631,8 +635,8 @@ impl NVML {
             let mut hics: [nvmlHwbcEntry_t; 1] = [mem::zeroed()];
 
             match nvmlSystemGetHicVersion(&mut count, hics.as_mut_ptr()) {
-                nvmlReturn_t::NVML_SUCCESS |
-                nvmlReturn_t::NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
+                nvmlReturn_enum_NVML_SUCCESS |
+                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
                 // We know that this will be an error
                 other => nvml_try(other).map(|_| 0),
             }
@@ -721,6 +725,7 @@ impl NVML {
     */
     // TODO: constructor for default pci_infos ^
     // Checked against local
+    // Tested
     #[cfg(target_os = "linux")]
     #[inline]
     pub fn discover_gpus(&self, pci_info: PciInfo) -> Result<()> {
@@ -760,6 +765,13 @@ mod test {
     #[test]
     fn nvml_is_sync() {
         assert_sync::<NVML>()
+    }
+
+    #[test]
+    fn shutdown() {
+        test(3, || {
+            nvml().shutdown()
+        })
     }
 
     #[test]
@@ -831,6 +843,18 @@ mod test {
         })
     }
 
+    // I don't have 2 devices
+    #[cfg(not(feature = "test-local"))]
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn topology_common_ancestor() {
+        let nvml = nvml();
+        let device1 = device(&nvml);
+        let device2 = nvml.device_by_index(1).expect("device");
+
+        nvml.topology_common_ancestor(&device1, &device2).expect("TopologyLevel");
+    }
+
     // Errors on my machine
     #[cfg_attr(feature = "test-local", should_panic(expected = "InvalidArg"))]
     #[test]
@@ -843,6 +867,17 @@ mod test {
                 other => other,
             }
         })
+    }
+
+    // I don't have 2 devices
+    #[cfg(not(feature = "test-local"))]
+    #[test]
+    fn are_devices_on_same_board() {
+        let nvml = nvml();
+        let device1 = device(&nvml);
+        let device2 = nvml.device_by_index(1).expect("device");
+
+        nvml.are_devices_on_same_board(&device1, &device2).expect("bool");
     }
 
     #[cfg(target_os = "linux")]

@@ -1,8 +1,14 @@
 use NVML;
-use unit::Unit;
+use Unit;
 use event::EventSet;
 use error::*;
-use device::Device;
+use Device;
+#[cfg(not(feature = "test-local"))]
+use NvLink;
+#[cfg(not(feature = "test-local"))]
+use struct_wrappers::nv_link::*;
+#[cfg(not(feature = "test-local"))]
+use structs::nv_link::*;
 use enum_wrappers::device::*;
 use struct_wrappers::device::*;
 use struct_wrappers::event::*;
@@ -82,6 +88,10 @@ impl ShouldPrint for FansInfo {}
 impl ShouldPrint for LedState {}
 impl ShouldPrint for PsuInfo {}
 impl ShouldPrint for UnitInfo {}
+#[cfg(not(feature = "test-local"))]
+impl ShouldPrint for UtilizationControl {}
+#[cfg(not(feature = "test-local"))]
+impl ShouldPrint for UtilizationCounter {}
 
 #[cfg(target_os = "windows")]
 impl ShouldPrint for DriverModelState {}
@@ -141,6 +151,23 @@ pub fn test_with_unit<T, R>(reps: usize, nvml: &NVML, test: T)
 
     multi(reps, || {
         test(&unit)
+    });
+}
+
+#[cfg(not(feature = "test-local"))]
+pub fn test_with_link<T, R>(reps: usize, nvml: &NVML, test: T)
+    where T: Fn(&NvLink) -> (Result<R>),
+          R: ShouldPrint {
+    // Is 0 a good default???
+    let device = device(&nvml);
+    let link = device.link_wrapper_for(0);
+
+    single(|| {
+        test(&link)
+    });
+
+    multi(reps, || {
+        test(&link)
     });
 }
 

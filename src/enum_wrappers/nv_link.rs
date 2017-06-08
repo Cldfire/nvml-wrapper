@@ -5,8 +5,7 @@ use error::*;
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlNvLinkUtilizationCountUnits_t")]
-#[wrap(has_count = "NVML_NVLINK_COUNTER_UNIT_COUNT")]
+#[wrap(c_enum = "nvmlNvLinkUtilizationCountUnits_enum")]
 pub enum UtilizationCountUnit {
     #[wrap(c_variant = "NVML_NVLINK_COUNTER_UNIT_CYCLES")]
     Cycles,
@@ -20,8 +19,7 @@ pub enum UtilizationCountUnit {
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlNvLinkCapability_t")]
-#[wrap(has_count = "NVML_NVLINK_CAP_COUNT")]
+#[wrap(c_enum = "nvmlNvLinkCapability_enum")]
 pub enum Capability {
     /// P2P over NVLink is supported.
     #[wrap(c_variant = "NVML_NVLINK_CAP_P2P_SUPPORTED")]
@@ -47,8 +45,7 @@ pub enum Capability {
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[wrap(c_enum = "nvmlNvLinkErrorCounter_t")]
-#[wrap(has_count = "NVML_NVLINK_ERROR_COUNT")]
+#[wrap(c_enum = "nvmlNvLinkErrorCounter_enum")]
 pub enum ErrorCounter {
     /// Data link transmit replay error counter.
     #[wrap(c_variant = "NVML_NVLINK_ERROR_DL_REPLAY")]
