@@ -3409,6 +3409,7 @@ impl<'nvml> Device<'nvml> {
 }
 
 #[cfg(test)]
+#[deny(unused_mut)]
 mod test {
     use super::Device;
     use error::*;
@@ -4128,7 +4129,6 @@ mod test {
 
     // This modifies device state, so we don't want to actually run the test
     #[allow(dead_code)]
-    #[deny(unused_mut)]
     fn reset_applications_clocks() {
         let nvml = nvml();
         let mut device = device(&nvml);
@@ -4138,7 +4138,6 @@ mod test {
 
     // This modifies device state, so we don't want to actually run the test
     #[allow(dead_code)]
-    #[deny(unused_mut)]
     fn set_auto_boosted_clocks() {
         let nvml = nvml();
         let mut device = device(&nvml);
@@ -4148,7 +4147,6 @@ mod test {
 
     // This modifies device state, so we don't want to actually run the test
     #[allow(dead_code)]
-    #[deny(unused_mut)]
     fn set_cpu_affinity() {
         let nvml = nvml();
         let mut device = device(&nvml);
@@ -4158,7 +4156,6 @@ mod test {
 
     // This modifies device state, so we don't want to actually run the test
     #[allow(dead_code)]
-    #[deny(unused_mut)]
     fn set_auto_boosted_clocks_default() {
         let nvml = nvml();
         let mut device = device(&nvml);
@@ -4178,7 +4175,6 @@ mod test {
 
     // This modifies device state, so we don't want to actually run the test
     #[allow(dead_code)]
-    #[deny(unused_mut)]
     fn clear_accounting_pids() {
         let nvml = nvml();
         let mut device = device(&nvml);
@@ -4227,7 +4223,6 @@ mod test {
 
     // This modifies device state, so we don't want to actually run the test
     #[allow(dead_code)]
-    #[deny(unused_mut)]
     fn set_accounting() {
         let nvml = nvml();
         let mut device = device(&nvml);
@@ -4237,7 +4232,6 @@ mod test {
 
     // This modifies device state, so we don't want to actually run the test
     #[allow(dead_code)]
-    #[deny(unused_mut)]
     fn clear_ecc_error_counts() {
         let nvml = nvml();
         let mut device = device(&nvml);
@@ -4247,7 +4241,6 @@ mod test {
 
     // This modifies device state, so we don't want to actually run the test
     #[allow(dead_code)]
-    #[deny(unused_mut)]
     fn set_api_restricted() {
         let nvml = nvml();
         let mut device = device(&nvml);
@@ -4257,7 +4250,6 @@ mod test {
 
     // This modifies device state, so we don't want to actually run the test
     #[allow(dead_code)]
-    #[deny(unused_mut)]
     fn set_applications_clocks() {
         let nvml = nvml();
         let mut device = device(&nvml);
@@ -4267,7 +4259,6 @@ mod test {
 
     // This modifies device state, so we don't want to actually run the test
     #[allow(dead_code)]
-    #[deny(unused_mut)]
     fn set_compute_mode() {
         let nvml = nvml();
         let mut device = device(&nvml);
@@ -4278,7 +4269,6 @@ mod test {
     // This modifies device state, so we don't want to actually run the test
     #[cfg(target_os = "windows")]
     #[allow(dead_code)]
-    #[deny(unused_mut)]
     fn set_driver_model() {
         let nvml = nvml();
         let mut device = device(&nvml);
@@ -4288,7 +4278,6 @@ mod test {
 
     // This modifies device state, so we don't want to actually run the test
     #[allow(dead_code)]
-    #[deny(unused_mut)]
     fn set_ecc() {
         let nvml = nvml();
         let mut device = device(&nvml);
@@ -4298,7 +4287,6 @@ mod test {
 
     // This modifies device state, so we don't want to actually run the test
     #[allow(dead_code)]
-    #[deny(unused_mut)]
     fn set_gpu_op_mode() {
         let nvml = nvml();
         let mut device = device(&nvml);
@@ -4308,7 +4296,6 @@ mod test {
 
     // This modifies device state, so we don't want to actually run the test
     #[allow(dead_code)]
-    #[deny(unused_mut)]
     fn set_persistent() {
         let nvml = nvml();
         let mut device = device(&nvml);
@@ -4318,7 +4305,6 @@ mod test {
 
     // This modifies device state, so we don't want to actually run the test
     #[allow(dead_code)]
-    #[deny(unused_mut)]
     fn set_power_management_limit() {
         let nvml = nvml();
         let mut device = device(&nvml);

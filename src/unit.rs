@@ -302,8 +302,9 @@ impl<'nvml> Unit<'nvml> {
 }
 
 // I do not have access to this hardware and cannot test anything
-#[cfg(not(feature = "test-local"))]
 #[cfg(test)]
+#[cfg(not(feature = "test-local"))]
+#[deny(unused_mut)]
 mod test {
     use test_utils::*;
     use enums::unit::TemperatureReading;
@@ -358,7 +359,6 @@ mod test {
 
     // This modifies unit state, so we don't want to actually run the test
     #[allow(dead_code)]
-    #[deny(unused_mut)]
     fn set_led_color() {
         let nvml = nvml();
         let mut unit = unit(&nvml);

@@ -23,6 +23,5 @@ default = []
 nightly = []
 
 [package.metadata.docs.rs]
-features = [ "feature1", "feature2" ]
+features = ["nightly"]
 all-features = false
-no-default-features = true

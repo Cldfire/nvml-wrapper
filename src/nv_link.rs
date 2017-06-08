@@ -407,6 +407,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
 #[cfg(test)]
 #[cfg(not(feature = "test-local"))]
+#[deny(unused_mut)]
 mod test {
     use test_utils::*;
     use enums::nv_link::*;
