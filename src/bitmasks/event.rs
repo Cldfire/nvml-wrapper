@@ -9,13 +9,13 @@ bitflags! {
     */
     // Checked against local
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-    pub flags EventTypes: u64 {
+    pub struct EventTypes: u64 {
         /// A corrected texture memory error is not an ECC error, so it does not
         /// generate a single bit event.
-        const SINGLE_BIT_ECC_ERROR  = nvmlEventTypeSingleBitEccError as u64,
+        const SINGLE_BIT_ECC_ERROR  = nvmlEventTypeSingleBitEccError as u64;
         /// An uncorrected texture memory error is not an ECC error, so it does not
         /// generate a double bit event.
-        const DOUBLE_BIT_ECC_ERROR  = nvmlEventTypeDoubleBitEccError as u64,
+        const DOUBLE_BIT_ECC_ERROR  = nvmlEventTypeDoubleBitEccError as u64;
         /**
         Power state change event.
         
@@ -25,9 +25,9 @@ bitflags! {
         GPUs should stay in performance state zero for the duration of the
         execution of a compute process.
         */
-        const PSTATE_CHANGE         = nvmlEventTypePState as u64,
-        const CRITICAL_XID_ERROR    = nvmlEventTypeXidCriticalError as u64,
+        const PSTATE_CHANGE         = nvmlEventTypePState as u64;
+        const CRITICAL_XID_ERROR    = nvmlEventTypeXidCriticalError as u64;
         /// Only supports the Kepler architecture.
-        const CLOCK_CHANGE          = nvmlEventTypeClock as u64,
+        const CLOCK_CHANGE          = nvmlEventTypeClock as u64;
     }
 }

@@ -8,8 +8,8 @@ bitflags! {
     /// Generic flags used to specify the default behavior of some functions.
     // Checked against local
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-    pub flags Behavior: u32 {
-        const DEFAULT = nvmlFlagDefault,
-        const FORCE   = nvmlFlagForce,
+    pub struct Behavior: u32 {
+        const DEFAULT = nvmlFlagDefault;
+        const FORCE   = nvmlFlagForce;
     }
 }

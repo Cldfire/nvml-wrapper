@@ -17,7 +17,7 @@ exclude = [
 
 [dependencies]
 error-chain = "0.10"
-bitflags = "0.8"
+bitflags = "0.9"
 serde = { version = "1.0", optional = true, features = ["derive"] }
 nvml-wrapper-sys = { path = "nvml-wrapper-sys" }
 wrapcenum-derive = { path = "../wrapcenum-derive" }

@@ -68,7 +68,7 @@ should be useful regardless of NVML version bumps.
 
 ## Rustc Support
 
-Currently supports rustc 1.17.0 or greater. The target version is the **latest**
+Currently supports rustc 1.18.0 or greater. The target version is the **latest**
 stable version; I do not intend to pin to an older one at any time.
 
 A small amount of NVML features involve dealing with untagged unions over FFI; a

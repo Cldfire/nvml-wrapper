@@ -72,6 +72,10 @@ This release **requires** and supports **rustc 1.18.0** or higher.
   * For more info see [rust-lang/rust#36927](https://github.com/rust-lang/rust/issues/36927)
   * Many methods now return an `UnexpectedVariant` error where they did not previously
 
+### Dependencies
+
+* Bitflags: `0.8.x -> 0.9.x`
+
 
 ## 0.1.0 (released 5-17-17)
 
