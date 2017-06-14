@@ -12,8 +12,9 @@ Handle to a set of events.
 
 **Operations on a set are not thread-safe.** It does not, therefore, implement `Sync`.
 
-Once again, Rust's lifetimes will ensure that this `EventSet` does not outlive the
-`NVML` instance that it was created from.
+You can get yourself an `EventSet` via `NVML.create_event_set()`. Once again, Rust's
+lifetimes will ensure that it does not outlive the `NVML` instance that it was created
+from.
 */
 // Checked against local
 #[derive(Debug)]
