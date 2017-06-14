@@ -139,6 +139,7 @@ pub mod enum_wrappers;
 pub mod event;
 pub mod bitmasks;
 pub mod nv_link;
+pub mod high_level;
 #[cfg(test)]
 mod test_utils;
 
