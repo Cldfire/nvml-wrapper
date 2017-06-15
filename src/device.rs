@@ -2977,6 +2977,9 @@ impl<'nvml> Device<'nvml> {
     Starts recording the given `EventTypes` for this `Device` and adding them
     to the specified `EventSet`.
 
+    Use `.supported_event_types()` to find out which events you can register for
+    this `Device`.
+
     **Unfortunately, due to the way `error-chain` works, there is no way to
     return the set if it is still valid after an error has occured with the
     register call.** The set that you passed in will be freed if any error
@@ -2989,12 +2992,12 @@ impl<'nvml> Device<'nvml> {
     are only available on `Device`s with power management enabled.
     
     # Errors
-    `Uninitialized`, if the library has not been successfully initialized
-    `InvalidArg`, if `events` is invalid (shouldn't occur?)
-    `NotSupported`, if the platform does not support this feature or some of the
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if `events` is invalid (shouldn't occur?)
+    * `NotSupported`, if the platform does not support this feature or some of the
     requested event types.
-    `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
-    `Unknown`, on any unexpected error. **If this error is returned, the `set` you
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error. **If this error is returned, the `set` you
     passed in has had its resources freed and will not be returned to you**. NVIDIA's
     docs say that this error means that the set is in an invalid state.
     
