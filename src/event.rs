@@ -7,6 +7,8 @@ use std::io;
 use std::io::Write;
 use NVML;
 
+// TODO: This should most probably only be compiled on linux
+
 /**
 Handle to a set of events.
 
