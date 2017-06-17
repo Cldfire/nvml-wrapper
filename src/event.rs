@@ -51,6 +51,7 @@ impl<'nvml> EventSet<'nvml> {
         unsafe {
             nvml_try(nvmlEventSetFree(self.set))?;
         }
+        
         Ok(mem::forget(self))
     }
 

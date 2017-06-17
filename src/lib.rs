@@ -238,6 +238,7 @@ impl NVML {
         unsafe {
             nvml_try(nvmlShutdown())?;
         }
+        
         Ok(mem::forget(self))
     }
 

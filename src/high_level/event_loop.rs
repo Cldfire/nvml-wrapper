@@ -69,8 +69,7 @@ impl<'nvml> EventLoop<'nvml> {
 
     # Errors
     * `Uninitialized`, if the library has not been successfully initialized
-    * `GpuLost`, if any of the given `Device`s have fallen off the bus or are
-    otherwise inaccessible
+    * `GpuLost`, if a GPU has fallen off the bus or is otherwise inaccessible
     * `Unknown`, on any unexpected error
 
     # Platform Support
@@ -91,8 +90,14 @@ impl<'nvml> EventLoop<'nvml> {
     handle within your closure if they occur; events are handed to you wrapped
     in a `Result`.
 
+    The errors that you will need to handle are:
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `GpuLost`, if a GPU has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+
     # Examples
-    See the <..> example in the `examples` directory at the root.
+    See the `event_loop` example in the `examples` directory at the root.
 
     # Platform Support
     Only supports Linux.
