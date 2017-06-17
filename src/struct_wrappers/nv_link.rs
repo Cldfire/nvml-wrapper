@@ -1,14 +1,14 @@
-use ffi::bindings::*;
-use error::*;
-use enum_wrappers::nv_link::*;
 use bitmasks::nv_link::*;
+use enum_wrappers::nv_link::*;
+use error::*;
+use ffi::bindings::*;
 
 /// Defines NvLink counter controls.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UtilizationControl {
     pub units: UtilizationCountUnit,
-    pub packet_filter: PacketTypes,
+    pub packet_filter: PacketTypes
 }
 
 impl UtilizationControl {
@@ -36,7 +36,7 @@ impl UtilizationControl {
     pub fn as_c(&self) -> nvmlNvLinkUtilizationControl_t {
         nvmlNvLinkUtilizationControl_t {
             units: self.units.as_c(),
-            pktfilter: self.packet_filter.bits(),
+            pktfilter: self.packet_filter.bits()
         }
     }
 }

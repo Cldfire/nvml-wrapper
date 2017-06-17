@@ -1,11 +1,12 @@
-use ffi::bindings::*;
+
+use NVML;
 use error::*;
-use struct_wrappers::event::*;
-use std::mem;
-use std::marker::PhantomData;
+use ffi::bindings::*;
 use std::io;
 use std::io::Write;
-use NVML;
+use std::marker::PhantomData;
+use std::mem;
+use struct_wrappers::event::*;
 
 // TODO: This should most probably only be compiled on linux
 
@@ -22,7 +23,7 @@ from.
 #[derive(Debug)]
 pub struct EventSet<'nvml> {
     set: nvmlEventSet_t,
-    _phantom: PhantomData<&'nvml NVML>,
+    _phantom: PhantomData<&'nvml NVML>
 }
 
 unsafe impl<'nvml> Send for EventSet<'nvml> {}
@@ -31,7 +32,7 @@ impl<'nvml> From<nvmlEventSet_t> for EventSet<'nvml> {
     fn from(set: nvmlEventSet_t) -> Self {
         EventSet {
             set,
-            _phantom: PhantomData,
+            _phantom: PhantomData
         }
     }
 }
@@ -51,7 +52,7 @@ impl<'nvml> EventSet<'nvml> {
         unsafe {
             nvml_try(nvmlEventSetFree(self.set))?;
         }
-        
+
         Ok(mem::forget(self))
     }
 
@@ -105,7 +106,8 @@ impl<'nvml> EventSet<'nvml> {
         &(self.set)
     }
 
-    /// Obtain a mutable reference to the raw set handle contained in the struct.
+    /// Obtain a mutable reference to the raw set handle contained in the
+    /// struct.
     #[inline]
     pub fn as_mut_raw(&mut self) -> &mut nvmlEventSet_t {
         &mut (self.set)
@@ -118,8 +120,8 @@ impl<'nvml> EventSet<'nvml> {
     }
 }
 
-/// This `Drop` implementation ignores errors! Use the `.release_events()` method on the `EventSet`
-/// struct if you care about handling them.
+/// This `Drop` implementation ignores errors! Use the `.release_events()`
+/// method on the `EventSet` struct if you care about handling them.
 impl<'nvml> Drop for EventSet<'nvml> {
     fn drop(&mut self) {
         #[allow(unused_must_use)]
@@ -127,9 +129,14 @@ impl<'nvml> Drop for EventSet<'nvml> {
             match nvml_try(nvmlEventSetFree(self.set)) {
                 Ok(()) => (),
                 Err(e) => {
-                    io::stderr().write(format!("WARNING: Error returned by \
-                        `nmvlEventSetFree()` in Drop implementation: {:?}", e).as_bytes());
-                }
+                    io::stderr().write(
+                        format!(
+                            "WARNING: Error returned by `nmvlEventSetFree()` in Drop \
+                             implementation: {:?}",
+                            e
+                        ).as_bytes()
+                    );
+                },
             }
         }
     }
@@ -138,9 +145,9 @@ impl<'nvml> Drop for EventSet<'nvml> {
 #[cfg(test)]
 mod test {
     use super::EventSet;
-    use test_utils::*;
     #[cfg(target_os = "linux")]
     use bitmasks::event::*;
+    use test_utils::*;
 
     // Ensuring that double-free issues don't crop up here.
     #[test]
@@ -162,10 +169,8 @@ mod test {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
             let set = nvml.create_event_set()?;
-            let set = device.register_events(PSTATE_CHANGE |
-                                             CRITICAL_XID_ERROR |
-                                             CLOCK_CHANGE,
-                                             set)?;
+            let set =
+                device.register_events(PSTATE_CHANGE | CRITICAL_XID_ERROR | CLOCK_CHANGE, set)?;
 
             set.release_events()
         })
@@ -180,15 +185,14 @@ mod test {
         let nvml = nvml();
         let device = device(&nvml);
         let set = nvml.create_event_set().expect("event set");
-        let set = device.register_events(PSTATE_CHANGE |
-                                         CRITICAL_XID_ERROR |
-                                         CLOCK_CHANGE,
-                                         set).expect("registration");
+        let set = device
+            .register_events(PSTATE_CHANGE | CRITICAL_XID_ERROR | CLOCK_CHANGE, set)
+            .expect("registration");
 
         let data = match set.wait(10_000) {
             Err(Error(ErrorKind::Timeout, _)) => return (),
             Ok(d) => d,
-            _ => panic!("An error other than `Timeout` occurred")
+            _ => panic!("An error other than `Timeout` occurred"),
         };
 
         print!("{:?} ...", data);

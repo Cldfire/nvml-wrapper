@@ -1,23 +1,23 @@
-use NVML;
-use Unit;
-use event::EventSet;
-use error::*;
 use Device;
+use NVML;
 #[cfg(not(feature = "test-local"))]
 use NvLink;
-#[cfg(not(feature = "test-local"))]
-use struct_wrappers::nv_link::*;
-#[cfg(not(feature = "test-local"))]
-use structs::nv_link::*;
-use enum_wrappers::device::*;
-use struct_wrappers::device::*;
-use struct_wrappers::event::*;
-use struct_wrappers::unit::*;
-use structs::device::*;
-use enums::unit::*;
+use Unit;
 use bitmasks::device::*;
 use bitmasks::event::*;
+use enum_wrappers::device::*;
+use enums::unit::*;
+use error::*;
+use event::EventSet;
 use std::fmt::Debug;
+use struct_wrappers::device::*;
+use struct_wrappers::event::*;
+#[cfg(not(feature = "test-local"))]
+use struct_wrappers::nv_link::*;
+use struct_wrappers::unit::*;
+use structs::device::*;
+#[cfg(not(feature = "test-local"))]
+use structs::nv_link::*;
 
 #[cfg(target_os = "windows")]
 use structs::device::DriverModelState;
@@ -114,67 +114,61 @@ pub fn assert_sync<T: Sync>() {}
 
 /// Run all testing methods for the given test.
 pub fn test<T, R>(reps: usize, test: T)
-    where T: Fn() -> (Result<R>),
-          R: ShouldPrint {
-    single(|| {
-        test()
-    });
+where
+    T: Fn() -> (Result<R>),
+    R: ShouldPrint,
+{
+    single(|| test());
 
-    multi(reps, || {
-        test()
-    });
+    multi(reps, || test());
 }
 
 pub fn test_with_device<T, R>(reps: usize, nvml: &NVML, test: T)
-    where T: Fn(&Device) -> (Result<R>),
-          R: ShouldPrint {
+where
+    T: Fn(&Device) -> (Result<R>),
+    R: ShouldPrint,
+{
     let device = device(nvml);
 
-    single(|| {
-        test(&device)
-    });
+    single(|| test(&device));
 
-    multi(reps, || {
-        test(&device)
-    });
+    multi(reps, || test(&device));
 }
 
 #[cfg(not(feature = "test-local"))]
 pub fn test_with_unit<T, R>(reps: usize, nvml: &NVML, test: T)
-    where T: Fn(&Unit) -> (Result<R>),
-          R: ShouldPrint {
+where
+    T: Fn(&Unit) -> (Result<R>),
+    R: ShouldPrint,
+{
     let unit = unit(nvml);
 
-    single(|| {
-        test(&unit)
-    });
+    single(|| test(&unit));
 
-    multi(reps, || {
-        test(&unit)
-    });
+    multi(reps, || test(&unit));
 }
 
 #[cfg(not(feature = "test-local"))]
 pub fn test_with_link<T, R>(reps: usize, nvml: &NVML, test: T)
-    where T: Fn(&NvLink) -> (Result<R>),
-          R: ShouldPrint {
+where
+    T: Fn(&NvLink) -> (Result<R>),
+    R: ShouldPrint,
+{
     // Is 0 a good default???
     let device = device(&nvml);
     let link = device.link_wrapper_for(0);
 
-    single(|| {
-        test(&link)
-    });
+    single(|| test(&link));
 
-    multi(reps, || {
-        test(&link)
-    });
+    multi(reps, || test(&link));
 }
 
 /// Run the given test once.
 pub fn single<T, R>(test: T)
-    where T: Fn() -> (Result<R>),
-          R: ShouldPrint {
+where
+    T: Fn() -> (Result<R>),
+    R: ShouldPrint,
+{
     let res = test().expect("successful single test");
 
     if res.should_print() {
@@ -183,9 +177,11 @@ pub fn single<T, R>(test: T)
 }
 
 /// Run the given test multiple times.
-pub fn multi<T, R>(count: usize, test: T) 
-    where T: Fn() -> (Result<R>),
-          R: ShouldPrint {
+pub fn multi<T, R>(count: usize, test: T)
+where
+    T: Fn() -> (Result<R>),
+    R: ShouldPrint,
+{
     for i in 0..count {
         test().expect(&format!("successful multi call #{}", i));
     }

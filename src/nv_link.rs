@@ -1,14 +1,14 @@
-use ffi::bindings::*;
-use error::*;
+use Device;
 use enum_wrappers::*;
 use enum_wrappers::nv_link::*;
-use struct_wrappers::nv_link::*;
-use struct_wrappers::device::PciInfo;
 use enums::nv_link::Counter;
-use structs::nv_link::UtilizationCounter;
-use Device;
+use error::*;
+use ffi::bindings::*;
 use std::mem;
 use std::os::raw::{c_uint, c_ulonglong};
+use struct_wrappers::device::PciInfo;
+use struct_wrappers::nv_link::*;
+use structs::nv_link::UtilizationCounter;
 
 /**
 Struct that represents a `Device`'s NvLink.
@@ -25,7 +25,7 @@ such a link setup. **Test the functionality in this module before you use it**.
 #[derive(Debug)]
 pub struct NvLink<'device, 'nvml: 'device> {
     pub(crate) device: &'device Device<'nvml>,
-    pub(crate) link: c_uint,
+    pub(crate) link: c_uint
 }
 
 impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
@@ -61,9 +61,11 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
         unsafe {
             let mut state: nvmlEnableState_t = mem::zeroed();
 
-            nvml_try(nvmlDeviceGetNvLinkState(self.device.unsafe_raw(),
-                                              self.link,
-                                              &mut state))?;
+            nvml_try(nvmlDeviceGetNvLinkState(
+                self.device.unsafe_raw(),
+                self.link,
+                &mut state
+            ))?;
 
             Ok(bool_from_state(state)?)
         }
@@ -88,9 +90,11 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
         unsafe {
             let mut version: c_uint = mem::zeroed();
 
-            nvml_try(nvmlDeviceGetNvLinkVersion(self.device.unsafe_raw(),
-                                                self.link,
-                                                &mut version))?;
+            nvml_try(nvmlDeviceGetNvLinkVersion(
+                self.device.unsafe_raw(),
+                self.link,
+                &mut version
+            ))?;
 
             Ok(version)
         }
@@ -116,10 +120,12 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
             // NVIDIA says that this should be interpreted as a boolean
             let mut capability: c_uint = mem::zeroed();
 
-            nvml_try(nvmlDeviceGetNvLinkCapability(self.device.unsafe_raw(),
-                                                   self.link,
-                                                   cap_type.as_c(),
-                                                   &mut capability))?;
+            nvml_try(nvmlDeviceGetNvLinkCapability(
+                self.device.unsafe_raw(),
+                self.link,
+                cap_type.as_c(),
+                &mut capability
+            ))?;
 
             Ok(match capability {
                 0 => false,
@@ -148,9 +154,11 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
         unsafe {
             let mut pci_info: nvmlPciInfo_t = mem::zeroed();
 
-            nvml_try(nvmlDeviceGetNvLinkRemotePciInfo(self.device.unsafe_raw(),
-                                                      self.link,
-                                                      &mut pci_info))?;
+            nvml_try(nvmlDeviceGetNvLinkRemotePciInfo(
+                self.device.unsafe_raw(),
+                self.link,
+                &mut pci_info
+            ))?;
 
             Ok(PciInfo::try_from(pci_info, false)?)
         }
@@ -175,10 +183,12 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
         unsafe {
             let mut value: c_ulonglong = mem::zeroed();
 
-            nvml_try(nvmlDeviceGetNvLinkErrorCounter(self.device.unsafe_raw(),
-                                                     self.link,
-                                                     counter.as_c(),
-                                                     &mut value))?;
+            nvml_try(nvmlDeviceGetNvLinkErrorCounter(
+                self.device.unsafe_raw(),
+                self.link,
+                counter.as_c(),
+                &mut value
+            ))?;
 
             Ok(value)
         }
@@ -201,8 +211,10 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     #[inline]
     pub fn reset_error_counters(&mut self) -> Result<()> {
         unsafe {
-            nvml_try(nvmlDeviceResetNvLinkErrorCounters(self.device.unsafe_raw(),
-                                                        self.link))
+            nvml_try(nvmlDeviceResetNvLinkErrorCounters(
+                self.device.unsafe_raw(),
+                self.link
+            ))
         }
     }
 
@@ -224,24 +236,23 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     */
     // No-run test written
     #[inline]
-    pub fn set_utilization_control(&mut self,
-                                   counter: Counter,
-                                   settings: UtilizationControl,
-                                   reset_counters: bool)
-                                   -> Result<()> {
+    pub fn set_utilization_control(
+        &mut self,
+        counter: Counter,
+        settings: UtilizationControl,
+        reset_counters: bool,
+    ) -> Result<()> {
 
-        let reset: c_uint = if reset_counters {
-            1
-        } else {
-            0
-        };
+        let reset: c_uint = if reset_counters { 1 } else { 0 };
 
         unsafe {
-            nvml_try(nvmlDeviceSetNvLinkUtilizationControl(self.device.unsafe_raw(),
-                                                           self.link,
-                                                           counter as c_uint,
-                                                           &mut settings.as_c(),
-                                                           reset))
+            nvml_try(nvmlDeviceSetNvLinkUtilizationControl(
+                self.device.unsafe_raw(),
+                self.link,
+                counter as c_uint,
+                &mut settings.as_c(),
+                reset
+            ))
         }
     }
 
@@ -261,16 +272,17 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     */
     // Test written
     #[inline]
-    pub fn utilization_control(&self, counter: Counter) 
-        -> Result<UtilizationControl> {
+    pub fn utilization_control(&self, counter: Counter) -> Result<UtilizationControl> {
         unsafe {
             let mut controls: nvmlNvLinkUtilizationControl_t = mem::zeroed();
 
-            nvml_try(nvmlDeviceGetNvLinkUtilizationControl(self.device.unsafe_raw(),
-                                                           self.link,
-                                                           counter as c_uint,
-                                                           &mut controls))?;
-            
+            nvml_try(nvmlDeviceGetNvLinkUtilizationControl(
+                self.device.unsafe_raw(),
+                self.link,
+                counter as c_uint,
+                &mut controls
+            ))?;
+
             Ok(UtilizationControl::try_from(controls)?)
         }
     }
@@ -306,21 +318,22 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Maxwell or newer fully supported devices.
     */
     // No-run test written
-    pub fn utilization_counter(&self, counter: Counter)
-        -> Result<UtilizationCounter> {
+    pub fn utilization_counter(&self, counter: Counter) -> Result<UtilizationCounter> {
         unsafe {
             let mut receive: c_ulonglong = mem::zeroed();
             let mut send: c_ulonglong = mem::zeroed();
 
-            nvml_try(nvmlDeviceGetNvLinkUtilizationCounter(self.device.unsafe_raw(),
-                                                           self.link,
-                                                           counter as c_uint,
-                                                           &mut receive,
-                                                           &mut send))?;
+            nvml_try(nvmlDeviceGetNvLinkUtilizationCounter(
+                self.device.unsafe_raw(),
+                self.link,
+                counter as c_uint,
+                &mut receive,
+                &mut send
+            ))?;
 
             Ok(UtilizationCounter {
                 receive,
-                send,
+                send
             })
         }
     }
@@ -367,15 +380,14 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
         self.set_utilization_counter_frozen(counter, false)
     }
 
-    fn set_utilization_counter_frozen(&mut self,
-                                      counter: Counter,
-                                      frozen: bool)
-                                      -> Result<()> {
+    fn set_utilization_counter_frozen(&mut self, counter: Counter, frozen: bool) -> Result<()> {
         unsafe {
-            nvml_try(nvmlDeviceFreezeNvLinkUtilizationCounter(self.device.unsafe_raw(),
-                                                              self.link,
-                                                              counter as c_uint,
-                                                              state_from_bool(frozen)))
+            nvml_try(nvmlDeviceFreezeNvLinkUtilizationCounter(
+                self.device.unsafe_raw(),
+                self.link,
+                counter as c_uint,
+                state_from_bool(frozen)
+            ))
         }
     }
 
@@ -398,9 +410,11 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     // No-run test written
     pub fn reset_utilization_counter(&mut self, counter: Counter) -> Result<()> {
         unsafe {
-            nvml_try(nvmlDeviceResetNvLinkUtilizationCounter(self.device.unsafe_raw(),
-                                                             self.link,
-                                                             counter as c_uint))
+            nvml_try(nvmlDeviceResetNvLinkUtilizationCounter(
+                self.device.unsafe_raw(),
+                self.link,
+                counter as c_uint
+            ))
         }
     }
 }
@@ -409,34 +423,28 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 #[cfg(not(feature = "test-local"))]
 #[deny(unused_mut)]
 mod test {
-    use test_utils::*;
-    use enums::nv_link::*;
-    use enum_wrappers::nv_link::*;
-    use struct_wrappers::nv_link::*;
     use bitmasks::nv_link::*;
+    use enum_wrappers::nv_link::*;
+    use enums::nv_link::*;
+    use struct_wrappers::nv_link::*;
+    use test_utils::*;
 
     #[test]
     fn is_active() {
         let nvml = nvml();
-        test_with_link(3, &nvml, |link| {
-            link.is_active()
-        })
+        test_with_link(3, &nvml, |link| link.is_active())
     }
 
     #[test]
     fn version() {
         let nvml = nvml();
-        test_with_link(3, &nvml, |link| {
-            link.version()
-        })
+        test_with_link(3, &nvml, |link| link.version())
     }
 
     #[test]
     fn has_capability() {
         let nvml = nvml();
-        test_with_link(3, &nvml, |link| {
-            link.has_capability(Capability::P2p)
-        })
+        test_with_link(3, &nvml, |link| link.has_capability(Capability::P2p))
     }
 
     #[test]
@@ -452,9 +460,11 @@ mod test {
     #[test]
     fn error_counter() {
         let nvml = nvml();
-        test_with_link(3, &nvml, |link| {
-            link.error_counter(ErrorCounter::DlRecovery)
-        })
+        test_with_link(
+            3,
+            &nvml,
+            |link| link.error_counter(ErrorCounter::DlRecovery)
+        )
     }
 
     // This modifies link state, so we don't want to actually run the test
@@ -476,7 +486,7 @@ mod test {
 
         let settings = UtilizationControl {
             units: UtilizationCountUnit::Cycles,
-            packet_filter: NO_OP | READ | WRITE | RATOM | WITH_DATA,
+            packet_filter: NO_OP | READ | WRITE | RATOM | WITH_DATA
         };
 
         link.set_utilization_control(Counter::One, settings, false).unwrap()
@@ -485,9 +495,7 @@ mod test {
     #[test]
     fn utilization_control() {
         let nvml = nvml();
-        test_with_link(3, &nvml, |link| {
-            link.utilization_control(Counter::One)
-        })
+        test_with_link(3, &nvml, |link| link.utilization_control(Counter::One))
     }
 
     // This shouldn't be called without modifying link state, so we don't want

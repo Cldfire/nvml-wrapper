@@ -1,8 +1,8 @@
-use ffi::bindings::*;
-use device::Device;
 use bitmasks::event::*;
+use device::Device;
 use enums::event::XidError;
 use error::*;
+use ffi::bindings::*;
 
 // TODO: Should this be higher level. It probably should
 /// Information about an event that has occurred.
@@ -24,7 +24,7 @@ pub struct EventData<'nvml> {
     
     `None` in the case of any other event type.
     */
-    pub event_data: Option<XidError>,
+    pub event_data: Option<XidError>
 }
 
 impl<'nvml> EventData<'nvml> {
@@ -32,7 +32,7 @@ impl<'nvml> EventData<'nvml> {
     pub fn try_from(struct_: nvmlEventData_t) -> Result<Self> {
         let event_type = match EventTypes::from_bits(struct_.eventType) {
             Some(t) => t,
-            None    => bail!(ErrorKind::IncorrectBits(Bits::U64(struct_.eventType))),
+            None => bail!(ErrorKind::IncorrectBits(Bits::U64(struct_.eventType))),
         };
 
         Ok(EventData {
@@ -45,7 +45,7 @@ impl<'nvml> EventData<'nvml> {
                 })
             } else {
                 None
-            },
+            }
         })
     }
 }

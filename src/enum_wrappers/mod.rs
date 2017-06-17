@@ -1,5 +1,5 @@
-use ffi::bindings::*;
 use error::*;
+use ffi::bindings::*;
 
 pub mod nv_link;
 pub mod device;

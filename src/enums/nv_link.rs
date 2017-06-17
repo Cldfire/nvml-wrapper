@@ -6,5 +6,5 @@
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Counter {
     Zero = 0,
-    One = 1,
+    One = 1
 }

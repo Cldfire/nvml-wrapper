@@ -1,14 +1,15 @@
 /*!
-The functionality in this module is only available on Linux platforms; NVML does not support events on any other platform.
+The functionality in this module is only available on Linux platforms; NVML does
+not support events on any other platform.
 */
 
-use enums::event::XidError;
-use bitmasks::event::*;
-use EventSet;
-use struct_wrappers::event::EventData;
-use error::*;
 use Device;
+use EventSet;
 use NVML;
+use bitmasks::event::*;
+use enums::event::XidError;
+use error::*;
+use struct_wrappers::event::EventData;
 
 // TODO: Tests
 
@@ -27,9 +28,9 @@ pub enum Event<'nvml> {
     DoubleBitEccError(Device<'nvml>),
     PowerStateChange(Device<'nvml>),
     SingleBitEccError(Device<'nvml>),
-    /// Returned if none of the above event types are contained in the `EventData`
-    /// the `EventLoop` processes.
-    Unknown,
+    /// Returned if none of the above event types are contained in the
+    /// `EventData` the `EventLoop` processes.
+    Unknown
 }
 
 impl<'nvml> From<EventData<'nvml>> for Event<'nvml> {
@@ -57,7 +58,7 @@ impl<'nvml> From<EventData<'nvml>> for Event<'nvml> {
 /// A usage example can be found in the `examples` directory at the root.
 // TODO: Example name ^
 pub struct EventLoop<'nvml> {
-    set: EventSet<'nvml>,
+    set: EventSet<'nvml>
 }
 
 impl<'nvml> EventLoop<'nvml> {
@@ -105,9 +106,13 @@ impl<'nvml> EventLoop<'nvml> {
     // TODO: example name
     #[inline]
     pub fn run_forever<F>(&mut self, mut callback: F)
-        where F: FnMut(Result<Event<'nvml>>, &mut EventLoopState) {
+    where
+        F: FnMut(Result<Event<'nvml>>, &mut EventLoopState),
+    {
 
-        let mut state = EventLoopState{ interrupted: false };
+        let mut state = EventLoopState {
+            interrupted: false
+        };
 
         loop {
             if state.interrupted {
@@ -129,7 +134,7 @@ impl<'nvml> EventLoop<'nvml> {
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct EventLoopState {
-    interrupted: bool,
+    interrupted: bool
 }
 
 impl EventLoopState {
@@ -145,8 +150,10 @@ impl EventLoopState {
 /// `use` it at your leisure.
 pub trait EventLoopProvider {
     // Thanks to Thinkofname for lifetime help, again :)
-    fn create_event_loop<'nvml>(&'nvml self, devices: Vec<&'nvml Device<'nvml>>)
-        -> Result<EventLoop>;
+    fn create_event_loop<'nvml>(
+        &'nvml self,
+        devices: Vec<&'nvml Device<'nvml>>,
+    ) -> Result<EventLoop>;
 }
 
 impl EventLoopProvider for NVML {
@@ -168,17 +175,19 @@ impl EventLoopProvider for NVML {
     Only supports Linux.
     */
     #[inline]
-    fn create_event_loop<'nvml>(&'nvml self, devices: Vec<&'nvml Device<'nvml>>)
-        -> Result<EventLoop> {
+    fn create_event_loop<'nvml>(
+        &'nvml self,
+        devices: Vec<&'nvml Device<'nvml>>,
+    ) -> Result<EventLoop> {
 
         let mut set = self.create_event_set()?;
 
         for d in devices {
             set = d.register_events(d.supported_event_types()?, set)?;
-        };
+        }
 
         Ok(EventLoop {
-            set,
+            set
         })
     }
 }

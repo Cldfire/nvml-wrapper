@@ -10,8 +10,10 @@ fn main() {
 
 #[cfg(target_os = "windows")]
 fn main() {
-    println!("Whoops! The event_loop sample only works on Linux (NVML does not \
-              support events on any other platform).");
+    println!(
+        "Whoops! The event_loop sample only works on Linux (NVML does not support events on any \
+         other platform)."
+    );
 }
 
 // The part that concerns you starts below.
@@ -20,7 +22,7 @@ fn main() {
 mod example {
     use nvml::NVML;
     // You may want to use your own error-chain setup in your own code
-    use nvml::error::{Result, Error, ErrorKind};
+    use nvml::error::{Error, ErrorKind, Result};
     // Bringing this in allows us to use `NVML.create_event_loop()`
     use nvml::high_level::EventLoopProvider;
     // Bringing these in for brevity (Event::SomeEvent vs. SomeEvent)

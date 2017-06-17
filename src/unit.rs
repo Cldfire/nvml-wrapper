@@ -1,13 +1,13 @@
-use ffi::bindings::*;
-use std::marker::PhantomData;
-use std::os::raw::c_uint;
-use std::mem;
+use NVML;
 use device::Device;
-use struct_wrappers::unit::*;
 use enum_wrappers::unit::*;
 use enums::unit::*;
 use error::*;
-use NVML;
+use ffi::bindings::*;
+use std::marker::PhantomData;
+use std::mem;
+use std::os::raw::c_uint;
+use struct_wrappers::unit::*;
 
 /**
 Struct that represents a unit. 
@@ -27,7 +27,7 @@ have to worry about calls returning `Uninitialized` errors.
 #[derive(Debug)]
 pub struct Unit<'nvml> {
     unit: nvmlUnit_t,
-    _phantom: PhantomData<&'nvml NVML>,
+    _phantom: PhantomData<&'nvml NVML>
 }
 
 unsafe impl<'nvml> Send for Unit<'nvml> {}
@@ -37,7 +37,7 @@ impl<'nvml> From<nvmlUnit_t> for Unit<'nvml> {
     fn from(unit: nvmlUnit_t) -> Self {
         Unit {
             unit,
-            _phantom: PhantomData,
+            _phantom: PhantomData
         }
     }
 }
@@ -70,10 +70,13 @@ impl<'nvml> Unit<'nvml> {
             };
             let mut devices: Vec<nvmlDevice_t> = vec![mem::zeroed(); count as usize];
 
-            nvml_try(nvmlUnitGetDevices(self.unit, &mut count, devices.as_mut_ptr()))?;
-            Ok(devices.iter()
-                      .map(|d| Device::from(*d))
-                      .collect())
+            nvml_try(nvmlUnitGetDevices(
+                self.unit,
+                &mut count,
+                devices.as_mut_ptr()
+            ))?;
+
+            Ok(devices.iter().map(|d| Device::from(*d)).collect())
         }
     }
 
@@ -217,7 +220,12 @@ impl<'nvml> Unit<'nvml> {
     pub fn temperature(&self, reading_type: TemperatureReading) -> Result<u32> {
         unsafe {
             let mut temp: c_uint = mem::zeroed();
-            nvml_try(nvmlUnitGetTemperature(self.unit, reading_type as c_uint, &mut temp))?;
+
+            nvml_try(nvmlUnitGetTemperature(
+                self.unit,
+                reading_type as c_uint,
+                &mut temp
+            ))?;
 
             Ok(temp)
         }
@@ -271,9 +279,7 @@ impl<'nvml> Unit<'nvml> {
     // Tested (no-run)
     #[inline]
     pub fn set_led_color(&mut self, color: LedColor) -> Result<()> {
-        unsafe {
-            nvml_try(nvmlUnitSetLedState(self.unit, color.as_c()))
-        }
+        unsafe { nvml_try(nvmlUnitSetLedState(self.unit, color.as_c())) }
     }
 
     /// Consume the struct and obtain the raw unit handle that it contains.
@@ -288,7 +294,8 @@ impl<'nvml> Unit<'nvml> {
         &(self.unit)
     }
 
-    /// Obtain a mutable reference to the raw unit handle contained in the struct.
+    /// Obtain a mutable reference to the raw unit handle contained in the
+    /// struct.
     #[inline]
     pub fn as_mut_raw(&mut self) -> &mut nvmlUnit_t {
         &mut (self.unit)
@@ -306,9 +313,9 @@ impl<'nvml> Unit<'nvml> {
 #[cfg(not(feature = "test-local"))]
 #[deny(unused_mut)]
 mod test {
-    use test_utils::*;
-    use enums::unit::TemperatureReading;
     use enum_wrappers::unit::LedColor;
+    use enums::unit::TemperatureReading;
+    use test_utils::*;
 
     #[test]
     fn devices() {
@@ -320,41 +327,31 @@ mod test {
     #[test]
     fn fan_info() {
         let nvml = nvml();
-        test_with_unit(3, &nvml, |unit| {
-            unit.fan_info()
-        })
+        test_with_unit(3, &nvml, |unit| unit.fan_info())
     }
 
     #[test]
     fn led_state() {
         let nvml = nvml();
-        test_with_unit(3, &nvml, |unit| {
-            unit.led_state()
-        })
+        test_with_unit(3, &nvml, |unit| unit.led_state())
     }
 
     #[test]
     fn psu_info() {
         let nvml = nvml();
-        test_with_unit(3, &nvml, |unit| {
-            unit.psu_info()
-        })
+        test_with_unit(3, &nvml, |unit| unit.psu_info())
     }
 
     #[test]
     fn temperature() {
         let nvml = nvml();
-        test_with_unit(3, &nvml, |unit| {
-            unit.temperature(TemperatureReading::Board)
-        })
+        test_with_unit(3, &nvml, |unit| unit.temperature(TemperatureReading::Board))
     }
 
     #[test]
     fn info() {
         let nvml = nvml();
-        test_with_unit(3, &nvml, |unit| {
-            unit.info()
-        })
+        test_with_unit(3, &nvml, |unit| unit.info())
     }
 
     // This modifies unit state, so we don't want to actually run the test

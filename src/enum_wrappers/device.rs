@@ -1,5 +1,6 @@
-use ffi::bindings::*;
+
 use error::*;
+use ffi::bindings::*;
 
 /// API types that allow changes to default permission restrictions.
 // Checked against local
@@ -19,10 +20,10 @@ pub enum Api {
     ///
     /// Applicable methods on `Device`: `.set_auto_boosted_clocks()`
     #[wrap(c_variant = "NVML_RESTRICTED_API_SET_AUTO_BOOSTED_CLOCKS")]
-    AutoBoostedClocks,
+    AutoBoostedClocks
 }
 
-/// Clock types. All speeds are in MHz. 
+/// Clock types. All speeds are in MHz.
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -41,7 +42,7 @@ pub enum Clock {
     Memory,
     /// Video encoder/decoder clock domain.
     #[wrap(c_variant = "NVML_CLOCK_VIDEO")]
-    Video,
+    Video
 }
 
 /// These are used in combo with `Clock` to specify a single clock value.
@@ -61,7 +62,7 @@ pub enum ClockId {
     DefaultAppClock,
     /// OEM-defined maximum clock rate.
     #[wrap(c_variant = "NVML_CLOCK_ID_CUSTOMER_BOOST_MAX")]
-    CustomerMaxBoost,
+    CustomerMaxBoost
 }
 
 /// GPU brand.
@@ -86,7 +87,7 @@ pub enum Brand {
     GRID,
     /// Targeted at gaming.
     #[wrap(c_variant = "NVML_BRAND_GEFORCE")]
-    GeForce,
+    GeForce
 }
 
 /**
@@ -103,7 +104,7 @@ pub enum BridgeChip {
     #[wrap(c_variant = "NVML_BRIDGE_CHIP_PLX")]
     PLX,
     #[wrap(c_variant = "NVML_BRIDGE_CHIP_BRO4")]
-    BRO4,
+    BRO4
 }
 
 /// Memory error types.
@@ -127,7 +128,7 @@ pub enum MemoryError {
     Texture memory: error occurred and resend failed.
     */
     #[wrap(c_variant = "NVML_MEMORY_ERROR_TYPE_UNCORRECTED")]
-    Uncorrected,
+    Uncorrected
 }
 
 /**
@@ -147,9 +148,10 @@ pub enum EccCounter {
     /// Volatile counts are reset each time the driver loads.
     #[wrap(c_variant = "NVML_VOLATILE_ECC")]
     Volatile,
-    /// Aggregate counts persist across reboots (i.e. for the lifetime of the device).
+    /// Aggregate counts persist across reboots (i.e. for the lifetime of the
+    /// device).
     #[wrap(c_variant = "NVML_AGGREGATE_ECC")]
-    Aggregate,
+    Aggregate
 }
 
 /// Memory locations. See `Device.memory_error_counter()`.
@@ -175,7 +177,7 @@ pub enum MemoryLocation {
     Texture,
     /// Shared memory.
     #[wrap(c_variant = "NVML_MEMORY_LOCATION_TEXTURE_SHM")]
-    Shared,
+    Shared
 }
 
 /// Driver models, Windows only.
@@ -190,7 +192,7 @@ pub enum DriverModel {
     WDDM,
     /// (TCC model) GPU treated as a generic device (recommended).
     #[wrap(c_variant = "NVML_DRIVER_WDM")]
-    WDM,
+    WDM
 }
 
 /**
@@ -210,10 +212,10 @@ pub enum OperationMode {
     /// Designed for running only compute tasks; disables graphics operations.
     #[wrap(c_variant = "NVML_GOM_COMPUTE")]
     Compute,
-    /// Designed for running graphics applications that don't require high bandwidth
-    /// double precision.
+    /// Designed for running graphics applications that don't require high
+    /// bandwidth double precision.
     #[wrap(c_variant = "NVML_GOM_LOW_DP")]
-    LowDP,
+    LowDP
 }
 
 /// Available infoROM objects.
@@ -230,10 +232,11 @@ pub enum InfoRom {
     ECC,
     /// The power management object.
     #[wrap(c_variant = "NVML_INFOROM_POWER")]
-    Power,
+    Power
 }
 
-/// Represents the queryable PCIe utilization counters (in bytes). 1KB granularity.
+/// Represents the queryable PCIe utilization counters (in bytes). 1KB
+/// granularity.
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -242,7 +245,7 @@ pub enum PcieUtilCounter {
     #[wrap(c_variant = "NVML_PCIE_UTIL_TX_BYTES")]
     Send,
     #[wrap(c_variant = "NVML_PCIE_UTIL_RX_BYTES")]
-    Receive,
+    Receive
 }
 
 /**
@@ -260,7 +263,7 @@ Value    Performance
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[wrap(c_enum = "nvmlPStates_enum")]
 pub enum PerformanceState {
-    /// Maximum performance.            
+    /// Maximum performance.
     #[wrap(c_variant = "NVML_PSTATE_0")]
     Zero,
     #[wrap(c_variant = "NVML_PSTATE_1")]
@@ -296,7 +299,7 @@ pub enum PerformanceState {
     Fifteen,
     /// Unknown performance state.
     #[wrap(c_variant = "NVML_PSTATE_UNKNOWN")]
-    Unknown,
+    Unknown
 }
 
 /// Causes for page retirement.
@@ -310,7 +313,7 @@ pub enum RetirementCause {
     MultipleSingleBitEccErrors,
     /// Page was retired due to a single double bit ECC error.
     #[wrap(c_variant = "NVML_PAGE_RETIREMENT_CAUSE_DOUBLE_BIT_ECC_ERROR")]
-    DoubleBitEccError,
+    DoubleBitEccError
 }
 
 /// Possible types of sampling events.
@@ -322,10 +325,12 @@ pub enum Sampling {
     /// Total power drawn by GPU.
     #[wrap(c_variant = "NVML_TOTAL_POWER_SAMPLES")]
     Power,
-    /// Percent of time during which one or more kernels was executing on the GPU.
+    /// Percent of time during which one or more kernels was executing on the
+    /// GPU.
     #[wrap(c_variant = "NVML_GPU_UTILIZATION_SAMPLES")]
     GpuUtilization,
-    /// Percent of time during which global (device) memory was being read or written.
+    /// Percent of time during which global (device) memory was being read or
+    /// written.
     #[wrap(c_variant = "NVML_MEMORY_UTILIZATION_SAMPLES")]
     MemoryUtilization,
     /// Percent of time during which NVENC remains busy.
@@ -339,7 +344,7 @@ pub enum Sampling {
     ProcessorClock,
     /// Memory clock samples.
     #[wrap(c_variant = "NVML_MEMORY_CLK_SAMPLES")]
-    MemoryClock,
+    MemoryClock
 }
 
 // Checked against local
@@ -349,7 +354,7 @@ pub enum Sampling {
 pub enum TemperatureSensor {
     /// Sensor for the GPU die.
     #[wrap(c_variant = "NVML_TEMPERATURE_GPU")]
-    Gpu,
+    Gpu
 }
 
 // Checked against local
@@ -362,7 +367,7 @@ pub enum TemperatureThreshold {
     Shutdown,
     /// Temperature at which the GPU will begin to throttle.
     #[wrap(c_variant = "NVML_TEMPERATURE_THRESHOLD_SLOWDOWN")]
-    Slowdown,
+    Slowdown
 }
 
 /// Level relationships within a system between two GPUs.
@@ -383,13 +388,13 @@ pub enum TopologyLevel {
     /// All devices that are connected to the same host bridge.
     #[wrap(c_variant = "NVML_TOPOLOGY_HOSTBRIDGE")]
     HostBridge,
-    /// All devices that are connected to the same CPU but possibly multiple host
-    /// bridges.
+    /// All devices that are connected to the same CPU but possibly multiple
+    /// host bridges.
     #[wrap(c_variant = "NVML_TOPOLOGY_CPU")]
     Cpu,
     /// All devices in the system
     #[wrap(c_variant = "NVML_TOPOLOGY_SYSTEM")]
-    System,
+    System
 }
 
 /// Types of performance policy for which violation times can be queried.
@@ -403,11 +408,12 @@ pub enum PerformancePolicy {
     #[wrap(c_variant = "NVML_PERF_POLICY_THERMAL")]
     Thermal,
     #[wrap(c_variant = "NVML_PERF_POLICY_SYNC_BOOST")]
-    SyncBoost,
+    SyncBoost
 }
 
-/// `ExclusiveProcess` was added in CUDA 4.0. Earlier CUDA versions supported a single
-/// exclusive mode, which is equivalent to `ExclusiveThread` in CUDA 4.0 and beyond.
+/// `ExclusiveProcess` was added in CUDA 4.0. Earlier CUDA versions supported a
+/// single exclusive mode, which is equivalent to `ExclusiveThread` in CUDA 4.0
+/// and beyond.
 // Checked against local
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -418,7 +424,8 @@ pub enum ComputeMode {
     Default,
     /// *SUPPORT REMOVED*
     ///
-    /// Only one context per device, usable from one thread at a time. *NOT SUPPORTED*
+    /// Only one context per device, usable from one thread at a time. *NOT
+    /// SUPPORTED*
     #[wrap(c_variant = "NVML_COMPUTEMODE_EXCLUSIVE_THREAD")]
     ExclusiveThread,
     /// No contexts per device.
@@ -426,7 +433,7 @@ pub enum ComputeMode {
     Prohibited,
     /// Only one context per device, usable from multiple threads at a time.
     #[wrap(c_variant = "NVML_COMPUTEMODE_EXCLUSIVE_PROCESS")]
-    ExclusiveProcess,
+    ExclusiveProcess
 }
 
 /// P2P capability index status.
@@ -448,7 +455,7 @@ pub enum P2pStatus {
     #[wrap(c_variant = "NVML_P2P_STATUS_NOT_SUPPORTED")]
     NotSupported,
     #[wrap(c_variant = "NVML_P2P_STATUS_UNKNOWN")]
-    Unknown,
+    Unknown
 }
 
 // Checked against local
@@ -467,7 +474,7 @@ pub enum P2pCapabilitiesIndex {
     #[wrap(c_variant = "NVML_P2P_CAPS_INDEX_PROP")]
     Prop,
     #[wrap(c_variant = "NVML_P2P_CAPS_INDEX_UNKNOWN")]
-    Unknown,
+    Unknown
 }
 
 /// Represents types for returned sample values.
@@ -484,5 +491,5 @@ pub enum SampleValueType {
     #[wrap(c_variant = "NVML_VALUE_TYPE_UNSIGNED_LONG")]
     UnsignedLong,
     #[wrap(c_variant = "NVML_VALUE_TYPE_UNSIGNED_LONG_LONG")]
-    UnsignedLongLong,
+    UnsignedLongLong
 }
