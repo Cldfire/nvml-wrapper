@@ -109,7 +109,6 @@ impl<'nvml> EventLoop<'nvml> {
     where
         F: FnMut(Result<Event<'nvml>>, &mut EventLoopState),
     {
-
         let mut state = EventLoopState {
             interrupted: false
         };
@@ -126,6 +125,33 @@ impl<'nvml> EventLoop<'nvml> {
                 Err(Error(ErrorKind::Timeout, _)) => continue,
                 value => callback(value.map(|d| d.into()), &mut state),
             };
+        }
+    }
+
+    /// Obtain a reference to the `EventSet` contained within this struct.
+    #[inline]
+    pub fn as_inner(&'nvml self) -> &'nvml EventSet<'nvml> {
+        &(self.set)
+    }
+
+    /// Obtain a mutable reference to the `EventSet` contained within this
+    /// struct.
+    #[inline]
+    pub fn as_mut_inner(&'nvml mut self) -> &'nvml mut EventSet<'nvml> {
+        &mut (self.set)
+    }
+
+    /// Consumes this `EventLoop` and yields the `EventSet` contained within.
+    #[inline]
+    pub fn into_inner(self) -> EventSet<'nvml> {
+        self.set
+    }
+}
+
+impl<'nvml> From<EventSet<'nvml>> for EventLoop<'nvml> {
+    fn from(set: EventSet<'nvml>) -> Self {
+        Self {
+            set
         }
     }
 }
