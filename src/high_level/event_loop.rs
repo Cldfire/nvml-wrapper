@@ -1,4 +1,63 @@
 /*!
+A convenient abstraction for working with events.
+
+Simply register the devices you wish to receive events for and then compose
+a handler for the events. Event handling looks like this (details removed):
+
+```no_run
+# extern crate nvml_wrapper as nvml;
+#
+# #[cfg(target_os = "linux")]
+# fn main() {
+#     example::actual_main().unwrap();
+# }
+#
+# #[cfg(target_os = "windows")]
+# fn main() {}
+#
+# #[cfg(target_os = "linux")]
+# mod example {
+# use nvml::NVML;
+# use nvml::error::{Error, ErrorKind, Result};
+# use nvml::high_level::EventLoopProvider;
+# use nvml::high_level::Event::*;
+#
+# pub fn actual_main() -> Result<()> {
+# let nvml = NVML::init()?;
+# let device = nvml.device_by_index(0)?;
+# let mut event_loop = nvml.create_event_loop(vec![&device])?;
+#
+event_loop.run_forever(|event, state| match event {
+    // If there were no errors, extract the event
+    Ok(event) => match event {
+        ClockChange(device) => { /* ... */ },
+        PowerStateChange(device) => { /* ... */ },
+        _ => { /* ... */ }
+    },
+
+    // If there was an error, handle it
+    Err(Error(error, _)) => match error {
+        // If the error is `Unknown`, continue looping and hope for the best
+        ErrorKind::Unknown => {},
+        // The other errors that can occur are almost guaranteed to mean that
+        // further looping will never be successful (`GpuLost` and
+        // `Uninitialized`), so we stop looping
+        _ => state.interrupt()
+    }
+});
+
+# Ok(())
+# }
+# }
+```
+
+The full, fleshed-out example can be viewed in the examples directory
+(`event_loop.rs`). Run it as follows:
+
+```bash
+cargo run --example event_loop
+```
+
 The functionality in this module is only available on Linux platforms; NVML does
 not support events on any other platform.
 */
@@ -53,9 +112,16 @@ impl<'nvml> From<EventData<'nvml>> for Event<'nvml> {
     }
 }
 
-/// Holds the `EventSet` utilized within an event loop.
-///
-/// A usage example can be found in the `examples` directory at the root.
+/**
+Holds the `EventSet` utilized within an event loop.
+
+A usage example is available (`examples/event_loop.rs`). It can be run as
+follows:
+
+```bash
+cargo run --example event_loop
+```
+*/
 // TODO: Example name ^
 pub struct EventLoop<'nvml> {
     set: EventSet<'nvml>
