@@ -122,7 +122,6 @@ follows:
 cargo run --example event_loop
 ```
 */
-// TODO: Example name ^
 pub struct EventLoop<'nvml> {
     set: EventSet<'nvml>
 }

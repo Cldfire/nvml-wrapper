@@ -21,7 +21,8 @@ fn main() {
 #[cfg(target_os = "linux")]
 mod example {
     use nvml::NVML;
-    // You may want to use your own error-chain setup in your own code
+    // You would probably want your own error setup in your own code; here we just 
+    // use the wrapper's error types.
     use nvml::error::{Error, ErrorKind, Result};
     // Bringing this in allows us to use `NVML.create_event_loop()`
     use nvml::high_level::EventLoopProvider;
