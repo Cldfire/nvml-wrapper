@@ -36,7 +36,7 @@ fn actual_main() -> Result<()> {
         "Your {name} is currently sitting at {temperature} °C with a \
         graphics clock of {graphics_clock} MHz and a memory clock of {mem_clock} \
         MHz. Memory usage is {used_mem} bytes out of an available {total_mem} bytes. \
-        The device is currently connected via a PCIe gen {link_gen} x{link_width} \
+        Right now the device is connected via a PCIe gen {link_gen} x{link_width} \
         interface; the max your hardware supports is PCIe gen {max_link_gen} \
         x{max_link_width}.",
         name=name, temperature=temperature, graphics_clock=graphics_clock,

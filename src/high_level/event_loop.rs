@@ -268,7 +268,7 @@ impl EventLoopProvider for NVML {
     #[inline]
     fn create_event_loop<'nvml>(
         &'nvml self,
-        devices: Vec<&'nvml Device<'nvml>>,
+        devices: Vec<&Device<'nvml>>,
     ) -> Result<EventLoop> {
 
         let mut set = self.create_event_set()?;
