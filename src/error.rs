@@ -174,8 +174,7 @@ error_chain! {
 
 /// `?` enabler for `nvmlReturn_t` types.
 // TODO: Can't have unit tests to ensure that mapping is correct because
-// error-chain
-// does not derive partialeq for errors
+// error-chain does not derive partialeq for errors
 // (https://github.com/brson/error-chain/issues/134)
 #[doc(hidden)]
 pub fn nvml_try(code: nvmlReturn_t) -> Result<()> {

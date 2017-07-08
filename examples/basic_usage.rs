@@ -1,13 +1,19 @@
 extern crate nvml_wrapper as nvml;
+// This is used to pretty-print bytes. Nothing you need to be concerned about.
+extern crate number_prefix;
 
 use nvml::NVML;
 // You would probably want your own error setup in your own code; here we just
 // use the wrapper's error types.
 use nvml::error::*;
 use nvml::enum_wrappers::device::{TemperatureSensor, Clock};
+use number_prefix::{decimal_prefix, Standalone, Prefixed};
 
 fn main() {
-    actual_main().unwrap();
+    match actual_main() {
+        Ok(()) => {},
+        Err(e) => println!("\n{:?}. \nDescription: {:?}\n", e, e.description())
+    }
 }
 
 // We write a function so that we can return a `Result` and use `?`
@@ -35,13 +41,14 @@ fn actual_main() -> Result<()> {
     println!(
         "Your {name} is currently sitting at {temperature} °C with a \
         graphics clock of {graphics_clock} MHz and a memory clock of {mem_clock} \
-        MHz. Memory usage is {used_mem} bytes out of an available {total_mem} bytes. \
+        MHz. Memory usage is {used_mem} out of an available {total_mem}. \
         Right now the device is connected via a PCIe gen {link_gen} x{link_width} \
         interface; the max your hardware supports is PCIe gen {max_link_gen} \
         x{max_link_width}.",
         name=name, temperature=temperature, graphics_clock=graphics_clock,
-        mem_clock=mem_clock, used_mem=mem_info.used, total_mem=mem_info.total,
-        link_gen=link_gen, link_width=link_width, max_link_gen=max_link_gen,
+        mem_clock=mem_clock, used_mem=format_bytes(mem_info.used),
+        total_mem=format_bytes(mem_info.total), link_gen=link_gen,
+        link_width=link_width, max_link_gen=max_link_gen,
         max_link_width=max_link_width
     );
 
@@ -55,4 +62,12 @@ fn actual_main() -> Result<()> {
 
     print!("\n\n");
     Ok(())
+}
+
+// Function used to pretty-format bytes. Not relevant to this library.
+fn format_bytes(num: u64) -> String {
+    match decimal_prefix(num as f32) {
+        Standalone(bytes)   => bytes.to_string(),
+        Prefixed(prefix, n) => format!("{:.2} {}B", n, prefix)
+    }
 }

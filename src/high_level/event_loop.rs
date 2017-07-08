@@ -87,8 +87,8 @@ pub enum Event<'nvml> {
     DoubleBitEccError(Device<'nvml>),
     PowerStateChange(Device<'nvml>),
     SingleBitEccError(Device<'nvml>),
-    /// Returned if none of the above event types are contained in the
-    /// `EventData` the `EventLoop` processes.
+    /// Returned if none of the other `Events` are contained in the `EventData`
+    /// the `EventLoop` processes.
     Unknown
 }
 
