@@ -40,6 +40,7 @@ impl PciInfo {
     `None`. See the field docs for more.
 
     # Errors
+
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     */
     pub fn try_from(struct_: nvmlPciInfo_t, sub_sys_id_present: bool) -> Result<Self> {
@@ -64,6 +65,7 @@ impl PciInfo {
     Waiting for `TryInto` to be stable. In the meantime, we do this.
 
     # Errors
+
     * `NulError`, if a nul byte was found in the bus_id (shouldn't occur?)
     * `StringTooLong`, if `bus_id.len()` exceeded the length of
     `NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE`. This should (?) only be able to
@@ -152,6 +154,7 @@ impl BridgeChipInfo {
     Construct `BridgeChipInfo` from the corresponding C struct.
 
     # Errors
+
     * `UnexpectedVariant`, for which you can read the docs for
     */
     pub fn try_from(struct_: nvmlBridgeChipInfo_t) -> Result<Self> {
@@ -186,6 +189,7 @@ impl BridgeChipHierarchy {
     Construct `BridgeChipHierarchy` from the corresponding C struct.
 
     # Errors
+    
     * `UnexpectedVariant`, for which you can read the docs for
     */
     pub fn try_from(struct_: nvmlBridgeChipHierarchy_t) -> Result<Self> {

@@ -17,6 +17,7 @@ impl LedState {
     Waiting for `TryFrom` to be stable. In the meantime, we do this.
     
     # Errors
+    
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     */
     pub fn try_from(struct_: nvmlLedState_t) -> Result<Self> {

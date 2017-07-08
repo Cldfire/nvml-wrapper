@@ -134,11 +134,13 @@ impl<'nvml> EventLoop<'nvml> {
     everything went well with the registration process.
 
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `GpuLost`, if a GPU has fallen off the bus or is otherwise inaccessible
     * `Unknown`, on any unexpected error
 
     # Platform Support
+
     Only supports Linux.
     */
     #[inline]
@@ -152,6 +154,7 @@ impl<'nvml> EventLoop<'nvml> {
     Handle events with the given callback until the loop is manually interrupted.
 
     # Errors
+
     The function itself does not return anything. You will be given errors to
     handle within your closure if they occur; events are handed to you wrapped
     in a `Result`.
@@ -163,9 +166,11 @@ impl<'nvml> EventLoop<'nvml> {
     * `Unknown`, on any unexpected error
 
     # Examples
+
     See the `event_loop` example in the `examples` directory at the root.
 
     # Platform Support
+
     Only supports Linux.
     */
     // TODO: example name
@@ -257,12 +262,14 @@ impl EventLoopProvider for NVML {
     call to actually utilize it.
 
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `GpuLost`, if any of the given `Device`s have fallen off the bus or are
     otherwise inaccessible
     * `Unknown`, on any unexpected error
 
     # Platform Support
+    
     Only supports Linux.
     */
     #[inline]

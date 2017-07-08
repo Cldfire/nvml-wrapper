@@ -58,14 +58,17 @@ impl<'nvml> Device<'nvml> {
     the calling process and all children. 
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler or newer fully supported devices.
     
     # Platform Support
+
     Only supports Linux. 
     */
     // Checked against local
@@ -86,6 +89,7 @@ impl<'nvml> Device<'nvml> {
     `.set_api_restricted()`.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid or the apiType is invalid (may occur if 
     the C lib changes dramatically?)
@@ -97,6 +101,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports all _fully supported_ products.
     */
     // Checked against local
@@ -122,7 +127,8 @@ impl<'nvml> Device<'nvml> {
     
     This setting can be changed using `.set_applications_clocks()`.
     
-    # Errors 
+    # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid or the clockType is invalid (may occur 
     if the C lib changes dramatically?)
@@ -131,6 +137,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler or newer fully supported devices.
     */
     // Checked against local
@@ -160,7 +167,8 @@ impl<'nvml> Device<'nvml> {
     clocks. Use `.set_applications_clocks()` and `.reset_applications_clocks()` to control
     auto boost behavior.
     
-    # Errors 
+    # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support auto boosted clocks
@@ -169,6 +177,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler or newer fully supported devices.
     */
     // Checked against local
@@ -198,7 +207,8 @@ impl<'nvml> Device<'nvml> {
     BAR1 memory is used to map the FB (device memory) so that it can be directly accessed
     by the CPU or by 3rd party devices (peer-to-peer on the PCIe bus).
     
-    # Errors 
+    # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this query
@@ -206,6 +216,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler or newer fully supported devices.
     */
     // Checked against local
@@ -234,6 +245,7 @@ impl<'nvml> Device<'nvml> {
     however, always be different from each other).
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -241,6 +253,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Fermi or newer fully supported devices.
     */
     // Checked against local
@@ -261,6 +274,7 @@ impl<'nvml> Device<'nvml> {
     See the `Brand` enum for documentation of possible values.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
@@ -285,6 +299,7 @@ impl<'nvml> Device<'nvml> {
     Only applicable to multi-GPU devices.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -293,6 +308,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports all _fully supported_ devices.
     */
     // Checked against local
@@ -311,6 +327,7 @@ impl<'nvml> Device<'nvml> {
     Gets this `Device`'s current clock speed for the given `Clock` type and `ClockId`.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if this `Device` is invalid or `clock_type` is invalid (shouldn't occur?)
     * `NotSupported`, if this `Device` does not support this feature
@@ -318,6 +335,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
@@ -343,6 +361,7 @@ impl<'nvml> Device<'nvml> {
     given `Clock` type.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if this `Device` is invalid or `clock_type` is invalid (shouldn't occur?)
     * `NotSupported`, if this `Device` or the `clock_type` on this `Device`
@@ -351,6 +370,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Maxwell and newer fully supported devices.
     */
     // Checked against local
@@ -374,6 +394,7 @@ impl<'nvml> Device<'nvml> {
     Gets the current compute mode for this `Device`.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if this `Device` is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -397,6 +418,7 @@ impl<'nvml> Device<'nvml> {
     Gets this `Device`'s current clock speed for the given `Clock` type.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if this `Device` is invalid
     * `NotSupported`, if this `Device` cannot report the specified clock
@@ -404,6 +426,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Fermi or newer fully supported devices.
     */
     // Checked against local
@@ -431,6 +454,7 @@ impl<'nvml> Device<'nvml> {
     function.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
@@ -464,6 +488,7 @@ impl<'nvml> Device<'nvml> {
     function.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
@@ -495,6 +520,7 @@ impl<'nvml> Device<'nvml> {
     64 CPUs per unsigned long on 64-bit machines, 32 on 32-bit machines.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `InsufficientSize`, if the passed-in `size` is 0 (must be > 0)
@@ -503,9 +529,11 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler or newer fully supported devices.
     
     # Platform Support
+
     Only supports Linux.
     */
     // Checked against local
@@ -536,6 +564,7 @@ impl<'nvml> Device<'nvml> {
     Gets the current PCIe link generation.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if PCIe link information is not available
@@ -543,6 +572,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Fermi or newer fully supported devices.
     */
     // Checked against local
@@ -565,6 +595,7 @@ impl<'nvml> Device<'nvml> {
     Gets the current PCIe link width.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if PCIe link information is not available
@@ -572,6 +603,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Fermi or newer fully supported devices.
     */
     // Checked against local
@@ -590,6 +622,7 @@ impl<'nvml> Device<'nvml> {
     Gets the current utilization and sampling size (sampling size in μs) for the Decoder.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -597,6 +630,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler or newer fully supported devices.
     */
     // Checked against local
@@ -625,6 +659,7 @@ impl<'nvml> Device<'nvml> {
     `reset_applications_clocks()`.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -632,6 +667,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler or newer fully supported devices.
     */
     // Checked against local
@@ -684,6 +720,7 @@ impl<'nvml> Device<'nvml> {
     A display can be active even when no monitor is physically attached to this `Device`.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -710,6 +747,7 @@ impl<'nvml> Device<'nvml> {
     This calls the C function `nvmlDeviceGetDisplayMode`.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -737,6 +775,7 @@ impl<'nvml> Device<'nvml> {
     is preferred if a display is not attached.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if the platform is not Windows
@@ -745,9 +784,11 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Fermi and newer fully supported devices.
     
     # Platform Support
+
     Only supports Windows.
     */
     // Checked against local
@@ -779,6 +820,7 @@ impl<'nvml> Device<'nvml> {
     mode following the next reboot.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -787,6 +829,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Fermi and newer fully supported devices. Only applicable to devices with
     ECC. Requires `InfoRom::ECC` version 1.0 or higher.
     */
@@ -815,6 +858,7 @@ impl<'nvml> Device<'nvml> {
     Gets the current utilization and sampling size (sampling size in μs) for the Encoder.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -822,6 +866,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler or newer fully supported devices.
     */
     // Checked against local
@@ -853,6 +898,7 @@ impl<'nvml> Device<'nvml> {
     are set elswhere. This includes the out-of-band power limit interface.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -860,6 +906,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler or newer fully supported devices.
     */
     // Checked against local
@@ -882,6 +929,7 @@ impl<'nvml> Device<'nvml> {
     and unable to spin, the output will not match the actual fan speed.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not have a fan
@@ -889,6 +937,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports all discrete products with dedicated fans.
     */
     // Checked against local
@@ -908,6 +957,7 @@ impl<'nvml> Device<'nvml> {
     after a reboot).
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -916,6 +966,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports GK110 M-class and X-class Tesla products from the Kepler family. Modes `LowDP`
     and `AllOn` are supported on fully supported GeForce products. Not supported
     on Quadro and Tesla C-class products.
@@ -947,6 +998,7 @@ impl<'nvml> Device<'nvml> {
     This only returns information about graphics based processes (OpenGL, DirectX).
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
@@ -978,6 +1030,7 @@ impl<'nvml> Device<'nvml> {
     This only returns the count of graphics based processes (OpenGL, DirectX).
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
@@ -1009,6 +1062,7 @@ impl<'nvml> Device<'nvml> {
     such as the CUDA device index.
     
     # Errors 
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
@@ -1034,6 +1088,7 @@ impl<'nvml> Device<'nvml> {
     user changes the configuration (e.g. disabling/enabling ECC).
     
     # Errors
+
     * `CorruptedInfoROM`, if the device's checksum couldn't be retrieved due to infoROM corruption
     * `Uninitialized`, if the library has not been successfully initialized
     * `NotSupported`, if this `Device` does not support this feature
@@ -1041,6 +1096,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports all devices with an infoROM.
     */
     // Checked against local
@@ -1067,6 +1123,7 @@ impl<'nvml> Device<'nvml> {
     is only an indicator of supported features.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not have an infoROM
@@ -1080,6 +1137,7 @@ impl<'nvml> Device<'nvml> {
     function? Hmm.
     
     # Device Support
+
     Supports all devices with an infoROM.
     */
     // Checked against local
@@ -1106,6 +1164,7 @@ impl<'nvml> Device<'nvml> {
     object type.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not have an infoROM
@@ -1114,6 +1173,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports all devices with an infoROM.
     
     Fermi and higher parts have non-volatile on-board memory for persisting device info,
@@ -1144,6 +1204,7 @@ impl<'nvml> Device<'nvml> {
     Gets the maximum clock speeds for this `Device`.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` cannot report the specified `Clock`
@@ -1151,6 +1212,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Fermi and newer fully supported devices.
     
     Note: On GPUs from the Fermi family, current P0 (Performance state 0?) clocks 
@@ -1180,6 +1242,7 @@ impl<'nvml> Device<'nvml> {
     this function will report is generation 1.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if PCIe link information is not available
@@ -1187,6 +1250,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Fermi and newer fully supported devices.
     */
     // Checked against local
@@ -1212,6 +1276,7 @@ impl<'nvml> Device<'nvml> {
     this method will report a max link width of 8.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if PCIe link information is not available
@@ -1219,6 +1284,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Fermi and newer fully supported devices.
     */
     // Checked against local
@@ -1239,6 +1305,7 @@ impl<'nvml> Device<'nvml> {
     Only applicable to devices with ECC. Requires ECC mode to be enabled.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if `error_type`, `counter_type`, or `location` is invalid (shouldn't occur?)
     * `NotSupported`, if this `Device` does not support ECC error reporting for the specified
@@ -1247,6 +1314,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Fermi and newer fully supported devices. Requires `InfoRom::ECC` version
     2.0 or higher to report aggregate location-based memory error counts. Requires
     `InfoRom::ECC version 1.0 or higher to report all other memory error counts.
@@ -1289,6 +1357,7 @@ impl<'nvml> Device<'nvml> {
     the device.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
@@ -1313,6 +1382,7 @@ impl<'nvml> Device<'nvml> {
     have the form `/dev/nvidia[minor number]`.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this query is not supported by this `Device`
@@ -1320,6 +1390,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Platform Support
+
     Only supports Linux.
     */
     // Checked against local
@@ -1339,6 +1410,7 @@ impl<'nvml> Device<'nvml> {
     Identifies whether or not this `Device` is on a multi-GPU board.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -1346,6 +1418,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Fermi or newer fully supported devices.
     */
     // Checked against local
@@ -1369,6 +1442,7 @@ impl<'nvml> Device<'nvml> {
     The name is an alphanumeric string that denotes a particular product. 
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
@@ -1399,6 +1473,7 @@ impl<'nvml> Device<'nvml> {
     See `PciInfo` for details about the returned attributes.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `GpuLost`, if the GPU has fallen off the bus or is otherwise inaccessible
@@ -1421,6 +1496,7 @@ impl<'nvml> Device<'nvml> {
     Gets the PCIe replay counter.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -1428,6 +1504,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler or newer fully supported devices.
     */
     // Checked against local
@@ -1449,6 +1526,7 @@ impl<'nvml> Device<'nvml> {
     interval and thus is the PCIE throughput over that interval.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid or `counter` is invalid (shouldn't occur?)
     * `NotSupported`, if this `Device` does not support this feature
@@ -1456,9 +1534,11 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Maxwell and newer fully supported devices.
     
     # Environment Support
+
     This method is not supported in virtualized GPU environments.
     */
     // Checked against local
@@ -1482,6 +1562,7 @@ impl<'nvml> Device<'nvml> {
     Gets the current performance state for this `Device`. 0 == max, 15 == min.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -1490,6 +1571,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Fermi or newer fully supported devices.
     */
     // Checked against local
@@ -1511,6 +1593,7 @@ impl<'nvml> Device<'nvml> {
     when the last client disconnects. This feature is disabled by default.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -1519,6 +1602,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Platform Support
+    
     Only supports Linux.
     */
     // Checked against local
@@ -1540,6 +1624,7 @@ impl<'nvml> Device<'nvml> {
     This is the limit that this `Device` boots with.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -1547,6 +1632,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler or newer fully supported devices.
     */
     // Checked against local
@@ -1571,6 +1657,7 @@ impl<'nvml> Device<'nvml> {
     total power draw reaches this limit, the power management algorithm kicks in.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -1578,6 +1665,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Fermi or newer fully supported devices.
     
     This reading is only supported if power management mode is supported. See
@@ -1600,6 +1688,7 @@ impl<'nvml> Device<'nvml> {
     Gets information about possible power management limit values for this `Device`, in milliwatts.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -1607,6 +1696,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler or newer fully supported devices.
     */
     // Checked against local
@@ -1662,6 +1752,7 @@ impl<'nvml> Device<'nvml> {
     Gets the power usage for this GPU and its associated circuitry (memory) in milliwatts.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support power readings
@@ -1669,6 +1760,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Fermi and newer fully supported devices.
     
     This reading is accurate to within +/- 5% of current power draw on Fermi and Kepler GPUs.
@@ -1700,6 +1792,7 @@ impl<'nvml> Device<'nvml> {
     match the address information in XID 63.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` doesn't support this feature
@@ -1707,6 +1800,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
@@ -1754,6 +1848,7 @@ impl<'nvml> Device<'nvml> {
     Gets whether there are pages pending retirement (they need a reboot to fully retire).
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` doesn't support this feature
@@ -1762,6 +1857,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
@@ -1792,6 +1888,7 @@ impl<'nvml> Device<'nvml> {
     existing methods is to get higher frequency data at a lower polling cost.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if this `Device` is invalid
     * `NotSupported`, if this query is not supported by this `Device`
@@ -1801,13 +1898,16 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler and newer fully supported devices.
     
     # Rustc Support
+
     Only compiles on nightly due to use of the `untagged_unions` feature. See
     [the tracking issue](https://github.com/rust-lang/rust/issues/32836).
 
     # Examples
+
     ```
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
@@ -1900,6 +2000,7 @@ impl<'nvml> Device<'nvml> {
     This serial number matches the serial number tag that is physically attached to the board.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` doesn't support this feature
@@ -1908,6 +2009,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports all products with an infoROM.
     */
     // Checked against local
@@ -1934,6 +2036,7 @@ impl<'nvml> Device<'nvml> {
     The board part number is programmed into the board's infoROM.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `NotSupported`, if the necessary VBIOS fields have not been filled
     * `GpuLost`, if the target GPU has fellen off the bus or is otherwise inaccessible
@@ -1964,12 +2067,14 @@ impl<'nvml> Device<'nvml> {
     Note that multiple reasons can be affecting clocks at once.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `NotSupported`, if this `Device` does not support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports all _fully supported_ devices.
     */
     // Checked against local.
@@ -1995,14 +2100,17 @@ impl<'nvml> Device<'nvml> {
     These reasons can be returned by `.current_throttle_reasons()`.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports all _fully supported_ devices.
     
     # Environment Support
+
     This method is not supported in virtualized GPU environments.
     */
     // Checked against local
@@ -2027,6 +2135,7 @@ impl<'nvml> Device<'nvml> {
     `set_applications_clocks()`.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `NotFound`, if the specified `for_mem_clock` is not a supported frequency
     * `InvalidArg`, if the device is invalid
@@ -2035,6 +2144,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
@@ -2083,6 +2193,7 @@ impl<'nvml> Device<'nvml> {
     `set_applications_clocks()`.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` doesn't support this feature
@@ -2090,6 +2201,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+    
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
@@ -2131,6 +2243,7 @@ impl<'nvml> Device<'nvml> {
     Gets the current temperature readings for the given sensor, in °C.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid or `sensor` is invalid (shouldn't occur?)
     * `NotSupported`, if this `Device` does not have the specified sensor
@@ -2158,6 +2271,7 @@ impl<'nvml> Device<'nvml> {
     Gets the temperature threshold for this `Device` and the specified `threshold_type`, in °C.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid or `threshold_type` is invalid (shouldn't occur?)
     * `NotSupported`, if this `Device` does not have a temperature sensor or is unsupported
@@ -2165,6 +2279,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
@@ -2188,12 +2303,14 @@ impl<'nvml> Device<'nvml> {
     Gets the common ancestor for two devices.
     
     # Errors
+
     * `InvalidArg`, if either `Device` is invalid
     * `NotSupported`, if this `Device` or the OS does not support this feature
     * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, an error has occurred in the underlying topology discovery
     
     # Platform Support
+
     Only supports Linux.
     */
     // Checked against local
@@ -2218,11 +2335,13 @@ impl<'nvml> Device<'nvml> {
     Gets the set of GPUs that are nearest to this `Device` at a specific interconnectivity level.
     
     # Errors
+
     * `InvalidArg`, if the device is invalid or `level` is invalid (shouldn't occur?)
     * `NotSupported`, if this `Device` or the OS does not support this feature
     * `Unknown`, an error has occurred in the underlying topology discovery
     
     # Platform Support
+
     Only supports Linux.
     */
     // Checked against local
@@ -2276,6 +2395,7 @@ impl<'nvml> Device<'nvml> {
     each of the separate memory systems, i.e. the total set of errors across the entire device.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid or either enum is invalid (shouldn't occur?)
     * `NotSupported`, if this `Device` does not support this feature
@@ -2283,6 +2403,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Fermi and newer fully supported devices. Requires `InfoRom::ECC` version 1.0
     or higher. Requires ECC mode to be enabled.
     */
@@ -2317,6 +2438,7 @@ impl<'nvml> Device<'nvml> {
     It does NOT correspond to any identifier printed on the board.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -2325,6 +2447,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
 
     # Examples
+
     The UUID can be used to compare two `Device`s and find out if they represent
     the same physical device:
 
@@ -2371,6 +2494,7 @@ impl<'nvml> Device<'nvml> {
     mechanism that is performed during driver initialization.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -2378,6 +2502,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Fermi and newer fully supported devices.
     */
     // Checked against local
@@ -2398,6 +2523,7 @@ impl<'nvml> Device<'nvml> {
     The VBIOS version may change from time to time.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -2435,12 +2561,14 @@ impl<'nvml> Device<'nvml> {
     Violation for thermal capping is not supported at this time.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the device is invalid or `perf_policy` is invalid (shouldn't occur?)
     * `NotSupported`, if this query is not supported by this `Device`
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     
     # Device Support
+
     Supports Kepler or newer fully supported devices.
     */
     // Checked against local
@@ -2464,6 +2592,7 @@ impl<'nvml> Device<'nvml> {
     Checks if this `Device` and the passed-in device are on the same physical board.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if either `Device` is invalid
     * `NotSupported`, if this check is not supported by this `Device`
@@ -2503,6 +2632,7 @@ impl<'nvml> Device<'nvml> {
     thermal limits allow.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `Device` is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -2510,6 +2640,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Fermi and newer non-GeForce fully supported devices and Maxwell or newer
     GeForce devices.
     */
@@ -2538,6 +2669,7 @@ impl<'nvml> Device<'nvml> {
     therefore must be enabled.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `Device` is invalid
     * `NotSupported`, if this `Device` does not support auto boosted clocks
@@ -2547,6 +2679,7 @@ impl<'nvml> Device<'nvml> {
     Not sure why nothing is said about `NoPermission`.
     
     # Device Support
+
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
@@ -2568,6 +2701,7 @@ impl<'nvml> Device<'nvml> {
     Currently supports up to 64 processors.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `Device` is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -2575,9 +2709,11 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler and newer fully supported devices.
     
     # Platform Support
+
     Only supports Linux.
     */
     // Checked against local
@@ -2605,6 +2741,7 @@ impl<'nvml> Device<'nvml> {
     auto boost behavior.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `NoPermission`, if the calling user does not have permission to change the default state
     * `InvalidArg`, if the `Device` is invalid
@@ -2613,6 +2750,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler or newer non-GeForce fully supported devices and Maxwell or newer
     GeForce devices.
     */
@@ -2634,6 +2772,7 @@ impl<'nvml> Device<'nvml> {
     Reads the infoROM from this `Device`'s flash and verifies the checksum.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `CorruptedInfoROM`, if this `Device`'s infoROM is corrupted
     * `NotSupported`, if this `Device` does not support this feature
@@ -2643,6 +2782,7 @@ impl<'nvml> Device<'nvml> {
     Not sure why `InvalidArg` is not mentioned.
     
     # Device Support
+
     Supports all devices with an infoROM.
     */
     // Checked against local
@@ -2660,6 +2800,7 @@ impl<'nvml> Device<'nvml> {
     Requires root/admin permissions.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `Device` is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -2667,6 +2808,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
@@ -2685,6 +2827,7 @@ impl<'nvml> Device<'nvml> {
     about new processes.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `Device` is invalid
     * `NotSupported`, if this `Device` does not support this feature or accounting mode
@@ -2692,6 +2835,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
@@ -2710,6 +2854,7 @@ impl<'nvml> Device<'nvml> {
     Gets whether or not per-process accounting mode is enabled.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `Device` is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -2717,6 +2862,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
@@ -2739,6 +2885,7 @@ impl<'nvml> Device<'nvml> {
     the circular buffer is full.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `Device` is invalid
     * `NotSupported`, if this `Device` does not support this feature or accounting
@@ -2804,6 +2951,7 @@ impl<'nvml> Device<'nvml> {
     terminated last) will be reported.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `Device` is invalid
     * `NotFound`, if the process stats were not found
@@ -2812,9 +2960,11 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Suports Kepler and newer fully supported devices.
     
     # Warning
+
     On Kepler devices, per-process stats are accurate _only if_ there's one process
     running on this `Device`.
     */
@@ -2848,6 +2998,7 @@ impl<'nvml> Device<'nvml> {
     * Disabling accounting clears accounting information for all PIDs
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `Device` is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -2855,6 +3006,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
@@ -2880,6 +3032,7 @@ impl<'nvml> Device<'nvml> {
     Requires root/admin permissions and ECC mode to be enabled.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `Device` is invalid or `counter_type` is invalid (shouldn't occur?)
     * `NotSupported`, if this `Device` does not support this feature
@@ -2888,6 +3041,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler and newer fully supported devices. Only applicable to devices with
     ECC. Requires `InfoRom::ECC` version 2.0 or higher to clear aggregate
     location-based ECC counts. Requires `InfoRom::ECC` version 1.0 or higher to
@@ -2914,6 +3068,7 @@ impl<'nvml> Device<'nvml> {
     current settings.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `Device` is invalid or `api_type` is invalid (shouldn't occur?)
     * `NotSupported`, if this `Device` does not support changing API restrictions or
@@ -2924,6 +3079,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
@@ -2959,6 +3115,7 @@ impl<'nvml> Device<'nvml> {
     to their default value.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `Device` is invalid or the clocks are not a valid combo
     * `NotSupported`, if this `Device` does not support this feature
@@ -2967,6 +3124,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler and newer non-GeForce fully supported devices and Maxwell or newer
     GeForce devices.
     */
@@ -2999,6 +3157,7 @@ impl<'nvml> Device<'nvml> {
     Requires root/admin permissions.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `Device` is invalid or `mode` is invalid (shouldn't occur?)
     * `NotSupported`, if this `Device` does not support this feature
@@ -3032,6 +3191,7 @@ impl<'nvml> Device<'nvml> {
     Requires root/admin permissions.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `Device` is invalid or `model` is invalid (shouldn't occur?)
     * `NotSupported`, if this `Device` does not support this feature
@@ -3040,12 +3200,15 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Fermi and newer fully supported devices.
     
     # Platform Support
+
     Only supports Windows.
 
     # Examples
+
     ```no_run
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
@@ -3085,6 +3248,7 @@ impl<'nvml> Device<'nvml> {
     This operation takes effect after the next reboot.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `Device` is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -3093,6 +3257,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Kepler and newer fully supported devices. Requires `InfoRom::ECC` version
     1.0 or higher.
     */
@@ -3114,6 +3279,7 @@ impl<'nvml> Device<'nvml> {
     is not supported.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `Device` is invalid or `mode` is invalid (shouldn't occur?)
     * `NotSupported`, if this `Device` does not support GOMs or a specific mode
@@ -3122,6 +3288,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports GK110 M-class and X-class Tesla products from the Kepler family. Modes
     `LowDP` and `AllOn` are supported on fully supported GeForce products. Not
     supported on Quadro and Tesla C-class products.
@@ -3144,6 +3311,7 @@ impl<'nvml> Device<'nvml> {
     disabled.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `Device` is invalid
     * `NotSupported`, if this `Device` does not support this feature
@@ -3152,6 +3320,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Platform Support
+
     Only supports Linux.
     */
     // Checked against local
@@ -3178,6 +3347,7 @@ impl<'nvml> Device<'nvml> {
     to check the allowed range of values.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `Device` is invalid or `limit` is out of range
     * `NotSupported`, if this `Device` does not support this feature
@@ -3187,6 +3357,7 @@ impl<'nvml> Device<'nvml> {
     For some reason NVIDIA does not mention `NoPermission`.
     
     # Device Support
+
     Supports Kepler and newer fully supported devices.
     */
     // Checked against local
@@ -3217,6 +3388,7 @@ impl<'nvml> Device<'nvml> {
     are only available on `Device`s with power management enabled.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if `events` is invalid (shouldn't occur?)
     * `NotSupported`, if the platform does not support this feature or some of the
@@ -3227,12 +3399,15 @@ impl<'nvml> Device<'nvml> {
     docs say that this error means that the set is in an invalid state.
     
     # Device Support
+
     Supports Fermi and newer fully supported devices.
     
     # Platform Support
+
     Only supports Linux.
 
     # Examples
+
     ```
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
@@ -3299,17 +3474,21 @@ impl<'nvml> Device<'nvml> {
     Gets the `EventTypes` that this `Device` supports.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Fermi and newer fully supported devices.
     
     # Platform Support
+
     Only supports Linux.
 
     # Examples
+
     ```
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
@@ -3363,6 +3542,7 @@ impl<'nvml> Device<'nvml> {
     off before this call is made.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `NotSupported`, if this `Device` doesn't support this feature
     * `NoPermission`, if the calling process has insufficient permissions to perform
@@ -3377,14 +3557,17 @@ impl<'nvml> Device<'nvml> {
     * `PciInfo.try_into_c()`
     
     # Device Support
+
     Supports Maxwell and newer fully supported devices.
     
     Some Kepler devices are also supported (that's all NVIDIA says, no specifics).
     
     # Platform Support
+
     Only supports Linux.
 
     # Examples
+
     ```no_run
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
@@ -3432,6 +3615,7 @@ impl<'nvml> Device<'nvml> {
     `PciInfo` to be used within this method.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `NotSupported`, if this `Device` doesn't support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
@@ -3444,14 +3628,17 @@ impl<'nvml> Device<'nvml> {
     * `PciInfo.try_into_c()`
     
     # Device Support
+
     Supports Maxwell and newer fully supported devices.
     
     Some Kepler devices are also supported (that's all NVIDIA says, no specifics).
     
     # Platform Support
+
     Only supports Linux.
 
     # Examples
+
     ```
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
@@ -3517,6 +3704,7 @@ impl<'nvml> Device<'nvml> {
     Must be run as administrator.
 
     # Bad Ergonomics Explanation
+
     Ideally the `Device` would be returned within the `Error` in the case of an
     error occuring during this call. Unfortunately, `error-chain` / `quick-error`
     do not support generic lifetime parameters, meaning I cannot return the
@@ -3527,6 +3715,7 @@ impl<'nvml> Device<'nvml> {
     less-than-satisfactory solution.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `NotSupported`, if this `Device` doesn't support this feature
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
@@ -3538,14 +3727,17 @@ impl<'nvml> Device<'nvml> {
     * `PciInfo.try_into_c()`
     
     # Device Support
+
     Supports Maxwell and newer fully supported devices.
     
     Some Kepler devices are also supported (that's all NVIDIA says, no specifics).
     
     # Platform Support
+
     Only supports Linux.
 
     # Examples
+    
     How to handle error case:
 
     ```no_run

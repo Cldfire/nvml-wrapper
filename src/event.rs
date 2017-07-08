@@ -43,6 +43,7 @@ impl<'nvml> EventSet<'nvml> {
     potential errors (*the `Drop` implementation ignores errors!*).
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `Unknown`, on any unexpected error
     */
@@ -70,6 +71,7 @@ impl<'nvml> EventSet<'nvml> {
     all XID error events.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `Timeout`, if no event arrived in the specified timeout or an interrupt
     arrived
@@ -77,6 +79,7 @@ impl<'nvml> EventSet<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+    
     Supports Fermi and newer fully supported devices.
     */
     // Checked against local

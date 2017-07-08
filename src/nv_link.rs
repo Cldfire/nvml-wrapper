@@ -45,6 +45,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Gets whether or not this `Device`'s NvLink is active.
 
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `link` or `Device` within this `NvLink` struct instance
     is invalid
@@ -53,6 +54,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     * `Unknown`, on any unexpected error
 
     # Device Support
+
     Supports Maxwell or newer fully supported devices.
     */
     // Test written
@@ -75,6 +77,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Gets the NvLink version of this `Device` / `NvLink`.
 
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `link` or `Device` within this `NvLink` struct instance
     is invalid
@@ -82,6 +85,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     * `Unknown`, on any unexpected error
 
     # Device Support
+
     Supports Maxwell or newer fully supported devices.
     */
     // Test written
@@ -104,6 +108,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Gets whether or not this `Device` / `NvLink` has a `Capability`.
 
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `link` or `Device` within this `NvLink` struct instance
     is invalid
@@ -111,6 +116,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     * `Unknown`, on any unexpected error
 
     # Device Support
+
     Supports Maxwell or newer fully supported devices.
     */
     // Test written
@@ -139,6 +145,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Gets the PCI information for this `NvLink`'s remote node.
 
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `link` or `Device` within this `NvLink` struct instance
     is invalid
@@ -146,6 +153,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     * `Unknown`, on any unexpected error
 
     # Device Support
+
     Supports Maxwell or newer fully supported devices.
     */
     // Test written
@@ -168,6 +176,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Gets the specified `ErrorCounter` value.
 
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `link` or `Device` within this `NvLink` struct instance
     is invalid
@@ -175,6 +184,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     * `Unknown`, on any unexpected error
 
     # Device Support
+
     Supports Maxwell or newer fully supported devices.
     */
     // Test written
@@ -198,6 +208,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Resets all error counters to zero.
 
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `link` or `Device` within this `NvLink` struct instance
     is invalid
@@ -205,6 +216,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     * `Unknown`, on any unexpected error
 
     # Device Support
+
     Supports Maxwell or newer fully supported devices.
     */
     // No-run test written
@@ -225,6 +237,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     The counters will be reset if `reset_counters` is true.
 
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `link` or `Device` within this `NvLink` struct instance
     is invalid
@@ -232,6 +245,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     * `Unknown`, on any unexpected error
 
     # Device Support
+
     Supports Maxwell or newer fully supported devices.
     */
     // No-run test written
@@ -261,6 +275,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     `Counter`.
 
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `link` or `Device` within this `NvLink` struct instance
     is invalid
@@ -268,6 +283,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     * `Unknown`, on any unexpected error
 
     # Device Support
+
     Supports Maxwell or newer fully supported devices.
     */
     // Test written
@@ -308,6 +324,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     cause this decision to be reconsidered.
 
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `link` or `Device` within this `NvLink` struct instance
     is invalid
@@ -315,6 +332,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     * `Unknown`, on any unexpected error
 
     # Device Support
+
     Supports Maxwell or newer fully supported devices.
     */
     // No-run test written
@@ -345,6 +363,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     meaning correctly).
 
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `link` or `Device` within this `NvLink` struct instance
     is invalid
@@ -352,6 +371,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     * `Unknown`, on any unexpected error
 
     # Device Support
+
     Supports Maxwell or newer fully supported devices.
     */
     // No-run test written
@@ -366,6 +386,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     meaning correctly).
 
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `link` or `Device` within this `NvLink` struct instance
     is invalid
@@ -373,6 +394,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     * `Unknown`, on any unexpected error
 
     # Device Support
+
     Supports Maxwell or newer fully supported devices.
     */
     // No-run test written
@@ -398,6 +420,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     meaning correctly).
 
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the `link` or `Device` within this `NvLink` struct instance
     is invalid
@@ -405,6 +428,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     * `Unknown`, on any unexpected error
 
     # Device Support
+    
     Supports Maxwell or newer fully supported devices.
     */
     // No-run test written

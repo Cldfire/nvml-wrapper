@@ -209,6 +209,7 @@ impl NVML {
     communicate with a GPU even when other GPUs in a system are bad or unstable.
     
     # Errors
+
     * `DriverNotLoaded`, if the NVIDIA driver is not running
     * `NoPermission`, if NVML does not have permission to talk to the driver
     * `Unknown`, on any unexpected error
@@ -228,6 +229,7 @@ impl NVML {
     potential errors (*the `Drop` implementation ignores errors!*).
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `Unknown`, on any unexpected error
     */
@@ -249,6 +251,7 @@ impl NVML {
     Note that this may return devices you do not have permission to access.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `Unknown`, on any unexpected error
     */
@@ -269,6 +272,7 @@ impl NVML {
     string. 
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     */
@@ -295,6 +299,7 @@ impl NVML {
     string. 
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     */
@@ -320,6 +325,7 @@ impl NVML {
     Gets the name of the process for the given process ID, cropped to the provided length.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the length is 0 (if this is returned without length being 0, file an issue)
     * `NotFound`, if the process does not exist
@@ -368,6 +374,7 @@ impl NVML {
     The NVML index may not correlate with other APIs such as the CUDA device index.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if index is invalid
     * `InsufficientPower`, if any attached devices have improperly attached external power cables
@@ -397,6 +404,7 @@ impl NVML {
     The bus ID corresponds to the `bus_id` returned by `Device.pci_info()`.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if `pci_bus_id` is invalid
     * `NotFound`, if `pci_bus_id` does not match a valid device on the system
@@ -454,6 +462,7 @@ impl NVML {
     GPUs may be initialized as the function called within searches for the target GPU.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if `uuid` is invalid
     * `NotFound`, if `uuid` does not match a valid device on the system
@@ -488,12 +497,14 @@ impl NVML {
     Note: this is the same as `Device.topology_common_ancestor()`.
     
     # Errors
+
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` or the OS does not support this feature
     * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Platform Support
+
     Only supports Linux.
     */
     // Checked against local
@@ -529,11 +540,13 @@ impl NVML {
     consistency between reboots.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if `index` is invalid
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     For S-class products.
     */
     // Checked against local
@@ -554,6 +567,7 @@ impl NVML {
     Note: this is the same as `Device.is_on_same_board_as()`.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if either `Device` is invalid
     * `NotSupported`, if this check is not supported by this `Device`
@@ -584,11 +598,13 @@ impl NVML {
     Gets the set of GPUs that have a CPU affinity with the given CPU number.
     
     # Errors
+
     * `InvalidArg`, if `cpu_number` is invalid
     * `NotSupported`, if this `Device` or the OS does not support this feature
     * `Unknown`, an error has occurred in the underlying topology discovery
     
     # Platform Support
+
     Only supports Linux.
     */
     // Tested
@@ -635,9 +651,11 @@ impl NVML {
     Gets the IDs and firmware versions for any Host Interface Cards in the system.
 
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
 
     # Device Support
+
     Supports S-class products.
     */
     // Checked against local
@@ -661,9 +679,11 @@ impl NVML {
     Gets the count of Host Interface Cards in the system.
 
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
 
     # Device Support
+
     Supports S-class products.
     */
     // Tested as part of the above method
@@ -699,10 +719,12 @@ impl NVML {
     Gets the number of units in the system.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports S-class products.
     */
     // Checked against local
@@ -721,10 +743,12 @@ impl NVML {
     Create an empty set of events.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Fermi and newer fully supported devices.
     */
     // Checked against local
@@ -759,6 +783,7 @@ impl NVML {
     Must be run as administrator.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `OperatingSystem`, if the operating system is denying this feature
     * `NoPermission`, if the calling process has insufficient permissions to
@@ -768,11 +793,13 @@ impl NVML {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Maxwell and newer fully supported devices.
     
     Some Kepler devices are also supported (that's all NVIDIA says, no specifics).
     
     # Platform Support
+    
     Only supports Linux.
     */
     // TODO: constructor for default pci_infos ^

@@ -52,11 +52,13 @@ impl<'nvml> Unit<'nvml> {
     on this call are _anything_ but clear.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the unit is invalid
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     For S-class products.
     */
     // Checked against local
@@ -89,11 +91,13 @@ impl<'nvml> Unit<'nvml> {
     on this call are _anything_ but clear.
 
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the unit is invalid
     * `Unknown`, on any unexpected error
 
     # Device Support
+
     For S-class products.
     */
     // Tested as part of the above
@@ -129,6 +133,7 @@ impl<'nvml> Unit<'nvml> {
     Gets fan information for this `Unit` (fan count and state + speed for each).
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the unit is invalid
     * `NotSupported`, if this is not an S-class product
@@ -136,6 +141,7 @@ impl<'nvml> Unit<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     For S-class products.
     */
     // Checked against local
@@ -154,6 +160,7 @@ impl<'nvml> Unit<'nvml> {
     Gets the LED state associated with this `Unit`.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the unit is invalid
     * `NotSupported`, if this is not an S-class product
@@ -161,6 +168,7 @@ impl<'nvml> Unit<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     For S-class products.
     */
     // Checked against local
@@ -179,6 +187,7 @@ impl<'nvml> Unit<'nvml> {
     Gets the PSU stats for this `Unit`.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the unit is invalid
     * `NotSupported`, if this is not an S-class product
@@ -186,6 +195,7 @@ impl<'nvml> Unit<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     For S-class products.
     */
     // Checked against local
@@ -206,12 +216,14 @@ impl<'nvml> Unit<'nvml> {
     Available readings depend on the product.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the unit is invalid
     * `NotSupported`, if this is not an S-class product
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     For S-class products. Available readings depend on the product.
     */
     // Checked against local
@@ -235,11 +247,13 @@ impl<'nvml> Unit<'nvml> {
     Gets the static information associated with this `Unit`.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the unit is invalid
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     
     # Device Support
+
     For S-class products.
     */
     // Checked against local
@@ -266,6 +280,7 @@ impl<'nvml> Unit<'nvml> {
     specified with this method (aka the `Unit` represented by this struct).
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the unit is invalid
     * `NotSupported`, if this is not an S-class product
@@ -273,6 +288,7 @@ impl<'nvml> Unit<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+    
     For S-class products.
     */
     // checked against local

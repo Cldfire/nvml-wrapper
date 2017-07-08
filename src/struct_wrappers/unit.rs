@@ -19,6 +19,7 @@ impl FansInfo {
     Construct `FansInfo` from the corresponding C struct.
 
     # Errors
+
     * `UnexpectedVariant`, for which you can read the docs for
     */
     pub fn try_from(struct_: nvmlUnitFanSpeeds_t) -> Result<Self> {
@@ -50,6 +51,7 @@ impl FanInfo {
     Construct `FanInfo` from the corresponding C struct.
 
     # Errors
+    
     * `UnexpectedVariant`, for which you can read the docs for
     */
     pub fn try_from(struct_: nvmlUnitFanInfo_t) -> Result<Self> {

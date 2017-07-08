@@ -16,6 +16,7 @@ impl UtilizationControl {
     Waiting for `TryFrom` to be stable. In the meantime, we do this.
 
     # Errors
+    
     * `UnexpectedVariant`, for which you can read the docs for
     * `IncorrectBits`, if bits obtained in this method cannot be interpreted
     as `PacketTypes`
