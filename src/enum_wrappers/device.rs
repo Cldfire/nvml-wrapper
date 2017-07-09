@@ -253,9 +253,9 @@ Allowed performance states.
 
 ```text
 Value    Performance
-  0           |
- ...          |
- 15           ▼
+  0       (highest)
+ ...
+ 15       (lowest)
 ```
 */
 // Checked against local

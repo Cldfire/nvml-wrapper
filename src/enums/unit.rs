@@ -21,13 +21,15 @@ impl LedState {
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     */
     pub fn try_from(struct_: nvmlLedState_t) -> Result<Self> {
-        match struct_.color {
+        let color = struct_.color;
+
+        match color {
             nvmlLedColor_enum_NVML_LED_COLOR_GREEN => Ok(LedState::Green),
             nvmlLedColor_enum_NVML_LED_COLOR_AMBER => unsafe {
                 let cause_raw = CStr::from_ptr(struct_.cause.as_ptr());
                 Ok(LedState::Amber(cause_raw.to_str()?.into()))
             },
-            _ => Err(Error::from_kind(ErrorKind::UnexpectedVariant)),
+            _ => Err(Error::from_kind(ErrorKind::UnexpectedVariant(color))),
         }
     }
 }

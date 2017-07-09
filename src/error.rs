@@ -12,6 +12,7 @@ error_chain! {
         Utf8Error(::std::str::Utf8Error);
         NulError(::std::ffi::NulError);
     }
+
     errors {
         /**
         An error used to pinpoint error cause within a function to \
@@ -23,6 +24,7 @@ error_chain! {
             description("An error used to pinpoint error cause within a function to \
                          a call to `PciInfo.try_into_c()`.")
         }
+        
         /**
         An error used to pinpoint error cause within a function to a call to
         `Device.pci_info()`.'
@@ -33,6 +35,7 @@ error_chain! {
             description("An error used to pinpoint error cause within a function to \
                          a call to `Device.pci_info()`.")
         }
+
         /**
         An error used to pinpoint error cause within a function to a call to
         `EventSet`.release_events()`.
@@ -43,6 +46,7 @@ error_chain! {
             description("An error used to pinpoint error cause within a function to \
                          a call to `EventSet.release_events()`.")
         }
+
         /**
         A String was too long to fit into an array.
 
@@ -53,6 +57,7 @@ error_chain! {
             display("The max String length was '{}', but the actual String \
                      length was '{}'.", max_len, actual_len)
         }
+
         /**
         Bits that did not correspond to a flag were encountered whilst attempting to
         interpret them as bitflags.
@@ -65,6 +70,7 @@ error_chain! {
             display("Bits that did not correspond to a flag were encountered whilst attempting \
                      to interpret them as bitflags: '{:?}'.", bits)
         }
+
         /**
         An unexpected enum variant was encountered.
         
@@ -72,37 +78,49 @@ error_chain! {
         possibility that an enum variant that is not defined within the Rust bindings
         can be returned from a C call.
 
+        The `value` field contains the value that could not be mapped to a
+        defined enum variant.
+
         See https://github.com/rust-lang/rust/issues/36927
         */
-        UnexpectedVariant {
+        UnexpectedVariant(value: u32) {
             description("An unexpected enum variant was encountered.")
+            display("The unexpected value '{}' was encountered and could not be \
+                     mapped to a defined enum variant.", value)
         }
+
         /// NVML was not first initialized with `NVML::init()`.
         Uninitialized {
             description("NVML was not first initialized with `NVML::init()`.")
         }
+
         /// A supplied argument is invalid.
         InvalidArg {
             description("A supplied argument is invalid.")
         }
+
         /// The requested operation is not available on the target device.
         NotSupported {
             description("The requested operation is not available on the target device.")
         }
+
         /// The current user does not have permission for the operation.
         NoPermission {
             description("The current user does not have permission for the operation.")
         }
+
         /// This error is deprecated on the part of the NVML lib itself and should 
         /// not be encountered. Multiple initializations are now allowed through refcounting.
         AlreadyInitialized {
             description("This error is deprecated on the part of the NVML lib itself and should \
                         not be encountered. Multiple initializations are now allowed through refcounting.")
         }
+
         /// A query to find and object was unsuccessful.
         NotFound {
             description("A query to find and object was unsuccessful.")
         }
+
         /**
         An input argument is not large enough.
         
@@ -113,58 +131,72 @@ error_chain! {
             description("An input argument is not large enough.")
             display("An input argument is not large enough. Required size: '{:?}'", required_size)
         }
+
         /// A device's external power cables are not properly attached.
         InsufficientPower {
             description("A device's external power cables are not properly attached.")
         }
+
         /// NVIDIA driver is not loaded.
         DriverNotLoaded {
             description("NVIDIA driver is not loaded.")
         }
+
         /// User provided timeout passed.
         Timeout {
             description("User provided timeout passed.")
         }
+
         /// NVIDIA kernel detected an interrupt issue with a GPU.
         IrqIssue {
             description("NVIDIA kernel detected an interrupt issue with a GPU.")
         }
+
         /// NVML Shared Library couldn't be found or loaded.
         LibraryNotFound {
             description("NVML Shared Library couldn't be found or loaded.")
         }
+
         /// Local version of NVML doesn't implement this function.
         FunctionNotFound {
             description("Local version of NVML doesn't implement this function.")
         }
+
         /// infoROM is corrupted.
         CorruptedInfoROM {
             description("infoROM is corrupted.")
         }
+
         /// The GPU has fallen off the bus or has otherwise become inaccessible.
         GpuLost {
             description("The GPU has fallen off the bus or has otherwise become inaccessible.")
         }
+
         /// The GPU requires a reset before it can be used again.
         ResetRequired {
             description("The GPU requires a reset before it can be used again.")
         }
+
         /// The GPU control device has been blocked by the operating system/cgroups.
         OperatingSystem {
             description("The GPU control device has been blocked by the operating system/cgroups.")
         }
+
         /// RM detects a driver/library version mismatch.
         LibRmVersionMismatch {
             description("RM detects a driver/library version mismatch.")
         }
+
         /// An operation cannot be performed because the GPU is currently in use.
         InUse {
             description("An operation cannot be performed because the GPU is currently in use.")
         }
+
         /// No data.
         NoData {
             description("No data.")
         }
+
         /// An internal driver error occurred.
         Unknown {
             description("An internal driver error occurred.")
@@ -221,7 +253,7 @@ pub fn nvml_try(code: nvmlReturn_t) -> Result<()> {
         nvmlReturn_enum_NVML_ERROR_IN_USE => Err(Error::from_kind(ErrorKind::InUse)),
         nvmlReturn_enum_NVML_ERROR_NO_DATA => Err(Error::from_kind(ErrorKind::NoData)),
         nvmlReturn_enum_NVML_ERROR_UNKNOWN => Err(Error::from_kind(ErrorKind::Unknown)),
-        _ => Err(Error::from_kind(ErrorKind::UnexpectedVariant)),
+        _ => Err(Error::from_kind(ErrorKind::UnexpectedVariant(code))),
     }
 }
 
