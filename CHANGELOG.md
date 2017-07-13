@@ -2,7 +2,48 @@
 
 This file describes the changes / additions / fixes between wrapper releases.
 
-## 0.2.0 (released 6-8-17)
+## 0.3.0 (released 2017-07-20)
+
+### Release Summary
+
+The major highlight of this release is the `high_level::event_loop` module, an interface to NVML's event capabilities. Only available on Linux platforms, this module provides you with the boilerplate necessary to quickly and easily watch for events on any number of devices, handling both errors and the events themselves. See the `event_loop` example in the examples folder at the root of the repository for more.
+
+### Rustc Support
+
+This release **requires** and supports **rustc 1.19.0** or higher.
+
+### Additions
+
+* Examples:
+  * `basic_usage`
+  * `event_loop`
+
+* `enums::event`:
+  * New file with the following:
+    * `XidError`
+
+* `high_level` module
+  * This module will be the home of any high-level abstractions over the NVML API.
+  * `high_level::event_loop`:
+    * New file with the following:
+      * `Event`
+      * `EventLoop`
+      * `EventLoopState`
+      * `EventLoopProvider`, implemented for:
+        * `NVML`
+
+### Changes
+
+* The `EventData.event_data` field is now an `Option<XidError>` instead of a `u64`
+  * This was done to more strongly represent the field's presence via the type system (it is `None` for most events) and also to statically type the `Unknown` value.
+
+* The `UnexpectedVariant` error now contains the enum value that could not be mapped to an enum variant defined in the wrapper.
+
+* The project is now formatted via rustfmt as much as possible.
+
+* Markdown headers now have two newlines after them, which is (to my knowledge) how they are supposed to be formatted.
+
+## 0.2.0 (released 2017-06-08)
 
 ### Release Summary
 
@@ -76,8 +117,7 @@ This release **requires** and supports **rustc 1.18.0** or higher.
 
 * Bitflags: `0.8.x -> 0.9.x`
 
-
-## 0.1.0 (released 5-17-17)
+## 0.1.0 (released 2017-05-17)
 
 ### Release Summary
 
