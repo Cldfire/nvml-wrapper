@@ -479,7 +479,6 @@ pub enum P2pCapabilitiesIndex {
 
 /// Represents types for returned sample values.
 // Checked against local
-#[cfg(feature = "nightly")]
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[wrap(c_enum = "nvmlValueType_enum")]

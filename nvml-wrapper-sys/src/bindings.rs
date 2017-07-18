@@ -565,7 +565,6 @@ pub type nvmlValueType_enum = raw::c_uint;
 pub use self::nvmlValueType_enum as nvmlValueType_t;
 #[repr(C)]
 #[derive(Copy)]
-#[cfg(feature = "nightly")]
 pub union nvmlValue_st {
     pub dVal: f64,
     pub uiVal: raw::c_uint,
@@ -573,7 +572,6 @@ pub union nvmlValue_st {
     pub ullVal: raw::c_ulonglong,
 }
 #[test]
-#[cfg(feature = "nightly")]
 fn bindgen_test_layout_nvmlValue_st() {
     assert_eq!(::std::mem::size_of::<nvmlValue_st>() , 8usize , concat ! (
                "Size of: " , stringify ! ( nvmlValue_st ) ));
@@ -600,21 +598,17 @@ fn bindgen_test_layout_nvmlValue_st() {
                 "Alignment of field: " , stringify ! ( nvmlValue_st ) , "::" ,
                 stringify ! ( ullVal ) ));
 }
-#[cfg(feature = "nightly")]
 impl Clone for nvmlValue_st {
     fn clone(&self) -> Self { *self }
 }
-#[cfg(feature = "nightly")]
 pub type nvmlValue_t = nvmlValue_st;
 #[repr(C)]
 #[derive(Copy)]
-#[cfg(feature = "nightly")]
 pub struct nvmlSample_st {
     pub timeStamp: raw::c_ulonglong,
     pub sampleValue: nvmlValue_t,
 }
 #[test]
-#[cfg(feature = "nightly")]
 fn bindgen_test_layout_nvmlSample_st() {
     assert_eq!(::std::mem::size_of::<nvmlSample_st>() , 16usize , concat ! (
                "Size of: " , stringify ! ( nvmlSample_st ) ));
@@ -631,11 +625,9 @@ fn bindgen_test_layout_nvmlSample_st() {
                 "Alignment of field: " , stringify ! ( nvmlSample_st ) , "::"
                 , stringify ! ( sampleValue ) ));
 }
-#[cfg(feature = "nightly")]
 impl Clone for nvmlSample_st {
     fn clone(&self) -> Self { *self }
 }
-#[cfg(feature = "nightly")]
 pub type nvmlSample_t = nvmlSample_st;
 pub const nvmlPerfPolicyType_enum_NVML_PERF_POLICY_POWER:
           nvmlPerfPolicyType_enum =
@@ -1636,7 +1628,6 @@ extern "C" {
                                        isRestricted: *mut nvmlEnableState_t)
      -> nvmlReturn_t;
 }
-#[cfg(feature = "nightly")]
 extern "C" {
     pub fn nvmlDeviceGetSamples(device: nvmlDevice_t,
                                 type_: nvmlSamplingType_t,

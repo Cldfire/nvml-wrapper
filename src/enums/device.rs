@@ -1,4 +1,3 @@
-#[cfg(feature = "nightly")]
 use enum_wrappers::device::*;
 use ffi::bindings::*;
 
@@ -45,7 +44,6 @@ impl From<u64> for UsedGpuMemory {
 
 /// Represents different types of sample values.
 // Checked against local
-#[cfg(feature = "nightly")]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum SampleValue {
@@ -54,7 +52,6 @@ pub enum SampleValue {
     U64(u64)
 }
 
-#[cfg(feature = "nightly")]
 impl SampleValue {
     pub fn from_tag_and_union(tag: &SampleValueType, union: nvmlValue_t) -> Self {
         use self::SampleValueType::*;

@@ -391,7 +391,6 @@ impl From<nvmlAccountingStats_t> for AccountingStats {
 
 /// Sample info.
 // Checked against local
-#[cfg(feature = "nightly")]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Sample {
@@ -400,7 +399,6 @@ pub struct Sample {
     pub value: SampleValue
 }
 
-#[cfg(feature = "nightly")]
 impl Sample {
     /// Given a tag and an untagged union, returns a Rust enum with the correct
     /// union variant.

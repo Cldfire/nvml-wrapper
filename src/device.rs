@@ -1937,7 +1937,6 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    #[cfg(feature = "nightly")]
     #[inline]
     pub fn samples<T>(&self, sample_type: Sampling, last_seen_timestamp: T) -> Result<Vec<Sample>>
     where
@@ -1972,7 +1971,6 @@ impl<'nvml> Device<'nvml> {
     }
 
     // Helper for the above function. Returns # of samples that can be queried.
-    #[cfg(feature = "nightly")]
     #[inline]
     fn samples_count(&self, sample_type: &Sampling, timestamp: u64) -> Result<c_uint> {
         unsafe {
@@ -4318,7 +4316,6 @@ mod test {
         test_with_device(3, &nvml, |device| device.are_pages_pending_retired())
     }
 
-    #[cfg(feature = "nightly")]
     #[test]
     fn samples() {
         let nvml = nvml();

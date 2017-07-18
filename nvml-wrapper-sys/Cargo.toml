@@ -20,8 +20,3 @@ exclude = [
 
 [features]
 default = []
-nightly = []
-
-[package.metadata.docs.rs]
-features = ["nightly"]
-all-features = false

@@ -8,9 +8,11 @@ This file describes the changes / additions / fixes between wrapper releases.
 
 The major highlight of this release is the `high_level::event_loop` module, an interface to NVML's event capabilities. Only available on Linux platforms, this module provides you with the boilerplate necessary to quickly and easily watch for events on any number of devices, handling both errors and the events themselves. See the `event_loop` example in the examples folder at the root of the repository for more.
 
-### Rustc Support
+This release also marks the point at which no nightly features are required for any reason, and hence the removal of the `nightly` feature flag.
 
-This release **requires** and supports **rustc 1.19.0** or higher.
+### Rust Version Support
+
+This release **requires** and supports **Rust 1.19.0** or higher.
 
 ### Additions
 
@@ -32,6 +34,10 @@ This release **requires** and supports **rustc 1.19.0** or higher.
       * `EventLoopProvider`, implemented for:
         * `NVML`
 
+### Removals
+
+* The `nightly` feature flag has been removed as nightly features are no longer required (`union` has been stabilized).
+
 ### Changes
 
 * The `EventData.event_data` field is now an `Option<XidError>` instead of a `u64`
@@ -49,9 +55,9 @@ This release **requires** and supports **rustc 1.19.0** or higher.
 
 The major highlight of this release is the `NvLink` struct, an interface to NVML's various NvLink-related functions. This release additionally corrects some issues / oversights in the wrapper and replaces Rust `enum`s with numerical constants for FFI use (see [rust-lang/rust#36927](https://github.com/rust-lang/rust/issues/36927)).
 
-### Rustc Support
+### Rust Version Support
 
-This release **requires** and supports **rustc 1.18.0** or higher.
+This release **requires** and supports **Rust 1.18.0** or higher.
 
 ### Additions
 
@@ -123,6 +129,6 @@ This release **requires** and supports **rustc 1.18.0** or higher.
 
 Initial release wrapping the majority of the NVML API surface.
 
-### Rustc Support
+### Rust Version Support
 
-This release **requires** and supports **rustc 1.17.0** or higher.
+This release **requires** and supports **Rust 1.17.0** or higher.
