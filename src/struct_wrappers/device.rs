@@ -4,7 +4,6 @@ use error::*;
 use ffi::bindings::*;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
-use std::u32;
 
 /// PCI information about a GPU device.
 // Checked against local
@@ -109,10 +108,10 @@ impl PciInfo {
                 // be none if obtained from `NvLink.remote_pci_info()`.
                 0
             },
-            reserved0: u32::MAX,
-            reserved1: u32::MAX,
-            reserved2: u32::MAX,
-            reserved3: u32::MAX
+            reserved0: 0,
+            reserved1: 0,
+            reserved2: 0,
+            reserved3: 0
         })
     }
 }
@@ -441,10 +440,6 @@ mod tests {
             assert_eq!(converted.device, raw.device);
             assert_eq!(converted.pciDeviceId, raw.pciDeviceId);
             assert_eq!(converted.pciSubSystemId, raw.pciSubSystemId);
-            assert_eq!(converted.reserved0, raw.reserved0);
-            assert_eq!(converted.reserved1, raw.reserved1);
-            assert_eq!(converted.reserved2, raw.reserved2);
-            assert_eq!(converted.reserved3, raw.reserved3);
 
             Ok(())
         })

@@ -104,6 +104,7 @@ for every NVML data structure.
 */
 
 #![cfg_attr(feature = "cargo-clippy", allow(doc_markdown))]
+#![recursion_limit = "1024"]
 #![allow(non_upper_case_globals)]
 
 #[macro_use]
