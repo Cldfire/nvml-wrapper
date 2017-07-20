@@ -512,7 +512,7 @@ impl<'nvml> Device<'nvml> {
     }
 
     /**
-    Gets a `Vec` of bitmasks with the ideal CPU affinity for the device.
+    Gets a vector of bitmasks with the ideal CPU affinity for the device.
     
     The results are sized to `size`. For example, if processors 0, 1, 32, and 33 are
     ideal for the device and `size` == 2, result[0] = 0x3, result[1] = 0x3.

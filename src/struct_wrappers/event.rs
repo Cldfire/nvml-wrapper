@@ -4,7 +4,6 @@ use enums::event::XidError;
 use error::*;
 use ffi::bindings::*;
 
-// TODO: Should this be higher level. It probably should
 /// Information about an event that has occurred.
 // Checked against local
 #[derive(Debug)]

@@ -8,8 +8,6 @@ use std::marker::PhantomData;
 use std::mem;
 use struct_wrappers::event::*;
 
-// TODO: This should most probably only be compiled on linux
-
 /**
 Handle to a set of events.
 
