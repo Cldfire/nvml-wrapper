@@ -1,10 +1,9 @@
-use ffi::bindings::*;
-use error::*;
 use enum_wrappers::device::*;
 use enums::device::*;
-use std::os::raw::c_char;
+use error::*;
+use ffi::bindings::*;
 use std::ffi::{CStr, CString};
-use std::u32;
+use std::os::raw::c_char;
 
 /// PCI information about a GPU device.
 // Checked against local
@@ -29,7 +28,7 @@ pub struct PciInfo {
     NVIDIA says that the C field that this corresponds to "is not filled ... and
     is indeterminate" when being returned from that specific call.
     */
-    pub pci_sub_system_id: Option<u32>,
+    pub pci_sub_system_id: Option<u32>
 }
 
 impl PciInfo {
@@ -40,6 +39,7 @@ impl PciInfo {
     `None`. See the field docs for more.
 
     # Errors
+
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     */
     pub fn try_from(struct_: nvmlPciInfo_t, sub_sys_id_present: bool) -> Result<Self> {
@@ -55,7 +55,7 @@ impl PciInfo {
                     Some(struct_.pciSubSystemId)
                 } else {
                     None
-                },
+                }
             })
         }
     }
@@ -64,6 +64,7 @@ impl PciInfo {
     Waiting for `TryInto` to be stable. In the meantime, we do this.
 
     # Errors
+
     * `NulError`, if a nul byte was found in the bus_id (shouldn't occur?)
     * `StringTooLong`, if `bus_id.len()` exceeded the length of
     `NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE`. This should (?) only be able to
@@ -91,9 +92,8 @@ impl PciInfo {
             }
         };
 
-        bus_id_c.clone_from_slice(&bus_id.iter()
-                                         .map(|b| *b as c_char)
-                                         .collect::<Vec<_>>());
+        bus_id_c
+            .clone_from_slice(&bus_id.iter().map(|b| *b as c_char).collect::<Vec<_>>());
 
         Ok(nvmlPciInfo_t {
             busId: bus_id_c,
@@ -106,12 +106,12 @@ impl PciInfo {
             } else {
                 // This seems the most correct thing to do? Since this should only
                 // be none if obtained from `NvLink.remote_pci_info()`.
-                0   
+                0
             },
-            reserved0: u32::MAX,
-            reserved1: u32::MAX,
-            reserved2: u32::MAX,
-            reserved3: u32::MAX,
+            reserved0: 0,
+            reserved1: 0,
+            reserved2: 0,
+            reserved3: 0
         })
     }
 }
@@ -123,10 +123,10 @@ impl PciInfo {
 pub struct BAR1MemoryInfo {
     /// Unallocated
     pub free: u64,
-    /// Total memory 
+    /// Total memory
     pub total: u64,
     /// Allocated
-    pub used: u64,
+    pub used: u64
 }
 
 impl From<nvmlBAR1Memory_t> for BAR1MemoryInfo {
@@ -134,7 +134,7 @@ impl From<nvmlBAR1Memory_t> for BAR1MemoryInfo {
         BAR1MemoryInfo {
             free: struct_.bar1Free,
             total: struct_.bar1Total,
-            used: struct_.bar1Used,
+            used: struct_.bar1Used
         }
     }
 }
@@ -145,7 +145,7 @@ impl From<nvmlBAR1Memory_t> for BAR1MemoryInfo {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct BridgeChipInfo {
     pub fw_version: FirmwareVersion,
-    pub chip_type: BridgeChip,
+    pub chip_type: BridgeChip
 }
 
 impl BridgeChipInfo {
@@ -153,6 +153,7 @@ impl BridgeChipInfo {
     Construct `BridgeChipInfo` from the corresponding C struct.
 
     # Errors
+
     * `UnexpectedVariant`, for which you can read the docs for
     */
     pub fn try_from(struct_: nvmlBridgeChipInfo_t) -> Result<Self> {
@@ -161,7 +162,7 @@ impl BridgeChipInfo {
 
         Ok(BridgeChipInfo {
             fw_version,
-            chip_type,
+            chip_type
         })
     }
 }
@@ -179,7 +180,7 @@ pub struct BridgeChipHierarchy {
     /// Hierarchy of bridge chips on the board.
     pub chips_hierarchy: Vec<BridgeChipInfo>,
     /// Number of bridge chips on the board.
-    pub chip_count: u8,
+    pub chip_count: u8
 }
 
 impl BridgeChipHierarchy {
@@ -187,19 +188,21 @@ impl BridgeChipHierarchy {
     Construct `BridgeChipHierarchy` from the corresponding C struct.
 
     # Errors
+    
     * `UnexpectedVariant`, for which you can read the docs for
     */
     pub fn try_from(struct_: nvmlBridgeChipHierarchy_t) -> Result<Self> {
-        let chips_hierarchy: Result<Vec<BridgeChipInfo>> =
-            struct_.bridgeChipInfo.iter()
-                .map(|bci| BridgeChipInfo::try_from(*bci))
-                .collect();
+        let chips_hierarchy: Result<Vec<BridgeChipInfo>> = struct_
+            .bridgeChipInfo
+            .iter()
+            .map(|bci| BridgeChipInfo::try_from(*bci))
+            .collect();
 
         let chips_hierarchy = chips_hierarchy?;
 
         Ok(BridgeChipHierarchy {
             chips_hierarchy,
-            chip_count: struct_.bridgeCount,
+            chip_count: struct_.bridgeCount
         })
     }
 }
@@ -212,14 +215,14 @@ pub struct ProcessInfo {
     // Process ID.
     pub pid: u32,
     /// Amount of used GPU memory in bytes.
-    pub used_gpu_memory: UsedGpuMemory,
+    pub used_gpu_memory: UsedGpuMemory
 }
 
 impl From<nvmlProcessInfo_t> for ProcessInfo {
     fn from(struct_: nvmlProcessInfo_t) -> Self {
         ProcessInfo {
             pid: struct_.pid,
-            used_gpu_memory: UsedGpuMemory::from(struct_.usedGpuMemory),
+            used_gpu_memory: UsedGpuMemory::from(struct_.usedGpuMemory)
         }
     }
 }
@@ -232,7 +235,7 @@ pub struct EccErrorCounts {
     pub device_memory: u64,
     pub l1_cache: u64,
     pub l2_cache: u64,
-    pub register_file: u64,
+    pub register_file: u64
 }
 
 impl From<nvmlEccErrorCounts_t> for EccErrorCounts {
@@ -241,7 +244,7 @@ impl From<nvmlEccErrorCounts_t> for EccErrorCounts {
             device_memory: struct_.deviceMemory,
             l1_cache: struct_.l1Cache,
             l2_cache: struct_.l2Cache,
-            register_file: struct_.registerFile,
+            register_file: struct_.registerFile
         }
     }
 }
@@ -257,8 +260,9 @@ pub struct MemoryInfo {
     pub total: u64,
     /// Allocated FB memory.
     ///
-    /// Note that the driver/GPU always sets aside a small amount of memory for bookkeeping.
-    pub used: u64,
+    /// Note that the driver/GPU always sets aside a small amount of memory for
+    /// bookkeeping.
+    pub used: u64
 }
 
 impl From<nvmlMemory_t> for MemoryInfo {
@@ -266,30 +270,30 @@ impl From<nvmlMemory_t> for MemoryInfo {
         MemoryInfo {
             free: struct_.free,
             total: struct_.total,
-            used: struct_.used,
+            used: struct_.used
         }
     }
 }
 
-/// Utilization information for a device. Each sample period may be between 1 second
-/// and 1/6 second, depending on the product being queried.
+/// Utilization information for a device. Each sample period may be between 1
+/// second and 1/6 second, depending on the product being queried.
 // Checked against local
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Utilization {
-    /// Percent of time over the past sample period during which one or more kernels
-    /// was executing on the GPU.
+    /// Percent of time over the past sample period during which one or more
+    /// kernels was executing on the GPU.
     pub gpu: u32,
     /// Percent of time over the past sample period during which global (device)
     /// memory was being read or written to.
-    pub memory: u32,
+    pub memory: u32
 }
 
 impl From<nvmlUtilization_t> for Utilization {
     fn from(struct_: nvmlUtilization_t) -> Self {
         Utilization {
             gpu: struct_.gpu,
-            memory: struct_.memory,
+            memory: struct_.memory
         }
     }
 }
@@ -302,14 +306,14 @@ pub struct ViolationTime {
     /// Represents CPU timestamp in microseconds.
     pub reference_time: u64,
     /// Violation time in nanoseconds.
-    pub violation_time: u64,
+    pub violation_time: u64
 }
 
 impl From<nvmlViolationTime_t> for ViolationTime {
     fn from(struct_: nvmlViolationTime_t) -> Self {
         ViolationTime {
             reference_time: struct_.referenceTime,
-            violation_time: struct_.violationTime,
+            violation_time: struct_.violationTime
         }
     }
 }
@@ -349,9 +353,9 @@ pub struct AccountingStats {
     pub memory_utilization: Option<u32>,
     /// CPU timestamp in usec representing the start time for the process.
     pub start_time: u64,
-    /// Amount of time in ms during which the compute context was active. This will be
-    /// zero if the process is not terminated.
-    pub time: u64,
+    /// Amount of time in ms during which the compute context was active. This
+    /// will be zero if the process is not terminated.
+    pub time: u64
 }
 
 impl From<nvmlAccountingStats_t> for AccountingStats {
@@ -379,29 +383,28 @@ impl From<nvmlAccountingStats_t> for AccountingStats {
                 _ => Some(struct_.memoryUtilization),
             },
             start_time: struct_.startTime,
-            time: struct_.time,
+            time: struct_.time
         }
     }
 }
 
 /// Sample info.
 // Checked against local
-#[cfg(feature = "nightly")]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Sample {
     /// CPU timestamp in μs
     pub timestamp: u64,
-    pub value: SampleValue,
+    pub value: SampleValue
 }
 
-#[cfg(feature = "nightly")]
 impl Sample {
-    /// Given a tag and an untagged union, returns a Rust enum with the correct union variant.
+    /// Given a tag and an untagged union, returns a Rust enum with the correct
+    /// union variant.
     pub fn from_tag_and_struct(tag: &SampleValueType, struct_: nvmlSample_t) -> Self {
         Sample {
             timestamp: struct_.timeStamp,
-            value: SampleValue::from_tag_and_union(tag, struct_.sampleValue),
+            value: SampleValue::from_tag_and_union(tag, struct_.sampleValue)
         }
     }
 }
@@ -409,23 +412,25 @@ impl Sample {
 #[cfg(test)]
 #[allow(unused_variables, unused_imports)]
 mod tests {
-    use test_utils::*;
     use error::*;
     use ffi::bindings::*;
     use std::mem;
+    use test_utils::*;
 
     #[test]
-    fn pci_info_from_to_c() { 
+    fn pci_info_from_to_c() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
-            let converted = device.pci_info()
-                                  .expect("wrapped pci info")
-                                  .try_into_c()
-                                  .expect("converted c pci info");
+            let converted = device
+                .pci_info()
+                .expect("wrapped pci info")
+                .try_into_c()
+                .expect("converted c pci info");
 
             let raw = unsafe {
                 let mut pci_info: nvmlPciInfo_t = mem::zeroed();
-                nvml_try(nvmlDeviceGetPciInfo_v2(device.unsafe_raw(), &mut pci_info)).expect("raw pci info");
+                nvml_try(nvmlDeviceGetPciInfo_v2(device.unsafe_raw(), &mut pci_info))
+                    .expect("raw pci info");
                 pci_info
             };
 
@@ -435,10 +440,6 @@ mod tests {
             assert_eq!(converted.device, raw.device);
             assert_eq!(converted.pciDeviceId, raw.pciDeviceId);
             assert_eq!(converted.pciSubSystemId, raw.pciSubSystemId);
-            assert_eq!(converted.reserved0, raw.reserved0);
-            assert_eq!(converted.reserved1, raw.reserved1);
-            assert_eq!(converted.reserved2, raw.reserved2);
-            assert_eq!(converted.reserved3, raw.reserved3);
 
             Ok(())
         })

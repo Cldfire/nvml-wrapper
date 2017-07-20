@@ -1,9 +1,9 @@
-use ffi::bindings::*;
-use device::Device;
 use bitmasks::event::*;
+use device::Device;
+use enums::event::XidError;
 use error::*;
+use ffi::bindings::*;
 
-// TODO: Should this be higher level. It probably should
 /// Information about an event that has occurred.
 // Checked against local
 #[derive(Debug)]
@@ -17,21 +17,34 @@ pub struct EventData<'nvml> {
     pub device: Device<'nvml>,
     /// Information about what specific event occurred.
     pub event_type: EventTypes,
-    /// Stores the last XID error for the device in the event of nvmlEventTypeXidCriticalError,
-    /// is 0 for any other event. Is 999 for an unknown XID error.
-    pub event_data: u64,
+    /**
+    Stores the last XID error for the device for the
+    nvmlEventTypeXidCriticalError event.
+    
+    `None` in the case of any other event type.
+    */
+    pub event_data: Option<XidError>
 }
 
 impl<'nvml> EventData<'nvml> {
     /// Waiting for `TryFrom` to be stable. In the meantime, we do this.
     pub fn try_from(struct_: nvmlEventData_t) -> Result<Self> {
+        let event_type = match EventTypes::from_bits(struct_.eventType) {
+            Some(t) => t,
+            None => bail!(ErrorKind::IncorrectBits(Bits::U64(struct_.eventType))),
+        };
+
         Ok(EventData {
             device: struct_.device.into(),
-            event_type: match EventTypes::from_bits(struct_.eventType) {
-                Some(t) => t,
-                None    => bail!(ErrorKind::IncorrectBits(Bits::U64(struct_.eventType))),
-            },
-            event_data: struct_.eventData,
+            event_type,
+            event_data: if event_type.contains(CRITICAL_XID_ERROR) {
+                Some(match struct_.eventData {
+                    999 => XidError::Unknown,
+                    v => XidError::Value(v),
+                })
+            } else {
+                None
+            }
         })
     }
 }

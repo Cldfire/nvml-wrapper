@@ -55,23 +55,12 @@ This wrapper has been developed against and is currently supporting NVML version
 to NVIDIA, so this wrapper should continue to work without issue regardless of
 NVML version bumps.
 
-## Rustc Support
+## Rust Version Support
 
-Currently supports rustc 1.18.0 or greater. The target version is the **latest**
+Currently supports Rust 1.19.0 or greater. The target version is the **latest**
 stable version; I do not intend to pin to an older one at any time.
 
-A small amount of NVML features involve dealing with untagged unions over FFI; a
-rustc nightly-only type is used in order to facilitate this. If you require use
-of the nightly-only functionality, compile with the `nightly` feature toggled on
-(and of course, with a nightly compiler):
-
-```bash
-cargo build --features "nightly"
-```
-
 ## Cargo Features
-
-The `nightly` feature can be toggled on to enable nightly-only features; read above.
 
 The `serde` feature can be toggled on in order to `#[derive(Serialize, Deserialize)]`
 for every NVML data structure.

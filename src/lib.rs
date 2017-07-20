@@ -92,30 +92,19 @@ This wrapper has been developed against and is currently supporting NVML version
 to NVIDIA, so this wrapper should continue to work without issue regardless of
 NVML version bumps.
 
-## Rustc Support
+## Rust Version Support
 
-Currently supports rustc 1.18.0 or greater. The target version is the **latest**
+Currently supports Rust 1.19.0 or greater. The target version is the **latest**
 stable version; I do not intend to pin to an older one at any time.
 
-A small amount of NVML features involve dealing with untagged unions over FFI; a
-rustc nightly-only type is used in order to facilitate this. If you require use
-of the nightly-only functionality, compile with the `nightly` feature toggled on
-(and of course, with a nightly compiler):
-
-```bash
-cargo build --features "nightly"
-```
-
 ## Cargo Features
-
-The `nightly` feature can be toggled on to enable nightly-only features; read above.
 
 The `serde` feature can be toggled on in order to `#[derive(Serialize, Deserialize)]`
 for every NVML data structure.
 */
 
-#![recursion_limit = "1024"]
 #![cfg_attr(feature = "cargo-clippy", allow(doc_markdown))]
+#![recursion_limit = "1024"]
 #![allow(non_upper_case_globals)]
 
 #[macro_use]
@@ -139,29 +128,30 @@ pub mod enum_wrappers;
 pub mod event;
 pub mod bitmasks;
 pub mod nv_link;
+pub mod high_level;
 #[cfg(test)]
 mod test_utils;
 
 // Re-exports for convenience
 pub use device::Device;
-pub use unit::Unit;
 pub use event::EventSet;
 pub use nv_link::NvLink;
+pub use unit::Unit;
 
-use error::*;
-use ffi::bindings::*;
-use std::os::raw::{c_uint, c_int};
-use std::ffi::{CStr, CString};
-#[cfg(target_os = "linux")]
-use std::ptr;
-use std::mem;
 #[cfg(target_os = "linux")]
 use enum_wrappers::device::*;
+use error::*;
+use ffi::bindings::*;
+use std::ffi::{CStr, CString};
+use std::io;
+use std::io::Write;
+use std::mem;
+use std::os::raw::{c_int, c_uint};
+#[cfg(target_os = "linux")]
+use std::ptr;
 #[cfg(target_os = "linux")]
 use struct_wrappers::device::PciInfo;
 use struct_wrappers::unit::HwbcEntry;
-use std::io;
-use std::io::Write;
 
 /**
 The main struct that this library revolves around.
@@ -187,7 +177,8 @@ as part of the [CUDA toolkit](https://developer.nvidia.com/cuda-downloads).
 #[derive(Debug)]
 pub struct NVML;
 
-// Here to clarify that NVML does have these traits. I know they are implemented without this.
+// Here to clarify that NVML does have these traits. I know they are
+// implemented without this.
 unsafe impl Send for NVML {}
 unsafe impl Sync for NVML {}
 
@@ -207,6 +198,7 @@ impl NVML {
     communicate with a GPU even when other GPUs in a system are bad or unstable.
     
     # Errors
+
     * `DriverNotLoaded`, if the NVIDIA driver is not running
     * `NoPermission`, if NVML does not have permission to talk to the driver
     * `Unknown`, on any unexpected error
@@ -226,6 +218,7 @@ impl NVML {
     potential errors (*the `Drop` implementation ignores errors!*).
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `Unknown`, on any unexpected error
     */
@@ -237,6 +230,7 @@ impl NVML {
         unsafe {
             nvml_try(nvmlShutdown())?;
         }
+
         Ok(mem::forget(self))
     }
 
@@ -246,6 +240,7 @@ impl NVML {
     Note that this may return devices you do not have permission to access.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `Unknown`, on any unexpected error
     */
@@ -266,6 +261,7 @@ impl NVML {
     string. 
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     */
@@ -274,8 +270,13 @@ impl NVML {
     #[inline]
     pub fn sys_driver_version(&self) -> Result<String> {
         unsafe {
-            let mut version_vec = Vec::with_capacity(NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE as usize);
-            nvml_try(nvmlSystemGetDriverVersion(version_vec.as_mut_ptr(), NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE))?;
+            let mut version_vec =
+                Vec::with_capacity(NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE as usize);
+
+            nvml_try(nvmlSystemGetDriverVersion(
+                version_vec.as_mut_ptr(),
+                NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE
+            ))?;
 
             let version_raw = CStr::from_ptr(version_vec.as_ptr());
             Ok(version_raw.to_str()?.into())
@@ -287,6 +288,7 @@ impl NVML {
     string. 
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     */
@@ -296,7 +298,11 @@ impl NVML {
     pub fn sys_nvml_version(&self) -> Result<String> {
         unsafe {
             let mut version_vec = Vec::with_capacity(NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE as usize);
-            nvml_try(nvmlSystemGetNVMLVersion(version_vec.as_mut_ptr(), NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE))?;
+
+            nvml_try(nvmlSystemGetNVMLVersion(
+                version_vec.as_mut_ptr(),
+                NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE
+            ))?;
 
             // Thanks to `Amaranth` on IRC for help with this
             let version_raw = CStr::from_ptr(version_vec.as_ptr());
@@ -308,6 +314,7 @@ impl NVML {
     Gets the name of the process for the given process ID, cropped to the provided length.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the length is 0 (if this is returned without length being 0, file an issue)
     * `NotFound`, if the process does not exist
@@ -316,14 +323,20 @@ impl NVML {
     that the string encoding is ANSI, so this may very well happen. 
     * `Unknown`, on any unexpected error
     */
-    // TODO: The docs say the string is ANSI-encoded. Not sure if I should try to do anything about that
+    // TODO: The docs say the string is ANSI-encoded. Not sure if I should try
+    // to do anything about that
     // Checked against local
     // Tested
     #[inline]
     pub fn sys_process_name(&self, pid: u32, length: usize) -> Result<String> {
         unsafe {
             let mut name_vec = Vec::with_capacity(length);
-            nvml_try(nvmlSystemGetProcessName(pid, name_vec.as_mut_ptr(), length as c_uint))?;
+
+            nvml_try(nvmlSystemGetProcessName(
+                pid,
+                name_vec.as_mut_ptr(),
+                length as c_uint
+            ))?;
 
             let name_raw = CStr::from_ptr(name_vec.as_ptr());
             Ok(name_raw.to_str()?.into())
@@ -350,6 +363,7 @@ impl NVML {
     The NVML index may not correlate with other APIs such as the CUDA device index.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if index is invalid
     * `InsufficientPower`, if any attached devices have improperly attached external power cables
@@ -379,6 +393,7 @@ impl NVML {
     The bus ID corresponds to the `bus_id` returned by `Device.pci_info()`.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if `pci_bus_id` is invalid
     * `NotFound`, if `pci_bus_id` does not match a valid device on the system
@@ -393,25 +408,35 @@ impl NVML {
     // Tested
     #[inline]
     pub fn device_by_pci_bus_id<S: AsRef<str>>(&self, pci_bus_id: S) -> Result<Device>
-        where Vec<u8>: From<S> {
+    where
+        Vec<u8>: From<S>,
+    {
         unsafe {
             let c_string = CString::new(pci_bus_id)?;
             let mut device: nvmlDevice_t = mem::zeroed();
-            nvml_try(nvmlDeviceGetHandleByPciBusId_v2(c_string.as_ptr(), &mut device))?;
+
+            nvml_try(nvmlDeviceGetHandleByPciBusId_v2(
+                c_string.as_ptr(),
+                &mut device
+            ))?;
 
             Ok(device.into())
         }
     }
 
-    /// Not documenting this because it's deprecated and does not seem to work anymore.
+    /// Not documenting this because it's deprecated and does not seem to work
+    /// anymore.
     // Tested (for an error)
     #[deprecated(note = "use `.device_by_uuid()`, this errors on dual GPU boards")]
     #[inline]
     pub fn device_by_serial<S: AsRef<str>>(&self, board_serial: S) -> Result<Device>
-        where Vec<u8>: From<S> {
+    where
+        Vec<u8>: From<S>,
+    {
         unsafe {
             let c_string = CString::new(board_serial)?;
             let mut device: nvmlDevice_t = mem::zeroed();
+
             nvml_try(nvmlDeviceGetHandleBySerial(c_string.as_ptr(), &mut device))?;
 
             Ok(device.into())
@@ -426,6 +451,7 @@ impl NVML {
     GPUs may be initialized as the function called within searches for the target GPU.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if `uuid` is invalid
     * `NotFound`, if `uuid` does not match a valid device on the system
@@ -440,11 +466,14 @@ impl NVML {
     // Checked against local
     // Tested
     #[inline]
-    pub fn device_by_uuid<S: AsRef<str>>(&self, uuid: S) -> Result<Device> 
-        where Vec<u8>: From<S> {
+    pub fn device_by_uuid<S: AsRef<str>>(&self, uuid: S) -> Result<Device>
+    where
+        Vec<u8>: From<S>,
+    {
         unsafe {
             let c_string = CString::new(uuid)?;
             let mut device: nvmlDevice_t = mem::zeroed();
+
             nvml_try(nvmlDeviceGetHandleByUUID(c_string.as_ptr(), &mut device))?;
 
             Ok(device.into())
@@ -457,22 +486,33 @@ impl NVML {
     Note: this is the same as `Device.topology_common_ancestor()`.
     
     # Errors
+
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` or the OS does not support this feature
     * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
     
     # Platform Support
+
     Only supports Linux.
     */
     // Checked against local
     // Tested
     #[cfg(target_os = "linux")]
     #[inline]
-    pub fn topology_common_ancestor(&self, device1: &Device, device2: &Device) -> Result<TopologyLevel> {
+    pub fn topology_common_ancestor(
+        &self,
+        device1: &Device,
+        device2: &Device,
+    ) -> Result<TopologyLevel> {
         unsafe {
             let mut level: nvmlGpuTopologyLevel_t = mem::zeroed();
-            nvml_try(nvmlDeviceGetTopologyCommonAncestor(device1.unsafe_raw(), device2.unsafe_raw(), &mut level))?;
+
+            nvml_try(nvmlDeviceGetTopologyCommonAncestor(
+                device1.unsafe_raw(),
+                device2.unsafe_raw(),
+                &mut level
+            ))?;
 
             Ok(TopologyLevel::try_from(level)?)
         }
@@ -489,11 +529,13 @@ impl NVML {
     consistency between reboots.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if `index` is invalid
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     For S-class products.
     */
     // Checked against local
@@ -514,6 +556,7 @@ impl NVML {
     Note: this is the same as `Device.is_on_same_board_as()`.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if either `Device` is invalid
     * `NotSupported`, if this check is not supported by this `Device`
@@ -526,7 +569,12 @@ impl NVML {
     pub fn are_devices_on_same_board(&self, device1: &Device, device2: &Device) -> Result<bool> {
         unsafe {
             let mut bool_int: c_int = mem::zeroed();
-            nvml_try(nvmlDeviceOnSameBoard(device1.unsafe_raw(), device2.unsafe_raw(), &mut bool_int))?;
+
+            nvml_try(nvmlDeviceOnSameBoard(
+                device1.unsafe_raw(),
+                device2.unsafe_raw(),
+                &mut bool_int
+            ))?;
 
             match bool_int {
                 0 => Ok(false),
@@ -539,11 +587,13 @@ impl NVML {
     Gets the set of GPUs that have a CPU affinity with the given CPU number.
     
     # Errors
+
     * `InvalidArg`, if `cpu_number` is invalid
     * `NotSupported`, if this `Device` or the OS does not support this feature
     * `Unknown`, an error has occurred in the underlying topology discovery
     
     # Platform Support
+
     Only supports Linux.
     */
     // Tested
@@ -557,13 +607,16 @@ impl NVML {
             };
             let mut devices: Vec<nvmlDevice_t> = vec![mem::zeroed(); count as usize];
 
-            nvml_try(nvmlSystemGetTopologyGpuSet(cpu_number, &mut count, devices.as_mut_ptr()))?;
-            Ok(devices.iter()
-                      .map(|d| Device::from(*d))
-                      .collect())
+            nvml_try(nvmlSystemGetTopologyGpuSet(
+                cpu_number,
+                &mut count,
+                devices.as_mut_ptr()
+            ))?;
+
+            Ok(devices.iter().map(|d| Device::from(*d)).collect())
         }
     }
-    
+
     // Helper function for the above.
     #[cfg(target_os = "linux")]
     #[inline]
@@ -573,7 +626,12 @@ impl NVML {
             let mut count: c_uint = 0;
 
             // Passing null doesn't indicate that we want the count, just allowed
-            nvml_try(nvmlSystemGetTopologyGpuSet(cpu_number, &mut count, ptr::null_mut()))?;
+            nvml_try(nvmlSystemGetTopologyGpuSet(
+                cpu_number,
+                &mut count,
+                ptr::null_mut()
+            ))?;
+
             Ok(count)
         }
     }
@@ -582,9 +640,11 @@ impl NVML {
     Gets the IDs and firmware versions for any Host Interface Cards in the system.
 
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
 
     # Device Support
+
     Supports S-class products.
     */
     // Checked against local
@@ -599,9 +659,8 @@ impl NVML {
             let mut hics: Vec<nvmlHwbcEntry_t> = vec![mem::zeroed(); count as usize];
 
             nvml_try(nvmlSystemGetHicVersion(&mut count, hics.as_mut_ptr()))?;
-            hics.iter()
-                .map(|h| HwbcEntry::try_from(*h))
-                .collect()
+            
+            hics.iter().map(|h| HwbcEntry::try_from(*h)).collect()
         }
     }
 
@@ -609,9 +668,11 @@ impl NVML {
     Gets the count of Host Interface Cards in the system.
 
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
 
     # Device Support
+
     Supports S-class products.
     */
     // Tested as part of the above method
@@ -647,10 +708,12 @@ impl NVML {
     Gets the number of units in the system.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports S-class products.
     */
     // Checked against local
@@ -669,10 +732,12 @@ impl NVML {
     Create an empty set of events.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Fermi and newer fully supported devices.
     */
     // Checked against local
@@ -707,6 +772,7 @@ impl NVML {
     Must be run as administrator.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `OperatingSystem`, if the operating system is denying this feature
     * `NoPermission`, if the calling process has insufficient permissions to
@@ -716,11 +782,13 @@ impl NVML {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     Supports Maxwell and newer fully supported devices.
     
     Some Kepler devices are also supported (that's all NVIDIA says, no specifics).
     
     # Platform Support
+    
     Only supports Linux.
     */
     // TODO: constructor for default pci_infos ^
@@ -729,14 +797,13 @@ impl NVML {
     #[cfg(target_os = "linux")]
     #[inline]
     pub fn discover_gpus(&self, pci_info: PciInfo) -> Result<()> {
-        unsafe {
-            nvml_try(nvmlDeviceDiscoverGpus(&mut pci_info.try_into_c()?))
-        }
+        unsafe { nvml_try(nvmlDeviceDiscoverGpus(&mut pci_info.try_into_c()?)) }
     }
 }
 
-/// This `Drop` implementation ignores errors! Use the `.shutdown()` method on the `NVML` struct
-/// if you care about handling them. 
+/// This `Drop` implementation ignores errors! Use the `.shutdown()` method on
+/// the `NVML` struct
+/// if you care about handling them.
 impl Drop for NVML {
     fn drop(&mut self) {
         #[allow(unused_must_use)]
@@ -744,9 +811,14 @@ impl Drop for NVML {
             match nvml_try(nvmlShutdown()) {
                 Ok(()) => (),
                 Err(e) => {
-                    io::stderr().write(format!("WARNING: Error returned by \
-                        `nmvlShutdown()` in Drop implementation: {:?}", e).as_bytes());
-                }
+                    io::stderr().write(
+                        format!(
+                            "WARNING: Error returned by `nmvlShutdown()` in Drop implementation: \
+                             {:?}",
+                            e
+                        ).as_bytes()
+                    );
+                },
             }
         }
     }
@@ -769,30 +841,22 @@ mod test {
 
     #[test]
     fn shutdown() {
-        test(3, || {
-            nvml().shutdown()
-        })
+        test(3, || nvml().shutdown())
     }
 
     #[test]
     fn device_count() {
-        test(3, || {
-            nvml().device_count()
-        })
+        test(3, || nvml().device_count())
     }
 
     #[test]
     fn sys_driver_version() {
-        test(3, || {
-            nvml().sys_driver_version()
-        })
+        test(3, || nvml().sys_driver_version())
     }
 
     #[test]
     fn sys_nvml_version() {
-        test(3, || {
-            nvml().sys_nvml_version()
-        })
+        test(3, || nvml().sys_nvml_version())
     }
 
     #[test]
@@ -807,9 +871,7 @@ mod test {
     #[test]
     fn device_by_index() {
         let nvml = nvml();
-        test(3, || {
-            nvml.device_by_index(0)
-        })
+        test(3, || nvml.device_by_index(0))
     }
 
     #[test]
@@ -884,32 +946,24 @@ mod test {
     #[test]
     fn topology_gpu_set() {
         let nvml = nvml();
-        test(3, || {
-            nvml.topology_gpu_set(0)
-        })
+        test(3, || nvml.topology_gpu_set(0))
     }
 
     #[test]
     fn hic_version() {
         let nvml = nvml();
-        test(3, || {
-            nvml.hic_versions()
-        })
+        test(3, || nvml.hic_versions())
     }
 
     #[test]
     fn unit_count() {
-        test(3, || {
-            nvml().unit_count()
-        })
+        test(3, || nvml().unit_count())
     }
 
     #[test]
     fn create_event_set() {
         let nvml = nvml();
-        test(3, || {
-            nvml.create_event_set()
-        })
+        test(3, || nvml.create_event_set())
     }
 
     #[cfg(target_os = "linux")]

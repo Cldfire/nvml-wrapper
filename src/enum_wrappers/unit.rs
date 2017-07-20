@@ -1,5 +1,5 @@
-use ffi::bindings::*;
 use error::*;
+use ffi::bindings::*;
 
 /// Unit fan state.
 // Checked against local
@@ -11,7 +11,7 @@ pub enum FanState {
     #[wrap(c_variant = "NVML_FAN_NORMAL")]
     Normal,
     #[wrap(c_variant = "NVML_FAN_FAILED")]
-    Failed,
+    Failed
 }
 
 // Checked against local
@@ -24,5 +24,5 @@ pub enum LedColor {
     Green,
     /// Used to indicate a problem.
     #[wrap(c_variant = "NVML_LED_COLOR_AMBER")]
-    Amber,
+    Amber
 }

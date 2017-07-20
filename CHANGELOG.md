@@ -2,15 +2,62 @@
 
 This file describes the changes / additions / fixes between wrapper releases.
 
-## 0.2.0 (released 6-8-17)
+## 0.3.0 (released 2017-07-20)
+
+### Release Summary
+
+The major highlight of this release is the `high_level::event_loop` module, an interface to NVML's event capabilities. Only available on Linux platforms, this module provides you with the boilerplate necessary to quickly and easily watch for events on any number of devices, handling both errors and the events themselves. See the `event_loop` example in the examples folder at the root of the repository for more.
+
+This release also marks the point at which no nightly features are required for any reason (meaning the removal of the `nightly` feature flag) and the addition of a couple examples demonstrating use of the crate.
+
+### Rust Version Support
+
+This release **requires** and supports **Rust 1.19.0** or higher.
+
+### Additions
+
+* Examples:
+  * `basic_usage`
+  * `event_loop`
+
+* `enums::event`:
+  * New file with the following:
+    * `XidError`
+
+* `high_level` module
+  * This module will be the home of any high-level abstractions over the NVML API.
+  * `high_level::event_loop`:
+    * New file with the following:
+      * `Event`
+      * `EventLoop`
+      * `EventLoopState`
+      * `EventLoopProvider`, implemented for:
+        * `NVML`
+
+### Removals
+
+* The `nightly` feature flag has been removed as nightly features are no longer required (`union` has been stabilized).
+
+### Changes
+
+* The `EventData.event_data` field is now an `Option<XidError>` instead of a `u64`
+  * This was done to more strongly represent the field's presence via the type system (it is `None` for most events) and also to statically type the `Unknown` value.
+
+* The `UnexpectedVariant` error now contains the enum value that could not be mapped to an enum variant defined in the wrapper.
+
+* The project is now formatted via rustfmt as much as possible.
+
+* Markdown headers now have two newlines after them, which is (to my knowledge) how they are supposed to be formatted.
+
+## 0.2.0 (released 2017-06-08)
 
 ### Release Summary
 
 The major highlight of this release is the `NvLink` struct, an interface to NVML's various NvLink-related functions. This release additionally corrects some issues / oversights in the wrapper and replaces Rust `enum`s with numerical constants for FFI use (see [rust-lang/rust#36927](https://github.com/rust-lang/rust/issues/36927)).
 
-### Rustc Support
+### Rust Version Support
 
-This release **requires** and supports **rustc 1.18.0** or higher.
+This release **requires** and supports **Rust 1.18.0** or higher.
 
 ### Additions
 
@@ -76,13 +123,12 @@ This release **requires** and supports **rustc 1.18.0** or higher.
 
 * Bitflags: `0.8.x -> 0.9.x`
 
-
-## 0.1.0 (released 5-17-17)
+## 0.1.0 (released 2017-05-17)
 
 ### Release Summary
 
 Initial release wrapping the majority of the NVML API surface.
 
-### Rustc Support
+### Rust Version Support
 
-This release **requires** and supports **rustc 1.17.0** or higher.
+This release **requires** and supports **Rust 1.17.0** or higher.

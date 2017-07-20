@@ -1,6 +1,6 @@
-use ffi::bindings::*;
-use error::*;
 use enum_wrappers::unit::*;
+use error::*;
+use ffi::bindings::*;
 use std::ffi::CStr;
 
 /// Fan information readings for an entire S-class unit.
@@ -11,7 +11,7 @@ pub struct FansInfo {
     /// Number of fans in the unit.
     pub count: u32,
     /// Fan data for each fan.
-    pub fans: Vec<FanInfo>,
+    pub fans: Vec<FanInfo>
 }
 
 impl FansInfo {
@@ -19,17 +19,18 @@ impl FansInfo {
     Construct `FansInfo` from the corresponding C struct.
 
     # Errors
+
     * `UnexpectedVariant`, for which you can read the docs for
     */
     pub fn try_from(struct_: nvmlUnitFanSpeeds_t) -> Result<Self> {
-        let fans: Result<Vec<FanInfo>> = 
+        let fans: Result<Vec<FanInfo>> =
             struct_.fans.iter().map(|f| FanInfo::try_from(*f)).collect();
 
         let fans = fans?;
 
         Ok(FansInfo {
             count: struct_.count,
-            fans,
+            fans
         })
     }
 }
@@ -42,7 +43,7 @@ pub struct FanInfo {
     /// Fan speed (RPM).
     pub speed: u32,
     /// Indicates whether a fan is working properly.
-    pub state: FanState,
+    pub state: FanState
 }
 
 impl FanInfo {
@@ -50,12 +51,13 @@ impl FanInfo {
     Construct `FanInfo` from the corresponding C struct.
 
     # Errors
+    
     * `UnexpectedVariant`, for which you can read the docs for
     */
     pub fn try_from(struct_: nvmlUnitFanInfo_t) -> Result<Self> {
         Ok(FanInfo {
             speed: struct_.speed,
-            state: FanState::try_from(struct_.state)?,
+            state: FanState::try_from(struct_.state)?
         })
     }
 }
@@ -88,7 +90,7 @@ pub struct PsuInfo {
     /// Human-readable string describing the PSU state.
     pub state: String,
     /// PSU voltage (in V)
-    pub voltage: u32,
+    pub voltage: u32
 }
 
 impl PsuInfo {
@@ -100,7 +102,7 @@ impl PsuInfo {
                 current: struct_.current,
                 power_draw: struct_.power,
                 state: state_raw.to_str()?.into(),
-                voltage: struct_.voltage,
+                voltage: struct_.voltage
             })
         }
     }
@@ -116,7 +118,7 @@ pub struct UnitInfo {
     pub id: String,
     pub name: String,
     /// Product serial number.
-    pub serial: String,
+    pub serial: String
 }
 
 impl UnitInfo {
@@ -132,7 +134,7 @@ impl UnitInfo {
                 firmware_version: version_raw.to_str()?.into(),
                 id: id_raw.to_str()?.into(),
                 name: name_raw.to_str()?.into(),
-                serial: serial_raw.to_str()?.into(),
+                serial: serial_raw.to_str()?.into()
             })
         }
     }
@@ -144,7 +146,7 @@ impl UnitInfo {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct HwbcEntry {
     pub id: u32,
-    pub firmware_version: String,
+    pub firmware_version: String
 }
 
 impl HwbcEntry {

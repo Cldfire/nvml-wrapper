@@ -1,13 +1,13 @@
-use ffi::bindings::*;
-use std::marker::PhantomData;
-use std::os::raw::c_uint;
-use std::mem;
+use NVML;
 use device::Device;
-use struct_wrappers::unit::*;
 use enum_wrappers::unit::*;
 use enums::unit::*;
 use error::*;
-use NVML;
+use ffi::bindings::*;
+use std::marker::PhantomData;
+use std::mem;
+use std::os::raw::c_uint;
+use struct_wrappers::unit::*;
 
 /**
 Struct that represents a unit. 
@@ -27,7 +27,7 @@ have to worry about calls returning `Uninitialized` errors.
 #[derive(Debug)]
 pub struct Unit<'nvml> {
     unit: nvmlUnit_t,
-    _phantom: PhantomData<&'nvml NVML>,
+    _phantom: PhantomData<&'nvml NVML>
 }
 
 unsafe impl<'nvml> Send for Unit<'nvml> {}
@@ -37,7 +37,7 @@ impl<'nvml> From<nvmlUnit_t> for Unit<'nvml> {
     fn from(unit: nvmlUnit_t) -> Self {
         Unit {
             unit,
-            _phantom: PhantomData,
+            _phantom: PhantomData
         }
     }
 }
@@ -52,11 +52,13 @@ impl<'nvml> Unit<'nvml> {
     on this call are _anything_ but clear.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the unit is invalid
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     For S-class products.
     */
     // Checked against local
@@ -70,10 +72,13 @@ impl<'nvml> Unit<'nvml> {
             };
             let mut devices: Vec<nvmlDevice_t> = vec![mem::zeroed(); count as usize];
 
-            nvml_try(nvmlUnitGetDevices(self.unit, &mut count, devices.as_mut_ptr()))?;
-            Ok(devices.iter()
-                      .map(|d| Device::from(*d))
-                      .collect())
+            nvml_try(nvmlUnitGetDevices(
+                self.unit,
+                &mut count,
+                devices.as_mut_ptr()
+            ))?;
+
+            Ok(devices.iter().map(|d| Device::from(*d)).collect())
         }
     }
 
@@ -86,11 +91,13 @@ impl<'nvml> Unit<'nvml> {
     on this call are _anything_ but clear.
 
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the unit is invalid
     * `Unknown`, on any unexpected error
 
     # Device Support
+
     For S-class products.
     */
     // Tested as part of the above
@@ -126,6 +133,7 @@ impl<'nvml> Unit<'nvml> {
     Gets fan information for this `Unit` (fan count and state + speed for each).
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the unit is invalid
     * `NotSupported`, if this is not an S-class product
@@ -133,6 +141,7 @@ impl<'nvml> Unit<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     For S-class products.
     */
     // Checked against local
@@ -151,6 +160,7 @@ impl<'nvml> Unit<'nvml> {
     Gets the LED state associated with this `Unit`.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the unit is invalid
     * `NotSupported`, if this is not an S-class product
@@ -158,6 +168,7 @@ impl<'nvml> Unit<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     For S-class products.
     */
     // Checked against local
@@ -176,6 +187,7 @@ impl<'nvml> Unit<'nvml> {
     Gets the PSU stats for this `Unit`.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the unit is invalid
     * `NotSupported`, if this is not an S-class product
@@ -183,6 +195,7 @@ impl<'nvml> Unit<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     For S-class products.
     */
     // Checked against local
@@ -203,12 +216,14 @@ impl<'nvml> Unit<'nvml> {
     Available readings depend on the product.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the unit is invalid
     * `NotSupported`, if this is not an S-class product
     * `Unknown`, on any unexpected error
     
     # Device Support
+
     For S-class products. Available readings depend on the product.
     */
     // Checked against local
@@ -217,7 +232,12 @@ impl<'nvml> Unit<'nvml> {
     pub fn temperature(&self, reading_type: TemperatureReading) -> Result<u32> {
         unsafe {
             let mut temp: c_uint = mem::zeroed();
-            nvml_try(nvmlUnitGetTemperature(self.unit, reading_type as c_uint, &mut temp))?;
+
+            nvml_try(nvmlUnitGetTemperature(
+                self.unit,
+                reading_type as c_uint,
+                &mut temp
+            ))?;
 
             Ok(temp)
         }
@@ -227,11 +247,13 @@ impl<'nvml> Unit<'nvml> {
     Gets the static information associated with this `Unit`.
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the unit is invalid
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     
     # Device Support
+
     For S-class products.
     */
     // Checked against local
@@ -258,6 +280,7 @@ impl<'nvml> Unit<'nvml> {
     specified with this method (aka the `Unit` represented by this struct).
     
     # Errors
+
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the unit is invalid
     * `NotSupported`, if this is not an S-class product
@@ -265,15 +288,14 @@ impl<'nvml> Unit<'nvml> {
     * `Unknown`, on any unexpected error
     
     # Device Support
+    
     For S-class products.
     */
     // checked against local
     // Tested (no-run)
     #[inline]
     pub fn set_led_color(&mut self, color: LedColor) -> Result<()> {
-        unsafe {
-            nvml_try(nvmlUnitSetLedState(self.unit, color.as_c()))
-        }
+        unsafe { nvml_try(nvmlUnitSetLedState(self.unit, color.as_c())) }
     }
 
     /// Consume the struct and obtain the raw unit handle that it contains.
@@ -288,7 +310,8 @@ impl<'nvml> Unit<'nvml> {
         &(self.unit)
     }
 
-    /// Obtain a mutable reference to the raw unit handle contained in the struct.
+    /// Obtain a mutable reference to the raw unit handle contained in the
+    /// struct.
     #[inline]
     pub fn as_mut_raw(&mut self) -> &mut nvmlUnit_t {
         &mut (self.unit)
@@ -306,9 +329,9 @@ impl<'nvml> Unit<'nvml> {
 #[cfg(not(feature = "test-local"))]
 #[deny(unused_mut)]
 mod test {
-    use test_utils::*;
-    use enums::unit::TemperatureReading;
     use enum_wrappers::unit::LedColor;
+    use enums::unit::TemperatureReading;
+    use test_utils::*;
 
     #[test]
     fn devices() {
@@ -320,41 +343,31 @@ mod test {
     #[test]
     fn fan_info() {
         let nvml = nvml();
-        test_with_unit(3, &nvml, |unit| {
-            unit.fan_info()
-        })
+        test_with_unit(3, &nvml, |unit| unit.fan_info())
     }
 
     #[test]
     fn led_state() {
         let nvml = nvml();
-        test_with_unit(3, &nvml, |unit| {
-            unit.led_state()
-        })
+        test_with_unit(3, &nvml, |unit| unit.led_state())
     }
 
     #[test]
     fn psu_info() {
         let nvml = nvml();
-        test_with_unit(3, &nvml, |unit| {
-            unit.psu_info()
-        })
+        test_with_unit(3, &nvml, |unit| unit.psu_info())
     }
 
     #[test]
     fn temperature() {
         let nvml = nvml();
-        test_with_unit(3, &nvml, |unit| {
-            unit.temperature(TemperatureReading::Board)
-        })
+        test_with_unit(3, &nvml, |unit| unit.temperature(TemperatureReading::Board))
     }
 
     #[test]
     fn info() {
         let nvml = nvml();
-        test_with_unit(3, &nvml, |unit| {
-            unit.info()
-        })
+        test_with_unit(3, &nvml, |unit| unit.info())
     }
 
     // This modifies unit state, so we don't want to actually run the test

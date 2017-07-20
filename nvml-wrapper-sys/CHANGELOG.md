@@ -2,7 +2,17 @@
 
 This file describes the changes / additions / fixes between bindings releases.
 
-## 0.2.0 (released 6-8-17)
+## 0.3.0 (released 2017-07-20)
+
+### Release Summary
+
+The `nightly` feature flag has been removed as unions are now available on stable Rust.
+
+### Rust Version Support
+
+This release **requires** and supports **Rust 1.19.0** or higher.
+
+## 0.2.0 (released 2017-06-08)
 
 ### Release Summary
 
@@ -15,7 +25,7 @@ Rust `enum`s were removed in favor of numerical constants for C enums. This was 
 * Removed `Copy` and `Clone` from structs where they did not make sense
   * Forgot about this before
 
-## 0.1.0 (released 5-7-17)
+## 0.1.0 (released 2017-05-17)
 
 ### Release Summary
 
