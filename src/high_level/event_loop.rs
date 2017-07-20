@@ -173,7 +173,6 @@ impl<'nvml> EventLoop<'nvml> {
 
     Only supports Linux.
     */
-    // TODO: example name
     #[inline]
     pub fn run_forever<F>(&mut self, mut callback: F)
     where

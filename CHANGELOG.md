@@ -8,7 +8,7 @@ This file describes the changes / additions / fixes between wrapper releases.
 
 The major highlight of this release is the `high_level::event_loop` module, an interface to NVML's event capabilities. Only available on Linux platforms, this module provides you with the boilerplate necessary to quickly and easily watch for events on any number of devices, handling both errors and the events themselves. See the `event_loop` example in the examples folder at the root of the repository for more.
 
-This release also marks the point at which no nightly features are required for any reason, and hence the removal of the `nightly` feature flag.
+This release also marks the point at which no nightly features are required for any reason (meaning the removal of the `nightly` feature flag) and the addition of a couple examples demonstrating use of the crate.
 
 ### Rust Version Support
 
