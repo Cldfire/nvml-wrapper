@@ -9,9 +9,6 @@ main() {
     cross build --target $TARGET --features serde
     cross build --target $TARGET --release --features serde
 
-    cross test --target $TARGET --no-run
-    cross test --target $TARGET --release --no-run
-
     cross build --target $TARGET --examples
     cross build --target $TARGET --examples --release
 }

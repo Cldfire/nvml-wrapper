@@ -1,4 +1,6 @@
 use enum_wrappers::device::OperationMode;
+#[cfg(target_os = "windows")]
+use enum_wrappers::device::DriverModel;
 
 /// Returned from `Device.auto_boosted_clocks_enabled()`
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]

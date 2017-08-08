@@ -15,7 +15,6 @@ use std::ffi::CStr;
 use std::marker::PhantomData;
 use std::mem;
 use std::os::raw::{c_int, c_uint, c_ulong, c_ulonglong};
-#[cfg(target_os = "linux")]
 use std::ptr;
 use struct_wrappers::device::*;
 use structs::device::*;
