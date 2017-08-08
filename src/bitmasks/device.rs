@@ -14,6 +14,7 @@ bitflags! {
         /// GPU clocks are limited by the current applications clocks setting.
         const APPLICATIONS_CLOCKS_SETTING = nvmlClocksThrottleReasonApplicationsClocksSetting as u64;
         /// **This flag is deprecated.** It has been renamed to `APPLICATIONS_CLOCKS_SETTING`.
+        // TODO: Use the #[deprecated] attribute again when the fix gets released
         const USER_DEFINED_CLOCKS         = nvmlClocksThrottleReasonUserDefinedClocks as u64;
         /// Software power scaling algorithm is reducing clocks.
         const SW_POWER_CAP                = nvmlClocksThrottleReasonSwPowerCap as u64;

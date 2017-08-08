@@ -5,6 +5,8 @@ authors = ["Cldfire"]
 description = "A complete, safe, and ergonomic Rust wrapper for the NVIDIA Management Library."
 readme = "README.md"
 documentation = "https://docs.rs/nvml-wrapper"
+travis-ci = { repository = "Cldfire/nvml-wrapper" }
+appveyor = { repository = "Cldfire/nvml-wrapper" }
 repository = "https://github.com/Cldfire/nvml-wrapper"
 license = "MIT/Apache-2.0"
 
