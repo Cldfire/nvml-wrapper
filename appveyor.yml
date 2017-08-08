@@ -49,7 +49,11 @@ test_script:
       cargo build --target %TARGET% &&
       cargo build --target %TARGET% --release &&
       cargo build --target %TARGET% --features serde &&
-      cargo build --target %TARGET% --release --features serde
+      cargo build --target %TARGET% --release --features serde &&
+      cargo test --target %TARGET% --no-run &&
+      cargo test --target %TARGET% --release --no-run &&
+      cargo build --target %TARGET% --examples &&
+      cargo build --target %TARGET% --examples --release
     )
 
 cache:

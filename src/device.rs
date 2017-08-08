@@ -4355,6 +4355,7 @@ mod test {
     #[test]
     fn supported_graphics_clocks() {
         let nvml = nvml();
+        #[allow(unused_variables)]
         test_with_device(3, &nvml, |device| {
             let supported = device.supported_graphics_clocks(810)?;
 
@@ -4385,6 +4386,7 @@ mod test {
     #[test]
     fn supported_memory_clocks() {
         let nvml = nvml();
+        #[allow(unused_variables)]
         test_with_device(3, &nvml, |device| {
             let supported = device.supported_memory_clocks()?;
 
