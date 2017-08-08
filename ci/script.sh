@@ -8,9 +8,6 @@ main() {
     cross build --target $TARGET --release
     cross build --target $TARGET --features serde
     cross build --target $TARGET --release --features serde
-
-    cross build --target $TARGET --examples
-    cross build --target $TARGET --examples --release
 }
 
 # we don't run the "test phase" when doing deploys
