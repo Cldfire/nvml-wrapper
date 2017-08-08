@@ -1,4 +1,4 @@
-use enum_wrappers::device::*;
+use enum_wrappers::device::SampleValueType;
 use ffi::bindings::*;
 
 /// Respresents possible variants for a firmware version.

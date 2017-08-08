@@ -1,13 +1,13 @@
 use Device;
-use enum_wrappers::*;
-use enum_wrappers::nv_link::*;
+use enum_wrappers::{bool_from_state, state_from_bool};
+use enum_wrappers::nv_link::{ErrorCounter, Capability};
 use enums::nv_link::Counter;
-use error::*;
+use error::{nvml_try, Result};
 use ffi::bindings::*;
 use std::mem;
 use std::os::raw::{c_uint, c_ulonglong};
 use struct_wrappers::device::PciInfo;
-use struct_wrappers::nv_link::*;
+use struct_wrappers::nv_link::UtilizationControl;
 use structs::nv_link::UtilizationCounter;
 
 /**

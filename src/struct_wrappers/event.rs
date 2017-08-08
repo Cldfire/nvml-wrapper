@@ -1,7 +1,7 @@
-use bitmasks::event::*;
+use bitmasks::event::{EventTypes, CRITICAL_XID_ERROR};
 use device::Device;
 use enums::event::XidError;
-use error::*;
+use error::{Result, Bits, ErrorKind};
 use ffi::bindings::*;
 
 /// Information about an event that has occurred.

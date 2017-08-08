@@ -1,12 +1,11 @@
-
 use NVML;
-use error::*;
+use error::{nvml_try, Result};
 use ffi::bindings::*;
 use std::io;
 use std::io::Write;
 use std::marker::PhantomData;
 use std::mem;
-use struct_wrappers::event::*;
+use struct_wrappers::event::EventData;
 
 /**
 Handle to a set of events.

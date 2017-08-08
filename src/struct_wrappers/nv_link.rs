@@ -1,6 +1,6 @@
-use bitmasks::nv_link::*;
-use enum_wrappers::nv_link::*;
-use error::*;
+use bitmasks::nv_link::PacketTypes;
+use enum_wrappers::nv_link::UtilizationCountUnit;
+use error::{Result, Bits, ErrorKind};
 use ffi::bindings::*;
 
 /// Defines NvLink counter controls.

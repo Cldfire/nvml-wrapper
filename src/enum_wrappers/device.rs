@@ -1,5 +1,4 @@
-
-use error::*;
+use error::{Result, ErrorKind, Error};
 use ffi::bindings::*;
 
 /// API types that allow changes to default permission restrictions.

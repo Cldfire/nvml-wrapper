@@ -1,4 +1,4 @@
-use enum_wrappers::device::*;
+use enum_wrappers::device::OperationMode;
 
 /// Returned from `Device.auto_boosted_clocks_enabled()`
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]

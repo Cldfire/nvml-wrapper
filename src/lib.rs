@@ -139,8 +139,8 @@ pub use nv_link::NvLink;
 pub use unit::Unit;
 
 #[cfg(target_os = "linux")]
-use enum_wrappers::device::*;
-use error::*;
+use enum_wrappers::device::TopologyLevel;
+use error::{Result, nvml_try};
 use ffi::bindings::*;
 use std::ffi::{CStr, CString};
 use std::io;
@@ -827,6 +827,7 @@ impl Drop for NVML {
 #[cfg(test)]
 mod test {
     use super::*;
+    use error::{Error, ErrorKind};
     use test_utils::*;
 
     #[test]

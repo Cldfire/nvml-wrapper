@@ -67,7 +67,7 @@ use EventSet;
 use NVML;
 use bitmasks::event::*;
 use enums::event::XidError;
-use error::*;
+use error::{Result, ErrorKind, Error};
 use struct_wrappers::event::EventData;
 
 // TODO: Tests

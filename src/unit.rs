@@ -1,13 +1,13 @@
 use NVML;
 use device::Device;
-use enum_wrappers::unit::*;
-use enums::unit::*;
-use error::*;
+use enum_wrappers::unit::LedColor;
+use enums::unit::{TemperatureReading, LedState};
+use error::{nvml_try, Result};
 use ffi::bindings::*;
 use std::marker::PhantomData;
 use std::mem;
 use std::os::raw::c_uint;
-use struct_wrappers::unit::*;
+use struct_wrappers::unit::{FansInfo, PsuInfo, UnitInfo};
 
 /**
 Struct that represents a unit. 

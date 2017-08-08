@@ -1,4 +1,4 @@
-use error::*;
+use error::{Result, ErrorKind, Error};
 use ffi::bindings::*;
 use std::ffi::CStr;
 

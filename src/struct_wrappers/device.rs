@@ -1,6 +1,6 @@
-use enum_wrappers::device::*;
-use enums::device::*;
-use error::*;
+use enum_wrappers::device::{BridgeChip, SampleValueType};
+use enums::device::{UsedGpuMemory, SampleValue, FirmwareVersion};
+use error::{Result, ErrorKind};
 use ffi::bindings::*;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;

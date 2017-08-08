@@ -1,5 +1,5 @@
-use enum_wrappers::unit::*;
-use error::*;
+use enum_wrappers::unit::FanState;
+use error::Result;
 use ffi::bindings::*;
 use std::ffi::CStr;
 
