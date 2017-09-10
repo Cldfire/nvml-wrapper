@@ -1,13 +1,13 @@
 extern crate nvml_wrapper as nvml;
-// This is used to pretty-print bytes. Nothing you need to be concerned about.
-extern crate number_prefix;
+// This is just used to pretty-print bytes.
+extern crate pretty_bytes;
 
 use nvml::NVML;
 // You would probably want your own error setup in your own code; here we just
 // use the wrapper's error types.
 use nvml::error::*;
 use nvml::enum_wrappers::device::{TemperatureSensor, Clock};
-use number_prefix::{decimal_prefix, Standalone, Prefixed};
+use pretty_bytes::converter::convert;
 
 fn main() {
     match actual_main() {
@@ -46,8 +46,8 @@ fn actual_main() -> Result<()> {
         interface; the max your hardware supports is PCIe gen {max_link_gen} \
         x{max_link_width}.",
         name=name, temperature=temperature, graphics_clock=graphics_clock,
-        mem_clock=mem_clock, used_mem=format_bytes(mem_info.used),
-        total_mem=format_bytes(mem_info.total), link_gen=link_gen,
+        mem_clock=mem_clock, used_mem=convert(mem_info.used as _),
+        total_mem=convert(mem_info.total as _), link_gen=link_gen,
         link_width=link_width, max_link_gen=max_link_gen,
         max_link_width=max_link_width
     );
@@ -62,12 +62,4 @@ fn actual_main() -> Result<()> {
 
     print!("\n\n");
     Ok(())
-}
-
-// Function used to pretty-format bytes. Not relevant to this library.
-fn format_bytes(num: u64) -> String {
-    match decimal_prefix(num as f32) {
-        Standalone(bytes)   => bytes.to_string(),
-        Prefixed(prefix, n) => format!("{:.2} {}B", n, prefix)
-    }
 }
