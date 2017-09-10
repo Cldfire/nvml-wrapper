@@ -9,7 +9,7 @@ bitflags! {
     */
     // Checked against local
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-    pub struct PacketType: u32 {
+    pub struct PacketTypes: u32 {
         const NO_OP      = nvmlNvLinkUtilizationCountPktTypes_enum_NVML_NVLINK_COUNTER_PKTFILTER_NOP as u32;
         const READ       = nvmlNvLinkUtilizationCountPktTypes_enum_NVML_NVLINK_COUNTER_PKTFILTER_READ as u32;
         const WRITE      = nvmlNvLinkUtilizationCountPktTypes_enum_NVML_NVLINK_COUNTER_PKTFILTER_WRITE as u32;

@@ -9,7 +9,7 @@ bitflags! {
     */
     // Checked against local
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-    pub struct EventType: u64 {
+    pub struct EventTypes: u64 {
         /// A corrected texture memory error is not an ECC error, so it does not
         /// generate a single bit event.
         const SINGLE_BIT_ECC_ERROR  = nvmlEventTypeSingleBitEccError as u64;

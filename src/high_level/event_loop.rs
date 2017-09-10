@@ -65,7 +65,7 @@ not support events on any other platform.
 use Device;
 use EventSet;
 use NVML;
-use bitmasks::event::EventType;
+use bitmasks::event::EventTypes;
 use enums::event::XidError;
 use error::{Result, ErrorKind, Error};
 use struct_wrappers::event::EventData;
@@ -94,17 +94,17 @@ pub enum Event<'nvml> {
 
 impl<'nvml> From<EventData<'nvml>> for Event<'nvml> {
     fn from(struct_: EventData<'nvml>) -> Self {
-        if struct_.event_type.contains(EventType::CLOCK_CHANGE) {
+        if struct_.event_type.contains(EventTypes::CLOCK_CHANGE) {
             Event::ClockChange(struct_.device)
-        } else if struct_.event_type.contains(EventType::CRITICAL_XID_ERROR) {
+        } else if struct_.event_type.contains(EventTypes::CRITICAL_XID_ERROR) {
             // We can unwrap here because we know `event_data` will be `Some`
             // since the error is `CRITICAL_XID_ERROR`
             Event::CriticalXidError(struct_.device, struct_.event_data.unwrap())
-        } else if struct_.event_type.contains(EventType::DOUBLE_BIT_ECC_ERROR) {
+        } else if struct_.event_type.contains(EventTypes::DOUBLE_BIT_ECC_ERROR) {
             Event::DoubleBitEccError(struct_.device)
-        } else if struct_.event_type.contains(EventType::PSTATE_CHANGE) {
+        } else if struct_.event_type.contains(EventTypes::PSTATE_CHANGE) {
             Event::PowerStateChange(struct_.device)
-        } else if struct_.event_type.contains(EventType::SINGLE_BIT_ECC_ERROR) {
+        } else if struct_.event_type.contains(EventTypes::SINGLE_BIT_ECC_ERROR) {
             Event::SingleBitEccError(struct_.device)
         } else {
             Event::Unknown

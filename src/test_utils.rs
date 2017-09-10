@@ -78,10 +78,10 @@ impl ShouldPrint for MemoryInfo {}
 impl ShouldPrint for PciInfo {}
 impl ShouldPrint for PerformanceState {}
 impl ShouldPrint for PowerManagementConstraints {}
-impl ShouldPrint for ThrottleReason {}
+impl ShouldPrint for ThrottleReasons {}
 impl ShouldPrint for ViolationTime {}
 impl ShouldPrint for AccountingStats {}
-impl ShouldPrint for EventType {}
+impl ShouldPrint for EventTypes {}
 impl<'nvml> ShouldPrint for EventData<'nvml> {}
 impl ShouldPrint for FansInfo {}
 impl ShouldPrint for LedState {}
