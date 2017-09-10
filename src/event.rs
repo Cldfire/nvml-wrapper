@@ -56,6 +56,8 @@ impl<'nvml> EventSet<'nvml> {
 
     /**
     Waits on events for the given timeout (in ms) and delivers one when it arrives.
+
+    See the `high_level::event_loop` module for an abstracted version of this.
     
     This method returns immediately if an event is ready to be delivered when it
     is called. If no events are ready it will sleep until an event arrives, but
@@ -80,8 +82,6 @@ impl<'nvml> EventSet<'nvml> {
     Supports Fermi and newer fully supported devices.
     */
     // Checked against local
-    // TODO: Should I go higher level with this?
-    // Should it be tied to the device and managed for you
     #[inline]
     pub fn wait(&self, timeout_ms: u32) -> Result<EventData<'nvml>> {
         unsafe {
@@ -131,7 +131,7 @@ impl<'nvml> Drop for EventSet<'nvml> {
                 Err(e) => {
                     io::stderr().write(
                         format!(
-                            "WARNING: Error returned by `nmvlEventSetFree()` in Drop \
+                            "WARNING: Error returned by `nvmlEventSetFree()` in Drop \
                              implementation: {:?}",
                             e
                         ).as_bytes()
