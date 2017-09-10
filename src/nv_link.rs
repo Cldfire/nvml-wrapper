@@ -510,7 +510,11 @@ mod test {
 
         let settings = UtilizationControl {
             units: UtilizationCountUnit::Cycles,
-            packet_filter: NO_OP | READ | WRITE | RATOM | WITH_DATA
+            packet_filter: PacketType::NO_OP |
+                           PacketType::READ |
+                           PacketType::WRITE |
+                           PacketType::RATOM |
+                           PacketType::WITH_DATA
         };
 
         link.set_utilization_control(Counter::One, settings, false).unwrap()

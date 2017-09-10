@@ -6,7 +6,7 @@ bitflags! {
     /// Flags used to specify why a GPU is throttling.
     // Checked against local
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-    pub struct ThrottleReasons: u64 {
+    pub struct ThrottleReason: u64 {
         /// Nothing is running on the GPU.
         ///
         /// This limiter may be removed in a future release.

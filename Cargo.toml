@@ -20,8 +20,8 @@ travis-ci = { repository = "Cldfire/nvml-wrapper" }
 appveyor = { repository = "Cldfire/nvml-wrapper" }
 
 [dependencies]
-error-chain = "0.10"
-bitflags = "0.9"
+error-chain = "0.11"
+bitflags = "1.0"
 serde = { version = "1.0", optional = true, features = ["derive"] }
 nvml-wrapper-sys = "0.3.0"
 wrapcenum-derive = "0.3.0"

@@ -169,8 +169,12 @@ mod test {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
             let set = nvml.create_event_set()?;
-            let set =
-                device.register_events(PSTATE_CHANGE | CRITICAL_XID_ERROR | CLOCK_CHANGE, set)?;
+            let set = device.register_events(
+                EventType::PSTATE_CHANGE |
+                EventType::CRITICAL_XID_ERROR |
+                EventType::CLOCK_CHANGE,
+                set
+            )?;
 
             set.release_events()
         })
@@ -185,9 +189,12 @@ mod test {
         let nvml = nvml();
         let device = device(&nvml);
         let set = nvml.create_event_set().expect("event set");
-        let set = device
-            .register_events(PSTATE_CHANGE | CRITICAL_XID_ERROR | CLOCK_CHANGE, set)
-            .expect("registration");
+        let set = device.register_events(
+            EventType::PSTATE_CHANGE |
+            EventType::CRITICAL_XID_ERROR |
+            EventType::CLOCK_CHANGE,
+            set
+        ).expect("registration");
 
         let data = match set.wait(10_000) {
             Err(Error(ErrorKind::Timeout, _)) => return (),

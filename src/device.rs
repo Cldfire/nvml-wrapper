@@ -4,9 +4,9 @@ use NVML;
 use NvLink;
 #[cfg(target_os = "windows")]
 use bitmasks::Behavior;
-use bitmasks::device::ThrottleReasons;
+use bitmasks::device::ThrottleReason;
 #[cfg(target_os = "linux")]
-use bitmasks::event::EventTypes;
+use bitmasks::event::EventType;
 use enum_wrappers::{state_from_bool, bool_from_state};
 use enum_wrappers::device::*;
 use error::{Bits, nvml_try, Result, ResultExt, ErrorKind, Error};
@@ -2076,7 +2076,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local.
     // Tested
     #[inline]
-    pub fn current_throttle_reasons(&self) -> Result<ThrottleReasons> {
+    pub fn current_throttle_reasons(&self) -> Result<ThrottleReason> {
         unsafe {
             let mut reasons: c_ulonglong = mem::zeroed();
 
@@ -2085,7 +2085,7 @@ impl<'nvml> Device<'nvml> {
                 &mut reasons
             ))?;
 
-            ThrottleReasons::from_bits(reasons)
+            ThrottleReason::from_bits(reasons)
                 .ok_or_else(|| ErrorKind::IncorrectBits(Bits::U64(reasons)).into())
         }
     }
@@ -2112,7 +2112,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested
     #[inline]
-    pub fn supported_throttle_reasons(&self) -> Result<ThrottleReasons> {
+    pub fn supported_throttle_reasons(&self) -> Result<ThrottleReason> {
         unsafe {
             let mut reasons: c_ulonglong = mem::zeroed();
 
@@ -2121,7 +2121,7 @@ impl<'nvml> Device<'nvml> {
                 &mut reasons
             ))?;
 
-            ThrottleReasons::from_bits(reasons)
+            ThrottleReason::from_bits(reasons)
                 .ok_or_else(|| ErrorKind::IncorrectBits(Bits::U64(reasons)).into())
         }
     }
@@ -3437,7 +3437,7 @@ impl<'nvml> Device<'nvml> {
     #[inline]
     pub fn register_events(
         &self,
-        events: EventTypes,
+        events: EventType,
         set: EventSet<'nvml>,
     ) -> Result<EventSet<'nvml>> {
         unsafe {
@@ -3510,12 +3510,12 @@ impl<'nvml> Device<'nvml> {
     // Tested
     #[cfg(target_os = "linux")]
     #[inline]
-    pub fn supported_event_types(&self) -> Result<EventTypes> {
+    pub fn supported_event_types(&self) -> Result<EventType> {
         unsafe {
             let mut flags: c_ulonglong = mem::zeroed();
             nvml_try(nvmlDeviceGetSupportedEventTypes(self.device, &mut flags))?;
 
-            if let Some(f) = EventTypes::from_bits(flags) {
+            if let Some(f) = EventType::from_bits(flags) {
                 Ok(f)
             } else {
                 bail!(ErrorKind::IncorrectBits(Bits::U64(flags)))
@@ -4676,8 +4676,12 @@ mod test {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
             let set = nvml.create_event_set()?;
-            let set =
-                device.register_events(PSTATE_CHANGE | CRITICAL_XID_ERROR | CLOCK_CHANGE, set)?;
+            let set = device.register_events(
+                EventType::PSTATE_CHANGE |
+                EventType::CRITICAL_XID_ERROR |
+                EventType::CLOCK_CHANGE,
+                set
+            )?;
 
             Ok(())
         })

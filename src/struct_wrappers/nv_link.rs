@@ -1,4 +1,4 @@
-use bitmasks::nv_link::PacketTypes;
+use bitmasks::nv_link::PacketType;
 use enum_wrappers::nv_link::UtilizationCountUnit;
 use error::{Result, Bits, ErrorKind};
 use ffi::bindings::*;
@@ -8,7 +8,7 @@ use ffi::bindings::*;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UtilizationControl {
     pub units: UtilizationCountUnit,
-    pub packet_filter: PacketTypes
+    pub packet_filter: PacketType
 }
 
 impl UtilizationControl {
@@ -26,7 +26,7 @@ impl UtilizationControl {
 
         Ok(UtilizationControl {
             units: UtilizationCountUnit::try_from(struct_.units)?,
-            packet_filter: match PacketTypes::from_bits(bits) {
+            packet_filter: match PacketType::from_bits(bits) {
                 Some(t) => t,
                 None => bail!(ErrorKind::IncorrectBits(Bits::U32(bits))),
             }
