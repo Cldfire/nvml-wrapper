@@ -2061,6 +2061,10 @@ impl<'nvml> Device<'nvml> {
     Gets current throttling reasons.
     
     Note that multiple reasons can be affecting clocks at once.
+
+    The returned bitmask is created via the `ThrottleReasons::from_bits_truncate`
+    method, meaning that any bits that don't correspond to flags present in this
+    version of the wrapper will be dropped.
     
     # Errors
 
@@ -2077,6 +2081,41 @@ impl<'nvml> Device<'nvml> {
     // Tested
     #[inline]
     pub fn current_throttle_reasons(&self) -> Result<ThrottleReasons> {
+        Ok(ThrottleReasons::from_bits_truncate(self.current_throttle_reasons_raw()?))
+    }
+
+    /**
+    Gets current throttling reasons, erroring if any bits correspond to
+    non-present flags.
+    
+    Note that multiple reasons can be affecting clocks at once.
+    
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `IncorrectBits`, if NVML returns any bits that do not correspond to flags in
+    `ThrottleReasons`
+    * `NotSupported`, if this `Device` does not support this feature
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+    
+    # Device Support
+
+    Supports all _fully supported_ devices.
+    */
+    // Checked against local.
+    // Tested
+    #[inline]
+    pub fn current_throttle_reasons_strict(&self) -> Result<ThrottleReasons> {
+        let reasons = self.current_throttle_reasons_raw()?;
+
+        ThrottleReasons::from_bits(reasons)
+            .ok_or_else(|| ErrorKind::IncorrectBits(Bits::U64(reasons)).into())
+    }
+
+    // Helper for the above methods.
+    #[inline]
+    fn current_throttle_reasons_raw(&self) -> Result<c_ulonglong> {
         unsafe {
             let mut reasons: c_ulonglong = mem::zeroed();
 
@@ -2085,8 +2124,7 @@ impl<'nvml> Device<'nvml> {
                 &mut reasons
             ))?;
 
-            ThrottleReasons::from_bits(reasons)
-                .ok_or_else(|| ErrorKind::IncorrectBits(Bits::U64(reasons)).into())
+            Ok(reasons)
         }
     }
 
@@ -2094,6 +2132,10 @@ impl<'nvml> Device<'nvml> {
     Gets a bitmask of the supported throttle reasons.
     
     These reasons can be returned by `.current_throttle_reasons()`.
+
+    The returned bitmask is created via the `ThrottleReasons::from_bits_truncate`
+    method, meaning that any bits that don't correspond to flags present in this
+    version of the wrapper will be dropped.
     
     # Errors
 
@@ -2113,6 +2155,44 @@ impl<'nvml> Device<'nvml> {
     // Tested
     #[inline]
     pub fn supported_throttle_reasons(&self) -> Result<ThrottleReasons> {
+        Ok(ThrottleReasons::from_bits_truncate(self.supported_throttle_reasons_raw()?))
+    }
+
+    /**
+    Gets a bitmask of the supported throttle reasons, erroring if any bits
+    correspond to non-present flags.
+    
+    These reasons can be returned by `.current_throttle_reasons()`.
+    
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `IncorrectBits`, if NVML returns any bits that do not correspond to flags in
+    `ThrottleReasons`
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+    
+    # Device Support
+
+    Supports all _fully supported_ devices.
+    
+    # Environment Support
+
+    This method is not supported in virtualized GPU environments.
+    */
+    // Checked against local
+    // Tested
+    #[inline]
+    pub fn supported_throttle_reasons_strict(&self) -> Result<ThrottleReasons> {
+        let reasons = self.supported_throttle_reasons_raw()?;
+
+        ThrottleReasons::from_bits(reasons)
+            .ok_or_else(|| ErrorKind::IncorrectBits(Bits::U64(reasons)).into())
+    }
+
+    // Helper for the above methods.
+    #[inline]
+    fn supported_throttle_reasons_raw(&self) -> Result<c_ulonglong> {
         unsafe {
             let mut reasons: c_ulonglong = mem::zeroed();
 
@@ -2121,8 +2201,7 @@ impl<'nvml> Device<'nvml> {
                 &mut reasons
             ))?;
 
-            ThrottleReasons::from_bits(reasons)
-                .ok_or_else(|| ErrorKind::IncorrectBits(Bits::U64(reasons)).into())
+            Ok(reasons)
         }
     }
 
@@ -3413,7 +3492,7 @@ impl<'nvml> Device<'nvml> {
     # fn test() -> Result<()> {
     # let nvml = NVML::init()?;
     # let device = nvml.device_by_index(0)?;
-    use nvml_wrapper::bitmasks::event::*;
+    use nvml_wrapper::bitmasks::event::EventTypes;
 
     let set = nvml.create_event_set()?;
 
@@ -3425,7 +3504,11 @@ impl<'nvml> Device<'nvml> {
     if everything went well. It does *not* require `set` to be mutable as nothing
     is being mutated.
     */
-    let set = device.register_events(CLOCK_CHANGE | PSTATE_CHANGE, set)?;
+    let set = device.register_events(
+        EventTypes::CLOCK_CHANGE |
+        EventTypes::PSTATE_CHANGE,
+        set
+    )?;
     # Ok(())
     # }
     ```
@@ -3468,6 +3551,10 @@ impl<'nvml> Device<'nvml> {
 
     /**
     Gets the `EventTypes` that this `Device` supports.
+
+    The returned bitmask is created via the `EventTypes::from_bits_truncate`
+    method, meaning that any bits that don't correspond to flags present in this
+    version of the wrapper will be dropped.
     
     # Errors
 
@@ -3494,13 +3581,16 @@ impl<'nvml> Device<'nvml> {
     # fn test() -> Result<()> {
     # let nvml = NVML::init()?;
     # let device = nvml.device_by_index(0)?;
-    use nvml_wrapper::bitmasks::event::*;
+    use nvml_wrapper::bitmasks::event::EventTypes;
 
     let supported = device.supported_event_types()?;
 
-    if supported.contains(CLOCK_CHANGE) {
+    if supported.contains(EventTypes::CLOCK_CHANGE) {
         println!("The `CLOCK_CHANGE` event is supported.");
-    } else if supported.contains(SINGLE_BIT_ECC_ERROR | DOUBLE_BIT_ECC_ERROR) {
+    } else if supported.contains(
+        EventTypes::SINGLE_BIT_ECC_ERROR |
+        EventTypes::DOUBLE_BIT_ECC_ERROR
+    ) {
         println!("All ECC error event types are supported.");
     }
     # Ok(())
@@ -3511,15 +3601,48 @@ impl<'nvml> Device<'nvml> {
     #[cfg(target_os = "linux")]
     #[inline]
     pub fn supported_event_types(&self) -> Result<EventTypes> {
-        unsafe {
-            let mut flags: c_ulonglong = mem::zeroed();
-            nvml_try(nvmlDeviceGetSupportedEventTypes(self.device, &mut flags))?;
+        Ok(EventTypes::from_bits_truncate(self.supported_event_types_raw()?))
+    }
 
-            if let Some(f) = EventTypes::from_bits(flags) {
-                Ok(f)
-            } else {
-                bail!(ErrorKind::IncorrectBits(Bits::U64(flags)))
-            }
+    /**
+    Gets the `EventTypes` that this `Device` supports, erroring if any bits
+    correspond to non-present flags.
+    
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `IncorrectBits`, if NVML returns any bits that do not correspond to flags in
+    `EventTypes`
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+    
+    # Device Support
+
+    Supports Fermi and newer fully supported devices.
+    
+    # Platform Support
+
+    Only supports Linux.
+    */
+    // Tested
+    #[cfg(target_os = "linux")]
+    #[inline]
+    pub fn supported_event_types_strict(&self) -> Result<EventTypes> {
+        let ev_types = self.supported_event_types_raw()?;
+
+        EventTypes::from_bits(ev_types)
+            .ok_or_else(|| ErrorKind::IncorrectBits(Bits::U64(ev_types)).into())
+    }
+
+    // Helper for the above methods.
+    #[cfg(target_os = "linux")]
+    #[inline]
+    fn supported_event_types_raw(&self) -> Result<c_ulonglong> {
+        unsafe {
+            let mut ev_types: c_ulonglong = mem::zeroed();
+            nvml_try(nvmlDeviceGetSupportedEventTypes(self.device, &mut ev_types))?;
+
+            Ok(ev_types)
         }
     }
 
@@ -3784,13 +3907,13 @@ impl<'nvml> Device<'nvml> {
             info
         } else {
             match self.pci_info() {
-                Ok(i) => i,
+                Ok(info) => info,
                 Err(e) => return (Err(e).chain_err(|| ErrorKind::GetPciInfoFailed), Some(self)),
             }
         };
 
         let mut raw_pci_info = match pci_info.try_into_c() {
-            Ok(i) => i,
+            Ok(info) => info,
             Err(e) => return (Err(e).chain_err(|| ErrorKind::PciInfoToCFailed), Some(self)),
         };
 
@@ -4346,9 +4469,21 @@ mod test {
     }
 
     #[test]
+    fn current_throttle_reasons_strict() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.current_throttle_reasons_strict())
+    }
+
+    #[test]
     fn supported_throttle_reasons() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.supported_throttle_reasons())
+    }
+
+    #[test]
+    fn supported_throttle_reasons_strict() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.supported_throttle_reasons_strict())
     }
 
     #[test]
@@ -4692,6 +4827,13 @@ mod test {
     fn supported_event_types() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.supported_event_types())
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn supported_event_types_strict() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.supported_event_types_strict())
     }
 
     #[cfg(target_os = "linux")]

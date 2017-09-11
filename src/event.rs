@@ -88,7 +88,7 @@ impl<'nvml> EventSet<'nvml> {
             let mut data: nvmlEventData_t = mem::zeroed();
             nvml_try(nvmlEventSetWait(self.set, &mut data, timeout_ms))?;
 
-            Ok(EventData::try_from(data)?)
+            Ok(data.into())
         }
     }
 
@@ -170,9 +170,9 @@ mod test {
         test_with_device(3, &nvml, |device| {
             let set = nvml.create_event_set()?;
             let set = device.register_events(
-                EventType::PSTATE_CHANGE |
-                EventType::CRITICAL_XID_ERROR |
-                EventType::CLOCK_CHANGE,
+                EventTypes::PSTATE_CHANGE |
+                EventTypes::CRITICAL_XID_ERROR |
+                EventTypes::CLOCK_CHANGE,
                 set
             )?;
 
@@ -190,9 +190,9 @@ mod test {
         let device = device(&nvml);
         let set = nvml.create_event_set().expect("event set");
         let set = device.register_events(
-            EventType::PSTATE_CHANGE |
-            EventType::CRITICAL_XID_ERROR |
-            EventType::CLOCK_CHANGE,
+            EventTypes::PSTATE_CHANGE |
+            EventTypes::CRITICAL_XID_ERROR |
+            EventTypes::CLOCK_CHANGE,
             set
         ).expect("registration");
 

@@ -1,8 +1,6 @@
 use bitmasks::event::EventTypes;
-// use bitmasks::event::EventTypes::CRITICAL_XID_ERROR;
 use device::Device;
 use enums::event::XidError;
-use error::{Result, Bits, ErrorKind};
 use ffi::bindings::*;
 
 /// Information about an event that has occurred.
@@ -27,15 +25,18 @@ pub struct EventData<'nvml> {
     pub event_data: Option<XidError>
 }
 
-impl<'nvml> EventData<'nvml> {
-    /// Waiting for `TryFrom` to be stable. In the meantime, we do this.
-    pub fn try_from(struct_: nvmlEventData_t) -> Result<Self> {
-        let event_type = match EventTypes::from_bits(struct_.eventType) {
-            Some(t) => t,
-            None => bail!(ErrorKind::IncorrectBits(Bits::U64(struct_.eventType))),
-        };
+impl<'nvml> From<nvmlEventData_t> for EventData<'nvml> {
+    /**
+    Performs the conversion.
+    
+    The `event_type` bitmask is created via the `EventTypes::from_bits_truncate`
+    method, meaning that any bits that don't correspond to flags present in this
+    version of the wrapper will be dropped.
+    */
+    fn from(struct_: nvmlEventData_t) -> Self {
+        let event_type = EventTypes::from_bits_truncate(struct_.eventType);
 
-        Ok(EventData {
+        EventData {
             device: struct_.device.into(),
             event_type,
             event_data: if event_type.contains(EventTypes::CRITICAL_XID_ERROR) {
@@ -46,6 +47,6 @@ impl<'nvml> EventData<'nvml> {
             } else {
                 None
             }
-        })
+        }
     }
 }

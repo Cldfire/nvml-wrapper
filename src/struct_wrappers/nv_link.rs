@@ -1,6 +1,6 @@
 use bitmasks::nv_link::PacketTypes;
 use enum_wrappers::nv_link::UtilizationCountUnit;
-use error::{Result, Bits, ErrorKind};
+use error::Result;
 use ffi::bindings::*;
 
 /// Defines NvLink counter controls.
@@ -15,21 +15,20 @@ impl UtilizationControl {
     /**
     Waiting for `TryFrom` to be stable. In the meantime, we do this.
 
+    The `packet_filter` bitmask is created via the `PacketTypes::from_bits_truncate`
+    method, meaning that any bits that don't correspond to flags present in this
+    version of the wrapper will be dropped.
+
     # Errors
-    
+
     * `UnexpectedVariant`, for which you can read the docs for
-    * `IncorrectBits`, if bits obtained in this method cannot be interpreted
-    as `PacketTypes`
     */
     pub fn try_from(struct_: nvmlNvLinkUtilizationControl_t) -> Result<Self> {
         let bits = struct_.pktfilter as u32;
 
         Ok(UtilizationControl {
             units: UtilizationCountUnit::try_from(struct_.units)?,
-            packet_filter: match PacketTypes::from_bits(bits) {
-                Some(t) => t,
-                None => bail!(ErrorKind::IncorrectBits(Bits::U32(bits))),
-            }
+            packet_filter: PacketTypes::from_bits_truncate(bits)
         })
     }
 
