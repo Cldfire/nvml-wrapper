@@ -2,6 +2,39 @@
 
 This file describes the changes / additions / fixes between wrapper releases.
 
+## 0.4.0 (released 2017-09-28)
+
+### Release Summary
+
+This is a small release that updates dependencies and makes a handful of changes for forward-compatibility purposes.
+
+### Rust Version Support
+
+This release **requires** and supports **Rust 1.20.0** or higher.
+
+### Additions
+
+* CI has been set up
+  * All it can do is build the crate (no testing of any kind), but at least it's something.
+
+### Changes
+
+* `EventData::try_from()` is replaced by a `From<nvmlEventData_t>` impl as it can no longer error
+  * This is because of the `from_bits_truncate()` usage described below
+
+* Methods that deal with bitmasks now use the `from_bits_truncate()` constructor instead of `from_bits()`
+  * This allows the wrapper, which is using bindings for NVML 8, to still accept bitmasks from future versions of NVML (such as NVML 9) that may have additional flags
+  * `*_strict()` method counterparts are available for most such methods if you need them
+* As a result of the `bitflags` update, flags are now associated constants
+  * This means that, for instance, `nvml_wrapper::bitmasks::event::CLOCK_CHANGE` is now `nvml_wrapper::bitmasks::event::EventTypes::CLOCK_CHANGE`
+* Imports were deglobbed in a number of places
+* The `basic_usage` example now uses `pretty-bytes` instead of `number_prefix` to pretty-print bytes
+
+### Dependencies
+
+* `bitflags`: `0.9.x -> 1.0.x`
+* `error-chain`: `0.10.x -> 0.11.x`
+
 ## 0.3.0 (released 2017-07-20)
 
 ### Release Summary
@@ -121,7 +154,7 @@ This release **requires** and supports **Rust 1.18.0** or higher.
 
 ### Dependencies
 
-* Bitflags: `0.8.x -> 0.9.x`
+* `bitflags`: `0.8.x -> 0.9.x`
 
 ## 0.1.0 (released 2017-05-17)
 
