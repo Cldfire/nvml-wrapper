@@ -3,8 +3,8 @@
 [![Docs.rs docs](https://docs.rs/nvml-wrapper/badge.svg)](https://docs.rs/nvml-wrapper)
 [![Crates.io version](https://img.shields.io/crates/v/nvml-wrapper.svg?style=flat-square)](https://crates.io/crates/nvml-wrapper)
 [![Crates.io downloads](https://img.shields.io/crates/d/nvml-wrapper.svg?style=flat-square)](https://crates.io/crates/nvml-wrapper)
-[![Travis build status](https://img.shields.io/travis/Cldfire/nvml-wrapper.svg?style=flat-square)](https://travis-ci.org/Cldfire/nvml-wrapper)
-[![AppVeyor build status](https://img.shields.io/appveyor/ci/Cldfire/nvml-wrapper.svg?style=flat-square)](https://ci.appveyor.com/project/Cldfire/nvml-wrapper)
+[![Travis build status](https://img.shields.io/travis/Cldfire/nvml-wrapper/master.svg?style=flat-square)](https://travis-ci.org/Cldfire/nvml-wrapper)
+[![AppVeyor build status](https://img.shields.io/appveyor/ci/Cldfire/nvml-wrapper/master.svg?style=flat-square)](https://ci.appveyor.com/project/Cldfire/nvml-wrapper)
 
 A complete, safe, and ergonomic Rust wrapper for the
 [NVIDIA Management Library](https://developer.nvidia.com/nvidia-management-library-nvml)
