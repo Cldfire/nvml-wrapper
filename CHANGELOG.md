@@ -20,8 +20,7 @@ This release **requires** and supports **Rust 1.20.0** or higher.
 ### Changes
 
 * `EventData::try_from()` is replaced by a `From<nvmlEventData_t>` impl as it can no longer error
-  * This is because of the `from_bits_truncate()` usage described below
-
+  * This is because of the `from_bits_truncate()` usage described next
 * Methods that deal with bitmasks now use the `from_bits_truncate()` constructor instead of `from_bits()`
   * This allows the wrapper, which is using bindings for NVML 8, to still accept bitmasks from future versions of NVML (such as NVML 9) that may have additional flags
   * `*_strict()` method counterparts are available for most such methods if you need them

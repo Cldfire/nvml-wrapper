@@ -1,6 +1,6 @@
 [package]
 name = "nvml-wrapper"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Cldfire"]
 description = "A complete, safe, and ergonomic Rust wrapper for the NVIDIA Management Library."
 readme = "README.md"

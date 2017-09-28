@@ -94,7 +94,7 @@ NVML version bumps.
 
 ## Rust Version Support
 
-Currently supports Rust 1.19.0 or greater. The target version is the **latest**
+Currently supports Rust 1.20.0 or greater. The target version is the **latest**
 stable version; I do not intend to pin to an older one at any time.
 
 ## Cargo Features
