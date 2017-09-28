@@ -3290,13 +3290,13 @@ impl<'nvml> Device<'nvml> {
     # fn test() -> Result<()> {
     # let nvml = NVML::init()?;
     # let mut device = nvml.device_by_index(0)?;
-    use nvml_wrapper::bitmasks::*;
+    use nvml_wrapper::bitmasks::Behavior;
     use nvml_wrapper::enum_wrappers::device::DriverModel;
 
-    device.set_driver_model(DriverModel::WDM, DEFAULT)?;
+    device.set_driver_model(DriverModel::WDM, Behavior::DEFAULT)?;
 
     // Force the change to WDM (TCC)
-    device.set_driver_model(DriverModel::WDM, FORCE)?;
+    device.set_driver_model(DriverModel::WDM, Behavior::FORCE)?;
     # Ok(())
     # }
     ```
@@ -3974,7 +3974,7 @@ impl<'nvml> Device<'nvml> {
 mod test {
     use super::Device;
     #[cfg(target_os = "windows")]
-    use bitmasks::DEFAULT;
+    use bitmasks::Behavior;
     #[cfg(target_os = "linux")]
     use bitmasks::event::*;
     use enum_wrappers::device::*;
@@ -4764,7 +4764,7 @@ mod test {
         let nvml = nvml();
         let mut device = device(&nvml);
 
-        device.set_driver_model(DriverModel::WDM, DEFAULT).expect("set to wdm")
+        device.set_driver_model(DriverModel::WDM, Behavior::DEFAULT).expect("set to wdm")
     }
 
     // This modifies device state, so we don't want to actually run the test
