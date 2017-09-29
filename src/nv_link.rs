@@ -55,7 +55,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // Test written
     #[inline]
@@ -86,7 +86,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // Test written
     #[inline]
@@ -117,7 +117,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // Test written
     #[inline]
@@ -154,7 +154,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // Test written
     #[inline]
@@ -186,7 +186,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // Test written
     #[inline]
@@ -218,7 +218,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // No-run test written
     #[inline]
@@ -247,7 +247,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // No-run test written
     #[inline]
@@ -285,7 +285,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // Test written
     #[inline]
@@ -334,7 +334,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // No-run test written
     pub fn utilization_counter(&self, counter: Counter) -> Result<UtilizationCounter> {
@@ -373,7 +373,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // No-run test written
     pub fn freeze_utilization_counter(&mut self, counter: Counter) -> Result<()> {
@@ -396,7 +396,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // No-run test written
     pub fn unfreeze_utilization_counter(&mut self, counter: Counter) -> Result<()> {
@@ -430,7 +430,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
     
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // No-run test written
     pub fn reset_utilization_counter(&mut self, counter: Counter) -> Result<()> {

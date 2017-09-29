@@ -28,6 +28,8 @@ pub struct PciInfo {
     Will always be `None` if this `PciInfo` was obtained from `NvLink.remote_pci_info()`.
     NVIDIA says that the C field that this corresponds to "is not filled ... and
     is indeterminate" when being returned from that specific call.
+
+    Will be `Some` in all other cases.
     */
     pub pci_sub_system_id: Option<u32>
 }

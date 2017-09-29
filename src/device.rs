@@ -369,7 +369,7 @@ impl<'nvml> Device<'nvml> {
     
     # Device Support
 
-    Supports Maxwell and newer fully supported devices.
+    Supports Pascal and newer fully supported devices.
     */
     // Checked against local
     // Tested on machines other than my own
@@ -1537,7 +1537,7 @@ impl<'nvml> Device<'nvml> {
     
     # Environment Support
 
-    This method is not supported in virtualized GPU environments.
+    This method is not supported on virtual machines running vGPUs.
     */
     // Checked against local
     // Tested
@@ -2149,7 +2149,7 @@ impl<'nvml> Device<'nvml> {
     
     # Environment Support
 
-    This method is not supported in virtualized GPU environments.
+    This method is not supported on virtual machines running vGPUs.
     */
     // Checked against local
     // Tested
@@ -2178,7 +2178,7 @@ impl<'nvml> Device<'nvml> {
     
     # Environment Support
 
-    This method is not supported in virtualized GPU environments.
+    This method is not supported on virtual machines running vGPUs.
     */
     // Checked against local
     // Tested
@@ -3677,7 +3677,7 @@ impl<'nvml> Device<'nvml> {
     
     # Device Support
 
-    Supports Maxwell and newer fully supported devices.
+    Supports Pascal and newer fully supported devices.
     
     Some Kepler devices are also supported (that's all NVIDIA says, no specifics).
     
@@ -3748,7 +3748,7 @@ impl<'nvml> Device<'nvml> {
     
     # Device Support
 
-    Supports Maxwell and newer fully supported devices.
+    Supports Pascal and newer fully supported devices.
     
     Some Kepler devices are also supported (that's all NVIDIA says, no specifics).
     
@@ -3847,7 +3847,7 @@ impl<'nvml> Device<'nvml> {
     
     # Device Support
 
-    Supports Maxwell and newer fully supported devices.
+    Supports Pascal and newer fully supported devices.
     
     Some Kepler devices are also supported (that's all NVIDIA says, no specifics).
     

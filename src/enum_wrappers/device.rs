@@ -176,7 +176,9 @@ pub enum MemoryLocation {
     Texture,
     /// Shared memory.
     #[wrap(c_variant = "NVML_MEMORY_LOCATION_TEXTURE_SHM")]
-    Shared
+    Shared,
+    #[wrap(c_variant = "NVML_MEMORY_LOCATION_CBU")]
+    CBU
 }
 
 /// Driver models, Windows only.
@@ -364,9 +366,15 @@ pub enum TemperatureThreshold {
     /// Temperature at which the GPU will shut down for hardware protection.
     #[wrap(c_variant = "NVML_TEMPERATURE_THRESHOLD_SHUTDOWN")]
     Shutdown,
-    /// Temperature at which the GPU will begin to throttle.
+    /// Temperature at which the GPU will begin hardware throttling.
     #[wrap(c_variant = "NVML_TEMPERATURE_THRESHOLD_SLOWDOWN")]
-    Slowdown
+    Slowdown,
+    /// Memory temperature at which the GPU will begin software slowdown.
+    #[wrap(c_variant = "NVML_TEMPERATURE_THRESHOLD_MEM_MAX")]
+    MemoryMax,
+    /// GPU temperature at which the GPU can be throttled below the base clock.
+    #[wrap(c_variant = "NVML_TEMPERATURE_THRESHOLD_GPU_MAX")]
+    GpuMax
 }
 
 /// Level relationships within a system between two GPUs.
@@ -407,7 +415,21 @@ pub enum PerformancePolicy {
     #[wrap(c_variant = "NVML_PERF_POLICY_THERMAL")]
     Thermal,
     #[wrap(c_variant = "NVML_PERF_POLICY_SYNC_BOOST")]
-    SyncBoost
+    SyncBoost,
+    #[wrap(c_variant = "NVML_PERF_POLICY_BOARD_LIMIT")]
+    BoardLimit,
+    #[wrap(c_variant = "NVML_PERF_POLICY_LOW_UTILIZATION")]
+    LowUtilization,
+    /// Board reliability limit.
+    #[wrap(c_variant = "NVML_PERF_POLICY_RELIABILITY")]
+    Reliability,
+
+    /// Total time the GPU was limited by any of the above.
+    #[wrap(c_variant = "NVML_PERF_POLICY_TOTAL_APP_CLOCKS")]
+    TotalAppClocks,
+    /// Total time the GPU was held below base clocks.
+    #[wrap(c_variant = "NVML_PERF_POLICY_TOTAL_BASE_CLOCKS")]
+    TotalBaseClocks
 }
 
 /// `ExclusiveProcess` was added in CUDA 4.0. Earlier CUDA versions supported a
@@ -489,5 +511,7 @@ pub enum SampleValueType {
     #[wrap(c_variant = "NVML_VALUE_TYPE_UNSIGNED_LONG")]
     UnsignedLong,
     #[wrap(c_variant = "NVML_VALUE_TYPE_UNSIGNED_LONG_LONG")]
-    UnsignedLongLong
+    UnsignedLongLong,
+    #[wrap(c_variant = "NVML_VALUE_TYPE_SIGNED_LONG_LONG")]
+    SignedLongLong
 }

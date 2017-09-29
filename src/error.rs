@@ -192,9 +192,20 @@ error_chain! {
             description("An operation cannot be performed because the GPU is currently in use.")
         }
 
+        InsufficientMemory {
+            description("Insufficient memory.")
+        }
+
         /// No data.
         NoData {
             description("No data.")
+        }
+
+        /// The requested vgpu operation is not available on the target device because
+        /// ECC is enabled.
+        VgpuEccNotSupported {
+            description("The requested vgpu operation is not available on the target \
+                        device because ECC is enabled.")
         }
 
         /// An internal driver error occurred.
@@ -251,7 +262,9 @@ pub fn nvml_try(code: nvmlReturn_t) -> Result<()> {
             Error::from_kind(ErrorKind::LibRmVersionMismatch)
         ),
         nvmlReturn_enum_NVML_ERROR_IN_USE => Err(Error::from_kind(ErrorKind::InUse)),
+        nvmlReturn_enum_NVML_ERROR_MEMORY => Err(Error::from_kind(ErrorKind::InsufficientMemory)),
         nvmlReturn_enum_NVML_ERROR_NO_DATA => Err(Error::from_kind(ErrorKind::NoData)),
+        nvmlReturn_enum_NVML_ERROR_VGPU_ECC_NOT_SUPPORTED => Err(Error::from_kind(ErrorKind::VgpuEccNotSupported)),
         nvmlReturn_enum_NVML_ERROR_UNKNOWN => Err(Error::from_kind(ErrorKind::Unknown)),
         _ => Err(Error::from_kind(ErrorKind::UnexpectedVariant(code))),
     }
