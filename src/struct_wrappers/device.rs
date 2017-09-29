@@ -96,7 +96,8 @@ impl PciInfo {
             .clone_from_slice(&bus_id.iter().map(|b| *b as c_char).collect::<Vec<_>>());
 
         Ok(nvmlPciInfo_t {
-            busId: bus_id_c,
+            // TODO: Is zeroing this out correct?
+            busIdLegacy: [0; NVML_DEVICE_PCI_BUS_ID_BUFFER_V2_SIZE as usize],
             domain: self.domain,
             bus: self.bus,
             device: self.device,
@@ -108,10 +109,7 @@ impl PciInfo {
                 // be none if obtained from `NvLink.remote_pci_info()`.
                 0
             },
-            reserved0: 0,
-            reserved1: 0,
-            reserved2: 0,
-            reserved3: 0
+            busId: bus_id_c
         })
     }
 }

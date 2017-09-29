@@ -162,7 +162,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
         unsafe {
             let mut pci_info: nvmlPciInfo_t = mem::zeroed();
 
-            nvml_try(nvmlDeviceGetNvLinkRemotePciInfo(
+            nvml_try(nvmlDeviceGetNvLinkRemotePciInfo_v2(
                 self.device.unsafe_raw(),
                 self.link,
                 &mut pci_info

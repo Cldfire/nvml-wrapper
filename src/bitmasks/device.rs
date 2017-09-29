@@ -21,11 +21,12 @@ bitflags! {
         Hardware slowdown (reducing the core clocks by a factor of 2 or more)
         is engaged.
         
-        This is an indicator of one of the following:
-        * temperature being too high
+        This is an indicator of:
+        * Temperature being too high
         * External Power Brake Asseration is triggered (e.g. by the system power supply)
         * Power draw is too high and Fast Trigger protection is reducing the clocks
-        * May also be reported during PState or clock change
+
+        This may also be reported during powerstate or clock change.
             * This behavior may be removed in a later release.
         */
         const HW_SLOWDOWN                 = nvmlClocksThrottleReasonHwSlowdown as u64;
@@ -38,8 +39,14 @@ bitflags! {
         system to find out why this GPU is being held at lower clocks.
         */
         const SYNC_BOOST                  = nvmlClocksThrottleReasonSyncBoost as u64;
-        /// Some other unspecified factor is reducing the clocks.
-        const UNKNOWN                     = nvmlClocksThrottleReasonUnknown as u64;
+        /**
+        Software thermal slowdown.
+
+        This is an indicator of one or more of the following:
+        * The current GPU temperature is above the max GPU operating temperature
+        * The current memory temperature is above the max memory operating temperature
+        */
+        const SW_THERMAL_SLOWDOWN         = nvmlClocksThrottleReasonSwThermalSlowdown as u64;
         /// Clocks are as high as possible and are not being throttled.
         const NONE                        = nvmlClocksThrottleReasonNone as u64;
     }

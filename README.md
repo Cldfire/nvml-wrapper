@@ -53,8 +53,8 @@ in theory.
 
 ## NVML Support
 
-This wrapper has been developed against and is currently supporting NVML version
-8. Each new version of NVML is guaranteed to be backwards-compatible according
+This wrapper is being developed against and currently supports NVML version
+9. Each new version of NVML is guaranteed to be backwards-compatible according
 to NVIDIA, so this wrapper should continue to work without issue regardless of
 NVML version bumps.
 

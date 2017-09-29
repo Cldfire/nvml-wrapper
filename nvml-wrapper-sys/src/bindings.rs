@@ -6,14 +6,99 @@
 #![allow(dead_code)]
 use std::os::raw;
 
-pub const NVML_API_VERSION: raw::c_uint = 8;
-pub const NVML_API_VERSION_STR: &'static [u8; 2usize] = b"8\x00";
+pub const NVML_API_VERSION: raw::c_uint = 9;
+pub const NVML_API_VERSION_STR: &'static [u8; 2usize] = b"9\x00";
 pub const NVML_VALUE_NOT_AVAILABLE: raw::c_int = -1;
-pub const NVML_DEVICE_PCI_BUS_ID_BUFFER_SIZE: raw::c_uint = 16;
-pub const NVML_NVLINK_MAX_LINKS: raw::c_uint = 4;
+pub const NVML_DEVICE_PCI_BUS_ID_BUFFER_SIZE: raw::c_uint = 32;
+pub const NVML_DEVICE_PCI_BUS_ID_BUFFER_V2_SIZE: raw::c_uint = 16;
+pub const NVML_NVLINK_MAX_LINKS: raw::c_uint = 6;
 pub const NVML_MAX_PHYSICAL_BRIDGE: raw::c_uint = 128;
 pub const nvmlFlagDefault: raw::c_uint = 0;
 pub const nvmlFlagForce: raw::c_uint = 1;
+pub const NVML_FI_DEV_ECC_CURRENT: raw::c_uint = 1;
+pub const NVML_FI_DEV_ECC_PENDING: raw::c_uint = 2;
+pub const NVML_FI_DEV_ECC_SBE_VOL_TOTAL: raw::c_uint = 3;
+pub const NVML_FI_DEV_ECC_DBE_VOL_TOTAL: raw::c_uint = 4;
+pub const NVML_FI_DEV_ECC_SBE_AGG_TOTAL: raw::c_uint = 5;
+pub const NVML_FI_DEV_ECC_DBE_AGG_TOTAL: raw::c_uint = 6;
+pub const NVML_FI_DEV_ECC_SBE_VOL_L1: raw::c_uint = 7;
+pub const NVML_FI_DEV_ECC_DBE_VOL_L1: raw::c_uint = 8;
+pub const NVML_FI_DEV_ECC_SBE_VOL_L2: raw::c_uint = 9;
+pub const NVML_FI_DEV_ECC_DBE_VOL_L2: raw::c_uint = 10;
+pub const NVML_FI_DEV_ECC_SBE_VOL_DEV: raw::c_uint = 11;
+pub const NVML_FI_DEV_ECC_DBE_VOL_DEV: raw::c_uint = 12;
+pub const NVML_FI_DEV_ECC_SBE_VOL_REG: raw::c_uint = 13;
+pub const NVML_FI_DEV_ECC_DBE_VOL_REG: raw::c_uint = 14;
+pub const NVML_FI_DEV_ECC_SBE_VOL_TEX: raw::c_uint = 15;
+pub const NVML_FI_DEV_ECC_DBE_VOL_TEX: raw::c_uint = 16;
+pub const NVML_FI_DEV_ECC_DBE_VOL_CBU: raw::c_uint = 17;
+pub const NVML_FI_DEV_ECC_SBE_AGG_L1: raw::c_uint = 18;
+pub const NVML_FI_DEV_ECC_DBE_AGG_L1: raw::c_uint = 19;
+pub const NVML_FI_DEV_ECC_SBE_AGG_L2: raw::c_uint = 20;
+pub const NVML_FI_DEV_ECC_DBE_AGG_L2: raw::c_uint = 21;
+pub const NVML_FI_DEV_ECC_SBE_AGG_DEV: raw::c_uint = 22;
+pub const NVML_FI_DEV_ECC_DBE_AGG_DEV: raw::c_uint = 23;
+pub const NVML_FI_DEV_ECC_SBE_AGG_REG: raw::c_uint = 24;
+pub const NVML_FI_DEV_ECC_DBE_AGG_REG: raw::c_uint = 25;
+pub const NVML_FI_DEV_ECC_SBE_AGG_TEX: raw::c_uint = 26;
+pub const NVML_FI_DEV_ECC_DBE_AGG_TEX: raw::c_uint = 27;
+pub const NVML_FI_DEV_ECC_DBE_AGG_CBU: raw::c_uint = 28;
+pub const NVML_FI_DEV_RETIRED_SBE: raw::c_uint = 29;
+pub const NVML_FI_DEV_RETIRED_DBE: raw::c_uint = 30;
+pub const NVML_FI_DEV_RETIRED_PENDING: raw::c_uint = 31;
+pub const NVML_FI_DEV_NVLINK_CRC_FLIT_ERROR_COUNT_L0: raw::c_uint = 32;
+pub const NVML_FI_DEV_NVLINK_CRC_FLIT_ERROR_COUNT_L1: raw::c_uint = 33;
+pub const NVML_FI_DEV_NVLINK_CRC_FLIT_ERROR_COUNT_L2: raw::c_uint = 34;
+pub const NVML_FI_DEV_NVLINK_CRC_FLIT_ERROR_COUNT_L3: raw::c_uint = 35;
+pub const NVML_FI_DEV_NVLINK_CRC_FLIT_ERROR_COUNT_L4: raw::c_uint = 36;
+pub const NVML_FI_DEV_NVLINK_CRC_FLIT_ERROR_COUNT_L5: raw::c_uint = 37;
+pub const NVML_FI_DEV_NVLINK_CRC_FLIT_ERROR_COUNT_TOTAL: raw::c_uint = 38;
+pub const NVML_FI_DEV_NVLINK_CRC_DATA_ERROR_COUNT_L0: raw::c_uint = 39;
+pub const NVML_FI_DEV_NVLINK_CRC_DATA_ERROR_COUNT_L1: raw::c_uint = 40;
+pub const NVML_FI_DEV_NVLINK_CRC_DATA_ERROR_COUNT_L2: raw::c_uint = 41;
+pub const NVML_FI_DEV_NVLINK_CRC_DATA_ERROR_COUNT_L3: raw::c_uint = 42;
+pub const NVML_FI_DEV_NVLINK_CRC_DATA_ERROR_COUNT_L4: raw::c_uint = 43;
+pub const NVML_FI_DEV_NVLINK_CRC_DATA_ERROR_COUNT_L5: raw::c_uint = 44;
+pub const NVML_FI_DEV_NVLINK_CRC_DATA_ERROR_COUNT_TOTAL: raw::c_uint = 45;
+pub const NVML_FI_DEV_NVLINK_REPLAY_ERROR_COUNT_L0: raw::c_uint = 46;
+pub const NVML_FI_DEV_NVLINK_REPLAY_ERROR_COUNT_L1: raw::c_uint = 47;
+pub const NVML_FI_DEV_NVLINK_REPLAY_ERROR_COUNT_L2: raw::c_uint = 48;
+pub const NVML_FI_DEV_NVLINK_REPLAY_ERROR_COUNT_L3: raw::c_uint = 49;
+pub const NVML_FI_DEV_NVLINK_REPLAY_ERROR_COUNT_L4: raw::c_uint = 50;
+pub const NVML_FI_DEV_NVLINK_REPLAY_ERROR_COUNT_L5: raw::c_uint = 51;
+pub const NVML_FI_DEV_NVLINK_REPLAY_ERROR_COUNT_TOTAL: raw::c_uint = 52;
+pub const NVML_FI_DEV_NVLINK_RECOVERY_ERROR_COUNT_L0: raw::c_uint = 53;
+pub const NVML_FI_DEV_NVLINK_RECOVERY_ERROR_COUNT_L1: raw::c_uint = 54;
+pub const NVML_FI_DEV_NVLINK_RECOVERY_ERROR_COUNT_L2: raw::c_uint = 55;
+pub const NVML_FI_DEV_NVLINK_RECOVERY_ERROR_COUNT_L3: raw::c_uint = 56;
+pub const NVML_FI_DEV_NVLINK_RECOVERY_ERROR_COUNT_L4: raw::c_uint = 57;
+pub const NVML_FI_DEV_NVLINK_RECOVERY_ERROR_COUNT_L5: raw::c_uint = 58;
+pub const NVML_FI_DEV_NVLINK_RECOVERY_ERROR_COUNT_TOTAL: raw::c_uint = 59;
+pub const NVML_FI_DEV_NVLINK_BANDWIDTH_C0_L0: raw::c_uint = 60;
+pub const NVML_FI_DEV_NVLINK_BANDWIDTH_C0_L1: raw::c_uint = 61;
+pub const NVML_FI_DEV_NVLINK_BANDWIDTH_C0_L2: raw::c_uint = 62;
+pub const NVML_FI_DEV_NVLINK_BANDWIDTH_C0_L3: raw::c_uint = 63;
+pub const NVML_FI_DEV_NVLINK_BANDWIDTH_C0_L4: raw::c_uint = 64;
+pub const NVML_FI_DEV_NVLINK_BANDWIDTH_C0_L5: raw::c_uint = 65;
+pub const NVML_FI_DEV_NVLINK_BANDWIDTH_C0_TOTAL: raw::c_uint = 66;
+pub const NVML_FI_DEV_NVLINK_BANDWIDTH_C1_L0: raw::c_uint = 67;
+pub const NVML_FI_DEV_NVLINK_BANDWIDTH_C1_L1: raw::c_uint = 68;
+pub const NVML_FI_DEV_NVLINK_BANDWIDTH_C1_L2: raw::c_uint = 69;
+pub const NVML_FI_DEV_NVLINK_BANDWIDTH_C1_L3: raw::c_uint = 70;
+pub const NVML_FI_DEV_NVLINK_BANDWIDTH_C1_L4: raw::c_uint = 71;
+pub const NVML_FI_DEV_NVLINK_BANDWIDTH_C1_L5: raw::c_uint = 72;
+pub const NVML_FI_DEV_NVLINK_BANDWIDTH_C1_TOTAL: raw::c_uint = 73;
+pub const NVML_FI_DEV_PERF_POLICY_POWER: raw::c_uint = 74;
+pub const NVML_FI_DEV_PERF_POLICY_THERMAL: raw::c_uint = 75;
+pub const NVML_FI_DEV_PERF_POLICY_SYNC_BOOST: raw::c_uint = 76;
+pub const NVML_FI_DEV_PERF_POLICY_BOARD_LIMIT: raw::c_uint = 77;
+pub const NVML_FI_DEV_PERF_POLICY_LOW_UTILIZATION: raw::c_uint = 78;
+pub const NVML_FI_DEV_PERF_POLICY_RELIABILITY: raw::c_uint = 79;
+pub const NVML_FI_DEV_PERF_POLICY_TOTAL_APP_CLOCKS: raw::c_uint = 80;
+pub const NVML_FI_DEV_PERF_POLICY_TOTAL_BASE_CLOCKS: raw::c_uint = 81;
+pub const NVML_FI_DEV_MEMORY_TEMP: raw::c_uint = 82;
+pub const NVML_FI_DEV_TOTAL_ENERGY_CONSUMPTION: raw::c_uint = 83;
+pub const NVML_FI_MAX: raw::c_uint = 84;
 pub const nvmlEventTypeSingleBitEccError: raw::c_uint = 1;
 pub const nvmlEventTypeDoubleBitEccError: raw::c_uint = 2;
 pub const nvmlEventTypePState: raw::c_uint = 4;
@@ -27,10 +112,14 @@ pub const nvmlClocksThrottleReasonUserDefinedClocks: raw::c_uint = 2;
 pub const nvmlClocksThrottleReasonSwPowerCap: raw::c_uint = 4;
 pub const nvmlClocksThrottleReasonHwSlowdown: raw::c_uint = 8;
 pub const nvmlClocksThrottleReasonSyncBoost: raw::c_uint = 16;
-pub const nvmlClocksThrottleReasonUnknown: raw::c_longlong =
-    -9223372036854775808;
+pub const nvmlClocksThrottleReasonSwThermalSlowdown: raw::c_uint = 32;
 pub const nvmlClocksThrottleReasonNone: raw::c_uint = 0;
-pub const nvmlClocksThrottleReasonAll: raw::c_longlong = -9223372036854775777;
+pub const NVML_GRID_LICENSE_BUFFER_SIZE: raw::c_uint = 128;
+pub const NVML_VGPU_NAME_BUFFER_SIZE: raw::c_uint = 64;
+pub const NVML_MAX_VGPU_TYPES_PER_PGPU: raw::c_uint = 17;
+pub const NVML_MAX_VGPU_INSTANCES_PER_PGPU: raw::c_uint = 24;
+pub const NVML_GRID_LICENSE_FEATURE_MAX_COUNT: raw::c_uint = 3;
+pub const NVML_GRID_LICENSE_INFO_MAX_LENGTH: raw::c_uint = 128;
 pub const NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE: raw::c_uint = 16;
 pub const NVML_DEVICE_UUID_BUFFER_SIZE: raw::c_uint = 80;
 pub const NVML_DEVICE_PART_NUMBER_BUFFER_SIZE: raw::c_uint = 80;
@@ -48,28 +137,25 @@ pub type nvmlDevice_t = *mut nvmlDevice_st;
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct nvmlPciInfo_st {
-    pub busId: [raw::c_char; 16usize],
+    pub busIdLegacy: [raw::c_char; 16usize],
     pub domain: raw::c_uint,
     pub bus: raw::c_uint,
     pub device: raw::c_uint,
     pub pciDeviceId: raw::c_uint,
     pub pciSubSystemId: raw::c_uint,
-    pub reserved0: raw::c_uint,
-    pub reserved1: raw::c_uint,
-    pub reserved2: raw::c_uint,
-    pub reserved3: raw::c_uint,
+    pub busId: [raw::c_char; 32usize],
 }
 #[test]
 fn bindgen_test_layout_nvmlPciInfo_st() {
-    assert_eq!(::std::mem::size_of::<nvmlPciInfo_st>() , 52usize , concat ! (
+    assert_eq!(::std::mem::size_of::<nvmlPciInfo_st>() , 68usize , concat ! (
                "Size of: " , stringify ! ( nvmlPciInfo_st ) ));
     assert_eq! (::std::mem::align_of::<nvmlPciInfo_st>() , 4usize , concat ! (
                 "Alignment of " , stringify ! ( nvmlPciInfo_st ) ));
     assert_eq! (unsafe {
-                & ( * ( 0 as * const nvmlPciInfo_st ) ) . busId as * const _
-                as usize } , 0usize , concat ! (
+                & ( * ( 0 as * const nvmlPciInfo_st ) ) . busIdLegacy as *
+                const _ as usize } , 0usize , concat ! (
                 "Alignment of field: " , stringify ! ( nvmlPciInfo_st ) , "::"
-                , stringify ! ( busId ) ));
+                , stringify ! ( busIdLegacy ) ));
     assert_eq! (unsafe {
                 & ( * ( 0 as * const nvmlPciInfo_st ) ) . domain as * const _
                 as usize } , 16usize , concat ! (
@@ -96,25 +182,10 @@ fn bindgen_test_layout_nvmlPciInfo_st() {
                 "Alignment of field: " , stringify ! ( nvmlPciInfo_st ) , "::"
                 , stringify ! ( pciSubSystemId ) ));
     assert_eq! (unsafe {
-                & ( * ( 0 as * const nvmlPciInfo_st ) ) . reserved0 as * const
-                _ as usize } , 36usize , concat ! (
+                & ( * ( 0 as * const nvmlPciInfo_st ) ) . busId as * const _
+                as usize } , 36usize , concat ! (
                 "Alignment of field: " , stringify ! ( nvmlPciInfo_st ) , "::"
-                , stringify ! ( reserved0 ) ));
-    assert_eq! (unsafe {
-                & ( * ( 0 as * const nvmlPciInfo_st ) ) . reserved1 as * const
-                _ as usize } , 40usize , concat ! (
-                "Alignment of field: " , stringify ! ( nvmlPciInfo_st ) , "::"
-                , stringify ! ( reserved1 ) ));
-    assert_eq! (unsafe {
-                & ( * ( 0 as * const nvmlPciInfo_st ) ) . reserved2 as * const
-                _ as usize } , 44usize , concat ! (
-                "Alignment of field: " , stringify ! ( nvmlPciInfo_st ) , "::"
-                , stringify ! ( reserved2 ) ));
-    assert_eq! (unsafe {
-                & ( * ( 0 as * const nvmlPciInfo_st ) ) . reserved3 as * const
-                _ as usize } , 48usize , concat ! (
-                "Alignment of field: " , stringify ! ( nvmlPciInfo_st ) , "::"
-                , stringify ! ( reserved3 ) ));
+                , stringify ! ( busId ) ));
 }
 impl Clone for nvmlPciInfo_st {
     fn clone(&self) -> Self { *self }
@@ -560,7 +631,10 @@ pub const nvmlValueType_enum_NVML_VALUE_TYPE_UNSIGNED_LONG: nvmlValueType_enum
 pub const nvmlValueType_enum_NVML_VALUE_TYPE_UNSIGNED_LONG_LONG:
           nvmlValueType_enum =
     3;
-pub const nvmlValueType_enum_NVML_VALUE_TYPE_COUNT: nvmlValueType_enum = 4;
+pub const nvmlValueType_enum_NVML_VALUE_TYPE_SIGNED_LONG_LONG:
+          nvmlValueType_enum =
+    4;
+pub const nvmlValueType_enum_NVML_VALUE_TYPE_COUNT: nvmlValueType_enum = 5;
 pub type nvmlValueType_enum = raw::c_uint;
 pub use self::nvmlValueType_enum as nvmlValueType_t;
 #[repr(C)]
@@ -570,6 +644,8 @@ pub union nvmlValue_st {
     pub uiVal: raw::c_uint,
     pub ulVal: raw::c_ulong,
     pub ullVal: raw::c_ulonglong,
+    pub sllVal: raw::c_longlong,
+    _bindgen_union_align: u64,
 }
 #[test]
 fn bindgen_test_layout_nvmlValue_st() {
@@ -597,6 +673,11 @@ fn bindgen_test_layout_nvmlValue_st() {
                 usize } , 0usize , concat ! (
                 "Alignment of field: " , stringify ! ( nvmlValue_st ) , "::" ,
                 stringify ! ( ullVal ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlValue_st ) ) . sllVal as * const _ as
+                usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( nvmlValue_st ) , "::" ,
+                stringify ! ( sllVal ) ));
 }
 impl Clone for nvmlValue_st {
     fn clone(&self) -> Self { *self }
@@ -638,9 +719,24 @@ pub const nvmlPerfPolicyType_enum_NVML_PERF_POLICY_THERMAL:
 pub const nvmlPerfPolicyType_enum_NVML_PERF_POLICY_SYNC_BOOST:
           nvmlPerfPolicyType_enum =
     2;
-pub const nvmlPerfPolicyType_enum_NVML_PERF_POLICY_COUNT:
+pub const nvmlPerfPolicyType_enum_NVML_PERF_POLICY_BOARD_LIMIT:
           nvmlPerfPolicyType_enum =
     3;
+pub const nvmlPerfPolicyType_enum_NVML_PERF_POLICY_LOW_UTILIZATION:
+          nvmlPerfPolicyType_enum =
+    4;
+pub const nvmlPerfPolicyType_enum_NVML_PERF_POLICY_RELIABILITY:
+          nvmlPerfPolicyType_enum =
+    5;
+pub const nvmlPerfPolicyType_enum_NVML_PERF_POLICY_TOTAL_APP_CLOCKS:
+          nvmlPerfPolicyType_enum =
+    10;
+pub const nvmlPerfPolicyType_enum_NVML_PERF_POLICY_TOTAL_BASE_CLOCKS:
+          nvmlPerfPolicyType_enum =
+    11;
+pub const nvmlPerfPolicyType_enum_NVML_PERF_POLICY_COUNT:
+          nvmlPerfPolicyType_enum =
+    12;
 pub type nvmlPerfPolicyType_enum = raw::c_uint;
 pub use self::nvmlPerfPolicyType_enum as nvmlPerfPolicyType_t;
 #[repr(C)]
@@ -692,9 +788,15 @@ pub const nvmlTemperatureThresholds_enum_NVML_TEMPERATURE_THRESHOLD_SHUTDOWN:
 pub const nvmlTemperatureThresholds_enum_NVML_TEMPERATURE_THRESHOLD_SLOWDOWN:
           nvmlTemperatureThresholds_enum =
     1;
-pub const nvmlTemperatureThresholds_enum_NVML_TEMPERATURE_THRESHOLD_COUNT:
+pub const nvmlTemperatureThresholds_enum_NVML_TEMPERATURE_THRESHOLD_MEM_MAX:
           nvmlTemperatureThresholds_enum =
     2;
+pub const nvmlTemperatureThresholds_enum_NVML_TEMPERATURE_THRESHOLD_GPU_MAX:
+          nvmlTemperatureThresholds_enum =
+    3;
+pub const nvmlTemperatureThresholds_enum_NVML_TEMPERATURE_THRESHOLD_COUNT:
+          nvmlTemperatureThresholds_enum =
+    4;
 pub type nvmlTemperatureThresholds_enum = raw::c_uint;
 pub use self::nvmlTemperatureThresholds_enum as nvmlTemperatureThresholds_t;
 pub const nvmlTemperatureSensors_enum_NVML_TEMPERATURE_GPU:
@@ -818,7 +920,10 @@ pub const nvmlReturn_enum_NVML_ERROR_LIB_RM_VERSION_MISMATCH: nvmlReturn_enum
           =
     18;
 pub const nvmlReturn_enum_NVML_ERROR_IN_USE: nvmlReturn_enum = 19;
-pub const nvmlReturn_enum_NVML_ERROR_NO_DATA: nvmlReturn_enum = 20;
+pub const nvmlReturn_enum_NVML_ERROR_MEMORY: nvmlReturn_enum = 20;
+pub const nvmlReturn_enum_NVML_ERROR_NO_DATA: nvmlReturn_enum = 21;
+pub const nvmlReturn_enum_NVML_ERROR_VGPU_ECC_NOT_SUPPORTED: nvmlReturn_enum =
+    22;
 pub const nvmlReturn_enum_NVML_ERROR_UNKNOWN: nvmlReturn_enum = 999;
 pub type nvmlReturn_enum = raw::c_uint;
 pub use self::nvmlReturn_enum as nvmlReturn_t;
@@ -840,9 +945,12 @@ pub const nvmlMemoryLocation_enum_NVML_MEMORY_LOCATION_TEXTURE_MEMORY:
 pub const nvmlMemoryLocation_enum_NVML_MEMORY_LOCATION_TEXTURE_SHM:
           nvmlMemoryLocation_enum =
     5;
-pub const nvmlMemoryLocation_enum_NVML_MEMORY_LOCATION_COUNT:
+pub const nvmlMemoryLocation_enum_NVML_MEMORY_LOCATION_CBU:
           nvmlMemoryLocation_enum =
     6;
+pub const nvmlMemoryLocation_enum_NVML_MEMORY_LOCATION_COUNT:
+          nvmlMemoryLocation_enum =
+    7;
 pub type nvmlMemoryLocation_enum = raw::c_uint;
 pub use self::nvmlMemoryLocation_enum as nvmlMemoryLocation_t;
 pub const nvmlPageRetirementCause_enum_NVML_PAGE_RETIREMENT_CAUSE_MULTIPLE_SINGLE_BIT_ECC_ERRORS:
@@ -867,6 +975,80 @@ pub const nvmlRestrictedAPI_enum_NVML_RESTRICTED_API_COUNT:
     2;
 pub type nvmlRestrictedAPI_enum = raw::c_uint;
 pub use self::nvmlRestrictedAPI_enum as nvmlRestrictedAPI_t;
+pub const nvmlGpuVirtualizationMode_NVML_GPU_VIRTUALIZATION_MODE_NONE:
+          nvmlGpuVirtualizationMode =
+    0;
+pub const nvmlGpuVirtualizationMode_NVML_GPU_VIRTUALIZATION_MODE_PASSTHROUGH:
+          nvmlGpuVirtualizationMode =
+    1;
+pub const nvmlGpuVirtualizationMode_NVML_GPU_VIRTUALIZATION_MODE_VGPU:
+          nvmlGpuVirtualizationMode =
+    2;
+pub const nvmlGpuVirtualizationMode_NVML_GPU_VIRTUALIZATION_MODE_HOST_VGPU:
+          nvmlGpuVirtualizationMode =
+    3;
+pub const nvmlGpuVirtualizationMode_NVML_GPU_VIRTUALIZATION_MODE_HOST_VSGA:
+          nvmlGpuVirtualizationMode =
+    4;
+pub type nvmlGpuVirtualizationMode = raw::c_uint;
+pub use self::nvmlGpuVirtualizationMode as nvmlGpuVirtualizationMode_t;
+#[repr(C)]
+#[derive(Copy)]
+pub struct nvmlFieldValue_st {
+    pub fieldId: raw::c_uint,
+    pub unused: raw::c_uint,
+    pub timestamp: raw::c_longlong,
+    pub latencyUsec: raw::c_longlong,
+    pub valueType: nvmlValueType_t,
+    pub nvmlReturn: nvmlReturn_t,
+    pub value: nvmlValue_t,
+}
+#[test]
+fn bindgen_test_layout_nvmlFieldValue_st() {
+    assert_eq!(::std::mem::size_of::<nvmlFieldValue_st>() , 40usize , concat !
+               ( "Size of: " , stringify ! ( nvmlFieldValue_st ) ));
+    assert_eq! (::std::mem::align_of::<nvmlFieldValue_st>() , 8usize , concat
+                ! ( "Alignment of " , stringify ! ( nvmlFieldValue_st ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlFieldValue_st ) ) . fieldId as *
+                const _ as usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! ( nvmlFieldValue_st ) ,
+                "::" , stringify ! ( fieldId ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlFieldValue_st ) ) . unused as * const
+                _ as usize } , 4usize , concat ! (
+                "Alignment of field: " , stringify ! ( nvmlFieldValue_st ) ,
+                "::" , stringify ! ( unused ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlFieldValue_st ) ) . timestamp as *
+                const _ as usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! ( nvmlFieldValue_st ) ,
+                "::" , stringify ! ( timestamp ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlFieldValue_st ) ) . latencyUsec as *
+                const _ as usize } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! ( nvmlFieldValue_st ) ,
+                "::" , stringify ! ( latencyUsec ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlFieldValue_st ) ) . valueType as *
+                const _ as usize } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! ( nvmlFieldValue_st ) ,
+                "::" , stringify ! ( valueType ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlFieldValue_st ) ) . nvmlReturn as *
+                const _ as usize } , 28usize , concat ! (
+                "Alignment of field: " , stringify ! ( nvmlFieldValue_st ) ,
+                "::" , stringify ! ( nvmlReturn ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlFieldValue_st ) ) . value as * const
+                _ as usize } , 32usize , concat ! (
+                "Alignment of field: " , stringify ! ( nvmlFieldValue_st ) ,
+                "::" , stringify ! ( value ) ));
+}
+impl Clone for nvmlFieldValue_st {
+    fn clone(&self) -> Self { *self }
+}
+pub type nvmlFieldValue_t = nvmlFieldValue_st;
 #[repr(C)]
 #[derive(Debug)]
 pub struct nvmlUnit_st {
@@ -909,6 +1091,7 @@ pub const nvmlLedColor_enum_NVML_LED_COLOR_AMBER: nvmlLedColor_enum = 1;
 pub type nvmlLedColor_enum = raw::c_uint;
 pub use self::nvmlLedColor_enum as nvmlLedColor_t;
 #[repr(C)]
+#[derive(Copy)]
 pub struct nvmlLedState_st {
     pub cause: [raw::c_char; 256usize],
     pub color: nvmlLedColor_t,
@@ -930,8 +1113,12 @@ fn bindgen_test_layout_nvmlLedState_st() {
                 "Alignment of field: " , stringify ! ( nvmlLedState_st ) ,
                 "::" , stringify ! ( color ) ));
 }
+impl Clone for nvmlLedState_st {
+    fn clone(&self) -> Self { *self }
+}
 pub type nvmlLedState_t = nvmlLedState_st;
 #[repr(C)]
+#[derive(Copy)]
 pub struct nvmlUnitInfo_st {
     pub name: [raw::c_char; 96usize],
     pub id: [raw::c_char; 96usize],
@@ -965,8 +1152,12 @@ fn bindgen_test_layout_nvmlUnitInfo_st() {
                 "Alignment of field: " , stringify ! ( nvmlUnitInfo_st ) ,
                 "::" , stringify ! ( firmwareVersion ) ));
 }
+impl Clone for nvmlUnitInfo_st {
+    fn clone(&self) -> Self { *self }
+}
 pub type nvmlUnitInfo_t = nvmlUnitInfo_st;
 #[repr(C)]
+#[derive(Copy)]
 pub struct nvmlPSUInfo_st {
     pub state: [raw::c_char; 256usize],
     pub current: raw::c_uint,
@@ -999,6 +1190,9 @@ fn bindgen_test_layout_nvmlPSUInfo_st() {
                 as usize } , 264usize , concat ! (
                 "Alignment of field: " , stringify ! ( nvmlPSUInfo_st ) , "::"
                 , stringify ! ( power ) ));
+}
+impl Clone for nvmlPSUInfo_st {
+    fn clone(&self) -> Self { *self }
 }
 pub type nvmlPSUInfo_t = nvmlPSUInfo_st;
 #[repr(C)]
@@ -1153,6 +1347,388 @@ impl Clone for nvmlAccountingStats_st {
     fn clone(&self) -> Self { *self }
 }
 pub type nvmlAccountingStats_t = nvmlAccountingStats_st;
+pub const nvmlVgpuVmIdType_NVML_VGPU_VM_ID_DOMAIN_ID: nvmlVgpuVmIdType = 0;
+pub const nvmlVgpuVmIdType_NVML_VGPU_VM_ID_UUID: nvmlVgpuVmIdType = 1;
+pub type nvmlVgpuVmIdType = raw::c_uint;
+pub use self::nvmlVgpuVmIdType as nvmlVgpuVmIdType_t;
+pub const nvmlVgpuGuestInfoState_enum_NVML_VGPU_INSTANCE_GUEST_INFO_STATE_UNINITIALIZED:
+          nvmlVgpuGuestInfoState_enum =
+    0;
+pub const nvmlVgpuGuestInfoState_enum_NVML_VGPU_INSTANCE_GUEST_INFO_STATE_INITIALIZED:
+          nvmlVgpuGuestInfoState_enum =
+    1;
+pub type nvmlVgpuGuestInfoState_enum = raw::c_uint;
+pub use self::nvmlVgpuGuestInfoState_enum as nvmlVgpuGuestInfoState_t;
+pub const nvmlGridLicenseFeatureCode_t_NVML_GRID_LICENSE_FEATURE_CODE_VGPU:
+          nvmlGridLicenseFeatureCode_t =
+    1;
+pub const nvmlGridLicenseFeatureCode_t_NVML_GRID_LICENSE_FEATURE_CODE_VWORKSTATION:
+          nvmlGridLicenseFeatureCode_t =
+    2;
+pub type nvmlGridLicenseFeatureCode_t = raw::c_uint;
+pub type nvmlVgpuTypeId_t = raw::c_uint;
+pub type nvmlVgpuInstance_t = raw::c_uint;
+#[repr(C)]
+#[derive(Copy)]
+pub struct nvmlVgpuInstanceUtilizationSample_st {
+    pub vgpuInstance: nvmlVgpuInstance_t,
+    pub timeStamp: raw::c_ulonglong,
+    pub smUtil: nvmlValue_t,
+    pub memUtil: nvmlValue_t,
+    pub encUtil: nvmlValue_t,
+    pub decUtil: nvmlValue_t,
+}
+#[test]
+fn bindgen_test_layout_nvmlVgpuInstanceUtilizationSample_st() {
+    assert_eq!(::std::mem::size_of::<nvmlVgpuInstanceUtilizationSample_st>() ,
+               48usize , concat ! (
+               "Size of: " , stringify ! (
+               nvmlVgpuInstanceUtilizationSample_st ) ));
+    assert_eq! (::std::mem::align_of::<nvmlVgpuInstanceUtilizationSample_st>()
+                , 8usize , concat ! (
+                "Alignment of " , stringify ! (
+                nvmlVgpuInstanceUtilizationSample_st ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlVgpuInstanceUtilizationSample_st ) )
+                . vgpuInstance as * const _ as usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlVgpuInstanceUtilizationSample_st ) , "::" , stringify ! (
+                vgpuInstance ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlVgpuInstanceUtilizationSample_st ) )
+                . timeStamp as * const _ as usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlVgpuInstanceUtilizationSample_st ) , "::" , stringify ! (
+                timeStamp ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlVgpuInstanceUtilizationSample_st ) )
+                . smUtil as * const _ as usize } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlVgpuInstanceUtilizationSample_st ) , "::" , stringify ! (
+                smUtil ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlVgpuInstanceUtilizationSample_st ) )
+                . memUtil as * const _ as usize } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlVgpuInstanceUtilizationSample_st ) , "::" , stringify ! (
+                memUtil ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlVgpuInstanceUtilizationSample_st ) )
+                . encUtil as * const _ as usize } , 32usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlVgpuInstanceUtilizationSample_st ) , "::" , stringify ! (
+                encUtil ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlVgpuInstanceUtilizationSample_st ) )
+                . decUtil as * const _ as usize } , 40usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlVgpuInstanceUtilizationSample_st ) , "::" , stringify ! (
+                decUtil ) ));
+}
+impl Clone for nvmlVgpuInstanceUtilizationSample_st {
+    fn clone(&self) -> Self { *self }
+}
+pub type nvmlVgpuInstanceUtilizationSample_t =
+    nvmlVgpuInstanceUtilizationSample_st;
+#[repr(C)]
+#[derive(Copy)]
+pub struct nvmlVgpuProcessUtilizationSample_st {
+    pub vgpuInstance: nvmlVgpuInstance_t,
+    pub pid: raw::c_uint,
+    pub processName: [raw::c_char; 64usize],
+    pub timeStamp: raw::c_ulonglong,
+    pub smUtil: raw::c_uint,
+    pub memUtil: raw::c_uint,
+    pub encUtil: raw::c_uint,
+    pub decUtil: raw::c_uint,
+}
+#[test]
+fn bindgen_test_layout_nvmlVgpuProcessUtilizationSample_st() {
+    assert_eq!(::std::mem::size_of::<nvmlVgpuProcessUtilizationSample_st>() ,
+               96usize , concat ! (
+               "Size of: " , stringify ! ( nvmlVgpuProcessUtilizationSample_st
+               ) ));
+    assert_eq! (::std::mem::align_of::<nvmlVgpuProcessUtilizationSample_st>()
+                , 8usize , concat ! (
+                "Alignment of " , stringify ! (
+                nvmlVgpuProcessUtilizationSample_st ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlVgpuProcessUtilizationSample_st ) ) .
+                vgpuInstance as * const _ as usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlVgpuProcessUtilizationSample_st ) , "::" , stringify ! (
+                vgpuInstance ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlVgpuProcessUtilizationSample_st ) ) .
+                pid as * const _ as usize } , 4usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlVgpuProcessUtilizationSample_st ) , "::" , stringify ! (
+                pid ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlVgpuProcessUtilizationSample_st ) ) .
+                processName as * const _ as usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlVgpuProcessUtilizationSample_st ) , "::" , stringify ! (
+                processName ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlVgpuProcessUtilizationSample_st ) ) .
+                timeStamp as * const _ as usize } , 72usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlVgpuProcessUtilizationSample_st ) , "::" , stringify ! (
+                timeStamp ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlVgpuProcessUtilizationSample_st ) ) .
+                smUtil as * const _ as usize } , 80usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlVgpuProcessUtilizationSample_st ) , "::" , stringify ! (
+                smUtil ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlVgpuProcessUtilizationSample_st ) ) .
+                memUtil as * const _ as usize } , 84usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlVgpuProcessUtilizationSample_st ) , "::" , stringify ! (
+                memUtil ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlVgpuProcessUtilizationSample_st ) ) .
+                encUtil as * const _ as usize } , 88usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlVgpuProcessUtilizationSample_st ) , "::" , stringify ! (
+                encUtil ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlVgpuProcessUtilizationSample_st ) ) .
+                decUtil as * const _ as usize } , 92usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlVgpuProcessUtilizationSample_st ) , "::" , stringify ! (
+                decUtil ) ));
+}
+impl Clone for nvmlVgpuProcessUtilizationSample_st {
+    fn clone(&self) -> Self { *self }
+}
+pub type nvmlVgpuProcessUtilizationSample_t =
+    nvmlVgpuProcessUtilizationSample_st;
+#[repr(C)]
+#[derive(Debug, Copy)]
+pub struct nvmlProcessUtilizationSample_st {
+    pub pid: raw::c_uint,
+    pub timeStamp: raw::c_ulonglong,
+    pub smUtil: raw::c_uint,
+    pub memUtil: raw::c_uint,
+    pub encUtil: raw::c_uint,
+    pub decUtil: raw::c_uint,
+}
+#[test]
+fn bindgen_test_layout_nvmlProcessUtilizationSample_st() {
+    assert_eq!(::std::mem::size_of::<nvmlProcessUtilizationSample_st>() ,
+               32usize , concat ! (
+               "Size of: " , stringify ! ( nvmlProcessUtilizationSample_st )
+               ));
+    assert_eq! (::std::mem::align_of::<nvmlProcessUtilizationSample_st>() ,
+                8usize , concat ! (
+                "Alignment of " , stringify ! (
+                nvmlProcessUtilizationSample_st ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlProcessUtilizationSample_st ) ) . pid
+                as * const _ as usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlProcessUtilizationSample_st ) , "::" , stringify ! ( pid )
+                ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlProcessUtilizationSample_st ) ) .
+                timeStamp as * const _ as usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlProcessUtilizationSample_st ) , "::" , stringify ! (
+                timeStamp ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlProcessUtilizationSample_st ) ) .
+                smUtil as * const _ as usize } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlProcessUtilizationSample_st ) , "::" , stringify ! (
+                smUtil ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlProcessUtilizationSample_st ) ) .
+                memUtil as * const _ as usize } , 20usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlProcessUtilizationSample_st ) , "::" , stringify ! (
+                memUtil ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlProcessUtilizationSample_st ) ) .
+                encUtil as * const _ as usize } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlProcessUtilizationSample_st ) , "::" , stringify ! (
+                encUtil ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlProcessUtilizationSample_st ) ) .
+                decUtil as * const _ as usize } , 28usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlProcessUtilizationSample_st ) , "::" , stringify ! (
+                decUtil ) ));
+}
+impl Clone for nvmlProcessUtilizationSample_st {
+    fn clone(&self) -> Self { *self }
+}
+pub type nvmlProcessUtilizationSample_t = nvmlProcessUtilizationSample_st;
+#[repr(C)]
+#[derive(Copy)]
+pub struct nvmlGridLicensableFeature_st {
+    pub featureCode: nvmlGridLicenseFeatureCode_t,
+    pub featureState: raw::c_uint,
+    pub licenseInfo: [raw::c_char; 128usize],
+}
+#[test]
+fn bindgen_test_layout_nvmlGridLicensableFeature_st() {
+    assert_eq!(::std::mem::size_of::<nvmlGridLicensableFeature_st>() ,
+               136usize , concat ! (
+               "Size of: " , stringify ! ( nvmlGridLicensableFeature_st ) ));
+    assert_eq! (::std::mem::align_of::<nvmlGridLicensableFeature_st>() ,
+                4usize , concat ! (
+                "Alignment of " , stringify ! ( nvmlGridLicensableFeature_st )
+                ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlGridLicensableFeature_st ) ) .
+                featureCode as * const _ as usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlGridLicensableFeature_st ) , "::" , stringify ! (
+                featureCode ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlGridLicensableFeature_st ) ) .
+                featureState as * const _ as usize } , 4usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlGridLicensableFeature_st ) , "::" , stringify ! (
+                featureState ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlGridLicensableFeature_st ) ) .
+                licenseInfo as * const _ as usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlGridLicensableFeature_st ) , "::" , stringify ! (
+                licenseInfo ) ));
+}
+impl Clone for nvmlGridLicensableFeature_st {
+    fn clone(&self) -> Self { *self }
+}
+pub type nvmlGridLicensableFeature_t = nvmlGridLicensableFeature_st;
+#[repr(C)]
+#[derive(Copy)]
+pub struct nvmlGridLicensableFeatures_st {
+    pub isGridLicenseSupported: raw::c_int,
+    pub licensableFeaturesCount: raw::c_uint,
+    pub gridLicensableFeatures: [nvmlGridLicensableFeature_t; 3usize],
+}
+#[test]
+fn bindgen_test_layout_nvmlGridLicensableFeatures_st() {
+    assert_eq!(::std::mem::size_of::<nvmlGridLicensableFeatures_st>() ,
+               416usize , concat ! (
+               "Size of: " , stringify ! ( nvmlGridLicensableFeatures_st ) ));
+    assert_eq! (::std::mem::align_of::<nvmlGridLicensableFeatures_st>() ,
+                4usize , concat ! (
+                "Alignment of " , stringify ! ( nvmlGridLicensableFeatures_st
+                ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlGridLicensableFeatures_st ) ) .
+                isGridLicenseSupported as * const _ as usize } , 0usize ,
+                concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlGridLicensableFeatures_st ) , "::" , stringify ! (
+                isGridLicenseSupported ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlGridLicensableFeatures_st ) ) .
+                licensableFeaturesCount as * const _ as usize } , 4usize ,
+                concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlGridLicensableFeatures_st ) , "::" , stringify ! (
+                licensableFeaturesCount ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlGridLicensableFeatures_st ) ) .
+                gridLicensableFeatures as * const _ as usize } , 8usize ,
+                concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlGridLicensableFeatures_st ) , "::" , stringify ! (
+                gridLicensableFeatures ) ));
+}
+impl Clone for nvmlGridLicensableFeatures_st {
+    fn clone(&self) -> Self { *self }
+}
+pub type nvmlGridLicensableFeatures_t = nvmlGridLicensableFeatures_st;
+pub const nvmlEncoderQueryType_enum_NVML_ENCODER_QUERY_H264:
+          nvmlEncoderQueryType_enum =
+    0;
+pub const nvmlEncoderQueryType_enum_NVML_ENCODER_QUERY_HEVC:
+          nvmlEncoderQueryType_enum =
+    1;
+pub type nvmlEncoderQueryType_enum = raw::c_uint;
+pub use self::nvmlEncoderQueryType_enum as nvmlEncoderType_t;
+#[repr(C)]
+#[derive(Debug, Copy)]
+pub struct nvmlEncoderSessionInfo_st {
+    pub sessionId: raw::c_uint,
+    pub pid: raw::c_uint,
+    pub vgpuInstance: nvmlVgpuInstance_t,
+    pub codecType: nvmlEncoderType_t,
+    pub hResolution: raw::c_uint,
+    pub vResolution: raw::c_uint,
+    pub averageFps: raw::c_uint,
+    pub averageLatency: raw::c_uint,
+}
+#[test]
+fn bindgen_test_layout_nvmlEncoderSessionInfo_st() {
+    assert_eq!(::std::mem::size_of::<nvmlEncoderSessionInfo_st>() , 32usize ,
+               concat ! (
+               "Size of: " , stringify ! ( nvmlEncoderSessionInfo_st ) ));
+    assert_eq! (::std::mem::align_of::<nvmlEncoderSessionInfo_st>() , 4usize ,
+                concat ! (
+                "Alignment of " , stringify ! ( nvmlEncoderSessionInfo_st )
+                ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlEncoderSessionInfo_st ) ) . sessionId
+                as * const _ as usize } , 0usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlEncoderSessionInfo_st ) , "::" , stringify ! ( sessionId )
+                ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlEncoderSessionInfo_st ) ) . pid as *
+                const _ as usize } , 4usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlEncoderSessionInfo_st ) , "::" , stringify ! ( pid ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlEncoderSessionInfo_st ) ) .
+                vgpuInstance as * const _ as usize } , 8usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlEncoderSessionInfo_st ) , "::" , stringify ! (
+                vgpuInstance ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlEncoderSessionInfo_st ) ) . codecType
+                as * const _ as usize } , 12usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlEncoderSessionInfo_st ) , "::" , stringify ! ( codecType )
+                ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlEncoderSessionInfo_st ) ) .
+                hResolution as * const _ as usize } , 16usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlEncoderSessionInfo_st ) , "::" , stringify ! ( hResolution
+                ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlEncoderSessionInfo_st ) ) .
+                vResolution as * const _ as usize } , 20usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlEncoderSessionInfo_st ) , "::" , stringify ! ( vResolution
+                ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlEncoderSessionInfo_st ) ) .
+                averageFps as * const _ as usize } , 24usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlEncoderSessionInfo_st ) , "::" , stringify ! ( averageFps
+                ) ));
+    assert_eq! (unsafe {
+                & ( * ( 0 as * const nvmlEncoderSessionInfo_st ) ) .
+                averageLatency as * const _ as usize } , 28usize , concat ! (
+                "Alignment of field: " , stringify ! (
+                nvmlEncoderSessionInfo_st ) , "::" , stringify ! (
+                averageLatency ) ));
+}
+impl Clone for nvmlEncoderSessionInfo_st {
+    fn clone(&self) -> Self { *self }
+}
+pub type nvmlEncoderSessionInfo_t = nvmlEncoderSessionInfo_st;
 extern "C" {
     pub fn nvmlInit_v2() -> nvmlReturn_t;
 }
@@ -1169,6 +1745,10 @@ extern "C" {
 extern "C" {
     pub fn nvmlSystemGetNVMLVersion(version: *mut raw::c_char,
                                     length: raw::c_uint) -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlSystemGetCudaDriverVersion(cudaDriverVersion: *mut raw::c_int)
+     -> nvmlReturn_t;
 }
 extern "C" {
     pub fn nvmlSystemGetProcessName(pid: raw::c_uint, name: *mut raw::c_char,
@@ -1339,6 +1919,10 @@ extern "C" {
     pub fn nvmlDeviceGetPersistenceMode(device: nvmlDevice_t,
                                         mode: *mut nvmlEnableState_t)
      -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlDeviceGetPciInfo_v3(device: nvmlDevice_t,
+                                   pci: *mut nvmlPciInfo_t) -> nvmlReturn_t;
 }
 extern "C" {
     pub fn nvmlDeviceGetPciInfo_v2(device: nvmlDevice_t,
@@ -1513,6 +2097,11 @@ extern "C" {
                                    power: *mut raw::c_uint) -> nvmlReturn_t;
 }
 extern "C" {
+    pub fn nvmlDeviceGetTotalEnergyConsumption(device: nvmlDevice_t,
+                                               energy: *mut raw::c_ulonglong)
+     -> nvmlReturn_t;
+}
+extern "C" {
     pub fn nvmlDeviceGetEnforcedPowerLimit(device: nvmlDevice_t,
                                            limit: *mut raw::c_uint)
      -> nvmlReturn_t;
@@ -1530,6 +2119,12 @@ extern "C" {
 extern "C" {
     pub fn nvmlDeviceGetComputeMode(device: nvmlDevice_t,
                                     mode: *mut nvmlComputeMode_t)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlDeviceGetCudaComputeCapability(device: nvmlDevice_t,
+                                              major: *mut raw::c_int,
+                                              minor: *mut raw::c_int)
      -> nvmlReturn_t;
 }
 extern "C" {
@@ -1579,6 +2174,26 @@ extern "C" {
     pub fn nvmlDeviceGetEncoderUtilization(device: nvmlDevice_t,
                                            utilization: *mut raw::c_uint,
                                            samplingPeriodUs: *mut raw::c_uint)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlDeviceGetEncoderCapacity(device: nvmlDevice_t,
+                                        encoderQueryType: nvmlEncoderType_t,
+                                        encoderCapacity: *mut raw::c_uint)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlDeviceGetEncoderStats(device: nvmlDevice_t,
+                                     sessionCount: *mut raw::c_uint,
+                                     averageFps: *mut raw::c_uint,
+                                     averageLatency: *mut raw::c_uint)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlDeviceGetEncoderSessions(device: nvmlDevice_t,
+                                        sessionCount: *mut raw::c_uint,
+                                        sessionInfos:
+                                            *mut nvmlEncoderSessionInfo_t)
      -> nvmlReturn_t;
 }
 extern "C" {
@@ -1758,9 +2373,9 @@ extern "C" {
      -> nvmlReturn_t;
 }
 extern "C" {
-    pub fn nvmlDeviceGetNvLinkRemotePciInfo(device: nvmlDevice_t,
-                                            link: raw::c_uint,
-                                            pci: *mut nvmlPciInfo_t)
+    pub fn nvmlDeviceGetNvLinkRemotePciInfo_v2(device: nvmlDevice_t,
+                                               link: raw::c_uint,
+                                               pci: *mut nvmlPciInfo_t)
      -> nvmlReturn_t;
 }
 extern "C" {
@@ -1851,5 +2466,191 @@ extern "C" {
 }
 extern "C" {
     pub fn nvmlDeviceDiscoverGpus(pciInfo: *mut nvmlPciInfo_t)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlDeviceGetFieldValues(device: nvmlDevice_t,
+                                    valuesCount: raw::c_int,
+                                    values: *mut nvmlFieldValue_t)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlDeviceGetVirtualizationMode(device: nvmlDevice_t,
+                                           pVirtualMode:
+                                               *mut nvmlGpuVirtualizationMode_t)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlDeviceSetVirtualizationMode(device: nvmlDevice_t,
+                                           virtualMode:
+                                               nvmlGpuVirtualizationMode_t)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlDeviceGetSupportedVgpus(device: nvmlDevice_t,
+                                       vgpuCount: *mut raw::c_uint,
+                                       vgpuTypeIds: *mut nvmlVgpuTypeId_t)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlDeviceGetCreatableVgpus(device: nvmlDevice_t,
+                                       vgpuCount: *mut raw::c_uint,
+                                       vgpuTypeIds: *mut nvmlVgpuTypeId_t)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlVgpuTypeGetClass(vgpuTypeId: nvmlVgpuTypeId_t,
+                                vgpuTypeClass: *mut raw::c_char,
+                                size: *mut raw::c_uint) -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlVgpuTypeGetName(vgpuTypeId: nvmlVgpuTypeId_t,
+                               vgpuTypeName: *mut raw::c_char,
+                               size: *mut raw::c_uint) -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlVgpuTypeGetDeviceID(vgpuTypeId: nvmlVgpuTypeId_t,
+                                   deviceID: *mut raw::c_ulonglong,
+                                   subsystemID: *mut raw::c_ulonglong)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlVgpuTypeGetFramebufferSize(vgpuTypeId: nvmlVgpuTypeId_t,
+                                          fbSize: *mut raw::c_ulonglong)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlVgpuTypeGetNumDisplayHeads(vgpuTypeId: nvmlVgpuTypeId_t,
+                                          numDisplayHeads: *mut raw::c_uint)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlVgpuTypeGetResolution(vgpuTypeId: nvmlVgpuTypeId_t,
+                                     displayIndex: raw::c_uint,
+                                     xdim: *mut raw::c_uint,
+                                     ydim: *mut raw::c_uint) -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlVgpuTypeGetLicense(vgpuTypeId: nvmlVgpuTypeId_t,
+                                  vgpuTypeLicenseString: *mut raw::c_char,
+                                  size: raw::c_uint) -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlVgpuTypeGetFrameRateLimit(vgpuTypeId: nvmlVgpuTypeId_t,
+                                         frameRateLimit: *mut raw::c_uint)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlVgpuTypeGetMaxInstances(device: nvmlDevice_t,
+                                       vgpuTypeId: nvmlVgpuTypeId_t,
+                                       vgpuInstanceCount: *mut raw::c_uint)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlDeviceGetActiveVgpus(device: nvmlDevice_t,
+                                    vgpuCount: *mut raw::c_uint,
+                                    vgpuInstances: *mut nvmlVgpuInstance_t)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlVgpuInstanceGetVmID(vgpuInstance: nvmlVgpuInstance_t,
+                                   vmId: *mut raw::c_char, size: raw::c_uint,
+                                   vmIdType: *mut nvmlVgpuVmIdType_t)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlVgpuInstanceGetUUID(vgpuInstance: nvmlVgpuInstance_t,
+                                   uuid: *mut raw::c_char, size: raw::c_uint)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlVgpuInstanceGetVmDriverVersion(vgpuInstance:
+                                                  nvmlVgpuInstance_t,
+                                              version: *mut raw::c_char,
+                                              length: raw::c_uint)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlVgpuInstanceGetFbUsage(vgpuInstance: nvmlVgpuInstance_t,
+                                      fbUsage: *mut raw::c_ulonglong)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlVgpuInstanceGetLicenseStatus(vgpuInstance: nvmlVgpuInstance_t,
+                                            licensed: *mut raw::c_uint)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlVgpuInstanceGetType(vgpuInstance: nvmlVgpuInstance_t,
+                                   vgpuTypeId: *mut nvmlVgpuTypeId_t)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlVgpuInstanceGetFrameRateLimit(vgpuInstance: nvmlVgpuInstance_t,
+                                             frameRateLimit: *mut raw::c_uint)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlVgpuInstanceGetEncoderCapacity(vgpuInstance:
+                                                  nvmlVgpuInstance_t,
+                                              encoderCapacity:
+                                                  *mut raw::c_uint)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlVgpuInstanceSetEncoderCapacity(vgpuInstance:
+                                                  nvmlVgpuInstance_t,
+                                              encoderCapacity: raw::c_uint)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlDeviceGetVgpuUtilization(device: nvmlDevice_t,
+                                        lastSeenTimeStamp: raw::c_ulonglong,
+                                        sampleValType: *mut nvmlValueType_t,
+                                        vgpuInstanceSamplesCount:
+                                            *mut raw::c_uint,
+                                        utilizationSamples:
+                                            *mut nvmlVgpuInstanceUtilizationSample_t)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlDeviceGetVgpuProcessUtilization(device: nvmlDevice_t,
+                                               lastSeenTimeStamp:
+                                                   raw::c_ulonglong,
+                                               vgpuProcessSamplesCount:
+                                                   *mut raw::c_uint,
+                                               utilizationSamples:
+                                                   *mut nvmlVgpuProcessUtilizationSample_t)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlDeviceGetGridLicensableFeatures(device: nvmlDevice_t,
+                                               pGridLicensableFeatures:
+                                                   *mut nvmlGridLicensableFeatures_t)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlVgpuInstanceGetEncoderStats(vgpuInstance: nvmlVgpuInstance_t,
+                                           sessionCount: *mut raw::c_uint,
+                                           averageFps: *mut raw::c_uint,
+                                           averageLatency: *mut raw::c_uint)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlVgpuInstanceGetEncoderSessions(vgpuInstance:
+                                                  nvmlVgpuInstance_t,
+                                              sessionCount: *mut raw::c_uint,
+                                              sessionInfo:
+                                                  *mut nvmlEncoderSessionInfo_t)
+     -> nvmlReturn_t;
+}
+extern "C" {
+    pub fn nvmlDeviceGetProcessUtilization(device: nvmlDevice_t,
+                                           utilization:
+                                               *mut nvmlProcessUtilizationSample_t,
+                                           processSamplesCount:
+                                               *mut raw::c_uint,
+                                           lastSeenTimeStamp:
+                                               raw::c_ulonglong)
      -> nvmlReturn_t;
 }
