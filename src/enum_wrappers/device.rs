@@ -515,3 +515,14 @@ pub enum SampleValueType {
     #[wrap(c_variant = "NVML_VALUE_TYPE_SIGNED_LONG_LONG")]
     SignedLongLong
 }
+
+/// Represents encoder types that capacity can be queried for.
+#[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[wrap(c_enum = "nvmlEncoderQueryType_enum")]
+pub enum EncoderType {
+    #[wrap(c_variant = "NVML_ENCODER_QUERY_H264")]
+    H264,
+    #[wrap(c_variant = "NVML_ENCODER_QUERY_HEVC")]
+    HEVC
+}

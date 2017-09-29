@@ -889,6 +889,133 @@ impl<'nvml> Device<'nvml> {
     }
 
     /**
+    Gets the current capacity of this device's encoder in macroblocks per second.
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if this device is invalid
+    * `NotSupported`, if this `Device` does not support the given `for_type`
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+
+    # Device Support
+
+    Supports Maxwell or newer fully supported devices.
+    */
+    // Tested
+    #[inline]
+    pub fn encoder_capacity(&self, for_type: EncoderType) -> Result<u32> {
+        unsafe {
+            let mut capacity: c_uint = mem::zeroed();
+
+            nvml_try(nvmlDeviceGetEncoderCapacity(
+                self.device,
+                for_type.as_c(),
+                &mut capacity
+            ))?;
+
+            Ok(capacity)
+        }
+    }
+
+    /**
+    Gets the current encoder stats for this device.
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if this device is invalid
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+
+    # Device Support
+
+    Supports Maxwell or newer fully supported devices.
+    */
+    // Tested
+    #[inline]
+    pub fn encoder_stats(&self) -> Result<EncoderStats> {
+        unsafe {
+            let mut session_count: c_uint = mem::zeroed();
+            let mut average_fps: c_uint = mem::zeroed();
+            let mut average_latency: c_uint = mem::zeroed();
+
+            nvml_try(nvmlDeviceGetEncoderStats(
+                self.device,
+                &mut session_count,
+                &mut average_fps,
+                &mut average_latency
+            ))?;
+
+            Ok(EncoderStats {
+                session_count,
+                average_fps,
+                average_latency
+            })
+        }
+    }
+
+    /**
+    Gets information about active encoder sessions on this device.
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, if an enum variant not defined in this wrapper gets
+    returned in a field of an `EncoderSessionInfo` struct
+    * `Unknown`, on any unexpected error
+
+    # Device Support
+
+    Supports Maxwell or newer fully supported devices.
+    */
+    // Tested
+    // TODO: Test this with an active session and make sure it works
+    #[inline]
+    pub fn encoder_sessions(&self) -> Result<Vec<EncoderSessionInfo>> {
+        unsafe {
+            let mut count = match self.encoder_sessions_count()? {
+                0 => return Ok(vec![]),
+                value => value
+            };
+            let mut sessions: Vec<nvmlEncoderSessionInfo_t> =
+                vec![mem::zeroed(); count as usize];
+
+            nvml_try(nvmlDeviceGetEncoderSessions(
+                self.device,
+                &mut count,
+                sessions.as_mut_ptr()
+            ))?;
+
+            sessions.truncate(count as usize);
+            Ok(
+                sessions
+                    // TODO: All other code paths like this should use `into_iter()`, not `iter()`
+                    .into_iter()
+                    .map(|s| EncoderSessionInfo::try_from(s))
+                    .collect::<Result<_>>()?
+            )
+        }
+    }
+
+    // Helper for the above function. Returns # of sessions that can be queried.
+    fn encoder_sessions_count(&self) -> Result<c_uint> {
+        unsafe {
+            let mut count: c_uint = 0;
+
+            nvml_try(nvmlDeviceGetEncoderSessions(
+                self.device,
+                &mut count,
+                ptr::null_mut()
+            ))?;
+
+            Ok(count)
+        }
+    }
+
+    /**
     Gets the effective power limit in milliwatts that the driver enforces after taking
     into account all limiters.
     
@@ -4205,6 +4332,26 @@ mod test {
     fn encoder_utilization() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.encoder_utilization())
+    }
+
+    #[test]
+    fn encoder_capacity() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.encoder_capacity(
+            EncoderType::H264)
+        )
+    }
+
+    #[test]
+    fn encoder_stats() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.encoder_stats())
+    }
+
+    #[test]
+    fn encoder_sessions() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.encoder_sessions())
     }
 
     #[test]

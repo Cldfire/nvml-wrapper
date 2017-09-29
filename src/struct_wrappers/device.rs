@@ -1,4 +1,4 @@
-use enum_wrappers::device::{BridgeChip, SampleValueType};
+use enum_wrappers::device::{BridgeChip, SampleValueType, EncoderType};
 use enums::device::{UsedGpuMemory, SampleValue, FirmwareVersion};
 use error::{Result, ErrorKind};
 use ffi::bindings::*;
@@ -61,7 +61,7 @@ impl PciInfo {
                 CStr::from_ptr(struct_.busId.as_ptr())
             };
 
-            Ok(PciInfo {
+            Ok(Self {
                 bus: struct_.bus,
                 bus_id: bus_id_raw.to_str()?.into(),
                 device: struct_.device,
@@ -145,7 +145,7 @@ pub struct BAR1MemoryInfo {
 
 impl From<nvmlBAR1Memory_t> for BAR1MemoryInfo {
     fn from(struct_: nvmlBAR1Memory_t) -> Self {
-        BAR1MemoryInfo {
+        Self {
             free: struct_.bar1Free,
             total: struct_.bar1Total,
             used: struct_.bar1Used
@@ -174,7 +174,7 @@ impl BridgeChipInfo {
         let fw_version = FirmwareVersion::from(struct_.fwVersion);
         let chip_type = BridgeChip::try_from(struct_.type_)?;
 
-        Ok(BridgeChipInfo {
+        Ok(Self {
             fw_version,
             chip_type
         })
@@ -214,7 +214,7 @@ impl BridgeChipHierarchy {
 
         let chips_hierarchy = chips_hierarchy?;
 
-        Ok(BridgeChipHierarchy {
+        Ok(Self {
             chips_hierarchy,
             chip_count: struct_.bridgeCount
         })
@@ -234,7 +234,7 @@ pub struct ProcessInfo {
 
 impl From<nvmlProcessInfo_t> for ProcessInfo {
     fn from(struct_: nvmlProcessInfo_t) -> Self {
-        ProcessInfo {
+        Self {
             pid: struct_.pid,
             used_gpu_memory: UsedGpuMemory::from(struct_.usedGpuMemory)
         }
@@ -254,7 +254,7 @@ pub struct EccErrorCounts {
 
 impl From<nvmlEccErrorCounts_t> for EccErrorCounts {
     fn from(struct_: nvmlEccErrorCounts_t) -> Self {
-        EccErrorCounts {
+        Self {
             device_memory: struct_.deviceMemory,
             l1_cache: struct_.l1Cache,
             l2_cache: struct_.l2Cache,
@@ -281,7 +281,7 @@ pub struct MemoryInfo {
 
 impl From<nvmlMemory_t> for MemoryInfo {
     fn from(struct_: nvmlMemory_t) -> Self {
-        MemoryInfo {
+        Self {
             free: struct_.free,
             total: struct_.total,
             used: struct_.used
@@ -305,7 +305,7 @@ pub struct Utilization {
 
 impl From<nvmlUtilization_t> for Utilization {
     fn from(struct_: nvmlUtilization_t) -> Self {
-        Utilization {
+        Self {
             gpu: struct_.gpu,
             memory: struct_.memory
         }
@@ -325,7 +325,7 @@ pub struct ViolationTime {
 
 impl From<nvmlViolationTime_t> for ViolationTime {
     fn from(struct_: nvmlViolationTime_t) -> Self {
-        ViolationTime {
+        Self {
             reference_time: struct_.referenceTime,
             violation_time: struct_.violationTime
         }
@@ -377,7 +377,7 @@ impl From<nvmlAccountingStats_t> for AccountingStats {
         let not_avail_u64 = (NVML_VALUE_NOT_AVAILABLE) as u64;
         let not_avail_u32 = (NVML_VALUE_NOT_AVAILABLE) as u32;
 
-        AccountingStats {
+        Self {
             gpu_utilization: match struct_.gpuUtilization {
                 v if v == not_avail_u32 => None,
                 _ => Some(struct_.gpuUtilization),
@@ -402,6 +402,54 @@ impl From<nvmlAccountingStats_t> for AccountingStats {
     }
 }
 
+/// Holds encoder session information.
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct EncoderSessionInfo {
+    /// Unique ID for this session.
+    pub session_id: u32,
+    /// The ID of the process that owns this session.
+    pub pid: u32,
+    /// The ID of the vGPU instance that owns this session (if applicable).
+    // TODO: Stronger typing when vgpu stuff is wrapped
+    pub vgpu_instance: Option<u32>,
+    pub codec_type: EncoderType,
+    /// Current horizontal encoding resolution.
+    pub hres: u32,
+    /// Current vertical encoding resolution.
+    pub vres: u32,
+    /// Moving average encode frames per second.
+    pub average_fps: u32,
+    /// Moving average encode latency in μs.
+    pub average_latency: u32
+}
+
+impl EncoderSessionInfo {
+    /**
+    Waiting on `TryFrom` to be stable.
+
+    # Errors
+    
+    * `UnexpectedVariant`, for which you can read the docs for
+    */
+    pub fn try_from(struct_: nvmlEncoderSessionInfo_t) -> Result<Self> {
+        // TODO: Use `Self` everywhere
+        Ok(Self {
+            session_id: struct_.sessionId,
+            pid: struct_.pid,
+            vgpu_instance: match struct_.vgpuInstance {
+                0 => None,
+                other => Some(other)
+            },
+            codec_type: EncoderType::try_from(struct_.codecType)?,
+            hres: struct_.hResolution,
+            vres: struct_.vResolution,
+            average_fps: struct_.averageFps,
+            average_latency: struct_.averageLatency
+        })
+    }
+}
+
 /// Sample info.
 // Checked against local
 #[derive(Debug, Clone, PartialEq)]
@@ -416,7 +464,7 @@ impl Sample {
     /// Given a tag and an untagged union, returns a Rust enum with the correct
     /// union variant.
     pub fn from_tag_and_struct(tag: &SampleValueType, struct_: nvmlSample_t) -> Self {
-        Sample {
+        Self {
             timestamp: struct_.timeStamp,
             value: SampleValue::from_tag_and_union(tag, struct_.sampleValue)
         }

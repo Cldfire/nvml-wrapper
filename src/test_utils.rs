@@ -66,6 +66,8 @@ impl ShouldPrint for Vec<u64> {}
 impl ShouldPrint for Vec<Sample> {}
 impl ShouldPrint for Vec<HwbcEntry> {}
 impl ShouldPrint for Utilization {}
+impl ShouldPrint for EncoderStats {}
+impl ShouldPrint for Vec<EncoderSessionInfo> {}
 impl ShouldPrint for AutoBoostClocksEnabledInfo {}
 impl ShouldPrint for BAR1MemoryInfo {}
 impl ShouldPrint for BridgeChipHierarchy {}

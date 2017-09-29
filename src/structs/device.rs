@@ -59,3 +59,15 @@ pub struct PowerManagementConstraints {
     pub min_limit: u32,
     pub max_limit: u32
 }
+
+/// Returned from `Device.encoder_stats()`
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct EncoderStats {
+    /// The number of active encoder sessions.
+    pub session_count: u32,
+    /// The trailing average FPS of all active encoder sessions.
+    pub average_fps: u32,
+    /// The encode latency in μs.
+    pub average_latency: u32
+}
