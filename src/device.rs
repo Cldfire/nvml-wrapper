@@ -1484,9 +1484,9 @@ impl<'nvml> Device<'nvml> {
     pub fn pci_info(&self) -> Result<PciInfo> {
         unsafe {
             let mut pci_info: nvmlPciInfo_t = mem::zeroed();
-            nvml_try(nvmlDeviceGetPciInfo_v2(self.device, &mut pci_info))?;
+            nvml_try(nvmlDeviceGetPciInfo_v3(self.device, &mut pci_info))?;
 
-            Ok(PciInfo::try_from(pci_info, true)?)
+            Ok(PciInfo::try_from(pci_info, true, false)?)
         }
     }
 

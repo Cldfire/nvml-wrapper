@@ -22,12 +22,13 @@ bitflags! {
         is engaged.
         
         This is an indicator of:
-        * Temperature being too high
-        * External Power Brake Asseration is triggered (e.g. by the system power supply)
-        * Power draw is too high and Fast Trigger protection is reducing the clocks
 
-        This may also be reported during powerstate or clock change.
-            * This behavior may be removed in a later release.
+        * Temperature being too high
+        * External Power Brake Asseration being triggered (e.g. by the system power supply)
+        * Power draw being too high and Fast Trigger protection reducing the clocks
+
+        This may also be reported during powerstate or clock change, behavior that may be
+        removed in a later release.
         */
         const HW_SLOWDOWN                 = nvmlClocksThrottleReasonHwSlowdown as u64;
         /**
@@ -43,6 +44,7 @@ bitflags! {
         Software thermal slowdown.
 
         This is an indicator of one or more of the following:
+        
         * The current GPU temperature is above the max GPU operating temperature
         * The current memory temperature is above the max memory operating temperature
         */

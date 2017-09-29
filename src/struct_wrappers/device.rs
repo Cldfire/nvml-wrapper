@@ -8,6 +8,7 @@ use std::os::raw::c_char;
 /// PCI information about a GPU device.
 // Checked against local
 // Tested
+// TODO: Sort out the legacy vs. new busid situation
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PciInfo {
@@ -35,16 +36,29 @@ impl PciInfo {
     /**
     Waiting for `TryFrom` to be stable. In the meantime, we do this.
 
-    Passing `false` for `sub_sys_id_present` will set the `pci_sub_system_id` field to
-    `None`. See the field docs for more.
+    Passing `false` for `sub_sys_id_present` will set the `pci_sub_system_id`
+    field to `None`. See the field docs for more.
+
+    Read NVIDIA's docs on the `nvmlDeviceGetPciInfo` functions to understand
+    the usage of the `use_legacy_bus_id` field.
 
     # Errors
 
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     */
-    pub fn try_from(struct_: nvmlPciInfo_t, sub_sys_id_present: bool) -> Result<Self> {
+    pub fn try_from(
+        struct_: nvmlPciInfo_t,
+        sub_sys_id_present: bool,
+        use_legacy_bus_id: bool
+    ) -> Result<Self> {
+
         unsafe {
-            let bus_id_raw = CStr::from_ptr(struct_.busId.as_ptr());
+            let bus_id_raw = if use_legacy_bus_id {
+                CStr::from_ptr(struct_.busIdLegacy.as_ptr())
+            } else {
+                CStr::from_ptr(struct_.busId.as_ptr())
+            };
+
             Ok(PciInfo {
                 bus: struct_.bus,
                 bus_id: bus_id_raw.to_str()?.into(),
@@ -427,7 +441,7 @@ mod tests {
 
             let raw = unsafe {
                 let mut pci_info: nvmlPciInfo_t = mem::zeroed();
-                nvml_try(nvmlDeviceGetPciInfo_v2(device.unsafe_raw(), &mut pci_info))
+                nvml_try(nvmlDeviceGetPciInfo_v3(device.unsafe_raw(), &mut pci_info))
                     .expect("raw pci info");
                 pci_info
             };
