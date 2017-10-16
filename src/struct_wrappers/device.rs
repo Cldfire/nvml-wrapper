@@ -108,8 +108,12 @@ impl PciInfo {
             }
         };
 
-        bus_id_c
-            .clone_from_slice(&bus_id.iter().map(|b| *b as c_char).collect::<Vec<_>>());
+        bus_id_c.clone_from_slice(
+            &bus_id
+                .into_iter()
+                .map(|b| b as c_char)
+                .collect::<Vec<_>>()
+        );
 
         Ok(nvmlPciInfo_t {
             // TODO: Is zeroing this out correct?
@@ -206,13 +210,11 @@ impl BridgeChipHierarchy {
     * `UnexpectedVariant`, for which you can read the docs for
     */
     pub fn try_from(struct_: nvmlBridgeChipHierarchy_t) -> Result<Self> {
-        let chips_hierarchy: Result<Vec<BridgeChipInfo>> = struct_
+        let chips_hierarchy = struct_
             .bridgeChipInfo
-            .iter()
+            .into_iter()
             .map(|bci| BridgeChipInfo::try_from(*bci))
-            .collect();
-
-        let chips_hierarchy = chips_hierarchy?;
+            .collect::<Result<_>>()?;
 
         Ok(Self {
             chips_hierarchy,

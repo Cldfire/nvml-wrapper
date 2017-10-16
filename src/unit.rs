@@ -78,7 +78,7 @@ impl<'nvml> Unit<'nvml> {
                 devices.as_mut_ptr()
             ))?;
 
-            Ok(devices.iter().map(|d| Device::from(*d)).collect())
+            Ok(devices.into_iter().map(Device::from).collect())
         }
     }
 

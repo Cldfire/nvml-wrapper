@@ -474,7 +474,7 @@ impl<'nvml> Device<'nvml> {
                 processes.as_mut_ptr()
             ))?;
 
-            Ok(processes.iter().map(|p| ProcessInfo::from(*p)).collect())
+            Ok(processes.into_iter().map(ProcessInfo::from).collect())
         }
     }
 
@@ -992,9 +992,8 @@ impl<'nvml> Device<'nvml> {
             sessions.truncate(count as usize);
             Ok(
                 sessions
-                    // TODO: All other code paths like this should use `into_iter()`, not `iter()`
                     .into_iter()
-                    .map(|s| EncoderSessionInfo::try_from(s))
+                    .map(EncoderSessionInfo::try_from)
                     .collect::<Result<_>>()?
             )
         }
@@ -1145,7 +1144,7 @@ impl<'nvml> Device<'nvml> {
                 processes.as_mut_ptr()
             ))?;
 
-            Ok(processes.iter().map(|p| ProcessInfo::from(*p)).collect())
+            Ok(processes.into_iter().map(ProcessInfo::from).collect())
         }
     }
 
@@ -2025,11 +2024,6 @@ impl<'nvml> Device<'nvml> {
     # Device Support
 
     Supports Kepler and newer fully supported devices.
-    
-    # Rustc Support
-
-    Only compiles on nightly due to use of the `untagged_unions` feature. See
-    [the tracking issue](https://github.com/rust-lang/rust/issues/32836).
 
     # Examples
 
@@ -2088,8 +2082,8 @@ impl<'nvml> Device<'nvml> {
             let val_type_rust = SampleValueType::try_from(val_type)?;
             Ok(
                 samples
-                    .iter()
-                    .map(|s| Sample::from_tag_and_struct(&val_type_rust, *s))
+                    .into_iter()
+                    .map(|s| Sample::from_tag_and_struct(&val_type_rust, s))
                     .collect()
             )
         }
@@ -2565,7 +2559,7 @@ impl<'nvml> Device<'nvml> {
                 gpus.as_mut_ptr()
             ))?;
 
-            Ok(gpus.iter().map(|d| Device::from(*d)).collect())
+            Ok(gpus.into_iter().map(Device::from).collect())
         }
     }
 
