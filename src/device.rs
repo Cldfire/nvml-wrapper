@@ -678,8 +678,8 @@ impl<'nvml> Device<'nvml> {
             ))?;
 
             Ok(UtilizationInfo {
-                utilization: utilization,
-                sampling_period: sampling_period
+                utilization,
+                sampling_period
             })
         }
     }
@@ -914,8 +914,8 @@ impl<'nvml> Device<'nvml> {
             ))?;
 
             Ok(UtilizationInfo {
-                utilization: utilization,
-                sampling_period: sampling_period
+                utilization,
+                sampling_period
             })
         }
     }

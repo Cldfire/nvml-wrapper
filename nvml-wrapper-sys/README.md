@@ -46,10 +46,15 @@ between Windows and Linux, however.
 
 ### Windows
 
+I have been able to successfully compile and run the tests for these bindings' wrapper
+using both the GNU and MSVC toolchains. An import library (`nvml.lib`) is included for
+compilation with the MSVC toolchain.
+
 The NVML library dll can be found at `%ProgramW6432%\NVIDIA Corporation\NVSMI\`
-(which is `C:\Program Files\NVIDIA Corporation\NVSMI\` on my machine). You will need
-to add this folder to your `PATH` in order to have everything work properly at
-runtime; alternatively, place a copy of the dll in the same folder as your executable.
+(which is `C:\Program Files\NVIDIA Corporation\NVSMI\` on my machine). I had to add
+this folder to my `PATH` or place a copy of the dll in the same folder as the executable
+in order to have everything work properly at runtime with the GNU toolchain. You may
+need to do the same; I'm not sure if the MSVC toolchain needs this step or not.
 
 ### Linux
 
