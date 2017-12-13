@@ -473,6 +473,35 @@ impl Sample {
     }
 }
 
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct ProcessUtilizationSample {
+    pub pid: u32,
+    /// CPU timestamp in μs
+    pub timestamp: u64,
+    /// SM (3D / compute) utilization
+    pub sm_util: u32,
+    /// Frame buffer memory utilization
+    pub mem_util: u32,
+    /// Encoder utilization
+    pub enc_util: u32,
+    /// Decoder utilization
+    pub dec_util: u32
+}
+
+impl From<nvmlProcessUtilizationSample_t> for ProcessUtilizationSample {
+    fn from(struct_: nvmlProcessUtilizationSample_t) -> Self {
+        Self {
+            pid: struct_.pid,
+            timestamp: struct_.timeStamp,
+            sm_util: struct_.smUtil,
+            mem_util: struct_.memUtil,
+            enc_util: struct_.encUtil,
+            dec_util: struct_.decUtil
+        }
+    }
+}
+
 #[cfg(test)]
 #[allow(unused_variables, unused_imports)]
 mod tests {

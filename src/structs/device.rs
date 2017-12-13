@@ -71,3 +71,11 @@ pub struct EncoderStats {
     /// The encode latency in μs.
     pub average_latency: u32
 }
+
+/// Returned from `Device.cuda_compute_capability()`
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct CudaComputeCapability {
+    pub major: i32,
+    pub minor: i32
+}

@@ -54,12 +54,14 @@ impl<'nvml> ShouldPrint for EventSet<'nvml> {
 
 impl ShouldPrint for bool {}
 impl ShouldPrint for u32 {}
+impl ShouldPrint for i32 {}
 impl ShouldPrint for (u32, u32) {}
 impl ShouldPrint for u64 {}
 impl ShouldPrint for String {}
 impl ShouldPrint for Brand {}
 impl ShouldPrint for [i8; 16] {}
 impl ShouldPrint for Vec<ProcessInfo> {}
+impl ShouldPrint for Vec<ProcessUtilizationSample> {}
 impl<'nvml> ShouldPrint for Vec<Device<'nvml>> {}
 impl ShouldPrint for Vec<u32> {}
 impl ShouldPrint for Vec<u64> {}

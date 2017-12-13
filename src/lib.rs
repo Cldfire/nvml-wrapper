@@ -290,7 +290,6 @@ impl NVML {
     
     # Errors
 
-    * `Uninitialized`, if the library has not been successfully initialized
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     */
     // Checked against local
@@ -308,6 +307,20 @@ impl NVML {
             // Thanks to `Amaranth` on IRC for help with this
             let version_raw = CStr::from_ptr(version_vec.as_ptr());
             Ok(version_raw.to_str()?.into())
+        }
+    }
+
+    /// Gets the version of the system's CUDA driver.
+    /// 
+    /// The returned version is the same as what `cuDriverGetVersion()` from the
+    /// CUDA API would return.
+    #[inline]
+    pub fn sys_cuda_driver_version(&self) -> Result<i32> {
+        unsafe {
+            let mut version: c_int = mem::zeroed();
+            nvml_try(nvmlSystemGetCudaDriverVersion(&mut version))?;
+
+            Ok(version)
         }
     }
 
@@ -859,6 +872,11 @@ mod test {
     #[test]
     fn sys_nvml_version() {
         test(3, || nvml().sys_nvml_version())
+    }
+
+    #[test]
+    fn sys_cuda_driver_version() {
+        test(3, || nvml().sys_cuda_driver_version())
     }
 
     #[test]
