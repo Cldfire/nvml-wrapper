@@ -395,10 +395,14 @@ pub enum TopologyLevel {
     /// All devices that are connected to the same host bridge.
     #[wrap(c_variant = "NVML_TOPOLOGY_HOSTBRIDGE")]
     HostBridge,
-    /// All devices that are connected to the same CPU but possibly multiple
-    /// host bridges.
-    #[wrap(c_variant = "NVML_TOPOLOGY_CPU")]
-    Cpu,
+    /**
+    All devices that are connected to the same NUMA node but possibly
+    multiple host bridges.
+    
+    This was `Cpu` in previous versions of NVML.
+    */
+    #[wrap(c_variant = "NVML_TOPOLOGY_NODE")]
+    Node,
     /// All devices in the system
     #[wrap(c_variant = "NVML_TOPOLOGY_SYSTEM")]
     System

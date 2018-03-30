@@ -116,7 +116,7 @@ error_chain! {
                         not be encountered. Multiple initializations are now allowed through refcounting.")
         }
 
-        /// A query to find and object was unsuccessful.
+        /// A query to find an object was unsuccessful.
         NotFound {
             description("A query to find and object was unsuccessful.")
         }
