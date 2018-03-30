@@ -1,6 +1,6 @@
 /*!
 A complete, safe, and ergonomic Rust wrapper for the
-[NVIDIA Management Library] (https://developer.nvidia.com/nvidia-management-library-nvml)
+[NVIDIA Management Library](https://developer.nvidia.com/nvidia-management-library-nvml)
 (NVML), a C-based programmatic interface for monitoring and managing various states within
 NVIDIA (primarily Tesla) GPUs.
 

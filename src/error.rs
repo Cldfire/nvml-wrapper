@@ -15,7 +15,7 @@ error_chain! {
 
     errors {
         /**
-        An error used to pinpoint error cause within a function to \
+        An error used to pinpoint error cause within a function to
         `PciInfo.try_into_c()`.
 
         This error is specific to this Rust wrapper.
@@ -27,7 +27,7 @@ error_chain! {
         
         /**
         An error used to pinpoint error cause within a function to a call to
-        `Device.pci_info()`.'
+        `Device.pci_info()`.
 
         This error is specific to this Rust wrapper.
         */
@@ -38,7 +38,7 @@ error_chain! {
 
         /**
         An error used to pinpoint error cause within a function to a call to
-        `EventSet`.release_events()`.
+        `EventSet.release_events()`.
 
         This error is specific to this Rust wrapper.
         */
@@ -81,7 +81,7 @@ error_chain! {
         The `value` field contains the value that could not be mapped to a
         defined enum variant.
 
-        See https://github.com/rust-lang/rust/issues/36927
+        See <https://github.com/rust-lang/rust/issues/36927>
         */
         UnexpectedVariant(value: u32) {
             description("An unexpected enum variant was encountered.")
