@@ -9,12 +9,16 @@ use bitmasks::device::ThrottleReasons;
 use bitmasks::event::EventTypes;
 use enum_wrappers::{state_from_bool, bool_from_state};
 use enum_wrappers::device::*;
-use error::{Bits, nvml_try, Result, ResultExt, ErrorKind, Error};
+#[cfg(target_os = "linux")]
+use error::ResultExt;
+use error::{Bits, nvml_try, Result, ErrorKind, Error};
 use ffi::bindings::*;
 use std::ffi::CStr;
 use std::marker::PhantomData;
 use std::mem;
-use std::os::raw::{c_int, c_uint, c_ulong, c_ulonglong};
+#[cfg(target_os = "linux")]
+use std::os::raw::c_ulong;
+use std::os::raw::{c_int, c_uint, c_ulonglong};
 use std::ptr;
 use struct_wrappers::device::*;
 use structs::device::*;
@@ -533,9 +537,8 @@ impl<'nvml> Device<'nvml> {
 
             // Passing null doesn't mean we want the count, it's just allowed
             match nvmlDeviceGetComputeRunningProcesses(self.device, &mut count, ptr::null_mut()) {
-                nvmlReturn_enum_NVML_SUCCESS => Ok(0),
                 nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
-                // We know that this wil be an error
+                // If success, return 0; otherwise, return error
                 other => nvml_try(other).map(|_| 0),
             }
         }
@@ -1151,7 +1154,7 @@ impl<'nvml> Device<'nvml> {
     /**
     Gets information about processes with a graphics context running on this `Device`.
     
-    This only returns information about graphics based processes (OpenGL, DirectX).
+    This only returns information about graphics based processes (OpenGL, DirectX, etc.).
     
     # Errors
 
@@ -1175,6 +1178,7 @@ impl<'nvml> Device<'nvml> {
                 &mut count,
                 processes.as_mut_ptr()
             ))?;
+            processes.truncate(count as usize);
 
             Ok(processes.into_iter().map(ProcessInfo::from).collect())
         }
@@ -1202,10 +1206,74 @@ impl<'nvml> Device<'nvml> {
 
             // Passing null doesn't indicate that we want the count. It's just allowed.
             match nvmlDeviceGetGraphicsRunningProcesses(self.device, &mut count, ptr::null_mut()) {
-                nvmlReturn_enum_NVML_SUCCESS => Ok(0),
                 nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
-                // We know that this will be an error
+                // If success, return 0; otherwise, return error
                 other => nvml_try(other).map(|_| 0),
+            }
+        }
+    }
+
+    /**
+    Gets utilization stats for relevant currently running processes.
+
+    Utilization stats are returned for processes that had a non-zero utilization stat
+    at some point during the target sample period. Passing `None` as the
+    `last_seen_timestamp` will target all samples that the driver has buffered; passing
+    a timestamp retrieved from a previous query will target samples taken since that
+    timestamp.
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if this `Device` is invalid
+    * `NotSupported`, if this `Device` does not support this feature
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+
+    # Device Support
+
+    Supports Maxwell or newer fully supported devices.
+    */
+    #[inline]
+    pub fn process_utilization_stats<T>(&self, last_seen_timestamp: T) -> Result<Vec<ProcessUtilizationSample>>
+    where
+        T: Into<Option<u64>>
+    {
+        unsafe {
+            let last_seen_timestamp = last_seen_timestamp.into().unwrap_or(0);
+            let mut count = match self.process_utilization_stats_count()? {
+                0 => return Ok(vec![]),
+                v => v
+            };
+            let mut utilization_samples: Vec<nvmlProcessUtilizationSample_t> 
+                = vec![mem::zeroed(); count as usize];
+
+            nvml_try(nvmlDeviceGetProcessUtilization(
+                self.device,
+                utilization_samples.as_mut_ptr(),
+                &mut count,
+                last_seen_timestamp
+            ))?;
+            utilization_samples.truncate(count as usize);
+
+            Ok(utilization_samples.into_iter().map(ProcessUtilizationSample::from).collect())
+        }
+    }
+
+    #[inline]
+    fn process_utilization_stats_count(&self) -> Result<c_uint> {
+        unsafe {
+            let mut count: c_uint = 0;
+
+            match nvmlDeviceGetProcessUtilization(
+                self.device,
+                ptr::null_mut(),
+                &mut count,
+                0
+            ) {
+                // Despite being undocumented, this appears to be the correct behavior
+                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
+                other => nvml_try(other).map(|_| 0)
             }
         }
     }
@@ -4431,6 +4499,12 @@ mod test {
     }
 
     #[test]
+    fn process_utilization_stats() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.process_utilization_stats(None))
+    }
+
+    #[test]
     fn index() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.index())
@@ -4722,6 +4796,7 @@ mod test {
             let supported = device.supported_memory_clocks()?;
 
             #[cfg(feature = "test-local")]
+            #[cfg(target_os = "linux")]
             {
                 assert_eq!(supported, vec![3505, 3304, 810, 405])
             }

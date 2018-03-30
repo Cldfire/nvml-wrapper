@@ -2,6 +2,7 @@ target
 Cargo.lock
 nvml-8.h
 nvml-9.h
+nvml-9.1.h
 nvml_copy.h
 .idea
 .vscode
