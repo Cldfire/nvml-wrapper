@@ -313,7 +313,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     I do not attempt to verify, statically or at runtime, that you have controls
     set for `counter` prior to calling this method on `counter`. NVIDIA says that
-    it is `In general[,] good practice`, which does not sound to me as if it is
+    it is "In general[,] good practice", which does not sound to me as if it is
     in any way unsafe to make this call without having set controls. I don't
     believe it's worth the overhead of using a `Mutex`'d bool to track whether
     or not you have set controls, and it's certainly not worth the effort to

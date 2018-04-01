@@ -159,6 +159,14 @@ use std::ptr;
 use struct_wrappers::device::PciInfo;
 use struct_wrappers::unit::HwbcEntry;
 
+/// Re-exports from `nvml-wrapper-sys` that are necessary for use of this wrapper.
+pub mod sys_exports {
+    /// Use these constants to populate the `structs::device::FieldId` newtype.
+    pub mod field_id {
+        pub use ffi::bindings::field_id::*;
+    }
+}
+
 /**
 The main struct that this library revolves around.
 

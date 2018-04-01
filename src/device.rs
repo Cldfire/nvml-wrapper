@@ -2232,6 +2232,57 @@ impl<'nvml> Device<'nvml> {
     }
 
     /**
+    Get values for the given slice of `FieldId`s.
+
+    NVIDIA's docs say that if any of the `FieldId`s are populated by the same driver
+    call, the samples for those IDs will be populated by a single call instead of
+    a call per ID. It would appear, then, that this is essentially a "batch-request"
+    API path for better performance.
+
+    There are too many field ID constants defined in the header to reasonably
+    wrap them with an enum in this crate. Instead, I've re-exported the defined
+    ID constants at `nvml_wrapper::sys_exports::field_id::*`; stick those
+    constants in `FieldId`s for use with this function.
+
+    # Errors
+
+    ## Outer `Result`
+
+    * `InvalidArg`, if `id_slice` has a length of zero
+
+    ## Vecter-contained `Result`
+
+    * `UnexpectedVariant`, check that error's docs for more info
+
+    # Device Support
+
+    Device support varies per `FieldId` that you pass in.
+    */
+    // TODO: Example
+    #[inline]
+    pub fn field_values_for(&self, id_slice: &[FieldId]) -> Result<Vec<Result<FieldValueSample>>> {
+        unsafe {
+            let values_count = id_slice.len();
+            let mut field_values: Vec<nvmlFieldValue_t> = Vec::with_capacity(values_count);
+
+            for id in id_slice.into_iter() {
+                let mut raw: nvmlFieldValue_t = mem::zeroed();
+                raw.fieldId = id.0;
+
+                field_values.push(raw);
+            }
+
+            nvml_try(nvmlDeviceGetFieldValues(
+                self.device,
+                values_count as i32,
+                field_values.as_mut_ptr()
+            ))?;
+
+            Ok(field_values.into_iter().map(|v| FieldValueSample::try_from(v)).collect())
+        }
+    }
+
+    /**
     Gets the globally unique board serial number associated with this `Device`'s board
     as an alphanumeric string.
     
@@ -4225,6 +4276,8 @@ mod test {
     use enum_wrappers::device::*;
     use error::*;
     use test_utils::*;
+    use sys_exports::field_id::*;
+    use structs::device::FieldId;
 
     #[test]
     fn device_is_send() {
@@ -4714,6 +4767,65 @@ mod test {
         test_with_device(3, &nvml, |device| {
             device.samples(Sampling::ProcessorClock, None)?;
             Ok(())
+        })
+    }
+
+    #[test]
+    fn field_values_for() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            device.field_values_for(&[
+                FieldId(NVML_FI_DEV_ECC_CURRENT),
+                FieldId(NVML_FI_DEV_ECC_PENDING),
+                FieldId(NVML_FI_DEV_ECC_SBE_VOL_TOTAL),
+                FieldId(NVML_FI_DEV_ECC_DBE_VOL_TOTAL),
+                FieldId(NVML_FI_DEV_ECC_SBE_AGG_TOTAL),
+                FieldId(NVML_FI_DEV_ECC_DBE_AGG_TOTAL),
+                FieldId(NVML_FI_DEV_ECC_SBE_VOL_L1),
+                FieldId(NVML_FI_DEV_ECC_DBE_VOL_L1),
+                FieldId(NVML_FI_DEV_ECC_SBE_VOL_L2),
+                FieldId(NVML_FI_DEV_ECC_DBE_VOL_L2),
+                FieldId(NVML_FI_DEV_ECC_SBE_VOL_DEV),
+                FieldId(NVML_FI_DEV_ECC_DBE_VOL_DEV),
+                FieldId(NVML_FI_DEV_ECC_SBE_VOL_REG),
+                FieldId(NVML_FI_DEV_ECC_DBE_VOL_REG),
+                FieldId(NVML_FI_DEV_ECC_SBE_VOL_TEX),
+                FieldId(NVML_FI_DEV_ECC_DBE_VOL_TEX),
+                FieldId(NVML_FI_DEV_ECC_DBE_VOL_CBU),
+                FieldId(NVML_FI_DEV_ECC_SBE_AGG_L1),
+                FieldId(NVML_FI_DEV_ECC_DBE_AGG_L1),
+                FieldId(NVML_FI_DEV_ECC_SBE_AGG_L2),
+                FieldId(NVML_FI_DEV_ECC_DBE_AGG_L2),
+                FieldId(NVML_FI_DEV_ECC_SBE_AGG_DEV),
+                FieldId(NVML_FI_DEV_ECC_DBE_AGG_DEV),
+                FieldId(NVML_FI_DEV_ECC_SBE_AGG_REG),
+                FieldId(NVML_FI_DEV_ECC_DBE_AGG_REG),
+                FieldId(NVML_FI_DEV_ECC_SBE_AGG_TEX),
+                FieldId(NVML_FI_DEV_ECC_DBE_AGG_TEX),
+                FieldId(NVML_FI_DEV_ECC_DBE_AGG_CBU),
+
+                FieldId(NVML_FI_DEV_PERF_POLICY_POWER),
+                FieldId(NVML_FI_DEV_PERF_POLICY_THERMAL),
+                FieldId(NVML_FI_DEV_PERF_POLICY_SYNC_BOOST),
+                FieldId(NVML_FI_DEV_PERF_POLICY_BOARD_LIMIT),
+                FieldId(NVML_FI_DEV_PERF_POLICY_LOW_UTILIZATION),
+                FieldId(NVML_FI_DEV_PERF_POLICY_RELIABILITY),
+                FieldId(NVML_FI_DEV_PERF_POLICY_TOTAL_APP_CLOCKS),
+                FieldId(NVML_FI_DEV_PERF_POLICY_TOTAL_BASE_CLOCKS),
+
+                FieldId(NVML_FI_DEV_MEMORY_TEMP),
+                FieldId(NVML_FI_DEV_TOTAL_ENERGY_CONSUMPTION)
+            ])
+        })
+    }
+
+    // Passing an empty slice should return an `InvalidArg` error
+    #[should_panic(expected = "InvalidArg")]
+    #[test]
+    fn field_values_for_empty() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| {
+            device.field_values_for(&[])
         })
     }
 

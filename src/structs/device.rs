@@ -79,3 +79,10 @@ pub struct CudaComputeCapability {
     pub major: i32,
     pub minor: i32
 }
+
+/// Populate this newtype with the constants `nvml_wrapper::sys_exports::field_id::*`.
+///
+/// Used in `FieldValue` and `Device.field_values_for()`.
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct FieldId(pub u32);

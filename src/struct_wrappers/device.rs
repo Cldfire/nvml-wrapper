@@ -1,6 +1,7 @@
 use enum_wrappers::device::{BridgeChip, SampleValueType, EncoderType};
 use enums::device::{UsedGpuMemory, SampleValue, FirmwareVersion};
-use error::{Result, ErrorKind};
+use structs::device::FieldId;
+use error::{Result, ErrorKind, nvml_try};
 use ffi::bindings::*;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
@@ -499,6 +500,51 @@ impl From<nvmlProcessUtilizationSample_t> for ProcessUtilizationSample {
             enc_util: struct_.encUtil,
             dec_util: struct_.decUtil
         }
+    }
+}
+
+/// Struct that stores information returned from `Device.field_values_for()`.
+// TODO: Missing a lot of derives becuase of the `Result`
+#[derive(Debug)]
+pub struct FieldValueSample {
+    /// The field that this sample is for.
+    field: FieldId,
+    /// This sample's CPU timestamp in μs (Unix time).
+    timestamp: i64,
+    /**
+    How long this field value took to update within NVML, in μs.
+    
+    This value may be averaged across several fields serviced by the same
+    driver call.
+    */
+    latency: i64,
+    /// The value of this sample.
+    /// 
+    /// Will be an error if retrieving this specific value failed.
+    value: Result<SampleValue>
+}
+
+impl FieldValueSample {
+    /**
+    Waiting on `TryFrom` to be stable.
+
+    # Errors
+    
+    * `UnexpectedVariant`, for which you can read the docs for
+    */
+    pub fn try_from(struct_: nvmlFieldValue_t) -> Result<Self> {
+        Ok(Self {
+            field: FieldId(struct_.fieldId),
+            timestamp: struct_.timestamp,
+            latency: struct_.latencyUsec,
+            value: match nvml_try(struct_.nvmlReturn) {
+                Ok(_) => Ok(SampleValue::from_tag_and_union(
+                    &SampleValueType::try_from(struct_.valueType)?, 
+                    struct_.value
+                )),
+                Err(e) => Err(e)
+            }
+        })
     }
 }
 

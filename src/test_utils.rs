@@ -66,6 +66,7 @@ impl<'nvml> ShouldPrint for Vec<Device<'nvml>> {}
 impl ShouldPrint for Vec<u32> {}
 impl ShouldPrint for Vec<u64> {}
 impl ShouldPrint for Vec<Sample> {}
+impl ShouldPrint for Vec<Result<FieldValueSample>> {}
 impl ShouldPrint for Vec<HwbcEntry> {}
 impl ShouldPrint for Utilization {}
 impl ShouldPrint for EncoderStats {}
