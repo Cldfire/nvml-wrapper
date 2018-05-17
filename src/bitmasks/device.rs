@@ -49,6 +49,19 @@ bitflags! {
         * The current memory temperature is above the max memory operating temperature
         */
         const SW_THERMAL_SLOWDOWN         = nvmlClocksThrottleReasonSwThermalSlowdown as u64;
+        /**
+        Hardware thermal slowdown is engaged, reducing core clocks by 2x or more.
+
+        This indicates that the temperature of the GPU is too high.
+        */
+        const HW_THERMAL_SLOWDOWN         = nvmlClocksThrottleReasonHwThermalSlowdown as u64;
+        /**
+        Hardware power brake slowdown is engaged, reducing core clocks by 2x or more.
+
+        This indicates that an external power brake assertion is being triggered,
+        such as by the system power supply.
+        */
+        const HW_POWER_BRAKE_SLOWDOWN     = nvmlClocksThrottleReasonHwPowerBrakeSlowdown as u64;
         /// Clocks are as high as possible and are not being throttled.
         const NONE                        = nvmlClocksThrottleReasonNone as u64;
     }

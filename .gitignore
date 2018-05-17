@@ -1,4 +1,5 @@
 target
+rls
 Cargo.lock
 nvml-8.h
 nvml-9.h

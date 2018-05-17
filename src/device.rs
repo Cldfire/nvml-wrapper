@@ -2250,7 +2250,7 @@ impl<'nvml> Device<'nvml> {
 
     * `InvalidArg`, if `id_slice` has a length of zero
 
-    ## Vecter-contained `Result`
+    ## Inner `Result`
 
     * `UnexpectedVariant`, check that error's docs for more info
 
