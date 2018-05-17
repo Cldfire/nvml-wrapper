@@ -2151,10 +2151,10 @@ impl<'nvml> Device<'nvml> {
     ```
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
-    # fn main() {
+    # fn main() -> Result<()> {
     # match test() {
-    # Err(Error(ErrorKind::NotFound, _)) => {},
-    # other => other.unwrap(),
+    # Err(Error(ErrorKind::NotFound, _)) => Ok(()),
+    # other => other,
     # }
     # }
     # fn test() -> Result<()> {
@@ -2822,10 +2822,7 @@ impl<'nvml> Device<'nvml> {
     ```no_run
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
-    # fn main() {
-    # test().unwrap();
-    # }
-    # fn test() -> Result<()> {
+    # fn main() -> Result<()> {
     # let nvml = NVML::init()?;
     # let device1 = nvml.device_by_index(0)?;
     # let device2 = nvml.device_by_index(1)?;
@@ -3782,10 +3779,7 @@ impl<'nvml> Device<'nvml> {
     ```
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
-    # fn main() {
-    # test().unwrap();    
-    # }
-    # fn test() -> Result<()> {
+    # fn main() -> Result<()> {
     # let nvml = NVML::init()?;
     # let device = nvml.device_by_index(0)?;
     use nvml_wrapper::bitmasks::event::EventTypes;
@@ -3871,10 +3865,7 @@ impl<'nvml> Device<'nvml> {
     ```
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
-    # fn main() {
-    # test().unwrap();    
-    # }
-    # fn test() -> Result<()> {
+    # fn main() -> Result<()> {
     # let nvml = NVML::init()?;
     # let device = nvml.device_by_index(0)?;
     use nvml_wrapper::bitmasks::event::EventTypes;
@@ -4057,10 +4048,7 @@ impl<'nvml> Device<'nvml> {
     ```
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
-    # fn main() {
-    # test().unwrap();    
-    # }
-    # fn test() -> Result<()> {
+    # fn main() -> Result<()> {
     # let nvml = NVML::init()?;
     # let mut device = nvml.device_by_index(0)?;
     // Pass `None`, `.is_drain_enabled()` call will grab `PciInfo` for us

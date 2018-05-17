@@ -158,6 +158,7 @@ use std::ptr;
 #[cfg(target_os = "linux")]
 use struct_wrappers::device::PciInfo;
 use struct_wrappers::unit::HwbcEntry;
+use bitmasks::InitFlags;
 
 /// Re-exports from `nvml-wrapper-sys` that are necessary for use of this wrapper.
 pub mod sys_exports {
@@ -222,6 +223,41 @@ impl NVML {
     pub fn init() -> Result<Self> {
         unsafe {
             nvml_try(nvmlInit_v2())?;
+        }
+
+        Ok(NVML)
+    }
+
+    /**
+    An initialization function that allows you to pass flags to control certain behaviors.
+
+    This is the same as `init()` except for the addition of flags.
+
+    # Errors
+
+    * `DriverNotLoaded`, if the NVIDIA driver is not running
+    * `NoPermission`, if NVML does not have permission to talk to the driver
+    * `Unknown`, on any unexpected error
+
+    # Examples
+
+    ```
+    # use nvml_wrapper::NVML;
+    # use nvml_wrapper::error::*;
+    use nvml_wrapper::bitmasks::InitFlags;
+
+    # fn main() -> Result<()> {
+    // Don't fail if the system doesn't have any NVIDIA GPUs
+    NVML::init_with_flags(InitFlags::NO_GPUS)?;
+    # Ok(())
+    # }
+    ```
+    */
+    // TODO: Example of using multiple flags when multiple flags exist
+    #[inline]
+    pub fn init_with_flags(flags: InitFlags) -> Result<Self> {
+        unsafe {
+            nvml_try(nvmlInitWithFlags(flags.bits()))?;
         }
 
         Ok(NVML)
@@ -854,6 +890,7 @@ impl Drop for NVML {
 #[cfg(test)]
 mod test {
     use super::*;
+    use bitmasks::InitFlags;
     use error::{Error, ErrorKind};
     use test_utils::*;
 
@@ -865,6 +902,11 @@ mod test {
     #[test]
     fn nvml_is_sync() {
         assert_sync::<NVML>()
+    }
+
+    #[test]
+    fn init_with_flags() {
+        NVML::init_with_flags(InitFlags::NO_GPUS).unwrap();
     }
 
     #[test]
