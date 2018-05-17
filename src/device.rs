@@ -2,26 +2,45 @@
 use EventSet;
 use NVML;
 use NvLink;
+
 #[cfg(target_os = "windows")]
 use bitmasks::Behavior;
 use bitmasks::device::ThrottleReasons;
 #[cfg(target_os = "linux")]
 use bitmasks::event::EventTypes;
-use enum_wrappers::{state_from_bool, bool_from_state};
-use enum_wrappers::device::*;
+
+use enum_wrappers::{
+    state_from_bool,
+    bool_from_state,
+    device::*
+};
+
 #[cfg(target_os = "linux")]
 use error::ResultExt;
 use error::{Bits, nvml_try, Result, ErrorKind, Error};
+
 use ffi::bindings::*;
-use std::ffi::CStr;
-use std::marker::PhantomData;
-use std::mem;
-#[cfg(target_os = "linux")]
-use std::os::raw::c_ulong;
-use std::os::raw::{c_int, c_uint, c_ulonglong};
-use std::ptr;
+
 use struct_wrappers::device::*;
 use structs::device::*;
+
+#[cfg(target_os = "linux")]
+use std::os::raw::c_ulong;
+use std::{
+    ffi::{
+        CStr
+    },
+    marker::{
+        PhantomData
+    },
+    mem,
+    os::raw::{
+        c_int,
+        c_uint,
+        c_ulonglong
+    },
+    ptr
+};
 
 /**
 Struct that represents a device on the system. 

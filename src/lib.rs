@@ -144,22 +144,6 @@ pub use event::EventSet;
 pub use nv_link::NvLink;
 pub use unit::Unit;
 
-#[cfg(target_os = "linux")]
-use enum_wrappers::device::TopologyLevel;
-use error::{Result, nvml_try};
-use ffi::bindings::*;
-use std::ffi::{CStr, CString};
-use std::io;
-use std::io::Write;
-use std::mem;
-use std::os::raw::{c_int, c_uint};
-#[cfg(target_os = "linux")]
-use std::ptr;
-#[cfg(target_os = "linux")]
-use struct_wrappers::device::PciInfo;
-use struct_wrappers::unit::HwbcEntry;
-use bitmasks::InitFlags;
-
 /// Re-exports from `nvml-wrapper-sys` that are necessary for use of this wrapper.
 pub mod sys_exports {
     /// Use these constants to populate the `structs::device::FieldId` newtype.
@@ -167,6 +151,36 @@ pub mod sys_exports {
         pub use ffi::bindings::field_id::*;
     }
 }
+
+#[cfg(target_os = "linux")]
+use std::ptr;
+use std::{
+    ffi::{
+        CStr,
+        CString
+    },
+    io::{
+        self,
+        Write
+    },
+    mem,
+    os::raw::{
+        c_int,
+        c_uint
+    }
+};
+
+#[cfg(target_os = "linux")]
+use enum_wrappers::device::TopologyLevel;
+
+use error::{Result, nvml_try};
+use ffi::bindings::*;
+
+#[cfg(target_os = "linux")]
+use struct_wrappers::device::PciInfo;
+use struct_wrappers::unit::HwbcEntry;
+
+use bitmasks::InitFlags;
 
 /**
 The main struct that this library revolves around.

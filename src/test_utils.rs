@@ -3,18 +3,26 @@ use NVML;
 #[cfg(not(feature = "test-local"))]
 use NvLink;
 use Unit;
-use bitmasks::device::*;
-use bitmasks::event::*;
+
+use bitmasks::{
+    device::*,
+    event::*
+};
+
 use enum_wrappers::device::*;
 use enums::unit::*;
 use error::*;
 use event::EventSet;
 use std::fmt::Debug;
-use struct_wrappers::device::*;
-use struct_wrappers::event::*;
+
+use struct_wrappers::{
+    device::*,
+    event::*,
+    unit::*
+};
 #[cfg(not(feature = "test-local"))]
 use struct_wrappers::nv_link::*;
-use struct_wrappers::unit::*;
+
 use structs::device::*;
 #[cfg(not(feature = "test-local"))]
 use structs::nv_link::*;
