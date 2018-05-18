@@ -215,10 +215,7 @@ error_chain! {
     }
 }
 
-/// `?` enabler for `nvmlReturn_t` types.
-// TODO: Can't have unit tests to ensure that mapping is correct because
-// error-chain does not derive partialeq for errors
-// (https://github.com/brson/error-chain/issues/134)
+/// Converts an `nvmlReturn_t` type into a `Result<(), Error>`.
 #[doc(hidden)]
 pub fn nvml_try(code: nvmlReturn_t) -> Result<()> {
     match code {
@@ -278,5 +275,143 @@ mod test {
     fn nvml_try_success() {
         let res = nvml_try(nvmlReturn_enum_NVML_SUCCESS);
         assert_eq!(res.unwrap(), ())
+    }
+
+    #[test]
+    fn nvml_try_uninitialized() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_UNINITIALIZED);
+        assert_matches!(res, Err(Error(ErrorKind::Uninitialized, _)));
+    }
+
+    #[test]
+    fn nvml_try_invalid_argument() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_INVALID_ARGUMENT);
+        assert_matches!(res, Err(Error(ErrorKind::InvalidArg, _)))
+    }
+
+    #[test]
+    fn nvml_try_not_supported() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_NOT_SUPPORTED);
+        assert_matches!(res, Err(Error(ErrorKind::NotSupported, _)))
+    }
+
+    #[test]
+    fn nvml_try_no_permission() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_NO_PERMISSION);
+        assert_matches!(res, Err(Error(ErrorKind::NoPermission, _)))
+    }
+
+    #[test]
+    fn nvml_try_already_initialized() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_ALREADY_INITIALIZED);
+        assert_matches!(res, Err(Error(ErrorKind::AlreadyInitialized, _)))
+    }
+
+    #[test]
+    fn nvml_try_not_found() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_NOT_FOUND);
+        assert_matches!(res, Err(Error(ErrorKind::NotFound, _)))
+    }
+
+    #[test]
+    fn nvml_try_insufficient_size() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE);
+        assert_matches!(res, Err(Error(ErrorKind::InsufficientSize(None), _)))
+    }
+
+    #[test]
+    fn nvml_try_insufficient_power() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_POWER);
+        assert_matches!(res, Err(Error(ErrorKind::InsufficientPower, _)))
+    }
+
+    #[test]
+    fn nvml_try_driver_not_loaded() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_DRIVER_NOT_LOADED);
+        assert_matches!(res, Err(Error(ErrorKind::DriverNotLoaded, _)))
+    }
+
+    #[test]
+    fn nvml_try_timeout() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_TIMEOUT);
+        assert_matches!(res, Err(Error(ErrorKind::Timeout, _)))
+    }
+
+    #[test]
+    fn nvml_try_irq_issue() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_IRQ_ISSUE);
+        assert_matches!(res, Err(Error(ErrorKind::IrqIssue, _)))
+    }
+
+    #[test]
+    fn nvml_try_library_not_found() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_LIBRARY_NOT_FOUND);
+        assert_matches!(res, Err(Error(ErrorKind::LibraryNotFound, _)))
+    }
+
+    #[test]
+    fn nvml_try_function_not_found() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_FUNCTION_NOT_FOUND);
+        assert_matches!(res, Err(Error(ErrorKind::FunctionNotFound, _)))
+    }
+
+    #[test]
+    fn nvml_try_corrupted_inforom() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_CORRUPTED_INFOROM);
+        assert_matches!(res, Err(Error(ErrorKind::CorruptedInfoROM, _)))
+    }
+
+    #[test]
+    fn nvml_try_gpu_is_lost() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_GPU_IS_LOST);
+        assert_matches!(res, Err(Error(ErrorKind::GpuLost, _)))
+    }
+
+    #[test]
+    fn nvml_try_reset_required() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_RESET_REQUIRED);
+        assert_matches!(res, Err(Error(ErrorKind::ResetRequired, _)))
+    }
+
+    #[test]
+    fn nvml_try_operating_system() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_OPERATING_SYSTEM);
+        assert_matches!(res, Err(Error(ErrorKind::OperatingSystem, _)))
+    }
+
+    #[test]
+    fn nvml_try_lib_rm_version_mismatch() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_LIB_RM_VERSION_MISMATCH);
+        assert_matches!(res, Err(Error(ErrorKind::LibRmVersionMismatch, _)))
+    }
+
+    #[test]
+    fn nvml_try_in_use() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_IN_USE);
+        assert_matches!(res, Err(Error(ErrorKind::InUse, _)))
+    }
+
+    #[test]
+    fn nvml_try_memory() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_MEMORY);
+        assert_matches!(res, Err(Error(ErrorKind::InsufficientMemory, _)))
+    }
+
+    #[test]
+    fn nvml_try_no_data() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_NO_DATA);
+        assert_matches!(res, Err(Error(ErrorKind::NoData, _)))
+    }
+
+    #[test]
+    fn nvml_try_vgpu_ecc_not_supported() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_VGPU_ECC_NOT_SUPPORTED);
+        assert_matches!(res, Err(Error(ErrorKind::VgpuEccNotSupported, _)))
+    }
+
+    #[test]
+    fn nvml_try_unknown() {
+        let res = nvml_try(nvmlReturn_enum_NVML_ERROR_UNKNOWN);
+        assert_matches!(res, Err(Error(ErrorKind::Unknown, _)))
     }
 }

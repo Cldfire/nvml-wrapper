@@ -123,6 +123,9 @@ extern crate wrapcenum_derive;
 #[macro_use]
 extern crate serde;
 extern crate nvml_wrapper_sys as ffi;
+#[cfg(test)]
+#[cfg_attr(test, macro_use)]
+extern crate assert_matches;
 
 pub mod device;
 pub mod error;
