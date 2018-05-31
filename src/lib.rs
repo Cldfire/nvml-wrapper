@@ -94,13 +94,13 @@ in theory.
 ## NVML Support
 
 This wrapper is being developed against and currently supports NVML version
-9. Each new version of NVML is guaranteed to be backwards-compatible according
+9.2. Each new version of NVML is guaranteed to be backwards-compatible according
 to NVIDIA, so this wrapper should continue to work without issue regardless of
 NVML version bumps.
 
 ## Rust Version Support
 
-Currently supports Rust 1.20.0 or greater. The target version is the **latest**
+Currently supports Rust 1.26.0 or greater. The target version is the **latest**
 stable version; I do not intend to pin to an older one at any time.
 
 ## Cargo Features

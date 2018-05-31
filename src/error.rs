@@ -83,7 +83,7 @@ error_chain! {
 
         See <https://github.com/rust-lang/rust/issues/36927>
         */
-        UnexpectedVariant(value: u32) {
+        UnexpectedVariant(value: i32) {
             description("An unexpected enum variant was encountered.")
             display("The unexpected value '{}' was encountered and could not be \
                      mapped to a defined enum variant.", value)

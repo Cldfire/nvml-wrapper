@@ -436,7 +436,6 @@ impl EncoderSessionInfo {
     * `UnexpectedVariant`, for which you can read the docs for
     */
     pub fn try_from(struct_: nvmlEncoderSessionInfo_t) -> Result<Self> {
-        // TODO: Use `Self` everywhere
         Ok(Self {
             session_id: struct_.sessionId,
             pid: struct_.pid,
@@ -504,7 +503,7 @@ impl From<nvmlProcessUtilizationSample_t> for ProcessUtilizationSample {
 }
 
 /// Struct that stores information returned from `Device.field_values_for()`.
-// TODO: Missing a lot of derives becuase of the `Result`
+// TODO: Missing a lot of derives because of the `Result`
 #[derive(Debug)]
 pub struct FieldValueSample {
     /// The field that this sample is for.
