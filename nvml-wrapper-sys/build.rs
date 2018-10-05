@@ -27,3 +27,8 @@ fn main() {
 
     println!("cargo:rustc-link-lib=nvidia-ml");
 }
+
+#[cfg(target_os = "macos")]
+fn main() {
+    compile_error!("NVML is not supported on macOS and therefore this crate cannot compile.");
+}
