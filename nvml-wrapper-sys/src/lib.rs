@@ -65,7 +65,7 @@ in theory.
 
 ## NVML Support
 
-These bindings were generated for NVML version 9.2. Each new version of NVML is
+These bindings were generated for NVML version 10. Each new version of NVML is
 guaranteed to be backwards-compatible according to NVIDIA, so these bindings
 should be useful regardless of NVML version bumps.
 
