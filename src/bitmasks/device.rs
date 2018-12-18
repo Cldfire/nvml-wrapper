@@ -62,6 +62,8 @@ bitflags! {
         such as by the system power supply.
         */
         const HW_POWER_BRAKE_SLOWDOWN     = nvmlClocksThrottleReasonHwPowerBrakeSlowdown as u64;
+        /// GPU clocks are limited by the current setting of display clocks.
+        const DISPLAY_CLOCK_SETTING       = nvmlClocksThrottleReasonDisplayClockSetting as u64;
         /// Clocks are as high as possible and are not being throttled.
         const NONE                        = nvmlClocksThrottleReasonNone as u64;
     }
