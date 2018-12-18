@@ -1383,8 +1383,7 @@ impl<'nvml> Device<'nvml> {
     #[inline]
     pub fn info_rom_image_version(&self) -> Result<String> {
         unsafe {
-            let mut version_vec =
-                Vec::with_capacity(NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE as usize);
+            let mut version_vec = vec![0; NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE as usize];
 
             nvml_try(nvmlDeviceGetInforomImageVersion(
                 self.device,
@@ -1423,8 +1422,7 @@ impl<'nvml> Device<'nvml> {
     #[inline]
     pub fn info_rom_version(&self, object: InfoRom) -> Result<String> {
         unsafe {
-            let mut version_vec =
-                Vec::with_capacity(NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE as usize);
+            let mut version_vec = vec![0; NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE as usize];
 
             nvml_try(nvmlDeviceGetInforomVersion(
                 self.device,
@@ -1692,7 +1690,7 @@ impl<'nvml> Device<'nvml> {
     #[inline]
     pub fn name(&self) -> Result<String> {
         unsafe {
-            let mut name_vec = Vec::with_capacity(NVML_DEVICE_NAME_BUFFER_SIZE as usize);
+            let mut name_vec = vec![0; NVML_DEVICE_NAME_BUFFER_SIZE as usize];
 
             nvml_try(nvmlDeviceGetName(
                 self.device,
@@ -2325,7 +2323,7 @@ impl<'nvml> Device<'nvml> {
     #[inline]
     pub fn serial(&self) -> Result<String> {
         unsafe {
-            let mut serial_vec = Vec::with_capacity(NVML_DEVICE_SERIAL_BUFFER_SIZE as usize);
+            let mut serial_vec = vec![0; NVML_DEVICE_SERIAL_BUFFER_SIZE as usize];
 
             nvml_try(nvmlDeviceGetSerial(
                 self.device,
@@ -2356,7 +2354,7 @@ impl<'nvml> Device<'nvml> {
     #[inline]
     pub fn board_part_number(&self) -> Result<String> {
         unsafe {
-            let mut part_num_vec = Vec::with_capacity(NVML_DEVICE_PART_NUMBER_BUFFER_SIZE as usize);
+            let mut part_num_vec = vec![0; NVML_DEVICE_PART_NUMBER_BUFFER_SIZE as usize];
 
             nvml_try(nvmlDeviceGetBoardPartNumber(
                 self.device,
@@ -2857,7 +2855,7 @@ impl<'nvml> Device<'nvml> {
     #[inline]
     pub fn uuid(&self) -> Result<String> {
         unsafe {
-            let mut uuid_vec = Vec::with_capacity(NVML_DEVICE_UUID_BUFFER_SIZE as usize);
+            let mut uuid_vec = vec![0; NVML_DEVICE_UUID_BUFFER_SIZE as usize];
 
             nvml_try(nvmlDeviceGetUUID(
                 self.device,
@@ -2920,8 +2918,7 @@ impl<'nvml> Device<'nvml> {
     #[inline]
     pub fn vbios_version(&self) -> Result<String> {
         unsafe {
-            let mut version_vec =
-                Vec::with_capacity(NVML_DEVICE_VBIOS_VERSION_BUFFER_SIZE as usize);
+            let mut version_vec = vec![0; NVML_DEVICE_VBIOS_VERSION_BUFFER_SIZE as usize];
 
             nvml_try(nvmlDeviceGetVbiosVersion(
                 self.device,

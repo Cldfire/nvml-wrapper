@@ -80,6 +80,8 @@ This file describes the changes / additions / fixes between wrapper releases.
 ### Fixes
 
 * Attempting to compile the library on macOS will now result in an informative error
+* Methods that allocate `i8` vectors to be passed as cstrings now do so via the `vec!` macro rather than simply using `with_capacity`, meaning the length of the vector gets set appropriately
+  * This did not cause a memory leak because we were just working with primitive types that don't have `Drop` impls, but it's nice to have fixed regardless
 
 ### Dependencies
 

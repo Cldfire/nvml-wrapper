@@ -109,7 +109,6 @@ The `serde` feature can be toggled on in order to `#[derive(Serialize, Deseriali
 for every NVML data structure.
 */
 
-#![cfg_attr(feature = "cargo-clippy", allow(doc_markdown))]
 #![recursion_limit = "1024"]
 #![allow(non_upper_case_globals)]
 
@@ -337,8 +336,7 @@ impl NVML {
     #[inline]
     pub fn sys_driver_version(&self) -> Result<String> {
         unsafe {
-            let mut version_vec =
-                Vec::with_capacity(NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE as usize);
+            let mut version_vec = vec![0; NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE as usize];
 
             nvml_try(nvmlSystemGetDriverVersion(
                 version_vec.as_mut_ptr(),
@@ -363,7 +361,7 @@ impl NVML {
     #[inline]
     pub fn sys_nvml_version(&self) -> Result<String> {
         unsafe {
-            let mut version_vec = Vec::with_capacity(NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE as usize);
+            let mut version_vec = vec![0; NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE as usize];
 
             nvml_try(nvmlSystemGetNVMLVersion(
                 version_vec.as_mut_ptr(),
@@ -410,7 +408,7 @@ impl NVML {
     #[inline]
     pub fn sys_process_name(&self, pid: u32, length: usize) -> Result<String> {
         unsafe {
-            let mut name_vec = Vec::with_capacity(length);
+            let mut name_vec = vec![0; length];
 
             nvml_try(nvmlSystemGetProcessName(
                 pid,
