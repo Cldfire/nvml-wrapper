@@ -2,6 +2,89 @@
 
 This file describes the changes / additions / fixes between wrapper releases.
 
+## Unreleased
+
+### Additions
+
+* An import library (`nvml.lib`) has been added that enables compilation using the MSVC toolchain on Windows.
+* `bitmasks`
+  * Added throttle reasons:
+    * `SW_THERMAL_SLOWDOWN`
+    * `HW_THERMAL_SLOWDOWN`
+    * `HW_POWER_BRAKE_SLOWDOWN`
+    * `DISPLAY_CLOCK_SETTING`
+  * `InitFlags`
+* `enums::device`
+  * `SampleValue`
+    * Added variant `I64(i64)`
+    * The `from_tag_and_union` constructor has been updated to support `i64` values
+* `enum_wrappers::device`
+  * `MemoryLocation`
+    * Added variant `Cbu`
+  * `TemperatureThreshold`
+    * Added variants:
+      * `MemoryMax`
+      * `GpuMax`
+  * `PerformancePolicy`
+    * Added variants:
+      * `BoardLimit`
+      * `LowUtilization`
+      * `Reliability`
+      * `TotalAppClocks`
+      * `TotalBaseClocks`
+  * `SampleValueType`
+    * Added variant `SignedLongLong`
+  * Added the `EncoderType` enum
+* `Device` struct:
+  * Added methods:
+    * `cuda_compute_capability`
+    * `encoder_capacity`
+    * `encoder_stats`
+    * `encoder_sessions`
+    * `process_utilization_stats`
+    * `total_energy_consumption`
+    * `field_values_for`
+* `error`
+  * Added errors:
+    * `InsufficientMemory`
+    * `VgpuEccNotSupported`
+* `NVML` struct:
+  * Added methods:
+    * `init_with_flags`
+    * `sys_cuda_driver_version`
+* `structs::device`
+  * Added structs:
+    * `EncoderStats`
+    * `CudaComputeCapability`
+    * `FieldId`
+* `struct_wrappers::device`
+  * `PciInfo`
+    * The `try_from` constructor was updated to allow specifying whether or not the legacy bus ID should be used
+  * Added structs:
+    * `EncoderSessionInfo`
+    * `ProcessUtilizationSample`
+    * `FieldValueSample`
+
+### Removals
+
+* `bitmasks`
+  * `ThrottleReasons::Unknown` was removed since its counterpart in the NVML library was removed
+
+### Changes
+
+* `enum_wrappers::device`
+  * `TopologyLevel`
+    * The `Cpu` variant was replaced by the `Node` variant
+* The `UnexpectedVariant` error value is now an `i32` (previously `u32`)
+
+### Fixes
+
+* Attempting to compile the library on macOS will now result in an informative error
+
+### Dependencies
+
+* `error-chain`: `0.11.x -> 0.12.x`
+
 ## 0.4.1 (released 2019-04-08)
 
 ### Release Summary

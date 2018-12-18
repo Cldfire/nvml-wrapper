@@ -178,7 +178,7 @@ pub enum MemoryLocation {
     #[wrap(c_variant = "NVML_MEMORY_LOCATION_TEXTURE_SHM")]
     Shared,
     #[wrap(c_variant = "NVML_MEMORY_LOCATION_CBU")]
-    CBU
+    Cbu
 }
 
 /// Driver models, Windows only.
