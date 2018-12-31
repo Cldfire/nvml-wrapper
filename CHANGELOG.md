@@ -20,7 +20,9 @@ This file describes the changes / additions / fixes between wrapper releases.
     * The `from_tag_and_union` constructor has been updated to support `i64` values
 * `enum_wrappers::device`
   * `MemoryLocation`
-    * Added variant `Cbu`
+    * Added variants:
+      * `Cbu`
+      * `SRAM`
   * `TemperatureThreshold`
     * Added variants:
       * `MemoryMax`
@@ -34,6 +36,8 @@ This file describes the changes / additions / fixes between wrapper releases.
       * `TotalBaseClocks`
   * `SampleValueType`
     * Added variant `SignedLongLong`
+  * `Brand`
+    * Added variant `Titan`
   * Added the `EncoderType` enum
 * `Device` struct:
   * Added methods:
@@ -58,8 +62,6 @@ This file describes the changes / additions / fixes between wrapper releases.
     * `CudaComputeCapability`
     * `FieldId`
 * `struct_wrappers::device`
-  * `PciInfo`
-    * The `try_from` constructor was updated to allow specifying whether or not the legacy bus ID should be used
   * Added structs:
     * `EncoderSessionInfo`
     * `ProcessUtilizationSample`

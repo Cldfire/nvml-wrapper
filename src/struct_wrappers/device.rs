@@ -397,7 +397,7 @@ pub struct EncoderSessionInfo {
     /// The ID of the process that owns this session.
     pub pid: u32,
     /// The ID of the vGPU instance that owns this session (if applicable).
-    // TODO: Stronger typing when vgpu stuff is wrapped
+    // TODO: Stronger typing if vgpu stuff gets wrapped
     pub vgpu_instance: Option<u32>,
     pub codec_type: EncoderType,
     /// Current horizontal encoding resolution.

@@ -86,7 +86,10 @@ pub enum Brand {
     GRID,
     /// Targeted at gaming.
     #[wrap(c_variant = "NVML_BRAND_GEFORCE")]
-    GeForce
+    GeForce,
+    /// Targeted at... people who don't quite need quadros?
+    #[wrap(c_variant = "NVML_BRAND_TITAN")]
+    Titan
 }
 
 /**
@@ -178,7 +181,10 @@ pub enum MemoryLocation {
     #[wrap(c_variant = "NVML_MEMORY_LOCATION_TEXTURE_SHM")]
     Shared,
     #[wrap(c_variant = "NVML_MEMORY_LOCATION_CBU")]
-    Cbu
+    Cbu,
+    /// SRAM present on Turing and above.
+    #[wrap(c_variant = "NVML_MEMORY_LOCATION_SRAM")]
+    SRAM
 }
 
 /// Driver models, Windows only.
