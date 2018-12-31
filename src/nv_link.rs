@@ -190,8 +190,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
                 &mut pci_info
             ))?;
 
-            // TODO: Should this use the legacy bus id?
-            Ok(PciInfo::try_from(pci_info, false, false)?)
+            Ok(PciInfo::try_from(pci_info, false)?)
         }
     }
 

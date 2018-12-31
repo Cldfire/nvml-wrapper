@@ -9,7 +9,6 @@ use std::os::raw::c_char;
 /// PCI information about a GPU device.
 // Checked against local
 // Tested
-// TODO: Sort out the legacy vs. new busid situation
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PciInfo {
@@ -42,25 +41,17 @@ impl PciInfo {
     Passing `false` for `sub_sys_id_present` will set the `pci_sub_system_id`
     field to `None`. See the field docs for more.
 
-    Read NVIDIA's docs on the `nvmlDeviceGetPciInfo` functions to understand
-    the usage of the `use_legacy_bus_id` field.
-
     # Errors
 
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     */
     pub fn try_from(
         struct_: nvmlPciInfo_t,
-        sub_sys_id_present: bool,
-        use_legacy_bus_id: bool
+        sub_sys_id_present: bool
     ) -> Result<Self> {
 
         unsafe {
-            let bus_id_raw = if use_legacy_bus_id {
-                CStr::from_ptr(struct_.busIdLegacy.as_ptr())
-            } else {
-                CStr::from_ptr(struct_.busId.as_ptr())
-            };
+            let bus_id_raw = CStr::from_ptr(struct_.busId.as_ptr());
 
             Ok(Self {
                 bus: struct_.bus,
@@ -84,21 +75,18 @@ impl PciInfo {
 
     * `NulError`, if a nul byte was found in the bus_id (shouldn't occur?)
     * `StringTooLong`, if `bus_id.len()` exceeded the length of
-    `NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE`. This should (?) only be able to
+    `NVML_DEVICE_PCI_BUS_ID_BUFFER_SIZE`. This should (?) only be able to
     occur if the user modifies `bus_id` in some fashion. We return an error
     rather than panicking.
     */
     // Tested
     pub fn try_into_c(self) -> Result<nvmlPciInfo_t> {
-        use NVML_DEVICE_PCI_BUS_ID_BUFFER_SIZE as _buf_size;
-
         // This is more readable than spraying `buf_size as usize` everywhere
-        fn buf_size() -> usize {
-            _buf_size as usize
+        const fn buf_size() -> usize {
+            NVML_DEVICE_PCI_BUS_ID_BUFFER_SIZE as usize
         }
 
-        // ...but const fn though.
-        let mut bus_id_c: [c_char; _buf_size as usize] = [0; _buf_size as usize];
+        let mut bus_id_c: [c_char; buf_size()] = [0; buf_size()];
         let mut bus_id = CString::new(self.bus_id)?.into_bytes_with_nul();
 
         if bus_id.len() > buf_size() {
@@ -117,19 +105,14 @@ impl PciInfo {
         );
 
         Ok(nvmlPciInfo_t {
-            // TODO: Is zeroing this out correct?
             busIdLegacy: [0; NVML_DEVICE_PCI_BUS_ID_BUFFER_V2_SIZE as usize],
             domain: self.domain,
             bus: self.bus,
             device: self.device,
             pciDeviceId: self.pci_device_id,
-            pciSubSystemId: if let Some(id) = self.pci_sub_system_id {
-                id
-            } else {
-                // This seems the most correct thing to do? Since this should only
-                // be none if obtained from `NvLink.remote_pci_info()`.
-                0
-            },
+            // This seems the most correct thing to do? Since this should only
+            // be none if obtained from `NvLink.remote_pci_info()`.
+            pciSubSystemId: self.pci_sub_system_id.unwrap_or(0),
             busId: bus_id_c
         })
     }

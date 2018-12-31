@@ -1724,7 +1724,7 @@ impl<'nvml> Device<'nvml> {
             let mut pci_info: nvmlPciInfo_t = mem::zeroed();
             nvml_try(nvmlDeviceGetPciInfo_v3(self.device, &mut pci_info))?;
 
-            Ok(PciInfo::try_from(pci_info, true, false)?)
+            Ok(PciInfo::try_from(pci_info, true)?)
         }
     }
 
