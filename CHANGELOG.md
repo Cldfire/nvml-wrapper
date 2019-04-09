@@ -2,6 +2,12 @@
 
 This file describes the changes / additions / fixes between wrapper releases.
 
+## 0.4.1 (released 2019-04-08)
+
+### Release Summary
+
+The version was bumped in order to update the readme with the new information on Linux compilation. See the `sys` crates' changelog for details.
+
 ## 0.4.0 (released 2017-09-28)
 
 ### Release Summary

@@ -43,12 +43,13 @@ runtime; alternatively, place a copy of the dll in the same folder as your execu
 
 ### Linux
 
-The NVML library can be found at `/usr/lib/nvidia-<driver-version>/libnvidia-ml.so`; on my system with driver version 375.51 installed, this puts the library at
-`/usr/lib/nvidia-375/libnvidia-ml.so`. You will need to create a symbolic link:
+The NVML library can be found at `/usr/lib/nvidia-<driver-version>/libnvidia-ml.so`;
+on my system with driver version 375.51 installed, this puts the library at
+`/usr/lib/nvidia-375/libnvidia-ml.so`.
 
-```bash
-sudo ln -s /usr/lib/nvidia-<driver-version>/libnvidia-ml.so /usr/lib
-```
+The `sys` crates' build script will automatically add the appropriate directory to
+the paths searched for the library, so you shouldn't have to do anything manually
+in theory.
 
 ## NVML Support
 

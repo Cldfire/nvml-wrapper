@@ -2,6 +2,15 @@
 
 This file describes the changes / additions / fixes between bindings releases.
 
+## 0.3.1 (released 2019-04-08)
+
+### Release Summary
+
+Improvements were made to the build script:
+
+* An attempt will be made to locate the directory containing `libnvidia-ml.so` and it will be automatically added to the locations that the library is being searched for in. Thanks @SunDoge!
+* The script will now display a helpful error message if compilation is attempted on macOS.
+
 ## 0.3.0 (released 2017-07-20)
 
 ### Release Summary
