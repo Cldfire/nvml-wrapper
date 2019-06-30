@@ -13,6 +13,9 @@ A complete, safe, and ergonomic Rust wrapper for the
 NVIDIA (primarily Tesla) GPUs.
 
 ```rust
+extern crate nvml_wrapper as nvml;
+use nvml::NVML;
+
 let nvml = NVML::init()?;
 // Get the first `Device` (GPU) in the system
 let device = nvml.device_by_index(0)?;
