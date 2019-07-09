@@ -707,6 +707,98 @@ impl<'nvml> Device<'nvml> {
     }
 
     /**
+    Gets global statistics for active frame buffer capture sessions on this `Device`.
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `NotSupported`, if this `Device` does not support this feature
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+
+    # Device Support
+
+    Supports Maxwell or newer fully supported devices.
+    */
+    // tested
+    #[inline]
+    pub fn fbc_stats(&self) -> Result<FbcStats> {
+        unsafe {
+            let mut fbc_stats: nvmlFBCStats_t = mem::zeroed();
+            nvml_try(nvmlDeviceGetFBCStats(self.device, &mut fbc_stats))?;
+
+            Ok(fbc_stats.into())
+        }
+    }
+
+    /**
+    Gets information about active frame buffer capture sessions on this `Device`.
+
+    Note that information such as the horizontal and vertical resolutions, the
+    average FPS, and the average latency will be zero if no frames have been
+    captured since a session was started.
+
+    # Errors
+
+    * `UnexpectedVariant`, for which you can read the docs for
+    * `IncorrectBits`, if bits are found in a session's info flags that don't
+        match the flags in this wrapper
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `NotSupported`, if this `Device` does not support this feature
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+
+    # Device Support
+
+    Supports Maxwell or newer fully supported devices.
+    */
+    // tested
+    #[inline]
+    pub fn fbc_sessions_info(&self) -> Result<Vec<FbcSessionInfo>> {
+        unsafe {
+            let mut count: c_uint = match self.fbc_session_count()? {
+                0 => return Ok(vec![]),
+                value => value,
+            };
+            let mut info: Vec<nvmlFBCSessionInfo_t> = vec![mem::zeroed(); count as usize];
+
+            nvml_try(nvmlDeviceGetFBCSessions(
+                self.device,
+                &mut count,
+                info.as_mut_ptr()
+            ))?;
+
+            info.into_iter().map(FbcSessionInfo::try_from).collect()
+        }
+    }
+
+    /**
+    Gets the number of active frame buffer capture sessions on this `Device`.
+    
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if this `Device` is invalid
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+    */
+    // tested as part of the above
+    #[inline]
+    pub fn fbc_session_count(&self) -> Result<u32> {
+        unsafe {
+            let mut count: c_uint = 0;
+
+            nvml_try(nvmlDeviceGetFBCSessions(
+                self.device,
+                &mut count,
+                ptr::null_mut()
+            ))?;
+
+            Ok(count)
+        }
+    }
+
+    /**
     Gets the default applications clock that this `Device` boots with or defaults to after
     `reset_applications_clocks()`.
     
@@ -1053,8 +1145,18 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
-    // Helper for the above function. Returns # of sessions that can be queried.
-    fn encoder_sessions_count(&self) -> Result<c_uint> {
+    /**
+    Gets the number of active encoder sessions on this device.
+    
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if this `Device` is invalid
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+    */
+    // tested as part of the above
+    fn encoder_sessions_count(&self) -> Result<u32> {
         unsafe {
             let mut count: c_uint = 0;
 
@@ -4541,6 +4643,18 @@ mod test {
     fn encoder_sessions() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.encoder_sessions())
+    }
+
+    #[test]
+    fn fbc_stats() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.fbc_stats())
+    }
+
+    #[test]
+    fn fbc_sessions_info() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.fbc_sessions_info())
     }
 
     #[test]

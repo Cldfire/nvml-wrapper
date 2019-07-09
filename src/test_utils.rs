@@ -78,6 +78,8 @@ impl ShouldPrint for Vec<Result<FieldValueSample>> {}
 impl ShouldPrint for Vec<HwbcEntry> {}
 impl ShouldPrint for Utilization {}
 impl ShouldPrint for EncoderStats {}
+impl ShouldPrint for FbcStats {}
+impl ShouldPrint for Vec<FbcSessionInfo> {}
 impl ShouldPrint for Vec<EncoderSessionInfo> {}
 impl ShouldPrint for AutoBoostClocksEnabledInfo {}
 impl ShouldPrint for BAR1MemoryInfo {}

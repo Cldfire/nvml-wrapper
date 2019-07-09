@@ -13,7 +13,8 @@ This file describes the changes / additions / fixes between wrapper releases.
     * `HW_THERMAL_SLOWDOWN`
     * `HW_POWER_BRAKE_SLOWDOWN`
     * `DISPLAY_CLOCK_SETTING`
-  * `InitFlags`
+  * Added `device::FbcFlags`
+  * Added `InitFlags`
 * `enums::device`
   * `SampleValue`
     * Added variant `I64(i64)`
@@ -41,12 +42,17 @@ This file describes the changes / additions / fixes between wrapper releases.
   * Added the `EncoderType` enum
   * Added the `DetachGpuState` enum
   * Added the `PcieLinkState` enum
+  * Added the `FbcSessionType` enum
 * `Device` struct:
   * Added methods:
     * `cuda_compute_capability`
     * `encoder_capacity`
     * `encoder_stats`
     * `encoder_sessions`
+    * `encoder_sessions_count`
+    * `fbc_stats`
+    * `fbc_sessions_info`
+    * `fbc_session_count`
     * `process_utilization_stats`
     * `total_energy_consumption`
     * `field_values_for`
@@ -68,6 +74,8 @@ This file describes the changes / additions / fixes between wrapper releases.
     * `EncoderSessionInfo`
     * `ProcessUtilizationSample`
     * `FieldValueSample`
+    * `FbcStats`
+    * `FbcSessionInfo`
 
 ### Removals
 

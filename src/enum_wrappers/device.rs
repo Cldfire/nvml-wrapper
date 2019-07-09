@@ -537,6 +537,25 @@ pub enum EncoderType {
     HEVC
 }
 
+/// The type of a frame buffer capture session
+///
+/// NVIDIA doesn't document the variants beyond their names.
+#[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[wrap(c_enum = "nvmlFBCSessionType_enum")]
+pub enum FbcSessionType {
+    #[wrap(c_variant = "NVML_FBC_SESSION_TYPE_UNKNOWN")]
+    Unknown,
+    #[wrap(c_variant = "NVML_FBC_SESSION_TYPE_TOSYS")]
+    ToSys,
+    #[wrap(c_variant = "NVML_FBC_SESSION_TYPE_CUDA")]
+    Cuda,
+    #[wrap(c_variant = "NVML_FBC_SESSION_TYPE_VID")]
+    Vid,
+    #[wrap(c_variant = "NVML_FBC_SESSION_TYPE_HWENC")]
+    HwEnc
+}
+
 /// Options to pass to Device.remove()
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

@@ -1,7 +1,8 @@
-use enum_wrappers::device::{BridgeChip, SampleValueType, EncoderType};
+use enum_wrappers::device::{BridgeChip, SampleValueType, EncoderType, FbcSessionType};
 use enums::device::{UsedGpuMemory, SampleValue, FirmwareVersion};
+use bitmasks::device::FbcFlags;
 use structs::device::FieldId;
-use error::{Result, ErrorKind, nvml_try};
+use error::{Result, Error, ErrorKind, nvml_try, Bits};
 use ffi::bindings::*;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
@@ -490,20 +491,20 @@ impl From<nvmlProcessUtilizationSample_t> for ProcessUtilizationSample {
 #[derive(Debug)]
 pub struct FieldValueSample {
     /// The field that this sample is for.
-    field: FieldId,
+    pub field: FieldId,
     /// This sample's CPU timestamp in μs (Unix time).
-    timestamp: i64,
+    pub timestamp: i64,
     /**
     How long this field value took to update within NVML, in μs.
     
     This value may be averaged across several fields serviced by the same
     driver call.
     */
-    latency: i64,
+    pub latency: i64,
     /// The value of this sample.
     /// 
     /// Will be an error if retrieving this specific value failed.
-    value: Result<SampleValue>
+    pub value: Result<SampleValue>
 }
 
 impl FieldValueSample {
@@ -526,6 +527,93 @@ impl FieldValueSample {
                 )),
                 Err(e) => Err(e)
             }
+        })
+    }
+}
+
+/// Holds global frame buffer capture session statistics.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct FbcStats {
+    /// The total number of sessions
+    pub sessions_count: u32,
+    /// Moving average of new frames captured per second for all capture sessions
+    pub average_fps: u32,
+    /// Moving average of new frame capture latency in microseconds for all capture sessions
+    pub average_latency: u32
+}
+
+impl From<nvmlFBCStats_t> for FbcStats {
+    fn from(struct_: nvmlFBCStats_t) -> Self {
+        Self {
+            sessions_count: struct_.sessionsCount,
+            average_fps: struct_.averageFPS,
+            average_latency: struct_.averageLatency
+        }
+    }
+}
+
+/// Information about a frame buffer capture session.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct FbcSessionInfo {
+    /// Unique session ID
+    pub session_id: u32,
+    /// The ID of the process that owns this session
+    pub pid: u32,
+    /// The ID of the vGPU instance that owns this session (if applicable).
+    // TODO: Stronger typing if vgpu stuff gets wrapped
+    pub vgpu_instance: Option<u32>,
+    /// The identifier of the display this session is running on
+    pub display_ordinal: u32,
+    /// The type of this session
+    pub session_type: FbcSessionType,
+    /// Various flags with info
+    pub session_flags: FbcFlags,
+    /// The maximum horizontal resolution supported by this session
+    pub hres_max: u32,
+    /// The maximum vertical resolution supported by this session
+    pub vres_max: u32,
+    /// The horizontal resolution requested by the caller in the capture call
+    pub hres: u32,
+    /// The vertical resolution requested by the caller in the capture call
+    pub vres: u32,
+    /// Moving average of new frames captured per second for this session
+    pub average_fps: u32,
+    /// Moving average of new frame capture latency in microseconds for this session
+    pub average_latency: u32
+}
+
+impl FbcSessionInfo {
+    /**
+    Waiting on `TryFrom` to be stable.
+
+    # Errors
+    
+    * `UnexpectedVariant`, for which you can read the docs for
+    * `IncorrectBits`, if the `sessionFlags` from the given struct do match the
+        wrapper definition
+    */
+    pub fn try_from(struct_: nvmlFBCSessionInfo_t) -> Result<Self> {
+        Ok(Self {
+            session_id: struct_.sessionId,
+            pid: struct_.pid,
+            vgpu_instance: match struct_.vgpuInstance {
+                0 => None,
+                other => Some(other)
+            },
+            display_ordinal: struct_.displayOrdinal,
+            session_type: FbcSessionType::try_from(struct_.sessionType)?,
+            session_flags: FbcFlags::from_bits(struct_.sessionFlags)
+                .ok_or_else(|| Error::from(ErrorKind::IncorrectBits(
+                    Bits::U32(struct_.sessionFlags)
+                )))?,
+            hres_max: struct_.hMaxResolution,
+            vres_max: struct_.vMaxResolution,
+            hres: struct_.hResolution,
+            vres: struct_.vResolution,
+            average_fps: struct_.averageFPS,
+            average_latency: struct_.averageLatency
         })
     }
 }

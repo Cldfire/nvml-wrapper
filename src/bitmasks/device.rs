@@ -68,3 +68,18 @@ bitflags! {
         const NONE                        = nvmlClocksThrottleReasonNone as u64;
     }
 }
+
+bitflags! {
+    /// Flags that specify info about a frame capture session
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    pub struct FbcFlags: u32 {
+        const DIFFMAP_ENABLED             = NVML_NVFBC_SESSION_FLAG_DIFFMAP_ENABLED;
+        const CLASSIFICATIONMAP_ENABLED   = NVML_NVFBC_SESSION_FLAG_CLASSIFICATIONMAP_ENABLED;
+        /// Specifies if capture was requested as a non-blocking call.
+        const CAPTURE_WITH_WAIT_NO_WAIT   = NVML_NVFBC_SESSION_FLAG_CAPTURE_WITH_WAIT_NO_WAIT;
+        /// Specifies if capture was requested as a blocking call.
+        const CAPTURE_WITH_WAIT_INFINITE  = NVML_NVFBC_SESSION_FLAG_CAPTURE_WITH_WAIT_INFINITE;
+        /// Specifies if capture was requested as a blocking call with a timeout.
+        const CAPTURE_WITH_WAIT_TIMEOUT   = NVML_NVFBC_SESSION_FLAG_CAPTURE_WITH_WAIT_TIMEOUT;
+    }
+}
