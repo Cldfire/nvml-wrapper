@@ -1202,7 +1202,7 @@ impl<'nvml> Device<'nvml> {
     }
 
     /**
-    Gets the intended operating speed of this `Device`'s fan as a percentage of the
+    Gets the intended operating speed of the specified fan as a percentage of the
     maximum fan speed (100%).
     
     Note: The reported speed is the intended fan speed. If the fan is physically blocked
@@ -1211,8 +1211,8 @@ impl<'nvml> Device<'nvml> {
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
-    * `InvalidArg`, if this `Device` is invalid
-    * `NotSupported`, if this `Device` does not have a fan
+    * `InvalidArg`, if this `Device` is invalid or `fan_idx` is invalid
+    * `NotSupported`, if this `Device` does not have a fan or is newer than Maxwell
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     * `Unknown`, on any unexpected error
     
@@ -1223,10 +1223,10 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested
     #[inline]
-    pub fn fan_speed(&self) -> Result<u32> {
+    pub fn fan_speed(&self, fan_idx: u32) -> Result<u32> {
         unsafe {
             let mut speed: c_uint = mem::zeroed();
-            nvml_try(nvmlDeviceGetFanSpeed(self.device, &mut speed))?;
+            nvml_try(nvmlDeviceGetFanSpeed_v2(self.device, fan_idx, &mut speed))?;
 
             Ok(speed)
         }
@@ -3795,6 +3795,13 @@ impl<'nvml> Device<'nvml> {
     This operation takes effect immediately and requires root/admin permissions.
     It is not persistent across reboots; after each reboot it will default to
     disabled.
+
+    Note that after disabling persistence on a device that has its own NUMA
+    memory, this `Device` handle will no longer be valid, and to continue to
+    interact with the physical device that it represents you will need to
+    obtain a new `Device` using the methods available on the `NVML` struct.
+    This limitation is currently only applicable to devices that have a
+    coherent NVLink connection to system memory.
     
     # Errors
 
@@ -4666,7 +4673,7 @@ mod test {
     #[test]
     fn fan_speed() {
         let nvml = nvml();
-        test_with_device(3, &nvml, |device| device.fan_speed())
+        test_with_device(3, &nvml, |device| device.fan_speed(0))
     }
 
     // My machine does not support this call
