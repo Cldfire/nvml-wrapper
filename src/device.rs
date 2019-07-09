@@ -4119,6 +4119,10 @@ impl<'nvml> Device<'nvml> {
     enumeration of current GPUs. As an example, if there are four GPUs present
     and the first is removed, the new enumeration will be 0-2. Device handles
     for the removed GPU will be invalid.
+
+    NVIDIA doesn't provide much documentation about the `gpu_state` and `link_state`
+    parameters, so you're on your own there. It does say that the `gpu_state`
+    controls whether or not this `Device` should be removed from the kernel.
     
     Must be run as administrator.
 
@@ -4162,10 +4166,11 @@ impl<'nvml> Device<'nvml> {
     ```no_run
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
+    # use nvml_wrapper::enum_wrappers::device::{DetachGpuState, PcieLinkState};
     # fn test() -> Result<()> {
     # let nvml = NVML::init()?;
     # let mut device = nvml.device_by_index(0)?;
-    match device.remove(None) {
+    match device.remove(None, DetachGpuState::Remove, PcieLinkState::ShutDown) {
         (Ok(()), None) => println!("Successful call, `Device` removed"),
         (Err(e), Some(d)) => println!("Unsuccessful call. `Device`: {:?}", d),
         _ => println!("Something else",)
@@ -4178,18 +4183,19 @@ impl<'nvml> Device<'nvml> {
     ```no_run
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
+    # use nvml_wrapper::enum_wrappers::device::{DetachGpuState, PcieLinkState};
     # fn test() -> Result<()> {
     # let nvml = NVML::init()?;
     # let mut device = nvml.device_by_index(0)?;
     // Pass `None`, `.remove()` call will grab `PciInfo` for us
-    device.remove(None).0?;
+    device.remove(None, DetachGpuState::Remove, PcieLinkState::ShutDown).0?;
 
     # let mut device2 = nvml.device_by_index(0)?;
     // Different `Device` because `.remove()` consumes the `Device`
     let pci_info = device2.pci_info()?;
 
     // Pass in our own `PciInfo`, call will use it instead
-    device2.remove(pci_info).0?;
+    device2.remove(pci_info, DetachGpuState::Remove, PcieLinkState::ShutDown).0?;
     # Ok(())
     # }
     ```
@@ -4201,6 +4207,8 @@ impl<'nvml> Device<'nvml> {
     pub fn remove<T: Into<Option<PciInfo>>>(
         self,
         pci_info: T,
+        gpu_state: DetachGpuState,
+        link_state: PcieLinkState
     ) -> (Result<()>, Option<Device<'nvml>>) {
 
         let pci_info = if let Some(info) = pci_info.into() {
@@ -4218,7 +4226,13 @@ impl<'nvml> Device<'nvml> {
         };
 
         unsafe {
-            match nvml_try(nvmlDeviceRemoveGpu(&mut raw_pci_info)) {
+            match nvml_try(
+                nvmlDeviceRemoveGpu_v2(
+                    &mut raw_pci_info,
+                    gpu_state.as_c(),
+                    link_state.as_c()
+                )
+            ) {
                 // `Device` removed; call was successful, no `Device` to return
                 Ok(()) => (Ok(()), None),
                 // `Device` has not been removed; unsuccessful call, return `Device`

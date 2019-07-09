@@ -536,3 +536,25 @@ pub enum EncoderType {
     #[wrap(c_variant = "NVML_ENCODER_QUERY_HEVC")]
     HEVC
 }
+
+/// Options to pass to Device.remove()
+#[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[wrap(c_enum = "nvmlDetachGpuState_enum")]
+pub enum DetachGpuState {
+    #[wrap(c_variant = "NVML_DETACH_GPU_KEEP")]
+    Keep,
+    #[wrap(c_variant = "NVML_DETACH_GPU_REMOVE")]
+    Remove
+}
+
+/// Options to pass to Device.remove()
+#[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[wrap(c_enum = "nvmlPcieLinkState_enum")]
+pub enum PcieLinkState {
+    #[wrap(c_variant = "NVML_PCIE_LINK_KEEP")]
+    Keep,
+    #[wrap(c_variant = "NVML_PCIE_LINK_SHUT_DOWN")]
+    ShutDown
+}

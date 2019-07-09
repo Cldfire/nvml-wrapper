@@ -1060,7 +1060,7 @@ mod test {
     }
 
     #[cfg(target_os = "linux")]
-    #[should_panic(expected = "NoPermission")]
+    #[should_panic(expected = "OperatingSystem")]
     #[test]
     fn discover_gpus() {
         let nvml = nvml();

@@ -39,6 +39,8 @@ This file describes the changes / additions / fixes between wrapper releases.
   * `Brand`
     * Added variant `Titan`
   * Added the `EncoderType` enum
+  * Added the `DetachGpuState` enum
+  * Added the `PcieLinkState` enum
 * `Device` struct:
   * Added methods:
     * `cuda_compute_capability`
@@ -78,6 +80,7 @@ This file describes the changes / additions / fixes between wrapper releases.
   * `TopologyLevel`
     * The `Cpu` variant was replaced by the `Node` variant
 * The `UnexpectedVariant` error value is now an `i32` (previously `u32`)
+* The `Device.remove()` method now takes additional parameters for more removal options
 
 ### Fixes
 
