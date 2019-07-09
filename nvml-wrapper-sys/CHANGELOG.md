@@ -4,7 +4,7 @@ This file describes the changes / additions / fixes between bindings releases.
 
 ## Unreleased
 
-Bindings have been regenerated using the NVML 9 header and bindgen 0.30.0.
+Bindings have been regenerated using the NVML 10.1 header and bindgen 0.50.0.
 
 ## 0.3.1 (released 2019-04-08)
 

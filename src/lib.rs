@@ -376,8 +376,8 @@ impl NVML {
 
     /// Gets the version of the system's CUDA driver.
     /// 
-    /// The returned version is the same as what `cuDriverGetVersion()` from the
-    /// CUDA API would return.
+    /// Calls into the CUDA library (cuDriverGetVersion()) or returns a known
+    /// supported value if the CUDA library is not installed.
     #[inline]
     pub fn sys_cuda_driver_version(&self) -> Result<i32> {
         unsafe {
