@@ -76,6 +76,10 @@ This file describes the changes / additions / fixes between wrapper releases.
     * `FieldValueSample`
     * `FbcStats`
     * `FbcSessionInfo`
+* `lib.rs`
+  * Added functions:
+    * `cuda_driver_version_major`
+    * `cuda_driver_version_minor`
 
 ### Removals
 

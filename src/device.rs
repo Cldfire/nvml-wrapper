@@ -2103,7 +2103,7 @@ impl<'nvml> Device<'nvml> {
     
     This reading is accurate to within +/- 5% of current power draw on Fermi and Kepler GPUs.
     It is only supported if power management mode is supported. See `.is_power_management_algo_active()`.
-    Yes, that is deperecated, but that's what NVIDIA's docs say to see.
+    Yes, that is deprecated, but that's what NVIDIA's docs say to see.
     */
     // Checked against local
     // Tested

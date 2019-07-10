@@ -16,7 +16,7 @@ let nvml = NVML::init()?;
 let device = nvml.device_by_index(0)?;
 
 let brand = device.brand()?; // GeForce on my system
-let fan_speed = device.fan_speed()?; // Currently 17% on my system
+let fan_speed = device.fan_speed(0)?; // Currently 17% on my system
 let power_limit = device.enforced_power_limit()?; // 275k milliwatts on my system
 let encoder_util = device.encoder_utilization()?; // Currently 0 on my system; Not encoding anything
 let memory_info = device.memory_info()?; // Currently 1.63/6.37 GB used on my system
@@ -183,6 +183,20 @@ use struct_wrappers::device::PciInfo;
 use struct_wrappers::unit::HwbcEntry;
 
 use bitmasks::InitFlags;
+
+/// Determines the major version of the CUDA driver given the full version.
+///
+/// Obtain the full version via `NVML.sys_cuda_driver_version()`.
+pub fn cuda_driver_version_major(version: i32) -> i32 {
+    version / 1000
+}
+
+/// Determines the minor version of the CUDA driver given the full version.
+///
+/// Obtain the full version via `NVML.sys_cuda_driver_version()`.
+pub fn cuda_driver_version_minor(version: i32) -> i32 {
+    (version % 1000) / 10
+}
 
 /**
 The main struct that this library revolves around.
@@ -374,10 +388,15 @@ impl NVML {
         }
     }
 
-    /// Gets the version of the system's CUDA driver.
-    /// 
-    /// Calls into the CUDA library (cuDriverGetVersion()) or returns a known
-    /// supported value if the CUDA library is not installed.
+    /**
+    Gets the version of the system's CUDA driver.
+    
+    Calls into the CUDA library (cuDriverGetVersion()) or returns a known
+    supported value if the CUDA library is not installed.
+
+    You can use `cuda_driver_version_major` and `cuda_driver_version_minor`
+    to get the major and minor driver versions from this number.
+    */
     #[inline]
     pub fn sys_cuda_driver_version(&self) -> Result<i32> {
         unsafe {
@@ -947,6 +966,16 @@ mod test {
     #[test]
     fn sys_cuda_driver_version() {
         test(3, || nvml().sys_cuda_driver_version())
+    }
+
+    #[test]
+    fn sys_cuda_driver_version_major() {
+        test(3, || Ok(cuda_driver_version_major(nvml().sys_cuda_driver_version()?)))
+    }
+
+    #[test]
+    fn sys_cuda_driver_version_minor() {
+        test(3, || Ok(cuda_driver_version_minor(nvml().sys_cuda_driver_version()?)))
     }
 
     #[test]
