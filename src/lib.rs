@@ -391,17 +391,21 @@ impl NVML {
     /**
     Gets the version of the system's CUDA driver.
     
-    Calls into the CUDA library (cuDriverGetVersion()) or returns a known
-    supported value if the CUDA library is not installed.
+    Calls into the CUDA library (cuDriverGetVersion()).
 
     You can use `cuda_driver_version_major` and `cuda_driver_version_minor`
     to get the major and minor driver versions from this number.
+
+    # Errors
+
+    * `FunctionNotFound`, if cuDriverGetVersion() is not found in the shared library
+    * `LibraryNotFound`, if libcuda.so.1 or libcuda.dll cannot be found
     */
     #[inline]
     pub fn sys_cuda_driver_version(&self) -> Result<i32> {
         unsafe {
             let mut version: c_int = mem::zeroed();
-            nvml_try(nvmlSystemGetCudaDriverVersion(&mut version))?;
+            nvml_try(nvmlSystemGetCudaDriverVersion_v2(&mut version))?;
 
             Ok(version)
         }

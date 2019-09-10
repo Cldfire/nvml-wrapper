@@ -109,7 +109,7 @@ error_chain! {
             description("The current user does not have permission for the operation.")
         }
 
-        /// This error is deprecated on the part of the NVML lib itself and should 
+        /// This error is deprecated on the part of the NVML lib itself and should
         /// not be encountered. Multiple initializations are now allowed through refcounting.
         AlreadyInitialized {
             description("This error is deprecated on the part of the NVML lib itself and should \
@@ -152,14 +152,14 @@ error_chain! {
             description("NVIDIA kernel detected an interrupt issue with a GPU.")
         }
 
-        /// NVML Shared Library couldn't be found or loaded.
+        /// A shared library couldn't be found or loaded.
         LibraryNotFound {
-            description("NVML Shared Library couldn't be found or loaded.")
+            description("A shared library couldn't be found or loaded.")
         }
 
-        /// Local version of NVML doesn't implement this function.
+        /// A function could not be found in a shared library.
         FunctionNotFound {
-            description("Local version of NVML doesn't implement this function.")
+            description("A function could not be found in a shared library")
         }
 
         /// infoROM is corrupted.

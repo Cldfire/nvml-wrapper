@@ -7,6 +7,7 @@ This file describes the changes / additions / fixes between wrapper releases.
 ### Additions
 
 * An import library (`nvml.lib`) has been added that enables compilation using the MSVC toolchain on Windows.
+* The `basic_usage` example now prints the system's CUDA driver version.
 * `bitmasks`
   * Added throttle reasons:
     * `SW_THERMAL_SLOWDOWN`
@@ -94,10 +95,10 @@ This file describes the changes / additions / fixes between wrapper releases.
 * The `UnexpectedVariant` error value is now an `i32` (previously `u32`)
 * The `Device.remove()` method now takes additional parameters for more removal options
 * The `Device.fan_speed()` method now takes a fan index to allow reading the speed of different fans
+* The `NVML.sys_cuda_driver_version()` method now errors if the CUDA shared library cannot be found
 
 ### Fixes
 
-* Attempting to compile the library on macOS will now result in an informative error
 * Methods that allocate `i8` vectors to be passed as cstrings now do so via the `vec!` macro rather than simply using `with_capacity`, meaning the length of the vector gets set appropriately
   * This did not cause a memory leak because we were just working with primitive types that don't have `Drop` impls, but it's nice to have fixed regardless
 
@@ -110,6 +111,10 @@ This file describes the changes / additions / fixes between wrapper releases.
 ### Release Summary
 
 The version was bumped in order to update the readme with the new information on Linux compilation. See the `sys` crates' changelog for details.
+
+### Fixes
+
+* Attempting to compile the library on macOS will now result in an informative error
 
 ## 0.4.0 (released 2017-09-28)
 
