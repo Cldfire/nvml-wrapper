@@ -80,6 +80,19 @@ pub struct CudaComputeCapability {
     pub minor: i32
 }
 
+/// Returned from `Device.retired_pages()`
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct RetiredPage {
+    /// The hardware address of the page that was retired.
+    ///
+    /// Note that this does not match the virtual address used in CUDA but does
+    /// match the address information in XID 63.
+    pub address: u64,
+    /// The retirement timestamp.
+    pub timestamp: u64
+}
+
 /// Populate this newtype with the constants `nvml_wrapper::sys_exports::field_id::*`.
 ///
 /// Used in `FieldValue` and `Device.field_values_for()`.

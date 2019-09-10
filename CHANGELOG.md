@@ -95,6 +95,7 @@ This file describes the changes / additions / fixes between wrapper releases.
 * The `UnexpectedVariant` error value is now an `i32` (previously `u32`)
 * The `Device.remove()` method now takes additional parameters for more removal options
 * The `Device.fan_speed()` method now takes a fan index to allow reading the speed of different fans
+* The `Device.retired_pages()` method now returns the timestamps for each page's retirment along with their addresses
 * The `NVML.sys_cuda_driver_version()` method now errors if the CUDA shared library cannot be found
 
 ### Fixes

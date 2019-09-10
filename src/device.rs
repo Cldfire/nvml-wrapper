@@ -2150,11 +2150,7 @@ impl<'nvml> Device<'nvml> {
     on my dev machine**. Please **verify for yourself** that it works before you use it.
     If you are able to test it on your machine, please let me know if it works; if it
     doesn't, I would love a PR.
-    
-    The address information provided by this API is the hardware address of the page that was
-    retired. Note that this does not match the virtual address used in CUDA, but it will
-    match the address information in XID 63.
-    
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
@@ -2170,22 +2166,29 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested on machines other than my own
     #[inline]
-    pub fn retired_pages(&self, cause: RetirementCause) -> Result<Vec<u64>> {
+    pub fn retired_pages(&self, cause: RetirementCause) -> Result<Vec<RetiredPage>> {
         unsafe {
             let mut count = match self.retired_pages_count(&cause)? {
                 0 => return Ok(vec![]),
                 value => value,
             };
-            let mut causes: Vec<c_ulonglong> = vec![mem::zeroed(); count as usize];
+            let mut addresses: Vec<c_ulonglong> = vec![mem::zeroed(); count as usize];
+            let mut timestamps: Vec<c_ulonglong> = vec![mem::zeroed(); count as usize];
 
-            nvml_try(nvmlDeviceGetRetiredPages(
+            nvml_try(nvmlDeviceGetRetiredPages_v2(
                 self.device,
                 cause.as_c(),
                 &mut count,
-                causes.as_mut_ptr()
+                addresses.as_mut_ptr(),
+                timestamps.as_mut_ptr()
             ))?;
 
-            Ok(causes)
+            Ok(addresses
+                .into_iter()
+                .zip(timestamps.into_iter())
+                .map(|(address, timestamp)| RetiredPage { address, timestamp })
+                .collect()
+            )
         }
     }
 
@@ -4269,7 +4272,7 @@ impl<'nvml> Device<'nvml> {
     Only supports Linux.
 
     # Examples
-    
+
     How to handle error case:
 
     ```no_run
