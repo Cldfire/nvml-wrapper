@@ -57,6 +57,8 @@ This file describes the changes / additions / fixes between wrapper releases.
     * `process_utilization_stats`
     * `total_energy_consumption`
     * `field_values_for`
+    * `set_gpu_locked_clocks`
+    * `reset_gpu_locked_clocks`
 * `error`
   * Added errors:
     * `InsufficientMemory`

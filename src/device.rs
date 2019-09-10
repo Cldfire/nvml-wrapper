@@ -3639,10 +3639,10 @@ impl<'nvml> Device<'nvml> {
     This operation takes effect immediately. Under Linux it is not persistent
     across reboots and always resets to `Default`. Under Windows it is
     persistent.
-    
+
     Under Windows, compute mode may only be set to `Default` when running in WDDM
     (physical display connected).
-    
+
     Requires root/admin permissions.
     
     # Errors
@@ -3663,12 +3663,12 @@ impl<'nvml> Device<'nvml> {
 
     /**
     Sets the driver model for this `Device`.
-    
+
     This operation takes effect after the next reboot. The model may only be
     set to WDDM when running in DEFAULT compute mode. Changing the model to
     WDDM is not supported when the GPU doesn't support graphics acceleration
     or will not support it after a reboot.
-    
+
     On Windows platforms the device driver can run in either WDDM or WDM (TCC)
     mode. If a physical display is attached to a device it must run in WDDM mode.
     
@@ -3676,7 +3676,7 @@ impl<'nvml> Device<'nvml> {
     attached with a `Behavior` of `FORCE`. This should only be done if the host
     is subsequently powered down and the display is detached from this `Device`
     before the next reboot.
-    
+
     Requires root/admin permissions.
     
     # Errors
@@ -3726,6 +3726,64 @@ impl<'nvml> Device<'nvml> {
                 model.as_c(),
                 flags.bits()
             ))
+        }
+    }
+
+    /**
+    Lock this `Device`'s clocks to a specific frequency range.
+
+    This setting supercedes application clock values and takes effect regardless
+    of whether or not any CUDA apps are running. It can be used to request constant
+    performance.
+
+    After a system reboot or a driver reload the clocks go back to their default
+    values.
+
+    Requires root/admin permissions.
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if the provided minimum and maximum clocks are not a valid combo
+    * `NotSupported`, if this `Device` does not support this feature
+    * `NoPermission`, if the user doesn't have permission to perform this operation
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+
+    # Device Support
+
+    Supports Pascal and newer fully supported devices.
+    */
+    // Tested (no-run)
+    #[inline]
+    pub fn set_gpu_locked_clocks(&mut self, min_clock_mhz: u32, max_clock_mhz: u32) -> Result<()> {
+        unsafe {
+            nvml_try(nvmlDeviceSetGpuLockedClocks(self.device, min_clock_mhz, max_clock_mhz))
+        }
+    }
+
+    /**
+    Reset this `Device`'s clocks to their default values.
+
+    This resets to the same values that would be used after a reboot or driver
+    reload (idle clocks, configurable via `set_applications_clocks()`).
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `NotSupported`, if this `Device` does not support this feature
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+
+    # Device Support
+
+    Supports Pascal and newer fully supported devices.
+    */
+    // Tested (no-run)
+    #[inline]
+    pub fn reset_gpu_locked_clocks(&mut self) -> Result<()> {
+        unsafe {
+            nvml_try(nvmlDeviceResetGpuLockedClocks(self.device))
         }
     }
 
@@ -5291,6 +5349,24 @@ mod test {
         let mut device = device(&nvml);
 
         device.set_driver_model(DriverModel::WDM, Behavior::DEFAULT).expect("set to wdm")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn set_gpu_locked_clocks() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.set_gpu_locked_clocks(1048, 1139).expect("set to a range")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn reset_gpu_locked_clocks() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.reset_gpu_locked_clocks().expect("clocks reset")
     }
 
     // This modifies device state, so we don't want to actually run the test
