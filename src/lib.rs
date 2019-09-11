@@ -178,6 +178,8 @@ use enum_wrappers::device::TopologyLevel;
 use error::{Result, nvml_try};
 use ffi::bindings::*;
 
+use struct_wrappers::BlacklistDeviceInfo;
+
 #[cfg(target_os = "linux")]
 use struct_wrappers::device::PciInfo;
 use struct_wrappers::unit::HwbcEntry;
@@ -900,6 +902,45 @@ impl NVML {
     pub fn discover_gpus(&self, pci_info: PciInfo) -> Result<()> {
         unsafe { nvml_try(nvmlDeviceDiscoverGpus(&mut pci_info.try_into_c()?)) }
     }
+
+    /**
+    Gets the number of blacklisted GPU devices in the system.
+
+    # Device Support
+
+    Supports all devices.
+    */
+    #[inline]
+    pub fn blacklist_device_count(&self) -> Result<u32> {
+        unsafe {
+            let mut count: c_uint = mem::zeroed();
+
+            nvml_try(nvmlGetBlacklistDeviceCount(&mut count))?;
+            Ok(count)
+        }
+    }
+
+    /**
+    Gets information for the specified blacklisted device.
+
+    # Errors
+
+    * `InvalidArg`, if the given index is invalid
+    * `Utf8Error`, if strings obtained from the C function are not valid Utf8
+
+    # Device Support
+
+    Supports all devices.
+    */
+    #[inline]
+    pub fn blacklist_device_info(&self, index: u32) -> Result<BlacklistDeviceInfo> {
+        unsafe {
+            let mut info: nvmlBlacklistDeviceInfo_t = mem::zeroed();
+
+            nvml_try(nvmlGetBlacklistDeviceInfoByIndex(index, &mut info))?;
+            Ok(BlacklistDeviceInfo::try_from(info)?)
+        }
+    }
 }
 
 /// This `Drop` implementation ignores errors! Use the `.shutdown()` method on
@@ -1106,5 +1147,20 @@ mod test {
                 other => other,
             }
         })
+    }
+
+    #[test]
+    fn blacklist_device_count() {
+        let nvml = nvml();
+        test(3, || nvml.blacklist_device_count())
+    }
+
+    #[test]
+    fn blacklist_device_info() {
+        let nvml = nvml();
+
+        if nvml.blacklist_device_count().unwrap() > 0 {
+            test(3, || nvml.blacklist_device_info(0))
+        }
     }
 }

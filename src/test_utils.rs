@@ -16,6 +16,7 @@ use event::EventSet;
 use std::fmt::Debug;
 
 use struct_wrappers::{
+    *,
     device::*,
     event::*,
     unit::*
@@ -90,6 +91,7 @@ impl ShouldPrint for EccModeState {}
 impl ShouldPrint for OperationModeState {}
 impl ShouldPrint for InfoRom {}
 impl ShouldPrint for Vec<RetiredPage> {}
+impl ShouldPrint for BlacklistDeviceInfo {}
 impl ShouldPrint for MemoryInfo {}
 impl ShouldPrint for PciInfo {}
 impl ShouldPrint for PerformanceState {}

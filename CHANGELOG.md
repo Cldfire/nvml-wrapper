@@ -67,6 +67,8 @@ This file describes the changes / additions / fixes between wrapper releases.
   * Added methods:
     * `init_with_flags`
     * `sys_cuda_driver_version`
+    * `blacklist_device_count`
+    * `blacklist_device_info`
 * `structs::device`
   * Added structs:
     * `EncoderStats`
