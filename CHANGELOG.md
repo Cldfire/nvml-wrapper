@@ -74,6 +74,10 @@ This file describes the changes / additions / fixes between wrapper releases.
     * `EncoderStats`
     * `CudaComputeCapability`
     * `FieldId`
+    * `RetiredPage`
+* `struct_wrappers`
+  * Added struct:
+    * `BlacklistDeviceInfo`
 * `struct_wrappers::device`
   * Added structs:
     * `EncoderSessionInfo`
