@@ -86,7 +86,10 @@ pub enum Brand {
     GRID,
     /// Targeted at gaming.
     #[wrap(c_variant = "NVML_BRAND_GEFORCE")]
-    GeForce
+    GeForce,
+    /// Targeted at... people who don't quite need quadros?
+    #[wrap(c_variant = "NVML_BRAND_TITAN")]
+    Titan
 }
 
 /**
@@ -176,7 +179,12 @@ pub enum MemoryLocation {
     Texture,
     /// Shared memory.
     #[wrap(c_variant = "NVML_MEMORY_LOCATION_TEXTURE_SHM")]
-    Shared
+    Shared,
+    #[wrap(c_variant = "NVML_MEMORY_LOCATION_CBU")]
+    Cbu,
+    /// SRAM present on Turing and above.
+    #[wrap(c_variant = "NVML_MEMORY_LOCATION_SRAM")]
+    SRAM
 }
 
 /// Driver models, Windows only.
@@ -364,9 +372,15 @@ pub enum TemperatureThreshold {
     /// Temperature at which the GPU will shut down for hardware protection.
     #[wrap(c_variant = "NVML_TEMPERATURE_THRESHOLD_SHUTDOWN")]
     Shutdown,
-    /// Temperature at which the GPU will begin to throttle.
+    /// Temperature at which the GPU will begin hardware throttling.
     #[wrap(c_variant = "NVML_TEMPERATURE_THRESHOLD_SLOWDOWN")]
-    Slowdown
+    Slowdown,
+    /// Memory temperature at which the GPU will begin software slowdown.
+    #[wrap(c_variant = "NVML_TEMPERATURE_THRESHOLD_MEM_MAX")]
+    MemoryMax,
+    /// GPU temperature at which the GPU can be throttled below the base clock.
+    #[wrap(c_variant = "NVML_TEMPERATURE_THRESHOLD_GPU_MAX")]
+    GpuMax
 }
 
 /// Level relationships within a system between two GPUs.
@@ -387,10 +401,14 @@ pub enum TopologyLevel {
     /// All devices that are connected to the same host bridge.
     #[wrap(c_variant = "NVML_TOPOLOGY_HOSTBRIDGE")]
     HostBridge,
-    /// All devices that are connected to the same CPU but possibly multiple
-    /// host bridges.
-    #[wrap(c_variant = "NVML_TOPOLOGY_CPU")]
-    Cpu,
+    /**
+    All devices that are connected to the same NUMA node but possibly
+    multiple host bridges.
+    
+    This was `Cpu` in previous versions of NVML.
+    */
+    #[wrap(c_variant = "NVML_TOPOLOGY_NODE")]
+    Node,
     /// All devices in the system
     #[wrap(c_variant = "NVML_TOPOLOGY_SYSTEM")]
     System
@@ -407,7 +425,21 @@ pub enum PerformancePolicy {
     #[wrap(c_variant = "NVML_PERF_POLICY_THERMAL")]
     Thermal,
     #[wrap(c_variant = "NVML_PERF_POLICY_SYNC_BOOST")]
-    SyncBoost
+    SyncBoost,
+    #[wrap(c_variant = "NVML_PERF_POLICY_BOARD_LIMIT")]
+    BoardLimit,
+    #[wrap(c_variant = "NVML_PERF_POLICY_LOW_UTILIZATION")]
+    LowUtilization,
+    /// Board reliability limit.
+    #[wrap(c_variant = "NVML_PERF_POLICY_RELIABILITY")]
+    Reliability,
+
+    /// Total time the GPU was limited by any of the above.
+    #[wrap(c_variant = "NVML_PERF_POLICY_TOTAL_APP_CLOCKS")]
+    TotalAppClocks,
+    /// Total time the GPU was held below base clocks.
+    #[wrap(c_variant = "NVML_PERF_POLICY_TOTAL_BASE_CLOCKS")]
+    TotalBaseClocks
 }
 
 /// `ExclusiveProcess` was added in CUDA 4.0. Earlier CUDA versions supported a
@@ -489,5 +521,59 @@ pub enum SampleValueType {
     #[wrap(c_variant = "NVML_VALUE_TYPE_UNSIGNED_LONG")]
     UnsignedLong,
     #[wrap(c_variant = "NVML_VALUE_TYPE_UNSIGNED_LONG_LONG")]
-    UnsignedLongLong
+    UnsignedLongLong,
+    #[wrap(c_variant = "NVML_VALUE_TYPE_SIGNED_LONG_LONG")]
+    SignedLongLong
+}
+
+/// Represents encoder types that capacity can be queried for.
+#[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[wrap(c_enum = "nvmlEncoderQueryType_enum")]
+pub enum EncoderType {
+    #[wrap(c_variant = "NVML_ENCODER_QUERY_H264")]
+    H264,
+    #[wrap(c_variant = "NVML_ENCODER_QUERY_HEVC")]
+    HEVC
+}
+
+/// The type of a frame buffer capture session
+///
+/// NVIDIA doesn't document the variants beyond their names.
+#[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[wrap(c_enum = "nvmlFBCSessionType_enum")]
+pub enum FbcSessionType {
+    #[wrap(c_variant = "NVML_FBC_SESSION_TYPE_UNKNOWN")]
+    Unknown,
+    #[wrap(c_variant = "NVML_FBC_SESSION_TYPE_TOSYS")]
+    ToSys,
+    #[wrap(c_variant = "NVML_FBC_SESSION_TYPE_CUDA")]
+    Cuda,
+    #[wrap(c_variant = "NVML_FBC_SESSION_TYPE_VID")]
+    Vid,
+    #[wrap(c_variant = "NVML_FBC_SESSION_TYPE_HWENC")]
+    HwEnc
+}
+
+/// Options to pass to Device.remove()
+#[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[wrap(c_enum = "nvmlDetachGpuState_enum")]
+pub enum DetachGpuState {
+    #[wrap(c_variant = "NVML_DETACH_GPU_KEEP")]
+    Keep,
+    #[wrap(c_variant = "NVML_DETACH_GPU_REMOVE")]
+    Remove
+}
+
+/// Options to pass to Device.remove()
+#[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[wrap(c_enum = "nvmlPcieLinkState_enum")]
+pub enum PcieLinkState {
+    #[wrap(c_variant = "NVML_PCIE_LINK_KEEP")]
+    Keep,
+    #[wrap(c_variant = "NVML_PCIE_LINK_SHUT_DOWN")]
+    ShutDown
 }

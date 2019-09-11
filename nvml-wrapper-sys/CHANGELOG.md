@@ -2,6 +2,14 @@
 
 This file describes the changes / additions / fixes between bindings releases.
 
+## Unreleased
+
+## 0.4.0 (released 2019-09-10)
+
+### Release Summary
+
+Bindings have been regenerated using the NVML 10.1 header and bindgen 0.50.0.
+
 ## 0.3.1 (released 2019-04-08)
 
 ### Release Summary

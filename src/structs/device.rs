@@ -59,3 +59,43 @@ pub struct PowerManagementConstraints {
     pub min_limit: u32,
     pub max_limit: u32
 }
+
+/// Returned from `Device.encoder_stats()`
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct EncoderStats {
+    /// The number of active encoder sessions.
+    pub session_count: u32,
+    /// The trailing average FPS of all active encoder sessions.
+    pub average_fps: u32,
+    /// The encode latency in μs.
+    pub average_latency: u32
+}
+
+/// Returned from `Device.cuda_compute_capability()`
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct CudaComputeCapability {
+    pub major: i32,
+    pub minor: i32
+}
+
+/// Returned from `Device.retired_pages()`
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct RetiredPage {
+    /// The hardware address of the page that was retired.
+    ///
+    /// Note that this does not match the virtual address used in CUDA but does
+    /// match the address information in XID 63.
+    pub address: u64,
+    /// The retirement timestamp.
+    pub timestamp: u64
+}
+
+/// Populate this newtype with the constants `nvml_wrapper::sys_exports::field_id::*`.
+///
+/// Used in `FieldValue` and `Device.field_values_for()`.
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct FieldId(pub u32);

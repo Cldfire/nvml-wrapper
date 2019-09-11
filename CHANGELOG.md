@@ -2,11 +2,134 @@
 
 This file describes the changes / additions / fixes between wrapper releases.
 
+## Unreleased
+
+## 0.5.0 (released 2019-09-10)
+
+### Release Summary
+
+A long time in the works, 0.5.0 contains the last two years of my extremely sporadic work wrapping some of the new functionality provided in NVML since version 8 alongside a handful of small fixes and improvements.
+
+### Additions
+
+* An import library (`nvml.lib`) has been added that enables compilation using the MSVC toolchain on Windows.
+* The `basic_usage` example now prints the system's CUDA driver version.
+* `bitmasks`
+  * Added throttle reasons:
+    * `SW_THERMAL_SLOWDOWN`
+    * `HW_THERMAL_SLOWDOWN`
+    * `HW_POWER_BRAKE_SLOWDOWN`
+    * `DISPLAY_CLOCK_SETTING`
+  * Added `device::FbcFlags`
+  * Added `InitFlags`
+* `enums::device`
+  * `SampleValue`
+    * Added variant `I64(i64)`
+    * The `from_tag_and_union` constructor has been updated to support `i64` values
+* `enum_wrappers::device`
+  * `MemoryLocation`
+    * Added variants:
+      * `Cbu`
+      * `SRAM`
+  * `TemperatureThreshold`
+    * Added variants:
+      * `MemoryMax`
+      * `GpuMax`
+  * `PerformancePolicy`
+    * Added variants:
+      * `BoardLimit`
+      * `LowUtilization`
+      * `Reliability`
+      * `TotalAppClocks`
+      * `TotalBaseClocks`
+  * `SampleValueType`
+    * Added variant `SignedLongLong`
+  * `Brand`
+    * Added variant `Titan`
+  * Added the `EncoderType` enum
+  * Added the `DetachGpuState` enum
+  * Added the `PcieLinkState` enum
+  * Added the `FbcSessionType` enum
+* `Device` struct:
+  * Added methods:
+    * `cuda_compute_capability`
+    * `encoder_capacity`
+    * `encoder_stats`
+    * `encoder_sessions`
+    * `encoder_sessions_count`
+    * `fbc_stats`
+    * `fbc_sessions_info`
+    * `fbc_session_count`
+    * `process_utilization_stats`
+    * `total_energy_consumption`
+    * `field_values_for`
+    * `set_gpu_locked_clocks`
+    * `reset_gpu_locked_clocks`
+* `error`
+  * Added errors:
+    * `InsufficientMemory`
+    * `VgpuEccNotSupported`
+* `NVML` struct:
+  * Added methods:
+    * `init_with_flags`
+    * `sys_cuda_driver_version`
+    * `blacklist_device_count`
+    * `blacklist_device_info`
+* `structs::device`
+  * Added structs:
+    * `EncoderStats`
+    * `CudaComputeCapability`
+    * `FieldId`
+    * `RetiredPage`
+* `struct_wrappers`
+  * Added struct:
+    * `BlacklistDeviceInfo`
+* `struct_wrappers::device`
+  * Added structs:
+    * `EncoderSessionInfo`
+    * `ProcessUtilizationSample`
+    * `FieldValueSample`
+    * `FbcStats`
+    * `FbcSessionInfo`
+* `lib.rs`
+  * Added functions:
+    * `cuda_driver_version_major`
+    * `cuda_driver_version_minor`
+
+### Removals
+
+* `bitmasks`
+  * `ThrottleReasons::Unknown` was removed since its counterpart in the NVML library was removed
+
+### Changes
+
+* `enum_wrappers::device`
+  * `TopologyLevel`
+    * The `Cpu` variant was replaced by the `Node` variant
+* The `UnexpectedVariant` error value is now an `i32` (previously `u32`)
+* The `Device.remove()` method now takes additional parameters for more removal options
+* The `Device.fan_speed()` method now takes a fan index to allow reading the speed of different fans
+* The `Device.retired_pages()` method now returns the timestamps for each page's retirment along with their addresses
+* The `NVML.sys_cuda_driver_version()` method now errors if the CUDA shared library cannot be found
+
+### Fixes
+
+* Methods that allocate `i8` vectors to be passed as cstrings now do so via the `vec!` macro rather than simply using `with_capacity`, meaning the length of the vector gets set appropriately
+  * This did not cause a memory leak because we were just working with primitive types that don't have `Drop` impls, but it's nice to have fixed regardless
+
+### Dependencies
+
+* `error-chain`: `0.11.x -> 0.12.x`
+
 ## 0.4.1 (released 2019-04-08)
 
 ### Release Summary
 
 The version was bumped in order to update the readme with the new information on Linux compilation. See the `sys` crates' changelog for details.
+
+### Fixes
+
+* Attempting to compile the library on macOS will now result in an informative error
 
 ## 0.4.0 (released 2017-09-28)
 

@@ -1,13 +1,35 @@
 use Device;
-use enum_wrappers::{bool_from_state, state_from_bool};
-use enum_wrappers::nv_link::{ErrorCounter, Capability};
+
+use enum_wrappers::{
+    bool_from_state,
+    state_from_bool,
+    nv_link::{
+        ErrorCounter,
+        Capability
+    }
+};
+
 use enums::nv_link::Counter;
 use error::{nvml_try, Result};
 use ffi::bindings::*;
-use std::mem;
-use std::os::raw::{c_uint, c_ulonglong};
-use struct_wrappers::device::PciInfo;
-use struct_wrappers::nv_link::UtilizationControl;
+
+use std::{
+    mem,
+    os::raw::{
+        c_uint,
+        c_ulonglong
+    }
+};
+
+use struct_wrappers::{
+    device::{
+        PciInfo
+    },
+    nv_link::{
+        UtilizationControl
+    }
+};
+
 use structs::nv_link::UtilizationCounter;
 
 /**
@@ -55,7 +77,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // Test written
     #[inline]
@@ -86,7 +108,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // Test written
     #[inline]
@@ -117,7 +139,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // Test written
     #[inline]
@@ -154,7 +176,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // Test written
     #[inline]
@@ -162,7 +184,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
         unsafe {
             let mut pci_info: nvmlPciInfo_t = mem::zeroed();
 
-            nvml_try(nvmlDeviceGetNvLinkRemotePciInfo(
+            nvml_try(nvmlDeviceGetNvLinkRemotePciInfo_v2(
                 self.device.unsafe_raw(),
                 self.link,
                 &mut pci_info
@@ -185,7 +207,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // Test written
     #[inline]
@@ -217,7 +239,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // No-run test written
     #[inline]
@@ -246,7 +268,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // No-run test written
     #[inline]
@@ -284,7 +306,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // Test written
     #[inline]
@@ -312,7 +334,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     I do not attempt to verify, statically or at runtime, that you have controls
     set for `counter` prior to calling this method on `counter`. NVIDIA says that
-    it is `In general[,] good practice`, which does not sound to me as if it is
+    it is "In general[,] good practice", which does not sound to me as if it is
     in any way unsafe to make this call without having set controls. I don't
     believe it's worth the overhead of using a `Mutex`'d bool to track whether
     or not you have set controls, and it's certainly not worth the effort to
@@ -333,7 +355,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // No-run test written
     pub fn utilization_counter(&self, counter: Counter) -> Result<UtilizationCounter> {
@@ -372,7 +394,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // No-run test written
     pub fn freeze_utilization_counter(&mut self, counter: Counter) -> Result<()> {
@@ -395,7 +417,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
 
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // No-run test written
     pub fn unfreeze_utilization_counter(&mut self, counter: Counter) -> Result<()> {
@@ -429,7 +451,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
     # Device Support
     
-    Supports Maxwell or newer fully supported devices.
+    Supports Pascal or newer fully supported devices.
     */
     // No-run test written
     pub fn reset_utilization_counter(&mut self, counter: Counter) -> Result<()> {

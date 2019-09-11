@@ -2,7 +2,7 @@ extern crate nvml_wrapper as nvml;
 // This is just used to pretty-print bytes.
 extern crate pretty_bytes;
 
-use nvml::NVML;
+use nvml::{NVML, cuda_driver_version_major, cuda_driver_version_minor};
 // You would probably want your own error setup in your own code; here we just
 // use the wrapper's error types.
 use nvml::error::*;
@@ -19,6 +19,8 @@ fn main() {
 // We write a function so that we can return a `Result` and use `?`
 fn actual_main() -> Result<()> {
     let nvml = NVML::init()?;
+
+    let cuda_version = nvml.sys_cuda_driver_version()?;
 
     // Grabbing the first device in the system, whichever one that is.
     // If you want to ensure you get the same physical device across reboots,
@@ -59,6 +61,13 @@ fn actual_main() -> Result<()> {
         println!();
         println!("This device is not on a multi-GPU board.")
     }
+
+    println!();
+    println!(
+        "System CUDA version: {}.{}",
+        cuda_driver_version_major(cuda_version),
+        cuda_driver_version_minor(cuda_version)
+    );
 
     print!("\n\n");
     Ok(())

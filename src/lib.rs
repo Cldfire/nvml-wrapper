@@ -1,6 +1,6 @@
 /*!
 A complete, safe, and ergonomic Rust wrapper for the
-[NVIDIA Management Library] (https://developer.nvidia.com/nvidia-management-library-nvml)
+[NVIDIA Management Library](https://developer.nvidia.com/nvidia-management-library-nvml)
 (NVML), a C-based programmatic interface for monitoring and managing various states within
 NVIDIA (primarily Tesla) GPUs.
 
@@ -16,7 +16,7 @@ let nvml = NVML::init()?;
 let device = nvml.device_by_index(0)?;
 
 let brand = device.brand()?; // GeForce on my system
-let fan_speed = device.fan_speed()?; // Currently 17% on my system
+let fan_speed = device.fan_speed(0)?; // Currently 17% on my system
 let power_limit = device.enforced_power_limit()?; // 275k milliwatts on my system
 let encoder_util = device.encoder_utilization()?; // Currently 0 on my system; Not encoding anything
 let memory_info = device.memory_info()?; // Currently 1.63/6.37 GB used on my system
@@ -71,10 +71,15 @@ between Windows and Linux, however.
 
 ### Windows
 
+I have been able to successfully compile and run this wrapper's tests using
+both the GNU and MSVC toolchains. An import library (`nvml.lib`) is included for
+compilation with the MSVC toolchain.
+
 The NVML library dll can be found at `%ProgramW6432%\NVIDIA Corporation\NVSMI\`
-(which is `C:\Program Files\NVIDIA Corporation\NVSMI\` on my machine). You will need
-to add this folder to your `PATH` in order to have everything work properly at
-runtime; alternatively, place a copy of the dll in the same folder as your executable.
+(which is `C:\Program Files\NVIDIA Corporation\NVSMI\` on my machine). I had to add
+this folder to my `PATH` or place a copy of the dll in the same folder as the executable
+in order to have everything work properly at runtime with the GNU toolchain. You may
+need to do the same; I'm not sure if the MSVC toolchain needs this step or not.
 
 ### Linux
 
@@ -88,14 +93,14 @@ in theory.
 
 ## NVML Support
 
-This wrapper has been developed against and is currently supporting NVML version
-8. Each new version of NVML is guaranteed to be backwards-compatible according
+This wrapper is being developed against and currently supports NVML version
+10.1. Each new version of NVML is guaranteed to be backwards-compatible according
 to NVIDIA, so this wrapper should continue to work without issue regardless of
 NVML version bumps.
 
 ## Rust Version Support
 
-Currently supports Rust 1.20.0 or greater. The target version is the **latest**
+Currently supports Rust 1.26.0 or greater. The target version is the **latest**
 stable version; I do not intend to pin to an older one at any time.
 
 ## Cargo Features
@@ -104,7 +109,6 @@ The `serde` feature can be toggled on in order to `#[derive(Serialize, Deseriali
 for every NVML data structure.
 */
 
-#![cfg_attr(feature = "cargo-clippy", allow(doc_markdown))]
 #![recursion_limit = "1024"]
 #![allow(non_upper_case_globals)]
 
@@ -118,6 +122,9 @@ extern crate wrapcenum_derive;
 #[macro_use]
 extern crate serde;
 extern crate nvml_wrapper_sys as ffi;
+#[cfg(test)]
+#[cfg_attr(test, macro_use)]
+extern crate assert_matches;
 
 pub mod device;
 pub mod error;
@@ -139,20 +146,59 @@ pub use event::EventSet;
 pub use nv_link::NvLink;
 pub use unit::Unit;
 
-#[cfg(target_os = "linux")]
-use enum_wrappers::device::TopologyLevel;
-use error::{Result, nvml_try};
-use ffi::bindings::*;
-use std::ffi::{CStr, CString};
-use std::io;
-use std::io::Write;
-use std::mem;
-use std::os::raw::{c_int, c_uint};
+/// Re-exports from `nvml-wrapper-sys` that are necessary for use of this wrapper.
+pub mod sys_exports {
+    /// Use these constants to populate the `structs::device::FieldId` newtype.
+    pub mod field_id {
+        pub use ffi::bindings::field_id::*;
+    }
+}
+
 #[cfg(target_os = "linux")]
 use std::ptr;
+use std::{
+    ffi::{
+        CStr,
+        CString
+    },
+    io::{
+        self,
+        Write
+    },
+    mem,
+    os::raw::{
+        c_int,
+        c_uint
+    }
+};
+
+#[cfg(target_os = "linux")]
+use enum_wrappers::device::TopologyLevel;
+
+use error::{Result, nvml_try};
+use ffi::bindings::*;
+
+use struct_wrappers::BlacklistDeviceInfo;
+
 #[cfg(target_os = "linux")]
 use struct_wrappers::device::PciInfo;
 use struct_wrappers::unit::HwbcEntry;
+
+use bitmasks::InitFlags;
+
+/// Determines the major version of the CUDA driver given the full version.
+///
+/// Obtain the full version via `NVML.sys_cuda_driver_version()`.
+pub fn cuda_driver_version_major(version: i32) -> i32 {
+    version / 1000
+}
+
+/// Determines the minor version of the CUDA driver given the full version.
+///
+/// Obtain the full version via `NVML.sys_cuda_driver_version()`.
+pub fn cuda_driver_version_minor(version: i32) -> i32 {
+    (version % 1000) / 10
+}
 
 /**
 The main struct that this library revolves around.
@@ -185,7 +231,7 @@ unsafe impl Sync for NVML {}
 
 impl NVML {
     /**
-    Handles NVML initilization and must be called before doing anything else.
+    Handles NVML initialization and must be called before doing anything else.
     
     This static function can be called multiple times and multiple NVML structs can be
     used at the same time. NVIDIA's docs state that "A reference count of the number of 
@@ -209,6 +255,41 @@ impl NVML {
     pub fn init() -> Result<Self> {
         unsafe {
             nvml_try(nvmlInit_v2())?;
+        }
+
+        Ok(NVML)
+    }
+
+    /**
+    An initialization function that allows you to pass flags to control certain behaviors.
+
+    This is the same as `init()` except for the addition of flags.
+
+    # Errors
+
+    * `DriverNotLoaded`, if the NVIDIA driver is not running
+    * `NoPermission`, if NVML does not have permission to talk to the driver
+    * `Unknown`, on any unexpected error
+
+    # Examples
+
+    ```
+    # use nvml_wrapper::NVML;
+    # use nvml_wrapper::error::*;
+    use nvml_wrapper::bitmasks::InitFlags;
+
+    # fn main() -> Result<()> {
+    // Don't fail if the system doesn't have any NVIDIA GPUs
+    NVML::init_with_flags(InitFlags::NO_GPUS)?;
+    # Ok(())
+    # }
+    ```
+    */
+    // TODO: Example of using multiple flags when multiple flags exist
+    #[inline]
+    pub fn init_with_flags(flags: InitFlags) -> Result<Self> {
+        unsafe {
+            nvml_try(nvmlInitWithFlags(flags.bits()))?;
         }
 
         Ok(NVML)
@@ -271,8 +352,7 @@ impl NVML {
     #[inline]
     pub fn sys_driver_version(&self) -> Result<String> {
         unsafe {
-            let mut version_vec =
-                Vec::with_capacity(NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE as usize);
+            let mut version_vec = vec![0; NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE as usize];
 
             nvml_try(nvmlSystemGetDriverVersion(
                 version_vec.as_mut_ptr(),
@@ -290,7 +370,6 @@ impl NVML {
     
     # Errors
 
-    * `Uninitialized`, if the library has not been successfully initialized
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     */
     // Checked against local
@@ -298,7 +377,7 @@ impl NVML {
     #[inline]
     pub fn sys_nvml_version(&self) -> Result<String> {
         unsafe {
-            let mut version_vec = Vec::with_capacity(NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE as usize);
+            let mut version_vec = vec![0; NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE as usize];
 
             nvml_try(nvmlSystemGetNVMLVersion(
                 version_vec.as_mut_ptr(),
@@ -308,6 +387,29 @@ impl NVML {
             // Thanks to `Amaranth` on IRC for help with this
             let version_raw = CStr::from_ptr(version_vec.as_ptr());
             Ok(version_raw.to_str()?.into())
+        }
+    }
+
+    /**
+    Gets the version of the system's CUDA driver.
+    
+    Calls into the CUDA library (cuDriverGetVersion()).
+
+    You can use `cuda_driver_version_major` and `cuda_driver_version_minor`
+    to get the major and minor driver versions from this number.
+
+    # Errors
+
+    * `FunctionNotFound`, if cuDriverGetVersion() is not found in the shared library
+    * `LibraryNotFound`, if libcuda.so.1 or libcuda.dll cannot be found
+    */
+    #[inline]
+    pub fn sys_cuda_driver_version(&self) -> Result<i32> {
+        unsafe {
+            let mut version: c_int = mem::zeroed();
+            nvml_try(nvmlSystemGetCudaDriverVersion_v2(&mut version))?;
+
+            Ok(version)
         }
     }
 
@@ -331,7 +433,7 @@ impl NVML {
     #[inline]
     pub fn sys_process_name(&self, pid: u32, length: usize) -> Result<String> {
         unsafe {
-            let mut name_vec = Vec::with_capacity(length);
+            let mut name_vec = vec![0; length];
 
             nvml_try(nvmlSystemGetProcessName(
                 pid,
@@ -614,7 +716,7 @@ impl NVML {
                 devices.as_mut_ptr()
             ))?;
 
-            Ok(devices.iter().map(|d| Device::from(*d)).collect())
+            Ok(devices.into_iter().map(Device::from).collect())
         }
     }
 
@@ -661,7 +763,7 @@ impl NVML {
 
             nvml_try(nvmlSystemGetHicVersion(&mut count, hics.as_mut_ptr()))?;
             
-            hics.iter().map(|h| HwbcEntry::try_from(*h)).collect()
+            hics.into_iter().map(HwbcEntry::try_from).collect()
         }
     }
 
@@ -784,7 +886,7 @@ impl NVML {
     
     # Device Support
 
-    Supports Maxwell and newer fully supported devices.
+    Supports Pascal and newer fully supported devices.
     
     Some Kepler devices are also supported (that's all NVIDIA says, no specifics).
     
@@ -799,6 +901,45 @@ impl NVML {
     #[inline]
     pub fn discover_gpus(&self, pci_info: PciInfo) -> Result<()> {
         unsafe { nvml_try(nvmlDeviceDiscoverGpus(&mut pci_info.try_into_c()?)) }
+    }
+
+    /**
+    Gets the number of blacklisted GPU devices in the system.
+
+    # Device Support
+
+    Supports all devices.
+    */
+    #[inline]
+    pub fn blacklist_device_count(&self) -> Result<u32> {
+        unsafe {
+            let mut count: c_uint = mem::zeroed();
+
+            nvml_try(nvmlGetBlacklistDeviceCount(&mut count))?;
+            Ok(count)
+        }
+    }
+
+    /**
+    Gets information for the specified blacklisted device.
+
+    # Errors
+
+    * `InvalidArg`, if the given index is invalid
+    * `Utf8Error`, if strings obtained from the C function are not valid Utf8
+
+    # Device Support
+
+    Supports all devices.
+    */
+    #[inline]
+    pub fn blacklist_device_info(&self, index: u32) -> Result<BlacklistDeviceInfo> {
+        unsafe {
+            let mut info: nvmlBlacklistDeviceInfo_t = mem::zeroed();
+
+            nvml_try(nvmlGetBlacklistDeviceInfoByIndex(index, &mut info))?;
+            Ok(BlacklistDeviceInfo::try_from(info)?)
+        }
     }
 }
 
@@ -828,6 +969,7 @@ impl Drop for NVML {
 #[cfg(test)]
 mod test {
     use super::*;
+    use bitmasks::InitFlags;
     use error::{Error, ErrorKind};
     use test_utils::*;
 
@@ -839,6 +981,11 @@ mod test {
     #[test]
     fn nvml_is_sync() {
         assert_sync::<NVML>()
+    }
+
+    #[test]
+    fn init_with_flags() {
+        NVML::init_with_flags(InitFlags::NO_GPUS).unwrap();
     }
 
     #[test]
@@ -862,11 +1009,29 @@ mod test {
     }
 
     #[test]
+    fn sys_cuda_driver_version() {
+        test(3, || nvml().sys_cuda_driver_version())
+    }
+
+    #[test]
+    fn sys_cuda_driver_version_major() {
+        test(3, || Ok(cuda_driver_version_major(nvml().sys_cuda_driver_version()?)))
+    }
+
+    #[test]
+    fn sys_cuda_driver_version_minor() {
+        test(3, || Ok(cuda_driver_version_minor(nvml().sys_cuda_driver_version()?)))
+    }
+
+    #[test]
     fn sys_process_name() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
             let processes = device.running_graphics_processes()?;
-            nvml.sys_process_name(processes[0].pid, 64)
+            match nvml.sys_process_name(processes[0].pid, 64) {
+                Err(Error(ErrorKind::NoPermission, _)) => Ok("No permission error".into()),
+                v => v
+            }
         })
     }
 
@@ -969,7 +1134,7 @@ mod test {
     }
 
     #[cfg(target_os = "linux")]
-    #[should_panic(expected = "NoPermission")]
+    #[should_panic(expected = "OperatingSystem")]
     #[test]
     fn discover_gpus() {
         let nvml = nvml();
@@ -982,5 +1147,20 @@ mod test {
                 other => other,
             }
         })
+    }
+
+    #[test]
+    fn blacklist_device_count() {
+        let nvml = nvml();
+        test(3, || nvml.blacklist_device_count())
+    }
+
+    #[test]
+    fn blacklist_device_info() {
+        let nvml = nvml();
+
+        if nvml.blacklist_device_count().unwrap() > 0 {
+            test(3, || nvml.blacklist_device_info(0))
+        }
     }
 }

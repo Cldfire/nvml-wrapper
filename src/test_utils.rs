@@ -3,18 +3,27 @@ use NVML;
 #[cfg(not(feature = "test-local"))]
 use NvLink;
 use Unit;
-use bitmasks::device::*;
-use bitmasks::event::*;
+
+use bitmasks::{
+    device::*,
+    event::*
+};
+
 use enum_wrappers::device::*;
 use enums::unit::*;
 use error::*;
 use event::EventSet;
 use std::fmt::Debug;
-use struct_wrappers::device::*;
-use struct_wrappers::event::*;
+
+use struct_wrappers::{
+    *,
+    device::*,
+    event::*,
+    unit::*
+};
 #[cfg(not(feature = "test-local"))]
 use struct_wrappers::nv_link::*;
-use struct_wrappers::unit::*;
+
 use structs::device::*;
 #[cfg(not(feature = "test-local"))]
 use structs::nv_link::*;
@@ -54,18 +63,25 @@ impl<'nvml> ShouldPrint for EventSet<'nvml> {
 
 impl ShouldPrint for bool {}
 impl ShouldPrint for u32 {}
+impl ShouldPrint for i32 {}
 impl ShouldPrint for (u32, u32) {}
 impl ShouldPrint for u64 {}
 impl ShouldPrint for String {}
 impl ShouldPrint for Brand {}
 impl ShouldPrint for [i8; 16] {}
 impl ShouldPrint for Vec<ProcessInfo> {}
+impl ShouldPrint for Vec<ProcessUtilizationSample> {}
 impl<'nvml> ShouldPrint for Vec<Device<'nvml>> {}
 impl ShouldPrint for Vec<u32> {}
 impl ShouldPrint for Vec<u64> {}
 impl ShouldPrint for Vec<Sample> {}
+impl ShouldPrint for Vec<Result<FieldValueSample>> {}
 impl ShouldPrint for Vec<HwbcEntry> {}
 impl ShouldPrint for Utilization {}
+impl ShouldPrint for EncoderStats {}
+impl ShouldPrint for FbcStats {}
+impl ShouldPrint for Vec<FbcSessionInfo> {}
+impl ShouldPrint for Vec<EncoderSessionInfo> {}
 impl ShouldPrint for AutoBoostClocksEnabledInfo {}
 impl ShouldPrint for BAR1MemoryInfo {}
 impl ShouldPrint for BridgeChipHierarchy {}
@@ -74,6 +90,8 @@ impl ShouldPrint for UtilizationInfo {}
 impl ShouldPrint for EccModeState {}
 impl ShouldPrint for OperationModeState {}
 impl ShouldPrint for InfoRom {}
+impl ShouldPrint for Vec<RetiredPage> {}
+impl ShouldPrint for BlacklistDeviceInfo {}
 impl ShouldPrint for MemoryInfo {}
 impl ShouldPrint for PciInfo {}
 impl ShouldPrint for PerformanceState {}

@@ -49,7 +49,8 @@ impl From<u64> for UsedGpuMemory {
 pub enum SampleValue {
     F64(f64),
     U32(u32),
-    U64(u64)
+    U64(u64),
+    I64(i64)
 }
 
 impl SampleValue {
@@ -64,6 +65,7 @@ impl SampleValue {
                 // NVML wouldn't return anything larger
                 UnsignedLong => SampleValue::U32(union.ulVal as u32),
                 UnsignedLongLong => SampleValue::U64(union.ullVal),
+                SignedLongLong => SampleValue::I64(union.sllVal)
             }
         }
     }

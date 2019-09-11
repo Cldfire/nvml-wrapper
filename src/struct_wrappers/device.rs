@@ -1,6 +1,8 @@
-use enum_wrappers::device::{BridgeChip, SampleValueType};
+use enum_wrappers::device::{BridgeChip, SampleValueType, EncoderType, FbcSessionType};
 use enums::device::{UsedGpuMemory, SampleValue, FirmwareVersion};
-use error::{Result, ErrorKind};
+use bitmasks::device::FbcFlags;
+use structs::device::FieldId;
+use error::{Result, Error, ErrorKind, nvml_try, Bits};
 use ffi::bindings::*;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
@@ -27,6 +29,8 @@ pub struct PciInfo {
     Will always be `None` if this `PciInfo` was obtained from `NvLink.remote_pci_info()`.
     NVIDIA says that the C field that this corresponds to "is not filled ... and
     is indeterminate" when being returned from that specific call.
+
+    Will be `Some` in all other cases.
     */
     pub pci_sub_system_id: Option<u32>
 }
@@ -35,17 +39,22 @@ impl PciInfo {
     /**
     Waiting for `TryFrom` to be stable. In the meantime, we do this.
 
-    Passing `false` for `sub_sys_id_present` will set the `pci_sub_system_id` field to
-    `None`. See the field docs for more.
+    Passing `false` for `sub_sys_id_present` will set the `pci_sub_system_id`
+    field to `None`. See the field docs for more.
 
     # Errors
 
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     */
-    pub fn try_from(struct_: nvmlPciInfo_t, sub_sys_id_present: bool) -> Result<Self> {
+    pub fn try_from(
+        struct_: nvmlPciInfo_t,
+        sub_sys_id_present: bool
+    ) -> Result<Self> {
+
         unsafe {
             let bus_id_raw = CStr::from_ptr(struct_.busId.as_ptr());
-            Ok(PciInfo {
+
+            Ok(Self {
                 bus: struct_.bus,
                 bus_id: bus_id_raw.to_str()?.into(),
                 device: struct_.device,
@@ -67,21 +76,18 @@ impl PciInfo {
 
     * `NulError`, if a nul byte was found in the bus_id (shouldn't occur?)
     * `StringTooLong`, if `bus_id.len()` exceeded the length of
-    `NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE`. This should (?) only be able to
+    `NVML_DEVICE_PCI_BUS_ID_BUFFER_SIZE`. This should (?) only be able to
     occur if the user modifies `bus_id` in some fashion. We return an error
     rather than panicking.
     */
     // Tested
     pub fn try_into_c(self) -> Result<nvmlPciInfo_t> {
-        use NVML_DEVICE_PCI_BUS_ID_BUFFER_SIZE as _buf_size;
-
         // This is more readable than spraying `buf_size as usize` everywhere
-        fn buf_size() -> usize {
-            _buf_size as usize
+        const fn buf_size() -> usize {
+            NVML_DEVICE_PCI_BUS_ID_BUFFER_SIZE as usize
         }
 
-        // ...but const fn though.
-        let mut bus_id_c: [c_char; _buf_size as usize] = [0; _buf_size as usize];
+        let mut bus_id_c: [c_char; buf_size()] = [0; buf_size()];
         let mut bus_id = CString::new(self.bus_id)?.into_bytes_with_nul();
 
         if bus_id.len() > buf_size() {
@@ -92,26 +98,23 @@ impl PciInfo {
             }
         };
 
-        bus_id_c
-            .clone_from_slice(&bus_id.iter().map(|b| *b as c_char).collect::<Vec<_>>());
+        bus_id_c.clone_from_slice(
+            &bus_id
+                .into_iter()
+                .map(|b| b as c_char)
+                .collect::<Vec<_>>()
+        );
 
         Ok(nvmlPciInfo_t {
-            busId: bus_id_c,
+            busIdLegacy: [0; NVML_DEVICE_PCI_BUS_ID_BUFFER_V2_SIZE as usize],
             domain: self.domain,
             bus: self.bus,
             device: self.device,
             pciDeviceId: self.pci_device_id,
-            pciSubSystemId: if let Some(id) = self.pci_sub_system_id {
-                id
-            } else {
-                // This seems the most correct thing to do? Since this should only
-                // be none if obtained from `NvLink.remote_pci_info()`.
-                0
-            },
-            reserved0: 0,
-            reserved1: 0,
-            reserved2: 0,
-            reserved3: 0
+            // This seems the most correct thing to do? Since this should only
+            // be none if obtained from `NvLink.remote_pci_info()`.
+            pciSubSystemId: self.pci_sub_system_id.unwrap_or(0),
+            busId: bus_id_c
         })
     }
 }
@@ -131,7 +134,7 @@ pub struct BAR1MemoryInfo {
 
 impl From<nvmlBAR1Memory_t> for BAR1MemoryInfo {
     fn from(struct_: nvmlBAR1Memory_t) -> Self {
-        BAR1MemoryInfo {
+        Self {
             free: struct_.bar1Free,
             total: struct_.bar1Total,
             used: struct_.bar1Used
@@ -160,7 +163,7 @@ impl BridgeChipInfo {
         let fw_version = FirmwareVersion::from(struct_.fwVersion);
         let chip_type = BridgeChip::try_from(struct_.type_)?;
 
-        Ok(BridgeChipInfo {
+        Ok(Self {
             fw_version,
             chip_type
         })
@@ -192,15 +195,13 @@ impl BridgeChipHierarchy {
     * `UnexpectedVariant`, for which you can read the docs for
     */
     pub fn try_from(struct_: nvmlBridgeChipHierarchy_t) -> Result<Self> {
-        let chips_hierarchy: Result<Vec<BridgeChipInfo>> = struct_
+        let chips_hierarchy = struct_
             .bridgeChipInfo
-            .iter()
+            .into_iter()
             .map(|bci| BridgeChipInfo::try_from(*bci))
-            .collect();
+            .collect::<Result<_>>()?;
 
-        let chips_hierarchy = chips_hierarchy?;
-
-        Ok(BridgeChipHierarchy {
+        Ok(Self {
             chips_hierarchy,
             chip_count: struct_.bridgeCount
         })
@@ -220,7 +221,7 @@ pub struct ProcessInfo {
 
 impl From<nvmlProcessInfo_t> for ProcessInfo {
     fn from(struct_: nvmlProcessInfo_t) -> Self {
-        ProcessInfo {
+        Self {
             pid: struct_.pid,
             used_gpu_memory: UsedGpuMemory::from(struct_.usedGpuMemory)
         }
@@ -240,7 +241,7 @@ pub struct EccErrorCounts {
 
 impl From<nvmlEccErrorCounts_t> for EccErrorCounts {
     fn from(struct_: nvmlEccErrorCounts_t) -> Self {
-        EccErrorCounts {
+        Self {
             device_memory: struct_.deviceMemory,
             l1_cache: struct_.l1Cache,
             l2_cache: struct_.l2Cache,
@@ -267,7 +268,7 @@ pub struct MemoryInfo {
 
 impl From<nvmlMemory_t> for MemoryInfo {
     fn from(struct_: nvmlMemory_t) -> Self {
-        MemoryInfo {
+        Self {
             free: struct_.free,
             total: struct_.total,
             used: struct_.used
@@ -291,7 +292,7 @@ pub struct Utilization {
 
 impl From<nvmlUtilization_t> for Utilization {
     fn from(struct_: nvmlUtilization_t) -> Self {
-        Utilization {
+        Self {
             gpu: struct_.gpu,
             memory: struct_.memory
         }
@@ -311,7 +312,7 @@ pub struct ViolationTime {
 
 impl From<nvmlViolationTime_t> for ViolationTime {
     fn from(struct_: nvmlViolationTime_t) -> Self {
-        ViolationTime {
+        Self {
             reference_time: struct_.referenceTime,
             violation_time: struct_.violationTime
         }
@@ -363,7 +364,7 @@ impl From<nvmlAccountingStats_t> for AccountingStats {
         let not_avail_u64 = (NVML_VALUE_NOT_AVAILABLE) as u64;
         let not_avail_u32 = (NVML_VALUE_NOT_AVAILABLE) as u32;
 
-        AccountingStats {
+        Self {
             gpu_utilization: match struct_.gpuUtilization {
                 v if v == not_avail_u32 => None,
                 _ => Some(struct_.gpuUtilization),
@@ -388,6 +389,53 @@ impl From<nvmlAccountingStats_t> for AccountingStats {
     }
 }
 
+/// Holds encoder session information.
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct EncoderSessionInfo {
+    /// Unique ID for this session.
+    pub session_id: u32,
+    /// The ID of the process that owns this session.
+    pub pid: u32,
+    /// The ID of the vGPU instance that owns this session (if applicable).
+    // TODO: Stronger typing if vgpu stuff gets wrapped
+    pub vgpu_instance: Option<u32>,
+    pub codec_type: EncoderType,
+    /// Current horizontal encoding resolution.
+    pub hres: u32,
+    /// Current vertical encoding resolution.
+    pub vres: u32,
+    /// Moving average encode frames per second.
+    pub average_fps: u32,
+    /// Moving average encode latency in μs.
+    pub average_latency: u32
+}
+
+impl EncoderSessionInfo {
+    /**
+    Waiting on `TryFrom` to be stable.
+
+    # Errors
+    
+    * `UnexpectedVariant`, for which you can read the docs for
+    */
+    pub fn try_from(struct_: nvmlEncoderSessionInfo_t) -> Result<Self> {
+        Ok(Self {
+            session_id: struct_.sessionId,
+            pid: struct_.pid,
+            vgpu_instance: match struct_.vgpuInstance {
+                0 => None,
+                other => Some(other)
+            },
+            codec_type: EncoderType::try_from(struct_.codecType)?,
+            hres: struct_.hResolution,
+            vres: struct_.vResolution,
+            average_fps: struct_.averageFps,
+            average_latency: struct_.averageLatency
+        })
+    }
+}
+
 /// Sample info.
 // Checked against local
 #[derive(Debug, Clone, PartialEq)]
@@ -402,10 +450,171 @@ impl Sample {
     /// Given a tag and an untagged union, returns a Rust enum with the correct
     /// union variant.
     pub fn from_tag_and_struct(tag: &SampleValueType, struct_: nvmlSample_t) -> Self {
-        Sample {
+        Self {
             timestamp: struct_.timeStamp,
             value: SampleValue::from_tag_and_union(tag, struct_.sampleValue)
         }
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct ProcessUtilizationSample {
+    pub pid: u32,
+    /// CPU timestamp in μs
+    pub timestamp: u64,
+    /// SM (3D / compute) utilization
+    pub sm_util: u32,
+    /// Frame buffer memory utilization
+    pub mem_util: u32,
+    /// Encoder utilization
+    pub enc_util: u32,
+    /// Decoder utilization
+    pub dec_util: u32
+}
+
+impl From<nvmlProcessUtilizationSample_t> for ProcessUtilizationSample {
+    fn from(struct_: nvmlProcessUtilizationSample_t) -> Self {
+        Self {
+            pid: struct_.pid,
+            timestamp: struct_.timeStamp,
+            sm_util: struct_.smUtil,
+            mem_util: struct_.memUtil,
+            enc_util: struct_.encUtil,
+            dec_util: struct_.decUtil
+        }
+    }
+}
+
+/// Struct that stores information returned from `Device.field_values_for()`.
+// TODO: Missing a lot of derives because of the `Result`
+#[derive(Debug)]
+pub struct FieldValueSample {
+    /// The field that this sample is for.
+    pub field: FieldId,
+    /// This sample's CPU timestamp in μs (Unix time).
+    pub timestamp: i64,
+    /**
+    How long this field value took to update within NVML, in μs.
+    
+    This value may be averaged across several fields serviced by the same
+    driver call.
+    */
+    pub latency: i64,
+    /// The value of this sample.
+    /// 
+    /// Will be an error if retrieving this specific value failed.
+    pub value: Result<SampleValue>
+}
+
+impl FieldValueSample {
+    /**
+    Waiting on `TryFrom` to be stable.
+
+    # Errors
+    
+    * `UnexpectedVariant`, for which you can read the docs for
+    */
+    pub fn try_from(struct_: nvmlFieldValue_t) -> Result<Self> {
+        Ok(Self {
+            field: FieldId(struct_.fieldId),
+            timestamp: struct_.timestamp,
+            latency: struct_.latencyUsec,
+            value: match nvml_try(struct_.nvmlReturn) {
+                Ok(_) => Ok(SampleValue::from_tag_and_union(
+                    &SampleValueType::try_from(struct_.valueType)?, 
+                    struct_.value
+                )),
+                Err(e) => Err(e)
+            }
+        })
+    }
+}
+
+/// Holds global frame buffer capture session statistics.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct FbcStats {
+    /// The total number of sessions
+    pub sessions_count: u32,
+    /// Moving average of new frames captured per second for all capture sessions
+    pub average_fps: u32,
+    /// Moving average of new frame capture latency in microseconds for all capture sessions
+    pub average_latency: u32
+}
+
+impl From<nvmlFBCStats_t> for FbcStats {
+    fn from(struct_: nvmlFBCStats_t) -> Self {
+        Self {
+            sessions_count: struct_.sessionsCount,
+            average_fps: struct_.averageFPS,
+            average_latency: struct_.averageLatency
+        }
+    }
+}
+
+/// Information about a frame buffer capture session.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct FbcSessionInfo {
+    /// Unique session ID
+    pub session_id: u32,
+    /// The ID of the process that owns this session
+    pub pid: u32,
+    /// The ID of the vGPU instance that owns this session (if applicable).
+    // TODO: Stronger typing if vgpu stuff gets wrapped
+    pub vgpu_instance: Option<u32>,
+    /// The identifier of the display this session is running on
+    pub display_ordinal: u32,
+    /// The type of this session
+    pub session_type: FbcSessionType,
+    /// Various flags with info
+    pub session_flags: FbcFlags,
+    /// The maximum horizontal resolution supported by this session
+    pub hres_max: u32,
+    /// The maximum vertical resolution supported by this session
+    pub vres_max: u32,
+    /// The horizontal resolution requested by the caller in the capture call
+    pub hres: u32,
+    /// The vertical resolution requested by the caller in the capture call
+    pub vres: u32,
+    /// Moving average of new frames captured per second for this session
+    pub average_fps: u32,
+    /// Moving average of new frame capture latency in microseconds for this session
+    pub average_latency: u32
+}
+
+impl FbcSessionInfo {
+    /**
+    Waiting on `TryFrom` to be stable.
+
+    # Errors
+    
+    * `UnexpectedVariant`, for which you can read the docs for
+    * `IncorrectBits`, if the `sessionFlags` from the given struct do match the
+        wrapper definition
+    */
+    pub fn try_from(struct_: nvmlFBCSessionInfo_t) -> Result<Self> {
+        Ok(Self {
+            session_id: struct_.sessionId,
+            pid: struct_.pid,
+            vgpu_instance: match struct_.vgpuInstance {
+                0 => None,
+                other => Some(other)
+            },
+            display_ordinal: struct_.displayOrdinal,
+            session_type: FbcSessionType::try_from(struct_.sessionType)?,
+            session_flags: FbcFlags::from_bits(struct_.sessionFlags)
+                .ok_or_else(|| Error::from(ErrorKind::IncorrectBits(
+                    Bits::U32(struct_.sessionFlags)
+                )))?,
+            hres_max: struct_.hMaxResolution,
+            vres_max: struct_.vMaxResolution,
+            hres: struct_.hResolution,
+            vres: struct_.vResolution,
+            average_fps: struct_.averageFPS,
+            average_latency: struct_.averageLatency
+        })
     }
 }
 
@@ -429,7 +638,7 @@ mod tests {
 
             let raw = unsafe {
                 let mut pci_info: nvmlPciInfo_t = mem::zeroed();
-                nvml_try(nvmlDeviceGetPciInfo_v2(device.unsafe_raw(), &mut pci_info))
+                nvml_try(nvmlDeviceGetPciInfo_v3(device.unsafe_raw(), &mut pci_info))
                     .expect("raw pci info");
                 pci_info
             };

@@ -23,10 +23,11 @@ impl FansInfo {
     * `UnexpectedVariant`, for which you can read the docs for
     */
     pub fn try_from(struct_: nvmlUnitFanSpeeds_t) -> Result<Self> {
-        let fans: Result<Vec<FanInfo>> =
-            struct_.fans.iter().map(|f| FanInfo::try_from(*f)).collect();
-
-        let fans = fans?;
+        let fans = struct_
+            .fans
+            .into_iter()
+            .map(|f| FanInfo::try_from(*f))
+            .collect::<Result<_>>()?;
 
         Ok(FansInfo {
             count: struct_.count,

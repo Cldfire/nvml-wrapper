@@ -5,6 +5,7 @@
 [![Crates.io downloads](https://img.shields.io/crates/d/nvml-wrapper.svg?style=flat-square)](https://crates.io/crates/nvml-wrapper)
 [![Travis build status](https://img.shields.io/travis/Cldfire/nvml-wrapper/master.svg?style=flat-square)](https://travis-ci.org/Cldfire/nvml-wrapper)
 [![AppVeyor build status](https://img.shields.io/appveyor/ci/Cldfire/nvml-wrapper/master.svg?style=flat-square)](https://ci.appveyor.com/project/Cldfire/nvml-wrapper)
+[![Dependency status](https://deps.rs/repo/github/cldfire/nvml-wrapper/status.svg)](https://deps.rs/repo/github/cldfire/nvml-wrapper)
 
 A complete, safe, and ergonomic Rust wrapper for the
 [NVIDIA Management Library](https://developer.nvidia.com/nvidia-management-library-nvml)
@@ -20,7 +21,7 @@ let nvml = NVML::init()?;
 let device = nvml.device_by_index(0)?;
 
 let brand = device.brand()?; // GeForce on my system
-let fan_speed = device.fan_speed()?; // Currently 17% on my system
+let fan_speed = device.fan_speed(0)?; // Currently 17% on my system
 let power_limit = device.enforced_power_limit()?; // 275k milliwatts on my system
 let encoder_util = device.encoder_utilization()?; // Currently 0 on my system; Not encoding anything
 let memory_info = device.memory_info()?; // Currently 1.63/6.37 GB used on my system
@@ -39,10 +40,15 @@ between Windows and Linux, however.
 
 ### Windows
 
+I have been able to successfully compile and run this wrapper's tests using
+both the GNU and MSVC toolchains. An import library (`nvml.lib`) is included for
+compilation with the MSVC toolchain.
+
 The NVML library dll can be found at `%ProgramW6432%\NVIDIA Corporation\NVSMI\`
-(which is `C:\Program Files\NVIDIA Corporation\NVSMI\` on my machine). You will need
-to add this folder to your `PATH` in order to have everything work properly at
-runtime; alternatively, place a copy of the dll in the same folder as your executable.
+(which is `C:\Program Files\NVIDIA Corporation\NVSMI\` on my machine). I had to add
+this folder to my `PATH` or place a copy of the dll in the same folder as the executable
+in order to have everything work properly at runtime with the GNU toolchain. You may
+need to do the same; I'm not sure if the MSVC toolchain needs this step or not.
 
 ### Linux
 
@@ -56,14 +62,14 @@ in theory.
 
 ## NVML Support
 
-This wrapper has been developed against and is currently supporting NVML version
-8. Each new version of NVML is guaranteed to be backwards-compatible according
+This wrapper is being developed against and currently supports NVML version
+10.1. Each new version of NVML is guaranteed to be backwards-compatible according
 to NVIDIA, so this wrapper should continue to work without issue regardless of
 NVML version bumps.
 
 ## Rust Version Support
 
-Currently supports Rust 1.20.0 or greater. The target version is the **latest**
+Currently supports Rust 1.26.0 or greater. The target version is the **latest**
 stable version; I do not intend to pin to an older one at any time.
 
 ## Cargo Features

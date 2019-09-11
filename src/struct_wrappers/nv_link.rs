@@ -4,6 +4,7 @@ use error::Result;
 use ffi::bindings::*;
 
 /// Defines NvLink counter controls.
+// TODO: Write a test going to / from C repr
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UtilizationControl {
@@ -36,7 +37,7 @@ impl UtilizationControl {
     pub fn as_c(&self) -> nvmlNvLinkUtilizationControl_t {
         nvmlNvLinkUtilizationControl_t {
             units: self.units.as_c(),
-            pktfilter: self.packet_filter.bits()
+            pktfilter: self.packet_filter.bits() as i32
         }
     }
 }
