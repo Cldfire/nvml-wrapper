@@ -4,6 +4,12 @@ This file describes the changes / additions / fixes between wrapper releases.
 
 ## Unreleased
 
+## 0.5.0 (released 2019-09-10)
+
+### Release Summary
+
+A long time in the works, 0.5.0 contains the last two years of my extremely sporadic work wrapping some of the new functionality provided in NVML since version 8 alongside a handful of small fixes and improvements.
+
 ### Additions
 
 * An import library (`nvml.lib`) has been added that enables compilation using the MSVC toolchain on Windows.
