@@ -4,6 +4,12 @@ This file describes the changes / additions / fixes between bindings releases.
 
 ## Unreleased
 
+## 0.4.1 (released 2019-09-11)
+
+### Release summary
+
+The Windows import library has been regenerated for NVML 10.1.
+
 ## 0.4.0 (released 2019-09-10)
 
 ### Release Summary
