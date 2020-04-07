@@ -7,6 +7,7 @@ This file describes the changes / additions / fixes between wrapper releases.
 ### Additions
 
 * `nvml-wrapper` updated to Rust 2018 edition
+* `nvml-wrapper-sys` updated to Rust 2018 edition
 
 ### Dependencies
 
