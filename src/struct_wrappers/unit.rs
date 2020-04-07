@@ -25,7 +25,7 @@ impl FansInfo {
     pub fn try_from(struct_: nvmlUnitFanSpeeds_t) -> Result<Self> {
         let fans = struct_
             .fans
-            .into_iter()
+            .iter()
             .map(|f| FanInfo::try_from(*f))
             .collect::<Result<_>>()?;
 

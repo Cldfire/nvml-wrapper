@@ -4,6 +4,10 @@ This file describes the changes / additions / fixes between wrapper releases.
 
 ## Unreleased
 
+### Dependencies
+
+* `bitflags`: `1.0.x -> 1.2.x`
+
 ## 0.5.0 (released 2019-09-10)
 
 ### Release Summary

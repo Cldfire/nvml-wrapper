@@ -197,7 +197,7 @@ impl BridgeChipHierarchy {
     pub fn try_from(struct_: nvmlBridgeChipHierarchy_t) -> Result<Self> {
         let chips_hierarchy = struct_
             .bridgeChipInfo
-            .into_iter()
+            .iter()
             .map(|bci| BridgeChipInfo::try_from(*bci))
             .collect::<Result<_>>()?;
 
