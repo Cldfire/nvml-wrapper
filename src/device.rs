@@ -4,7 +4,7 @@ use crate::NVML;
 use crate::NvLink;
 
 #[cfg(target_os = "windows")]
-use bitmasks::Behavior;
+use crate::bitmasks::Behavior;
 use crate::bitmasks::device::ThrottleReasons;
 #[cfg(target_os = "linux")]
 use crate::bitmasks::event::EventTypes;
@@ -4458,7 +4458,7 @@ impl<'nvml> Device<'nvml> {
 mod test {
     use super::Device;
     #[cfg(target_os = "windows")]
-    use bitmasks::Behavior;
+    use crate::bitmasks::Behavior;
     #[cfg(target_os = "linux")]
     use crate::bitmasks::event::*;
     use crate::enum_wrappers::device::*;

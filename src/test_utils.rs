@@ -29,7 +29,7 @@ use crate::structs::device::*;
 use crate::structs::nv_link::*;
 
 #[cfg(target_os = "windows")]
-use structs::device::DriverModelState;
+use crate::structs::device::DriverModelState;
 
 pub trait ShouldPrint: Debug {
     fn should_print(&self) -> bool {
