@@ -1,6 +1,6 @@
 #![allow(deprecated)]
 
-use ffi::bindings::*;
+use crate::ffi::bindings::*;
 
 bitflags! {
     /// Flags used to specify why a GPU is throttling.

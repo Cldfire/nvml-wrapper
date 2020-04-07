@@ -1,6 +1,6 @@
-use enum_wrappers::unit::FanState;
-use error::Result;
-use ffi::bindings::*;
+use crate::enum_wrappers::unit::FanState;
+use crate::error::Result;
+use crate::ffi::bindings::*;
 use std::ffi::CStr;
 
 /// Fan information readings for an entire S-class unit.

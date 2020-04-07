@@ -1,6 +1,6 @@
-use Device;
+use crate::Device;
 
-use enum_wrappers::{
+use crate::enum_wrappers::{
     bool_from_state,
     state_from_bool,
     nv_link::{
@@ -9,9 +9,9 @@ use enum_wrappers::{
     }
 };
 
-use enums::nv_link::Counter;
-use error::{nvml_try, Result};
-use ffi::bindings::*;
+use crate::enums::nv_link::Counter;
+use crate::error::{nvml_try, Result};
+use crate::ffi::bindings::*;
 
 use std::{
     mem,
@@ -21,7 +21,7 @@ use std::{
     }
 };
 
-use struct_wrappers::{
+use crate::struct_wrappers::{
     device::{
         PciInfo
     },
@@ -30,7 +30,7 @@ use struct_wrappers::{
     }
 };
 
-use structs::nv_link::UtilizationCounter;
+use crate::structs::nv_link::UtilizationCounter;
 
 /**
 Struct that represents a `Device`'s NvLink.
@@ -469,11 +469,11 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 #[cfg(not(feature = "test-local"))]
 #[deny(unused_mut)]
 mod test {
-    use bitmasks::nv_link::*;
-    use enum_wrappers::nv_link::*;
-    use enums::nv_link::*;
-    use struct_wrappers::nv_link::*;
-    use test_utils::*;
+    use crate::bitmasks::nv_link::*;
+    use crate::enum_wrappers::nv_link::*;
+    use crate::enums::nv_link::*;
+    use crate::struct_wrappers::nv_link::*;
+    use crate::test_utils::*;
 
     #[test]
     fn is_active() {

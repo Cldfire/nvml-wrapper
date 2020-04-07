@@ -1,5 +1,5 @@
-use enum_wrappers::device::SampleValueType;
-use ffi::bindings::*;
+use crate::enum_wrappers::device::SampleValueType;
+use crate::ffi::bindings::*;
 
 /// Respresents possible variants for a firmware version.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]

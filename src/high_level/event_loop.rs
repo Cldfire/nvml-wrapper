@@ -62,13 +62,13 @@ The functionality in this module is only available on Linux platforms; NVML does
 not support events on any other platform.
 */
 
-use Device;
-use EventSet;
-use NVML;
-use bitmasks::event::EventTypes;
-use enums::event::XidError;
-use error::{Result, ErrorKind, Error};
-use struct_wrappers::event::EventData;
+use crate::Device;
+use crate::EventSet;
+use crate::NVML;
+use crate::bitmasks::event::EventTypes;
+use crate::enums::event::XidError;
+use crate::error::{Result, ErrorKind, Error};
+use crate::struct_wrappers::event::EventData;
 
 // TODO: Tests
 

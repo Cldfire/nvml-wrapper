@@ -2,7 +2,7 @@ pub mod device;
 pub mod nv_link;
 pub mod event;
 
-use ffi::bindings::*;
+use crate::ffi::bindings::*;
 
 bitflags! {
     /// Generic flags used to specify the default behavior of some functions.

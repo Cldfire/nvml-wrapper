@@ -4,8 +4,8 @@ pub mod event;
 pub mod nv_link;
 
 use self::device::PciInfo;
-use error::Result;
-use ffi::bindings::*;
+use crate::error::Result;
+use crate::ffi::bindings::*;
 use std::ffi::CStr;
 
 /// Information about a blacklisted device

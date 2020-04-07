@@ -1,13 +1,13 @@
-use NVML;
-use device::Device;
-use enum_wrappers::unit::LedColor;
-use enums::unit::{TemperatureReading, LedState};
-use error::{nvml_try, Result};
-use ffi::bindings::*;
+use crate::NVML;
+use crate::device::Device;
+use crate::enum_wrappers::unit::LedColor;
+use crate::enums::unit::{TemperatureReading, LedState};
+use crate::error::{nvml_try, Result};
+use crate::ffi::bindings::*;
 use std::marker::PhantomData;
 use std::mem;
 use std::os::raw::c_uint;
-use struct_wrappers::unit::{FansInfo, PsuInfo, UnitInfo};
+use crate::struct_wrappers::unit::{FansInfo, PsuInfo, UnitInfo};
 
 /**
 Struct that represents a unit. 
@@ -329,9 +329,9 @@ impl<'nvml> Unit<'nvml> {
 #[cfg(not(feature = "test-local"))]
 #[deny(unused_mut)]
 mod test {
-    use enum_wrappers::unit::LedColor;
-    use enums::unit::TemperatureReading;
-    use test_utils::*;
+    use crate::enum_wrappers::unit::LedColor;
+    use crate::enums::unit::TemperatureReading;
+    use crate::test_utils::*;
 
     #[test]
     fn devices() {

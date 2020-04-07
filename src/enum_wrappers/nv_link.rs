@@ -1,5 +1,5 @@
-use error::{Result, ErrorKind, Error};
-use ffi::bindings::*;
+use crate::error::{Result, ErrorKind, Error};
+use crate::ffi::bindings::*;
 
 /// Represents the NvLink utilization counter packet units.
 // Checked against local

@@ -1,32 +1,32 @@
-use Device;
-use NVML;
+use crate::Device;
+use crate::NVML;
 #[cfg(not(feature = "test-local"))]
-use NvLink;
-use Unit;
+use crate::NvLink;
+use crate::Unit;
 
-use bitmasks::{
+use crate::bitmasks::{
     device::*,
     event::*
 };
 
-use enum_wrappers::device::*;
-use enums::unit::*;
-use error::*;
-use event::EventSet;
+use crate::enum_wrappers::device::*;
+use crate::enums::unit::*;
+use crate::error::*;
+use crate::event::EventSet;
 use std::fmt::Debug;
 
-use struct_wrappers::{
+use crate::struct_wrappers::{
     *,
     device::*,
     event::*,
     unit::*
 };
 #[cfg(not(feature = "test-local"))]
-use struct_wrappers::nv_link::*;
+use crate::struct_wrappers::nv_link::*;
 
-use structs::device::*;
+use crate::structs::device::*;
 #[cfg(not(feature = "test-local"))]
-use structs::nv_link::*;
+use crate::structs::nv_link::*;
 
 #[cfg(target_os = "windows")]
 use structs::device::DriverModelState;

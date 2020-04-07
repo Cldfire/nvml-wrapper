@@ -141,16 +141,16 @@ pub mod high_level;
 mod test_utils;
 
 // Re-exports for convenience
-pub use device::Device;
-pub use event::EventSet;
-pub use nv_link::NvLink;
-pub use unit::Unit;
+pub use crate::device::Device;
+pub use crate::event::EventSet;
+pub use crate::nv_link::NvLink;
+pub use crate::unit::Unit;
 
 /// Re-exports from `nvml-wrapper-sys` that are necessary for use of this wrapper.
 pub mod sys_exports {
     /// Use these constants to populate the `structs::device::FieldId` newtype.
     pub mod field_id {
-        pub use ffi::bindings::field_id::*;
+        pub use crate::ffi::bindings::field_id::*;
     }
 }
 
@@ -173,18 +173,18 @@ use std::{
 };
 
 #[cfg(target_os = "linux")]
-use enum_wrappers::device::TopologyLevel;
+use crate::enum_wrappers::device::TopologyLevel;
 
-use error::{Result, nvml_try};
-use ffi::bindings::*;
+use crate::error::{Result, nvml_try};
+use crate::ffi::bindings::*;
 
-use struct_wrappers::BlacklistDeviceInfo;
+use crate::struct_wrappers::BlacklistDeviceInfo;
 
 #[cfg(target_os = "linux")]
-use struct_wrappers::device::PciInfo;
-use struct_wrappers::unit::HwbcEntry;
+use crate::struct_wrappers::device::PciInfo;
+use crate::struct_wrappers::unit::HwbcEntry;
 
-use bitmasks::InitFlags;
+use crate::bitmasks::InitFlags;
 
 /// Determines the major version of the CUDA driver given the full version.
 ///
@@ -969,9 +969,9 @@ impl Drop for NVML {
 #[cfg(test)]
 mod test {
     use super::*;
-    use bitmasks::InitFlags;
-    use error::{Error, ErrorKind};
-    use test_utils::*;
+    use crate::bitmasks::InitFlags;
+    use crate::error::{Error, ErrorKind};
+    use crate::test_utils::*;
 
     #[test]
     fn nvml_is_send() {

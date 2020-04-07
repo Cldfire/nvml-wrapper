@@ -7,6 +7,7 @@ readme = "README.md"
 documentation = "https://docs.rs/nvml-wrapper"
 repository = "https://github.com/Cldfire/nvml-wrapper"
 license = "MIT/Apache-2.0"
+edition = "2018"
 
 keywords = ["nvidia", "gpu", "managment", "monitoring", "hardware"]
 categories = ["api-bindings", "hardware-support"]

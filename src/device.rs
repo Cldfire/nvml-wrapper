@@ -1,28 +1,28 @@
 #[cfg(target_os = "linux")]
-use EventSet;
-use NVML;
-use NvLink;
+use crate::EventSet;
+use crate::NVML;
+use crate::NvLink;
 
 #[cfg(target_os = "windows")]
 use bitmasks::Behavior;
-use bitmasks::device::ThrottleReasons;
+use crate::bitmasks::device::ThrottleReasons;
 #[cfg(target_os = "linux")]
-use bitmasks::event::EventTypes;
+use crate::bitmasks::event::EventTypes;
 
-use enum_wrappers::{
+use crate::enum_wrappers::{
     state_from_bool,
     bool_from_state,
     device::*
 };
 
 #[cfg(target_os = "linux")]
-use error::ResultExt;
-use error::{Bits, nvml_try, Result, ErrorKind, Error};
+use crate::error::ResultExt;
+use crate::error::{Bits, nvml_try, Result, ErrorKind, Error};
 
-use ffi::bindings::*;
+use crate::ffi::bindings::*;
 
-use struct_wrappers::device::*;
-use structs::device::*;
+use crate::struct_wrappers::device::*;
+use crate::structs::device::*;
 
 #[cfg(target_os = "linux")]
 use std::os::raw::c_ulong;
@@ -4460,12 +4460,12 @@ mod test {
     #[cfg(target_os = "windows")]
     use bitmasks::Behavior;
     #[cfg(target_os = "linux")]
-    use bitmasks::event::*;
-    use enum_wrappers::device::*;
-    use error::*;
-    use test_utils::*;
-    use sys_exports::field_id::*;
-    use structs::device::FieldId;
+    use crate::bitmasks::event::*;
+    use crate::enum_wrappers::device::*;
+    use crate::error::*;
+    use crate::test_utils::*;
+    use crate::sys_exports::field_id::*;
+    use crate::structs::device::FieldId;
 
     #[test]
     fn device_is_send() {

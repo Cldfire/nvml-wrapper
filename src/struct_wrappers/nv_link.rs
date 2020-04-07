@@ -1,7 +1,7 @@
-use bitmasks::nv_link::PacketTypes;
-use enum_wrappers::nv_link::UtilizationCountUnit;
-use error::Result;
-use ffi::bindings::*;
+use crate::bitmasks::nv_link::PacketTypes;
+use crate::enum_wrappers::nv_link::UtilizationCountUnit;
+use crate::error::Result;
+use crate::ffi::bindings::*;
 
 /// Defines NvLink counter controls.
 // TODO: Write a test going to / from C repr

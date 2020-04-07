@@ -1,9 +1,9 @@
-use enum_wrappers::device::{BridgeChip, SampleValueType, EncoderType, FbcSessionType};
-use enums::device::{UsedGpuMemory, SampleValue, FirmwareVersion};
-use bitmasks::device::FbcFlags;
-use structs::device::FieldId;
-use error::{Result, Error, ErrorKind, nvml_try, Bits};
-use ffi::bindings::*;
+use crate::enum_wrappers::device::{BridgeChip, SampleValueType, EncoderType, FbcSessionType};
+use crate::enums::device::{UsedGpuMemory, SampleValue, FirmwareVersion};
+use crate::bitmasks::device::FbcFlags;
+use crate::structs::device::FieldId;
+use crate::error::{Result, Error, ErrorKind, nvml_try, Bits};
+use crate::ffi::bindings::*;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
@@ -621,10 +621,10 @@ impl FbcSessionInfo {
 #[cfg(test)]
 #[allow(unused_variables, unused_imports)]
 mod tests {
-    use error::*;
-    use ffi::bindings::*;
+    use crate::error::*;
+    use crate::ffi::bindings::*;
     use std::mem;
-    use test_utils::*;
+    use crate::test_utils::*;
 
     #[test]
     fn pci_info_from_to_c() {

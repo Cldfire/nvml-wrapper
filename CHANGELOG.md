@@ -4,6 +4,10 @@ This file describes the changes / additions / fixes between wrapper releases.
 
 ## Unreleased
 
+### Additions
+
+* `nvml-wrapper` updated to Rust 2018 edition
+
 ### Dependencies
 
 * `bitflags`: `1.0.x -> 1.2.x`

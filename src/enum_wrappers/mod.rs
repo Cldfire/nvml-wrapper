@@ -1,5 +1,5 @@
-use error::{Result, ErrorKind, Error};
-use ffi::bindings::*;
+use crate::error::{Result, ErrorKind, Error};
+use crate::ffi::bindings::*;
 
 pub mod nv_link;
 pub mod device;

@@ -1,6 +1,6 @@
-use NVML;
-use error::{nvml_try, Result};
-use ffi::bindings::*;
+use crate::NVML;
+use crate::error::{nvml_try, Result};
+use crate::ffi::bindings::*;
 
 use std::{
     io::{
@@ -13,7 +13,7 @@ use std::{
     mem
 };
 
-use struct_wrappers::event::EventData;
+use crate::struct_wrappers::event::EventData;
 
 /**
 Handle to a set of events.
@@ -154,8 +154,8 @@ impl<'nvml> Drop for EventSet<'nvml> {
 mod test {
     use super::EventSet;
     #[cfg(target_os = "linux")]
-    use bitmasks::event::*;
-    use test_utils::*;
+    use crate::bitmasks::event::*;
+    use crate::test_utils::*;
 
     // Ensuring that double-free issues don't crop up here.
     #[test]
@@ -192,7 +192,7 @@ mod test {
     #[cfg(feature = "test-local")]
     #[test]
     fn wait() {
-        use error::*;
+        use crate::error::*;
 
         let nvml = nvml();
         let device = device(&nvml);

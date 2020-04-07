@@ -20,14 +20,14 @@ fn main() {
 
 #[cfg(target_os = "linux")]
 mod example {
-    use nvml::NVML;
+    use crate::nvml::NVML;
     // You would probably want your own error setup in your own code; here we just 
     // use the wrapper's error types.
-    use nvml::error::{Error, ErrorKind, Result};
+    use crate::nvml::error::{Error, ErrorKind, Result};
     // Bringing this in allows us to use `NVML.create_event_loop()`
-    use nvml::high_level::EventLoopProvider;
+    use crate::nvml::high_level::EventLoopProvider;
     // Bringing these in for brevity (Event::SomeEvent vs. SomeEvent)
-    use nvml::high_level::Event::*;
+    use crate::nvml::high_level::Event::*;
 
     // We write a function so that we can return a `Result` and use `?`
     pub fn actual_main() -> Result<()> {

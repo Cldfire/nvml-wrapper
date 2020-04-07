@@ -1,4 +1,4 @@
-use ffi::bindings::*;
+use crate::ffi::bindings::*;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

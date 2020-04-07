@@ -1,5 +1,5 @@
-use error::{Result, ErrorKind, Error};
-use ffi::bindings::*;
+use crate::error::{Result, ErrorKind, Error};
+use crate::ffi::bindings::*;
 use std::ffi::CStr;
 
 /// LED states for an S-class unit.

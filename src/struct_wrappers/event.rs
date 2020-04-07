@@ -1,7 +1,7 @@
-use bitmasks::event::EventTypes;
-use device::Device;
-use enums::event::XidError;
-use ffi::bindings::*;
+use crate::bitmasks::event::EventTypes;
+use crate::device::Device;
+use crate::enums::event::XidError;
+use crate::ffi::bindings::*;
 
 /// Information about an event that has occurred.
 // Checked against local
