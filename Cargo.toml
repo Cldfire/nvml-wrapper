@@ -24,6 +24,7 @@ nvml-wrapper-sys = { path = "nvml-wrapper-sys/" }
 wrapcenum-derive = "0.3"
 
 [dev-dependencies]
+rusty-hook = "^0.11.1"
 # Used in the `basic_usage` example
 pretty-bytes = "0.2"
 # Used in error-related tests
