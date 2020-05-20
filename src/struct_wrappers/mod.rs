@@ -1,7 +1,7 @@
 pub mod device;
-pub mod unit;
 pub mod event;
 pub mod nv_link;
+pub mod unit;
 
 use self::device::PciInfo;
 use crate::error::Result;
@@ -13,7 +13,7 @@ use std::ffi::CStr;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct BlacklistDeviceInfo {
     pci_info: PciInfo,
-    uuid: String
+    uuid: String,
 }
 
 impl BlacklistDeviceInfo {
@@ -24,16 +24,13 @@ impl BlacklistDeviceInfo {
 
     * `Utf8Error`, if strings obtained from the C function are not valid Utf8
     */
-    pub fn try_from(
-        struct_: nvmlBlacklistDeviceInfo_t,
-    ) -> Result<Self> {
-
+    pub fn try_from(struct_: nvmlBlacklistDeviceInfo_t) -> Result<Self> {
         unsafe {
             let uuid_raw = CStr::from_ptr(struct_.uuid.as_ptr());
 
             Ok(Self {
                 pci_info: PciInfo::try_from(struct_.pciInfo, true)?,
-                uuid: uuid_raw.to_str()?.into()
+                uuid: uuid_raw.to_str()?.into(),
             })
         }
     }

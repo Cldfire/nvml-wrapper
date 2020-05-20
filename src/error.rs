@@ -4,7 +4,7 @@ use crate::ffi::bindings::*;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Bits {
     U32(u32),
-    U64(u64)
+    U64(u64),
 }
 
 error_chain! {
@@ -24,7 +24,7 @@ error_chain! {
             description("An error used to pinpoint error cause within a function to \
                          a call to `PciInfo.try_into_c()`.")
         }
-        
+
         /**
         An error used to pinpoint error cause within a function to a call to
         `Device.pci_info()`.
@@ -61,7 +61,7 @@ error_chain! {
         /**
         Bits that did not correspond to a flag were encountered whilst attempting to
         interpret them as bitflags.
-        
+
         This error is specific to this Rust wrapper.
         */
         IncorrectBits(bits: Bits) {
@@ -73,7 +73,7 @@ error_chain! {
 
         /**
         An unexpected enum variant was encountered.
-        
+
         This error is specific to this Rust wrapper. It is used to represent the
         possibility that an enum variant that is not defined within the Rust bindings
         can be returned from a C call.
@@ -123,7 +123,7 @@ error_chain! {
 
         /**
         An input argument is not large enough.
-        
+
         The value contained is the size required for a successful call (if `Some`)
         and `None` if not explicitly set.
         */
@@ -224,44 +224,46 @@ pub fn nvml_try(code: nvmlReturn_t) -> Result<()> {
         nvmlReturn_enum_NVML_ERROR_INVALID_ARGUMENT => Err(Error::from_kind(ErrorKind::InvalidArg)),
         nvmlReturn_enum_NVML_ERROR_NOT_SUPPORTED => Err(Error::from_kind(ErrorKind::NotSupported)),
         nvmlReturn_enum_NVML_ERROR_NO_PERMISSION => Err(Error::from_kind(ErrorKind::NoPermission)),
-        nvmlReturn_enum_NVML_ERROR_ALREADY_INITIALIZED => Err(
-            Error::from_kind(ErrorKind::AlreadyInitialized)
-        ),
+        nvmlReturn_enum_NVML_ERROR_ALREADY_INITIALIZED => {
+            Err(Error::from_kind(ErrorKind::AlreadyInitialized))
+        }
         nvmlReturn_enum_NVML_ERROR_NOT_FOUND => Err(Error::from_kind(ErrorKind::NotFound)),
-        nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => Err(
-            Error::from_kind(ErrorKind::InsufficientSize(None))
-        ),
-        nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_POWER => Err(
-            Error::from_kind(ErrorKind::InsufficientPower)
-        ),
-        nvmlReturn_enum_NVML_ERROR_DRIVER_NOT_LOADED => Err(
-            Error::from_kind(ErrorKind::DriverNotLoaded)
-        ),
+        nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => {
+            Err(Error::from_kind(ErrorKind::InsufficientSize(None)))
+        }
+        nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_POWER => {
+            Err(Error::from_kind(ErrorKind::InsufficientPower))
+        }
+        nvmlReturn_enum_NVML_ERROR_DRIVER_NOT_LOADED => {
+            Err(Error::from_kind(ErrorKind::DriverNotLoaded))
+        }
         nvmlReturn_enum_NVML_ERROR_TIMEOUT => Err(Error::from_kind(ErrorKind::Timeout)),
         nvmlReturn_enum_NVML_ERROR_IRQ_ISSUE => Err(Error::from_kind(ErrorKind::IrqIssue)),
-        nvmlReturn_enum_NVML_ERROR_LIBRARY_NOT_FOUND => Err(
-            Error::from_kind(ErrorKind::LibraryNotFound)
-        ),
-        nvmlReturn_enum_NVML_ERROR_FUNCTION_NOT_FOUND => Err(
-            Error::from_kind(ErrorKind::FunctionNotFound)
-        ),
-        nvmlReturn_enum_NVML_ERROR_CORRUPTED_INFOROM => Err(
-            Error::from_kind(ErrorKind::CorruptedInfoROM)
-        ),
+        nvmlReturn_enum_NVML_ERROR_LIBRARY_NOT_FOUND => {
+            Err(Error::from_kind(ErrorKind::LibraryNotFound))
+        }
+        nvmlReturn_enum_NVML_ERROR_FUNCTION_NOT_FOUND => {
+            Err(Error::from_kind(ErrorKind::FunctionNotFound))
+        }
+        nvmlReturn_enum_NVML_ERROR_CORRUPTED_INFOROM => {
+            Err(Error::from_kind(ErrorKind::CorruptedInfoROM))
+        }
         nvmlReturn_enum_NVML_ERROR_GPU_IS_LOST => Err(Error::from_kind(ErrorKind::GpuLost)),
-        nvmlReturn_enum_NVML_ERROR_RESET_REQUIRED => Err(
-            Error::from_kind(ErrorKind::ResetRequired)
-        ),
-        nvmlReturn_enum_NVML_ERROR_OPERATING_SYSTEM => Err(
-            Error::from_kind(ErrorKind::OperatingSystem)
-        ),
-        nvmlReturn_enum_NVML_ERROR_LIB_RM_VERSION_MISMATCH => Err(
-            Error::from_kind(ErrorKind::LibRmVersionMismatch)
-        ),
+        nvmlReturn_enum_NVML_ERROR_RESET_REQUIRED => {
+            Err(Error::from_kind(ErrorKind::ResetRequired))
+        }
+        nvmlReturn_enum_NVML_ERROR_OPERATING_SYSTEM => {
+            Err(Error::from_kind(ErrorKind::OperatingSystem))
+        }
+        nvmlReturn_enum_NVML_ERROR_LIB_RM_VERSION_MISMATCH => {
+            Err(Error::from_kind(ErrorKind::LibRmVersionMismatch))
+        }
         nvmlReturn_enum_NVML_ERROR_IN_USE => Err(Error::from_kind(ErrorKind::InUse)),
         nvmlReturn_enum_NVML_ERROR_MEMORY => Err(Error::from_kind(ErrorKind::InsufficientMemory)),
         nvmlReturn_enum_NVML_ERROR_NO_DATA => Err(Error::from_kind(ErrorKind::NoData)),
-        nvmlReturn_enum_NVML_ERROR_VGPU_ECC_NOT_SUPPORTED => Err(Error::from_kind(ErrorKind::VgpuEccNotSupported)),
+        nvmlReturn_enum_NVML_ERROR_VGPU_ECC_NOT_SUPPORTED => {
+            Err(Error::from_kind(ErrorKind::VgpuEccNotSupported))
+        }
         nvmlReturn_enum_NVML_ERROR_UNKNOWN => Err(Error::from_kind(ErrorKind::Unknown)),
         _ => Err(Error::from_kind(ErrorKind::UnexpectedVariant(code))),
     }

@@ -1,6 +1,6 @@
-use crate::enum_wrappers::device::OperationMode;
 #[cfg(target_os = "windows")]
 use crate::enum_wrappers::device::DriverModel;
+use crate::enum_wrappers::device::OperationMode;
 
 /// Returned from `Device.auto_boosted_clocks_enabled()`
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -12,7 +12,7 @@ pub struct AutoBoostClocksEnabledInfo {
     ///
     /// The GPU will revert to this default when no applications are using the
     /// GPU.
-    pub is_enabled_default: bool
+    pub is_enabled_default: bool,
 }
 
 /// Returned from `Device.decoder_utilization()` and
@@ -22,7 +22,7 @@ pub struct AutoBoostClocksEnabledInfo {
 pub struct UtilizationInfo {
     pub utilization: u32,
     /// Sampling period in μs.
-    pub sampling_period: u32
+    pub sampling_period: u32,
 }
 
 /// Returned from `Device.driver_model()`
@@ -31,7 +31,7 @@ pub struct UtilizationInfo {
 #[cfg(target_os = "windows")]
 pub struct DriverModelState {
     pub current: DriverModel,
-    pub pending: DriverModel
+    pub pending: DriverModel,
 }
 
 /// Returned from `Device.is_ecc_enabled()`
@@ -39,7 +39,7 @@ pub struct DriverModelState {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct EccModeState {
     pub currently_enabled: bool,
-    pub pending_enabled: bool
+    pub pending_enabled: bool,
 }
 
 /// Returned from `Device.gpu_operation_mode()`
@@ -47,7 +47,7 @@ pub struct EccModeState {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct OperationModeState {
     pub current: OperationMode,
-    pub pending: OperationMode
+    pub pending: OperationMode,
 }
 
 /// Returned from `Device.power_management_limit_constraints()`
@@ -57,7 +57,7 @@ pub struct OperationModeState {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PowerManagementConstraints {
     pub min_limit: u32,
-    pub max_limit: u32
+    pub max_limit: u32,
 }
 
 /// Returned from `Device.encoder_stats()`
@@ -69,7 +69,7 @@ pub struct EncoderStats {
     /// The trailing average FPS of all active encoder sessions.
     pub average_fps: u32,
     /// The encode latency in μs.
-    pub average_latency: u32
+    pub average_latency: u32,
 }
 
 /// Returned from `Device.cuda_compute_capability()`
@@ -77,7 +77,7 @@ pub struct EncoderStats {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct CudaComputeCapability {
     pub major: i32,
-    pub minor: i32
+    pub minor: i32,
 }
 
 /// Returned from `Device.retired_pages()`
@@ -90,7 +90,7 @@ pub struct RetiredPage {
     /// match the address information in XID 63.
     pub address: u64,
     /// The retirement timestamp.
-    pub timestamp: u64
+    pub timestamp: u64,
 }
 
 /// Populate this newtype with the constants `nvml_wrapper::sys_exports::field_id::*`.

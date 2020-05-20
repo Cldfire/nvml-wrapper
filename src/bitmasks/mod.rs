@@ -1,6 +1,6 @@
 pub mod device;
-pub mod nv_link;
 pub mod event;
+pub mod nv_link;
 
 use crate::ffi::bindings::*;
 

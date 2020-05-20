@@ -1,4 +1,4 @@
-use crate::error::{Result, ErrorKind, Error};
+use crate::error::{Error, ErrorKind, Result};
 use crate::ffi::bindings::*;
 use std::ffi::CStr;
 
@@ -9,15 +9,15 @@ pub enum LedState {
     /// Indicates good health.
     Green,
     /// Indicates a problem along with the accompanying cause.
-    Amber(String)
+    Amber(String),
 }
 
 impl LedState {
     /**
     Waiting for `TryFrom` to be stable. In the meantime, we do this.
-    
+
     # Errors
-    
+
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     */
     pub fn try_from(struct_: nvmlLedState_t) -> Result<Self> {
@@ -43,5 +43,5 @@ impl LedState {
 pub enum TemperatureReading {
     Intake = 0,
     Exhaust = 1,
-    Board = 2
+    Board = 2,
 }

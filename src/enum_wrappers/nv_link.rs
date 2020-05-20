@@ -1,4 +1,4 @@
-use crate::error::{Result, ErrorKind, Error};
+use crate::error::{Error, ErrorKind, Result};
 use crate::ffi::bindings::*;
 
 /// Represents the NvLink utilization counter packet units.
@@ -12,7 +12,7 @@ pub enum UtilizationCountUnit {
     #[wrap(c_variant = "NVML_NVLINK_COUNTER_UNIT_PACKETS")]
     Packets,
     #[wrap(c_variant = "NVML_NVLINK_COUNTER_UNIT_BYTES")]
-    Bytes
+    Bytes,
 }
 
 /// Represents queryable NvLink capabilities.
@@ -38,7 +38,7 @@ pub enum Capability {
     SliBridge,
     /// Link is supported on this device.
     #[wrap(c_variant = "NVML_NVLINK_CAP_VALID")]
-    ValidLink
+    ValidLink,
 }
 
 /// Represents queryable NvLink error counters.
@@ -58,5 +58,5 @@ pub enum ErrorCounter {
     DlCrcFlit,
     /// Data link receive data CRC error counter.
     #[wrap(c_variant = "NVML_NVLINK_ERROR_DL_CRC_DATA")]
-    DlCrcData
+    DlCrcData,
 }

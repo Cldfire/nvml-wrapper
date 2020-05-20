@@ -20,7 +20,7 @@ bitflags! {
         /**
         Hardware slowdown (reducing the core clocks by a factor of 2 or more)
         is engaged.
-        
+
         This is an indicator of:
 
         * Temperature being too high
@@ -33,7 +33,7 @@ bitflags! {
         const HW_SLOWDOWN                 = nvmlClocksThrottleReasonHwSlowdown as u64;
         /**
         This GPU is being throttled by another GPU in its sync boost group.
-        
+
         Sync boost groups can be used to maximize performance per watt. All GPUs
         in a sync boost group will boost to the minimum possible clocks across
         the entire group. Look at the throttle reasons for other GPUs in the
@@ -44,7 +44,7 @@ bitflags! {
         Software thermal slowdown.
 
         This is an indicator of one or more of the following:
-        
+
         * The current GPU temperature is above the max GPU operating temperature
         * The current memory temperature is above the max memory operating temperature
         */

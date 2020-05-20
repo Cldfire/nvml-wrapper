@@ -1,13 +1,10 @@
 use crate::Device;
-use crate::NVML;
 #[cfg(not(feature = "test-local"))]
 use crate::NvLink;
 use crate::Unit;
+use crate::NVML;
 
-use crate::bitmasks::{
-    device::*,
-    event::*
-};
+use crate::bitmasks::{device::*, event::*};
 
 use crate::enum_wrappers::device::*;
 use crate::enums::unit::*;
@@ -15,14 +12,9 @@ use crate::error::*;
 use crate::event::EventSet;
 use std::fmt::Debug;
 
-use crate::struct_wrappers::{
-    *,
-    device::*,
-    event::*,
-    unit::*
-};
 #[cfg(not(feature = "test-local"))]
 use crate::struct_wrappers::nv_link::*;
+use crate::struct_wrappers::{device::*, event::*, unit::*, *};
 
 use crate::structs::device::*;
 #[cfg(not(feature = "test-local"))]

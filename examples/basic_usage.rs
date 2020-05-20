@@ -2,17 +2,17 @@ extern crate nvml_wrapper as nvml;
 // This is just used to pretty-print bytes.
 extern crate pretty_bytes;
 
-use crate::nvml::{NVML, cuda_driver_version_major, cuda_driver_version_minor};
+use crate::nvml::{cuda_driver_version_major, cuda_driver_version_minor, NVML};
 // You would probably want your own error setup in your own code; here we just
 // use the wrapper's error types.
+use crate::nvml::enum_wrappers::device::{Clock, TemperatureSensor};
 use crate::nvml::error::*;
-use crate::nvml::enum_wrappers::device::{TemperatureSensor, Clock};
 use pretty_bytes::converter::convert;
 
 fn main() {
     match actual_main() {
-        Ok(()) => {},
-        Err(e) => println!("\n{:?}. \nDescription: {:?}\n", e, e.description())
+        Ok(()) => {}
+        Err(e) => println!("\n{:?}. \nDescription: {:?}\n", e, e.description()),
     }
 }
 
@@ -47,11 +47,16 @@ fn actual_main() -> Result<()> {
         Right now the device is connected via a PCIe gen {link_gen} x{link_width} \
         interface; the max your hardware supports is PCIe gen {max_link_gen} \
         x{max_link_width}.",
-        name=name, temperature=temperature, graphics_clock=graphics_clock,
-        mem_clock=mem_clock, used_mem=convert(mem_info.used as _),
-        total_mem=convert(mem_info.total as _), link_gen=link_gen,
-        link_width=link_width, max_link_gen=max_link_gen,
-        max_link_width=max_link_width
+        name = name,
+        temperature = temperature,
+        graphics_clock = graphics_clock,
+        mem_clock = mem_clock,
+        used_mem = convert(mem_info.used as _),
+        total_mem = convert(mem_info.total as _),
+        link_gen = link_gen,
+        link_width = link_width,
+        max_link_gen = max_link_gen,
+        max_link_width = max_link_width
     );
 
     if device.is_multi_gpu_board()? {

@@ -1,4 +1,4 @@
-use crate::error::{Result, ErrorKind, Error};
+use crate::error::{Error, ErrorKind, Result};
 use crate::ffi::bindings::*;
 
 /// API types that allow changes to default permission restrictions.
@@ -9,8 +9,8 @@ use crate::ffi::bindings::*;
 pub enum Api {
     /**
     APIs that change application clocks.
-    
-    Applicable methods on `Device`: `.set_applications_clocks()`, 
+
+    Applicable methods on `Device`: `.set_applications_clocks()`,
     `.reset_applications_clocks()`
     */
     #[wrap(c_variant = "NVML_RESTRICTED_API_SET_APPLICATION_CLOCKS")]
@@ -19,7 +19,7 @@ pub enum Api {
     ///
     /// Applicable methods on `Device`: `.set_auto_boosted_clocks()`
     #[wrap(c_variant = "NVML_RESTRICTED_API_SET_AUTO_BOOSTED_CLOCKS")]
-    AutoBoostedClocks
+    AutoBoostedClocks,
 }
 
 /// Clock types. All speeds are in MHz.
@@ -41,7 +41,7 @@ pub enum Clock {
     Memory,
     /// Video encoder/decoder clock domain.
     #[wrap(c_variant = "NVML_CLOCK_VIDEO")]
-    Video
+    Video,
 }
 
 /// These are used in combo with `Clock` to specify a single clock value.
@@ -61,7 +61,7 @@ pub enum ClockId {
     DefaultAppClock,
     /// OEM-defined maximum clock rate.
     #[wrap(c_variant = "NVML_CLOCK_ID_CUSTOMER_BOOST_MAX")]
-    CustomerMaxBoost
+    CustomerMaxBoost,
 }
 
 /// GPU brand.
@@ -89,7 +89,7 @@ pub enum Brand {
     GeForce,
     /// Targeted at... people who don't quite need quadros?
     #[wrap(c_variant = "NVML_BRAND_TITAN")]
-    Titan
+    Titan,
 }
 
 /**
@@ -106,7 +106,7 @@ pub enum BridgeChip {
     #[wrap(c_variant = "NVML_BRIDGE_CHIP_PLX")]
     PLX,
     #[wrap(c_variant = "NVML_BRIDGE_CHIP_BRO4")]
-    BRO4
+    BRO4,
 }
 
 /// Memory error types.
@@ -117,7 +117,7 @@ pub enum BridgeChip {
 pub enum MemoryError {
     /**
     A memory error that was corrected.
-    
+
     ECC error: single bit error.
     Texture memory: error fixed by a resend.
     */
@@ -125,12 +125,12 @@ pub enum MemoryError {
     Corrected,
     /**
     A memory error that was not corrected.
-    
+
     ECC error: double bit error.
     Texture memory: error occurred and resend failed.
     */
     #[wrap(c_variant = "NVML_MEMORY_ERROR_TYPE_UNCORRECTED")]
-    Uncorrected
+    Uncorrected,
 }
 
 /**
@@ -153,7 +153,7 @@ pub enum EccCounter {
     /// Aggregate counts persist across reboots (i.e. for the lifetime of the
     /// device).
     #[wrap(c_variant = "NVML_AGGREGATE_ECC")]
-    Aggregate
+    Aggregate,
 }
 
 /// Memory locations. See `Device.memory_error_counter()`.
@@ -184,7 +184,7 @@ pub enum MemoryLocation {
     Cbu,
     /// SRAM present on Turing and above.
     #[wrap(c_variant = "NVML_MEMORY_LOCATION_SRAM")]
-    SRAM
+    SRAM,
 }
 
 /// Driver models, Windows only.
@@ -199,7 +199,7 @@ pub enum DriverModel {
     WDDM,
     /// (TCC model) GPU treated as a generic device (recommended).
     #[wrap(c_variant = "NVML_DRIVER_WDM")]
-    WDM
+    WDM,
 }
 
 /**
@@ -222,7 +222,7 @@ pub enum OperationMode {
     /// Designed for running graphics applications that don't require high
     /// bandwidth double precision.
     #[wrap(c_variant = "NVML_GOM_LOW_DP")]
-    LowDP
+    LowDP,
 }
 
 /// Available infoROM objects.
@@ -239,7 +239,7 @@ pub enum InfoRom {
     ECC,
     /// The power management object.
     #[wrap(c_variant = "NVML_INFOROM_POWER")]
-    Power
+    Power,
 }
 
 /// Represents the queryable PCIe utilization counters (in bytes). 1KB
@@ -252,7 +252,7 @@ pub enum PcieUtilCounter {
     #[wrap(c_variant = "NVML_PCIE_UTIL_TX_BYTES")]
     Send,
     #[wrap(c_variant = "NVML_PCIE_UTIL_RX_BYTES")]
-    Receive
+    Receive,
 }
 
 /**
@@ -306,7 +306,7 @@ pub enum PerformanceState {
     Fifteen,
     /// Unknown performance state.
     #[wrap(c_variant = "NVML_PSTATE_UNKNOWN")]
-    Unknown
+    Unknown,
 }
 
 /// Causes for page retirement.
@@ -320,7 +320,7 @@ pub enum RetirementCause {
     MultipleSingleBitEccErrors,
     /// Page was retired due to a single double bit ECC error.
     #[wrap(c_variant = "NVML_PAGE_RETIREMENT_CAUSE_DOUBLE_BIT_ECC_ERROR")]
-    DoubleBitEccError
+    DoubleBitEccError,
 }
 
 /// Possible types of sampling events.
@@ -351,7 +351,7 @@ pub enum Sampling {
     ProcessorClock,
     /// Memory clock samples.
     #[wrap(c_variant = "NVML_MEMORY_CLK_SAMPLES")]
-    MemoryClock
+    MemoryClock,
 }
 
 // Checked against local
@@ -361,7 +361,7 @@ pub enum Sampling {
 pub enum TemperatureSensor {
     /// Sensor for the GPU die.
     #[wrap(c_variant = "NVML_TEMPERATURE_GPU")]
-    Gpu
+    Gpu,
 }
 
 // Checked against local
@@ -380,7 +380,7 @@ pub enum TemperatureThreshold {
     MemoryMax,
     /// GPU temperature at which the GPU can be throttled below the base clock.
     #[wrap(c_variant = "NVML_TEMPERATURE_THRESHOLD_GPU_MAX")]
-    GpuMax
+    GpuMax,
 }
 
 /// Level relationships within a system between two GPUs.
@@ -404,14 +404,14 @@ pub enum TopologyLevel {
     /**
     All devices that are connected to the same NUMA node but possibly
     multiple host bridges.
-    
+
     This was `Cpu` in previous versions of NVML.
     */
     #[wrap(c_variant = "NVML_TOPOLOGY_NODE")]
     Node,
     /// All devices in the system
     #[wrap(c_variant = "NVML_TOPOLOGY_SYSTEM")]
-    System
+    System,
 }
 
 /// Types of performance policy for which violation times can be queried.
@@ -439,7 +439,7 @@ pub enum PerformancePolicy {
     TotalAppClocks,
     /// Total time the GPU was held below base clocks.
     #[wrap(c_variant = "NVML_PERF_POLICY_TOTAL_BASE_CLOCKS")]
-    TotalBaseClocks
+    TotalBaseClocks,
 }
 
 /// `ExclusiveProcess` was added in CUDA 4.0. Earlier CUDA versions supported a
@@ -464,7 +464,7 @@ pub enum ComputeMode {
     Prohibited,
     /// Only one context per device, usable from multiple threads at a time.
     #[wrap(c_variant = "NVML_COMPUTEMODE_EXCLUSIVE_PROCESS")]
-    ExclusiveProcess
+    ExclusiveProcess,
 }
 
 /// P2P capability index status.
@@ -486,7 +486,7 @@ pub enum P2pStatus {
     #[wrap(c_variant = "NVML_P2P_STATUS_NOT_SUPPORTED")]
     NotSupported,
     #[wrap(c_variant = "NVML_P2P_STATUS_UNKNOWN")]
-    Unknown
+    Unknown,
 }
 
 // Checked against local
@@ -505,7 +505,7 @@ pub enum P2pCapabilitiesIndex {
     #[wrap(c_variant = "NVML_P2P_CAPS_INDEX_PROP")]
     Prop,
     #[wrap(c_variant = "NVML_P2P_CAPS_INDEX_UNKNOWN")]
-    Unknown
+    Unknown,
 }
 
 /// Represents types for returned sample values.
@@ -523,7 +523,7 @@ pub enum SampleValueType {
     #[wrap(c_variant = "NVML_VALUE_TYPE_UNSIGNED_LONG_LONG")]
     UnsignedLongLong,
     #[wrap(c_variant = "NVML_VALUE_TYPE_SIGNED_LONG_LONG")]
-    SignedLongLong
+    SignedLongLong,
 }
 
 /// Represents encoder types that capacity can be queried for.
@@ -534,7 +534,7 @@ pub enum EncoderType {
     #[wrap(c_variant = "NVML_ENCODER_QUERY_H264")]
     H264,
     #[wrap(c_variant = "NVML_ENCODER_QUERY_HEVC")]
-    HEVC
+    HEVC,
 }
 
 /// The type of a frame buffer capture session
@@ -553,7 +553,7 @@ pub enum FbcSessionType {
     #[wrap(c_variant = "NVML_FBC_SESSION_TYPE_VID")]
     Vid,
     #[wrap(c_variant = "NVML_FBC_SESSION_TYPE_HWENC")]
-    HwEnc
+    HwEnc,
 }
 
 /// Options to pass to Device.remove()
@@ -564,7 +564,7 @@ pub enum DetachGpuState {
     #[wrap(c_variant = "NVML_DETACH_GPU_KEEP")]
     Keep,
     #[wrap(c_variant = "NVML_DETACH_GPU_REMOVE")]
-    Remove
+    Remove,
 }
 
 /// Options to pass to Device.remove()
@@ -575,5 +575,5 @@ pub enum PcieLinkState {
     #[wrap(c_variant = "NVML_PCIE_LINK_KEEP")]
     Keep,
     #[wrap(c_variant = "NVML_PCIE_LINK_SHUT_DOWN")]
-    ShutDown
+    ShutDown,
 }

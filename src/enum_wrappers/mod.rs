@@ -1,8 +1,8 @@
-use crate::error::{Result, ErrorKind, Error};
+use crate::error::{Error, ErrorKind, Result};
 use crate::ffi::bindings::*;
 
-pub mod nv_link;
 pub mod device;
+pub mod nv_link;
 pub mod unit;
 
 pub fn bool_from_state(state: nvmlEnableState_t) -> Result<bool> {

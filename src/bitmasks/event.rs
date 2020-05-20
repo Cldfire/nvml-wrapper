@@ -3,7 +3,7 @@ use crate::ffi::bindings::*;
 bitflags! {
     /**
     Event types that you can request to be notified about.
-    
+
     Types can be combined with the Bitwise Or operator `|` when passed to
     `Device.register_events()`.
     */
@@ -18,7 +18,7 @@ bitflags! {
         const DOUBLE_BIT_ECC_ERROR  = nvmlEventTypeDoubleBitEccError as u64;
         /**
         Power state change event.
-        
+
         On the Fermi architecture, a PState change is an indicator that the GPU
         is throttling down due to no work being executed on the GPU, power
         capping, or thermal capping. In a typical situation, Fermi-based

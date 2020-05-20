@@ -1,9 +1,9 @@
-use crate::enum_wrappers::device::{BridgeChip, SampleValueType, EncoderType, FbcSessionType};
-use crate::enums::device::{UsedGpuMemory, SampleValue, FirmwareVersion};
 use crate::bitmasks::device::FbcFlags;
-use crate::structs::device::FieldId;
-use crate::error::{Result, Error, ErrorKind, nvml_try, Bits};
+use crate::enum_wrappers::device::{BridgeChip, EncoderType, FbcSessionType, SampleValueType};
+use crate::enums::device::{FirmwareVersion, SampleValue, UsedGpuMemory};
+use crate::error::{nvml_try, Bits, Error, ErrorKind, Result};
 use crate::ffi::bindings::*;
+use crate::structs::device::FieldId;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
@@ -25,14 +25,14 @@ pub struct PciInfo {
     pub pci_device_id: u32,
     /**
     The 32-bit Sub System Device ID.
-    
+
     Will always be `None` if this `PciInfo` was obtained from `NvLink.remote_pci_info()`.
     NVIDIA says that the C field that this corresponds to "is not filled ... and
     is indeterminate" when being returned from that specific call.
 
     Will be `Some` in all other cases.
     */
-    pub pci_sub_system_id: Option<u32>
+    pub pci_sub_system_id: Option<u32>,
 }
 
 impl PciInfo {
@@ -46,11 +46,7 @@ impl PciInfo {
 
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     */
-    pub fn try_from(
-        struct_: nvmlPciInfo_t,
-        sub_sys_id_present: bool
-    ) -> Result<Self> {
-
+    pub fn try_from(struct_: nvmlPciInfo_t, sub_sys_id_present: bool) -> Result<Self> {
         unsafe {
             let bus_id_raw = CStr::from_ptr(struct_.busId.as_ptr());
 
@@ -64,7 +60,7 @@ impl PciInfo {
                     Some(struct_.pciSubSystemId)
                 } else {
                     None
-                }
+                },
             })
         }
     }
@@ -99,12 +95,7 @@ impl PciInfo {
             }
         }
 
-        bus_id_c.clone_from_slice(
-            &bus_id
-                .into_iter()
-                .map(|b| b as c_char)
-                .collect::<Vec<_>>()
-        );
+        bus_id_c.clone_from_slice(&bus_id.into_iter().map(|b| b as c_char).collect::<Vec<_>>());
 
         Ok(nvmlPciInfo_t {
             busIdLegacy: [0; NVML_DEVICE_PCI_BUS_ID_BUFFER_V2_SIZE as usize],
@@ -115,7 +106,7 @@ impl PciInfo {
             // This seems the most correct thing to do? Since this should only
             // be none if obtained from `NvLink.remote_pci_info()`.
             pciSubSystemId: self.pci_sub_system_id.unwrap_or(0),
-            busId: bus_id_c
+            busId: bus_id_c,
         })
     }
 }
@@ -130,7 +121,7 @@ pub struct BAR1MemoryInfo {
     /// Total memory
     pub total: u64,
     /// Allocated
-    pub used: u64
+    pub used: u64,
 }
 
 impl From<nvmlBAR1Memory_t> for BAR1MemoryInfo {
@@ -138,7 +129,7 @@ impl From<nvmlBAR1Memory_t> for BAR1MemoryInfo {
         Self {
             free: struct_.bar1Free,
             total: struct_.bar1Total,
-            used: struct_.bar1Used
+            used: struct_.bar1Used,
         }
     }
 }
@@ -149,7 +140,7 @@ impl From<nvmlBAR1Memory_t> for BAR1MemoryInfo {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct BridgeChipInfo {
     pub fw_version: FirmwareVersion,
-    pub chip_type: BridgeChip
+    pub chip_type: BridgeChip,
 }
 
 impl BridgeChipInfo {
@@ -166,15 +157,15 @@ impl BridgeChipInfo {
 
         Ok(Self {
             fw_version,
-            chip_type
+            chip_type,
         })
     }
 }
 
 /**
-This struct stores the complete hierarchy of the bridge chip within the board. 
+This struct stores the complete hierarchy of the bridge chip within the board.
 
-The immediate bridge is stored at index 0 of `chips_hierarchy`. The parent to 
+The immediate bridge is stored at index 0 of `chips_hierarchy`. The parent to
 the immediate bridge is at index 1, and so forth.
 */
 // Checked against local
@@ -184,7 +175,7 @@ pub struct BridgeChipHierarchy {
     /// Hierarchy of bridge chips on the board.
     pub chips_hierarchy: Vec<BridgeChipInfo>,
     /// Number of bridge chips on the board.
-    pub chip_count: u8
+    pub chip_count: u8,
 }
 
 impl BridgeChipHierarchy {
@@ -192,7 +183,7 @@ impl BridgeChipHierarchy {
     Construct `BridgeChipHierarchy` from the corresponding C struct.
 
     # Errors
-    
+
     * `UnexpectedVariant`, for which you can read the docs for
     */
     pub fn try_from(struct_: nvmlBridgeChipHierarchy_t) -> Result<Self> {
@@ -204,7 +195,7 @@ impl BridgeChipHierarchy {
 
         Ok(Self {
             chips_hierarchy,
-            chip_count: struct_.bridgeCount
+            chip_count: struct_.bridgeCount,
         })
     }
 }
@@ -217,14 +208,14 @@ pub struct ProcessInfo {
     // Process ID.
     pub pid: u32,
     /// Amount of used GPU memory in bytes.
-    pub used_gpu_memory: UsedGpuMemory
+    pub used_gpu_memory: UsedGpuMemory,
 }
 
 impl From<nvmlProcessInfo_t> for ProcessInfo {
     fn from(struct_: nvmlProcessInfo_t) -> Self {
         Self {
             pid: struct_.pid,
-            used_gpu_memory: UsedGpuMemory::from(struct_.usedGpuMemory)
+            used_gpu_memory: UsedGpuMemory::from(struct_.usedGpuMemory),
         }
     }
 }
@@ -237,7 +228,7 @@ pub struct EccErrorCounts {
     pub device_memory: u64,
     pub l1_cache: u64,
     pub l2_cache: u64,
-    pub register_file: u64
+    pub register_file: u64,
 }
 
 impl From<nvmlEccErrorCounts_t> for EccErrorCounts {
@@ -246,7 +237,7 @@ impl From<nvmlEccErrorCounts_t> for EccErrorCounts {
             device_memory: struct_.deviceMemory,
             l1_cache: struct_.l1Cache,
             l2_cache: struct_.l2Cache,
-            register_file: struct_.registerFile
+            register_file: struct_.registerFile,
         }
     }
 }
@@ -264,7 +255,7 @@ pub struct MemoryInfo {
     ///
     /// Note that the driver/GPU always sets aside a small amount of memory for
     /// bookkeeping.
-    pub used: u64
+    pub used: u64,
 }
 
 impl From<nvmlMemory_t> for MemoryInfo {
@@ -272,7 +263,7 @@ impl From<nvmlMemory_t> for MemoryInfo {
         Self {
             free: struct_.free,
             total: struct_.total,
-            used: struct_.used
+            used: struct_.used,
         }
     }
 }
@@ -288,14 +279,14 @@ pub struct Utilization {
     pub gpu: u32,
     /// Percent of time over the past sample period during which global (device)
     /// memory was being read or written to.
-    pub memory: u32
+    pub memory: u32,
 }
 
 impl From<nvmlUtilization_t> for Utilization {
     fn from(struct_: nvmlUtilization_t) -> Self {
         Self {
             gpu: struct_.gpu,
-            memory: struct_.memory
+            memory: struct_.memory,
         }
     }
 }
@@ -308,14 +299,14 @@ pub struct ViolationTime {
     /// Represents CPU timestamp in microseconds.
     pub reference_time: u64,
     /// Violation time in nanoseconds.
-    pub violation_time: u64
+    pub violation_time: u64,
 }
 
 impl From<nvmlViolationTime_t> for ViolationTime {
     fn from(struct_: nvmlViolationTime_t) -> Self {
         Self {
             reference_time: struct_.referenceTime,
-            violation_time: struct_.violationTime
+            violation_time: struct_.violationTime,
         }
     }
 }
@@ -335,8 +326,8 @@ pub struct AccountingStats {
     Percent of time over the process's lifetime during which one or more kernels was
     executing on the GPU. This is just like what is returned by
     `Device.utilization_rates()` except it is for the lifetime of a process (not just
-    the last sample period). 
-    
+    the last sample period).
+
     It will be `None` if `Device.utilization_rates()` is not supported.
     */
     pub gpu_utilization: Option<u32>,
@@ -349,7 +340,7 @@ pub struct AccountingStats {
     /**
     Percent of time over the process's lifetime during which global (device) memory
     was being read from or written to.
-    
+
     It will be `None` if `Device.utilization_rates()` is not supported.
     */
     pub memory_utilization: Option<u32>,
@@ -357,7 +348,7 @@ pub struct AccountingStats {
     pub start_time: u64,
     /// Amount of time in ms during which the compute context was active. This
     /// will be zero if the process is not terminated.
-    pub time: u64
+    pub time: u64,
 }
 
 impl From<nvmlAccountingStats_t> for AccountingStats {
@@ -385,7 +376,7 @@ impl From<nvmlAccountingStats_t> for AccountingStats {
                 _ => Some(struct_.memoryUtilization),
             },
             start_time: struct_.startTime,
-            time: struct_.time
+            time: struct_.time,
         }
     }
 }
@@ -409,7 +400,7 @@ pub struct EncoderSessionInfo {
     /// Moving average encode frames per second.
     pub average_fps: u32,
     /// Moving average encode latency in μs.
-    pub average_latency: u32
+    pub average_latency: u32,
 }
 
 impl EncoderSessionInfo {
@@ -417,7 +408,7 @@ impl EncoderSessionInfo {
     Waiting on `TryFrom` to be stable.
 
     # Errors
-    
+
     * `UnexpectedVariant`, for which you can read the docs for
     */
     pub fn try_from(struct_: nvmlEncoderSessionInfo_t) -> Result<Self> {
@@ -426,13 +417,13 @@ impl EncoderSessionInfo {
             pid: struct_.pid,
             vgpu_instance: match struct_.vgpuInstance {
                 0 => None,
-                other => Some(other)
+                other => Some(other),
             },
             codec_type: EncoderType::try_from(struct_.codecType)?,
             hres: struct_.hResolution,
             vres: struct_.vResolution,
             average_fps: struct_.averageFps,
-            average_latency: struct_.averageLatency
+            average_latency: struct_.averageLatency,
         })
     }
 }
@@ -444,7 +435,7 @@ impl EncoderSessionInfo {
 pub struct Sample {
     /// CPU timestamp in μs
     pub timestamp: u64,
-    pub value: SampleValue
+    pub value: SampleValue,
 }
 
 impl Sample {
@@ -453,7 +444,7 @@ impl Sample {
     pub fn from_tag_and_struct(tag: &SampleValueType, struct_: nvmlSample_t) -> Self {
         Self {
             timestamp: struct_.timeStamp,
-            value: SampleValue::from_tag_and_union(tag, struct_.sampleValue)
+            value: SampleValue::from_tag_and_union(tag, struct_.sampleValue),
         }
     }
 }
@@ -471,7 +462,7 @@ pub struct ProcessUtilizationSample {
     /// Encoder utilization
     pub enc_util: u32,
     /// Decoder utilization
-    pub dec_util: u32
+    pub dec_util: u32,
 }
 
 impl From<nvmlProcessUtilizationSample_t> for ProcessUtilizationSample {
@@ -482,7 +473,7 @@ impl From<nvmlProcessUtilizationSample_t> for ProcessUtilizationSample {
             sm_util: struct_.smUtil,
             mem_util: struct_.memUtil,
             enc_util: struct_.encUtil,
-            dec_util: struct_.decUtil
+            dec_util: struct_.decUtil,
         }
     }
 }
@@ -497,15 +488,15 @@ pub struct FieldValueSample {
     pub timestamp: i64,
     /**
     How long this field value took to update within NVML, in μs.
-    
+
     This value may be averaged across several fields serviced by the same
     driver call.
     */
     pub latency: i64,
     /// The value of this sample.
-    /// 
+    ///
     /// Will be an error if retrieving this specific value failed.
-    pub value: Result<SampleValue>
+    pub value: Result<SampleValue>,
 }
 
 impl FieldValueSample {
@@ -513,7 +504,7 @@ impl FieldValueSample {
     Waiting on `TryFrom` to be stable.
 
     # Errors
-    
+
     * `UnexpectedVariant`, for which you can read the docs for
     */
     pub fn try_from(struct_: nvmlFieldValue_t) -> Result<Self> {
@@ -523,11 +514,11 @@ impl FieldValueSample {
             latency: struct_.latencyUsec,
             value: match nvml_try(struct_.nvmlReturn) {
                 Ok(_) => Ok(SampleValue::from_tag_and_union(
-                    &SampleValueType::try_from(struct_.valueType)?, 
-                    struct_.value
+                    &SampleValueType::try_from(struct_.valueType)?,
+                    struct_.value,
                 )),
-                Err(e) => Err(e)
-            }
+                Err(e) => Err(e),
+            },
         })
     }
 }
@@ -541,7 +532,7 @@ pub struct FbcStats {
     /// Moving average of new frames captured per second for all capture sessions
     pub average_fps: u32,
     /// Moving average of new frame capture latency in microseconds for all capture sessions
-    pub average_latency: u32
+    pub average_latency: u32,
 }
 
 impl From<nvmlFBCStats_t> for FbcStats {
@@ -549,7 +540,7 @@ impl From<nvmlFBCStats_t> for FbcStats {
         Self {
             sessions_count: struct_.sessionsCount,
             average_fps: struct_.averageFPS,
-            average_latency: struct_.averageLatency
+            average_latency: struct_.averageLatency,
         }
     }
 }
@@ -582,7 +573,7 @@ pub struct FbcSessionInfo {
     /// Moving average of new frames captured per second for this session
     pub average_fps: u32,
     /// Moving average of new frame capture latency in microseconds for this session
-    pub average_latency: u32
+    pub average_latency: u32,
 }
 
 impl FbcSessionInfo {
@@ -590,7 +581,7 @@ impl FbcSessionInfo {
     Waiting on `TryFrom` to be stable.
 
     # Errors
-    
+
     * `UnexpectedVariant`, for which you can read the docs for
     * `IncorrectBits`, if the `sessionFlags` from the given struct do match the
         wrapper definition
@@ -601,20 +592,19 @@ impl FbcSessionInfo {
             pid: struct_.pid,
             vgpu_instance: match struct_.vgpuInstance {
                 0 => None,
-                other => Some(other)
+                other => Some(other),
             },
             display_ordinal: struct_.displayOrdinal,
             session_type: FbcSessionType::try_from(struct_.sessionType)?,
-            session_flags: FbcFlags::from_bits(struct_.sessionFlags)
-                .ok_or_else(|| Error::from(ErrorKind::IncorrectBits(
-                    Bits::U32(struct_.sessionFlags)
-                )))?,
+            session_flags: FbcFlags::from_bits(struct_.sessionFlags).ok_or_else(|| {
+                Error::from(ErrorKind::IncorrectBits(Bits::U32(struct_.sessionFlags)))
+            })?,
             hres_max: struct_.hMaxResolution,
             vres_max: struct_.vMaxResolution,
             hres: struct_.hResolution,
             vres: struct_.vResolution,
             average_fps: struct_.averageFPS,
-            average_latency: struct_.averageLatency
+            average_latency: struct_.averageLatency,
         })
     }
 }
@@ -624,8 +614,8 @@ impl FbcSessionInfo {
 mod tests {
     use crate::error::*;
     use crate::ffi::bindings::*;
-    use std::mem;
     use crate::test_utils::*;
+    use std::mem;
 
     #[test]
     fn pci_info_from_to_c() {

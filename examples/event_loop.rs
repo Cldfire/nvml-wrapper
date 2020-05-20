@@ -21,7 +21,7 @@ fn main() {
 #[cfg(target_os = "linux")]
 mod example {
     use crate::nvml::NVML;
-    // You would probably want your own error setup in your own code; here we just 
+    // You would probably want your own error setup in your own code; here we just
     // use the wrapper's error types.
     use crate::nvml::error::{Error, ErrorKind, Result};
     // Bringing this in allows us to use `NVML.create_event_loop()`
@@ -41,30 +41,34 @@ mod example {
         event_loop.run_forever(|event, state| match event {
             // If there were no errors, extract the event
             Ok(event) => match event {
-                ClockChange(device) => if let Ok(uuid) = device.uuid() { 
-                    println!("ClockChange      event for device with UUID {:?}", uuid);
-                } else {
-                    // Your error-handling strategy here
-                },
+                ClockChange(device) => {
+                    if let Ok(uuid) = device.uuid() {
+                        println!("ClockChange      event for device with UUID {:?}", uuid);
+                    } else {
+                        // Your error-handling strategy here
+                    }
+                }
 
-                PowerStateChange(device) => if let Ok(uuid) = device.uuid() { 
-                    println!("PowerStateChange event for device with UUID {:?}", uuid);
-                } else {
-                    // Your error-handling strategy here
-                },
+                PowerStateChange(device) => {
+                    if let Ok(uuid) = device.uuid() {
+                        println!("PowerStateChange event for device with UUID {:?}", uuid);
+                    } else {
+                        // Your error-handling strategy here
+                    }
+                }
 
-                _ => println!("A different event occurred: {:?}", event)
+                _ => println!("A different event occurred: {:?}", event),
             },
 
             // If there was an error, handle it
             Err(Error(error, _)) => match error {
                 // If the error is `Unknown`, continue looping and hope for the best
-                ErrorKind::Unknown => {},
+                ErrorKind::Unknown => {}
                 // The other errors that can occur are almost guaranteed to mean that
                 // further looping will never be successful (`GpuLost` and
                 // `Uninitialized`), so we stop looping
-                _ => state.interrupt()
-            }
+                _ => state.interrupt(),
+            },
         });
 
         Ok(())

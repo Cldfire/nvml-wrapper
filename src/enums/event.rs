@@ -8,5 +8,5 @@ pub enum XidError {
     /// Contains the value of the error.
     Value(u64),
     /// If the error is unknown.
-    Unknown
+    Unknown,
 }

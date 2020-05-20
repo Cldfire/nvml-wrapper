@@ -14,7 +14,7 @@ NVML supports the following platforms:
 * Windows
   * Windows Server 2008 R2 64-bit
   * Windows Server 2012 R2 64-bit
-  * Windows 7 64-bit 
+  * Windows 7 64-bit
   * Windows 8 64-bit
   * Windows 10 64-bit
 * Linux

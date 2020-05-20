@@ -23,7 +23,7 @@ let memory_info = device.memory_info()?; // Currently 1.63/6.37 GB used on my sy
 # }
 ```
 
-NVML is intended to be a platform for building 3rd-party applications, and is also the 
+NVML is intended to be a platform for building 3rd-party applications, and is also the
 underlying library for NVIDIA's nvidia-smi tool.
 
 It supports the following platforms:
@@ -31,7 +31,7 @@ It supports the following platforms:
 * Windows
   * Windows Server 2008 R2 64-bit
   * Windows Server 2012 R2 64-bit
-  * Windows 7 64-bit 
+  * Windows 7 64-bit
   * Windows 8 64-bit
   * Windows 10 64-bit
 * Linux
@@ -118,24 +118,24 @@ extern crate wrapcenum_derive;
 #[cfg(feature = "serde")]
 #[macro_use]
 extern crate serde;
-extern crate nvml_wrapper_sys as ffi;
 #[cfg(test)]
 #[cfg_attr(test, macro_use)]
 extern crate assert_matches;
+extern crate nvml_wrapper_sys as ffi;
 
-pub mod device;
-pub mod error;
-pub mod unit;
-pub mod structs;
-pub mod struct_wrappers;
-pub mod enums;
-pub mod enum_wrappers;
-pub mod event;
 pub mod bitmasks;
-pub mod nv_link;
+pub mod device;
+pub mod enum_wrappers;
+pub mod enums;
+pub mod error;
+pub mod event;
 pub mod high_level;
+pub mod nv_link;
+pub mod struct_wrappers;
+pub mod structs;
 #[cfg(test)]
 mod test_utils;
+pub mod unit;
 
 // Re-exports for convenience
 pub use crate::device::Device;
@@ -154,25 +154,16 @@ pub mod sys_exports {
 #[cfg(target_os = "linux")]
 use std::ptr;
 use std::{
-    ffi::{
-        CStr,
-        CString
-    },
-    io::{
-        self,
-        Write
-    },
+    ffi::{CStr, CString},
+    io::{self, Write},
     mem,
-    os::raw::{
-        c_int,
-        c_uint
-    }
+    os::raw::{c_int, c_uint},
 };
 
 #[cfg(target_os = "linux")]
 use crate::enum_wrappers::device::TopologyLevel;
 
-use crate::error::{Result, nvml_try};
+use crate::error::{nvml_try, Result};
 use crate::ffi::bindings::*;
 
 use crate::struct_wrappers::BlacklistDeviceInfo;
@@ -204,14 +195,14 @@ According to NVIDIA's documentation, "It is the user's responsibility to call `n
 before calling any other methods, and `nvmlShutdown()` once NVML is no longer being used."
 This struct is used to enforce those rules.
 
-Also according to NVIDIA's documentation, "NVML is thread-safe so it is safe to make 
+Also according to NVIDIA's documentation, "NVML is thread-safe so it is safe to make
 simultaneous NVML calls from multiple threads." In the Rust world, this translates to `NVML`
 being `Send` + `Sync`. You can `.clone()` an `Arc` wrapped `NVML` and enjoy using it on any thread.
 
 NOTE: If you care about possible errors returned from `nvmlShutdown()`, use the `.shutdown()`
 method on this struct. **The `Drop` implementation ignores errors.**
 
-When reading documentation on this struct and its members, remember that a lot of it, 
+When reading documentation on this struct and its members, remember that a lot of it,
 especially in regards to errors returned, is copied from NVIDIA's docs. While they can be found
 online [here](http://docs.nvidia.com/deploy/nvml-api/index.html), the hosted docs are outdated and
 do not accurately reflect the version of NVML that this library is written for; beware. You should
@@ -229,18 +220,18 @@ unsafe impl Sync for NVML {}
 impl NVML {
     /**
     Handles NVML initialization and must be called before doing anything else.
-    
+
     This static function can be called multiple times and multiple NVML structs can be
-    used at the same time. NVIDIA's docs state that "A reference count of the number of 
-    initializations is maintained. Shutdown only occurs when the reference count reaches 
+    used at the same time. NVIDIA's docs state that "A reference count of the number of
+    initializations is maintained. Shutdown only occurs when the reference count reaches
     zero."
-    
+
     In practice, there should be no need to create multiple `NVML` structs; wrap this struct
-    in an `Arc` and go that route. 
-    
+    in an `Arc` and go that route.
+
     Note that this will initialize NVML but not any GPUs. This means that NVML can
     communicate with a GPU even when other GPUs in a system are bad or unstable.
-    
+
     # Errors
 
     * `DriverNotLoaded`, if the NVIDIA driver is not running
@@ -293,7 +284,7 @@ impl NVML {
     /**
     Use this to shutdown NVML and release allocated resources if you care about handling
     potential errors (*the `Drop` implementation ignores errors!*).
-    
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
@@ -313,9 +304,9 @@ impl NVML {
 
     /**
     Get the number of compute devices in the system (compute device == one GPU).
-    
+
     Note that this may return devices you do not have permission to access.
-    
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
@@ -334,8 +325,8 @@ impl NVML {
 
     /**
     Gets the version of the system's graphics driver and returns it as an alphanumeric
-    string. 
-    
+    string.
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
@@ -349,7 +340,7 @@ impl NVML {
 
             nvml_try(nvmlSystemGetDriverVersion(
                 version_vec.as_mut_ptr(),
-                NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE
+                NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE,
             ))?;
 
             let version_raw = CStr::from_ptr(version_vec.as_ptr());
@@ -359,8 +350,8 @@ impl NVML {
 
     /**
     Gets the version of the system's NVML library and returns it as an alphanumeric
-    string. 
-    
+    string.
+
     # Errors
 
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
@@ -373,7 +364,7 @@ impl NVML {
 
             nvml_try(nvmlSystemGetNVMLVersion(
                 version_vec.as_mut_ptr(),
-                NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE
+                NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE,
             ))?;
 
             // Thanks to `Amaranth` on IRC for help with this
@@ -384,7 +375,7 @@ impl NVML {
 
     /**
     Gets the version of the system's CUDA driver.
-    
+
     Calls into the CUDA library (cuDriverGetVersion()).
 
     You can use `cuda_driver_version_major` and `cuda_driver_version_minor`
@@ -406,7 +397,7 @@ impl NVML {
 
     /**
     Gets the name of the process for the given process ID, cropped to the provided length.
-    
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
@@ -414,7 +405,7 @@ impl NVML {
     * `NotFound`, if the process does not exist
     * `NoPermission`, if the user doesn't have permission to perform the operation
     * `Utf8Error`, if the string obtained from the C function is not valid UTF-8. NVIDIA's docs say
-    that the string encoding is ANSI, so this may very well happen. 
+    that the string encoding is ANSI, so this may very well happen.
     * `Unknown`, on any unexpected error
     */
     // TODO: The docs say the string is ANSI-encoded. Not sure if I should try
@@ -428,7 +419,7 @@ impl NVML {
             nvml_try(nvmlSystemGetProcessName(
                 pid,
                 name_vec.as_mut_ptr(),
-                length as c_uint
+                length as c_uint,
             ))?;
 
             let name_raw = CStr::from_ptr(name_vec.as_ptr());
@@ -438,23 +429,23 @@ impl NVML {
 
     /**
     Acquire the handle for a particular device based on its index (starts at 0).
-    
+
     Usage of this function causes NVML to initialize the target GPU. Additional
-    GPUs may be initialized if the target GPU is an SLI slave. 
-    
+    GPUs may be initialized if the target GPU is an SLI slave.
+
     You can determine valid indices by using `.device_count()`. This
     function doesn't call that for you, but the actual C function to get
     the device handle will return an error in the case of an invalid index.
-    This means that the `InvalidArg` error will be returned if you pass in 
+    This means that the `InvalidArg` error will be returned if you pass in
     an invalid index.
-    
-    NVIDIA's docs state that "The order in which NVML enumerates devices has 
-    no guarantees of consistency between reboots. For that reason it is recommended 
+
+    NVIDIA's docs state that "The order in which NVML enumerates devices has
+    no guarantees of consistency between reboots. For that reason it is recommended
     that devices be looked up by their PCI ids or UUID." In this library, that translates
     into usage of `.device_by_uuid()` and `.device_by_pci_bus_id()`.
-    
+
     The NVML index may not correlate with other APIs such as the CUDA device index.
-    
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
@@ -478,12 +469,12 @@ impl NVML {
 
     /**
     Acquire the handle for a particular device based on its PCI bus ID.
-    
+
     Usage of this function causes NVML to initialize the target GPU. Additional
     GPUs may be initialized if the target GPU is an SLI slave.
-    
+
     The bus ID corresponds to the `bus_id` returned by `Device.pci_info()`.
-    
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
@@ -508,7 +499,7 @@ impl NVML {
 
             nvml_try(nvmlDeviceGetHandleByPciBusId_v2(
                 c_string.as_ptr(),
-                &mut device
+                &mut device,
             ))?;
 
             Ok(device.into())
@@ -536,10 +527,10 @@ impl NVML {
     /**
     Acquire the handle for a particular device based on its globally unique immutable
     UUID.
-    
+
     Usage of this function causes NVML to initialize the target GPU. Additional
     GPUs may be initialized as the function called within searches for the target GPU.
-    
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
@@ -550,7 +541,7 @@ impl NVML {
     * `GpuLost`, if the target GPU has fallen off the bus or is otherwise inaccessible
     * `NulError`, for which you can read the docs on `std::ffi::NulError`
     * `Unknown`, on any unexpected error
-    
+
     NVIDIA doesn't mention `NoPermission` for this one. Strange!
     */
     // Checked against local
@@ -571,16 +562,16 @@ impl NVML {
 
     /**
     Gets the common ancestor for two devices.
-    
+
     Note: this is the same as `Device.topology_common_ancestor()`.
-    
+
     # Errors
 
     * `InvalidArg`, if the device is invalid
     * `NotSupported`, if this `Device` or the OS does not support this feature
     * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
-    
+
     # Platform Support
 
     Only supports Linux.
@@ -599,7 +590,7 @@ impl NVML {
             nvml_try(nvmlDeviceGetTopologyCommonAncestor(
                 device1.handle(),
                 device2.handle(),
-                &mut level
+                &mut level,
             ))?;
 
             Ok(TopologyLevel::try_from(level)?)
@@ -608,20 +599,20 @@ impl NVML {
 
     /**
     Acquire the handle for a particular `Unit` based on its index.
-    
+
     Valid indices are derived from the count returned by `.unit_count()`.
     For example, if `unit_count` is 2 the valid indices are 0 and 1, corresponding
     to UNIT 0 and UNIT 1.
-    
+
     Note that the order in which NVML enumerates units has no guarantees of
     consistency between reboots.
-    
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if `index` is invalid
     * `Unknown`, on any unexpected error
-    
+
     # Device Support
 
     For S-class products.
@@ -639,9 +630,9 @@ impl NVML {
 
     /**
     Checks if the passed-in `Device`s are on the same physical board.
-    
+
     Note: this is the same as `Device.is_on_same_board_as()`.
-    
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
@@ -659,7 +650,7 @@ impl NVML {
             nvml_try(nvmlDeviceOnSameBoard(
                 device1.handle(),
                 device2.handle(),
-                &mut bool_int
+                &mut bool_int,
             ))?;
 
             match bool_int {
@@ -671,13 +662,13 @@ impl NVML {
 
     /**
     Gets the set of GPUs that have a CPU affinity with the given CPU number.
-    
+
     # Errors
 
     * `InvalidArg`, if `cpu_number` is invalid
     * `NotSupported`, if this `Device` or the OS does not support this feature
     * `Unknown`, an error has occurred in the underlying topology discovery
-    
+
     # Platform Support
 
     Only supports Linux.
@@ -695,7 +686,7 @@ impl NVML {
             nvml_try(nvmlSystemGetTopologyGpuSet(
                 cpu_number,
                 &mut count,
-                devices.as_mut_ptr()
+                devices.as_mut_ptr(),
             ))?;
 
             Ok(devices.into_iter().map(Device::from).collect())
@@ -713,7 +704,7 @@ impl NVML {
             nvml_try(nvmlSystemGetTopologyGpuSet(
                 cpu_number,
                 &mut count,
-                ptr::null_mut()
+                ptr::null_mut(),
             ))?;
 
             Ok(count)
@@ -742,7 +733,7 @@ impl NVML {
             let mut hics: Vec<nvmlHwbcEntry_t> = vec![mem::zeroed(); count as usize];
 
             nvml_try(nvmlSystemGetHicVersion(&mut count, hics.as_mut_ptr()))?;
-            
+
             hics.into_iter().map(HwbcEntry::try_from).collect()
         }
     }
@@ -764,7 +755,7 @@ impl NVML {
             /*
             NVIDIA doesn't even say that `count` will be set to the count if
             `InsufficientSize` is returned. But we can assume sanity, right?
-            
+
             The idea here is:
             If there are 0 HICs, NVML_SUCCESS is returned, `count` is set
               to 0. We return count, all good.
@@ -778,8 +769,9 @@ impl NVML {
             let mut hics: [nvmlHwbcEntry_t; 1] = [mem::zeroed()];
 
             match nvmlSystemGetHicVersion(&mut count, hics.as_mut_ptr()) {
-                nvmlReturn_enum_NVML_SUCCESS |
-                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
+                nvmlReturn_enum_NVML_SUCCESS | nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => {
+                    Ok(count)
+                }
                 // We know that this will be an error
                 other => nvml_try(other).map(|_| 0),
             }
@@ -788,12 +780,12 @@ impl NVML {
 
     /**
     Gets the number of units in the system.
-    
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
     * `Unknown`, on any unexpected error
-    
+
     # Device Support
 
     Supports S-class products.
@@ -811,12 +803,12 @@ impl NVML {
 
     /**
     Create an empty set of events.
-    
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
     * `Unknown`, on any unexpected error
-    
+
     # Device Support
 
     Supports Fermi and newer fully supported devices.
@@ -835,22 +827,22 @@ impl NVML {
     /**
     Request the OS and the NVIDIA kernel driver to rediscover a portion of the PCI
     subsystem in search of GPUs that were previously removed.
-    
+
     The portion of the PCI tree can be narrowed by specifying a domain, bus, and
     device in the passed-in `pci_info`. **If all of these fields are zeroes, the
     entire PCI tree will be searched.** Note that for long-running NVML processes,
     the enumeration of devices will change based on how many GPUs are discovered
     and where they are inserted in bus order.
-    
+
     All newly discovered GPUs will be initialized and have their ECC scrubbed which
     may take several seconds per GPU. **All device handles are no longer guaranteed
     to be valid post discovery**. I am not sure if this means **all** device
     handles, literally, or if NVIDIA is referring to handles that had previously
     been obtained to devices that were then removed and have now been
     re-discovered.
-    
+
     Must be run as administrator.
-    
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
@@ -860,15 +852,15 @@ impl NVML {
     * `NulError`, if an issue is encountered when trying to convert a Rust
     `String` into a `CString`.
     * `Unknown`, on any unexpected error
-    
+
     # Device Support
 
     Supports Pascal and newer fully supported devices.
-    
+
     Some Kepler devices are also supported (that's all NVIDIA says, no specifics).
-    
+
     # Platform Support
-    
+
     Only supports Linux.
     */
     // TODO: constructor for default pci_infos ^
@@ -932,9 +924,10 @@ impl Drop for NVML {
                             "WARNING: Error returned by `nmvlShutdown()` in Drop implementation: \
                              {:?}",
                             e
-                        ).as_bytes()
+                        )
+                        .as_bytes(),
                     );
-                },
+                }
             }
         }
     }
@@ -989,12 +982,16 @@ mod test {
 
     #[test]
     fn sys_cuda_driver_version_major() {
-        test(3, || Ok(cuda_driver_version_major(nvml().sys_cuda_driver_version()?)))
+        test(3, || {
+            Ok(cuda_driver_version_major(nvml().sys_cuda_driver_version()?))
+        })
     }
 
     #[test]
     fn sys_cuda_driver_version_minor() {
-        test(3, || Ok(cuda_driver_version_minor(nvml().sys_cuda_driver_version()?)))
+        test(3, || {
+            Ok(cuda_driver_version_minor(nvml().sys_cuda_driver_version()?))
+        })
     }
 
     #[test]
@@ -1004,7 +1001,7 @@ mod test {
             let processes = device.running_graphics_processes()?;
             match nvml.sys_process_name(processes[0].pid, 64) {
                 Err(Error(ErrorKind::NoPermission, _)) => Ok("No permission error".into()),
-                v => v
+                v => v,
             }
         })
     }
@@ -1055,7 +1052,8 @@ mod test {
         let device1 = device(&nvml);
         let device2 = nvml.device_by_index(1).expect("device");
 
-        nvml.topology_common_ancestor(&device1, &device2).expect("TopologyLevel");
+        nvml.topology_common_ancestor(&device1, &device2)
+            .expect("TopologyLevel");
     }
 
     // Errors on my machine
@@ -1080,7 +1078,8 @@ mod test {
         let device1 = device(&nvml);
         let device2 = nvml.device_by_index(1).expect("device");
 
-        nvml.are_devices_on_same_board(&device1, &device2).expect("bool");
+        nvml.are_devices_on_same_board(&device1, &device2)
+            .expect("bool");
     }
 
     #[cfg(target_os = "linux")]

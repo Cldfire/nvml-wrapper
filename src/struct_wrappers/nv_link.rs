@@ -9,7 +9,7 @@ use crate::ffi::bindings::*;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UtilizationControl {
     pub units: UtilizationCountUnit,
-    pub packet_filter: PacketTypes
+    pub packet_filter: PacketTypes,
 }
 
 impl UtilizationControl {
@@ -29,7 +29,7 @@ impl UtilizationControl {
 
         Ok(UtilizationControl {
             units: UtilizationCountUnit::try_from(struct_.units)?,
-            packet_filter: PacketTypes::from_bits_truncate(bits)
+            packet_filter: PacketTypes::from_bits_truncate(bits),
         })
     }
 
@@ -37,7 +37,7 @@ impl UtilizationControl {
     pub fn as_c(&self) -> nvmlNvLinkUtilizationControl_t {
         nvmlNvLinkUtilizationControl_t {
             units: self.units.as_c(),
-            pktfilter: self.packet_filter.bits() as i32
+            pktfilter: self.packet_filter.bits() as i32,
         }
     }
 }

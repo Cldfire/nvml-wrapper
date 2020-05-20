@@ -2,11 +2,8 @@ use crate::Device;
 
 use crate::enum_wrappers::{
     bool_from_state,
+    nv_link::{Capability, ErrorCounter},
     state_from_bool,
-    nv_link::{
-        ErrorCounter,
-        Capability
-    }
 };
 
 use crate::enums::nv_link::Counter;
@@ -15,20 +12,10 @@ use crate::ffi::bindings::*;
 
 use std::{
     mem,
-    os::raw::{
-        c_uint,
-        c_ulonglong
-    }
+    os::raw::{c_uint, c_ulonglong},
 };
 
-use crate::struct_wrappers::{
-    device::{
-        PciInfo
-    },
-    nv_link::{
-        UtilizationControl
-    }
-};
+use crate::struct_wrappers::{device::PciInfo, nv_link::UtilizationControl};
 
 use crate::structs::nv_link::UtilizationCounter;
 
@@ -47,7 +34,7 @@ such a link setup. **Test the functionality in this module before you use it**.
 #[derive(Debug)]
 pub struct NvLink<'device, 'nvml: 'device> {
     pub(crate) device: &'device Device<'nvml>,
-    pub(crate) link: c_uint
+    pub(crate) link: c_uint,
 }
 
 impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
@@ -85,7 +72,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
             nvml_try(nvmlDeviceGetNvLinkState(
                 self.device.handle(),
                 self.link,
-                &mut state
+                &mut state,
             ))?;
 
             Ok(bool_from_state(state)?)
@@ -115,7 +102,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
             nvml_try(nvmlDeviceGetNvLinkVersion(
                 self.device.handle(),
                 self.link,
-                &mut version
+                &mut version,
             ))?;
 
             Ok(version)
@@ -147,7 +134,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
                 self.device.handle(),
                 self.link,
                 cap_type.as_c(),
-                &mut capability
+                &mut capability,
             ))?;
 
             Ok(match capability {
@@ -181,7 +168,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
             nvml_try(nvmlDeviceGetNvLinkRemotePciInfo_v2(
                 self.device.handle(),
                 self.link,
-                &mut pci_info
+                &mut pci_info,
             ))?;
 
             Ok(PciInfo::try_from(pci_info, false)?)
@@ -212,7 +199,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
                 self.device.handle(),
                 self.link,
                 counter.as_c(),
-                &mut value
+                &mut value,
             ))?;
 
             Ok(value)
@@ -239,12 +226,12 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
         unsafe {
             nvml_try(nvmlDeviceResetNvLinkErrorCounters(
                 self.device.handle(),
-                self.link
+                self.link,
             ))
         }
     }
 
-    /** 
+    /**
     Sets the NvLink utilization counter control information for the specified
     `Counter`.
 
@@ -269,7 +256,6 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
         settings: UtilizationControl,
         reset_counters: bool,
     ) -> Result<()> {
-
         let reset: c_uint = if reset_counters { 1 } else { 0 };
 
         unsafe {
@@ -278,7 +264,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
                 self.link,
                 counter as c_uint,
                 &mut settings.as_c(),
-                reset
+                reset,
             ))
         }
     }
@@ -308,7 +294,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
                 self.device.handle(),
                 self.link,
                 counter as c_uint,
-                &mut controls
+                &mut controls,
             ))?;
 
             Ok(UtilizationControl::try_from(controls)?)
@@ -358,13 +344,10 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
                 self.link,
                 counter as c_uint,
                 &mut receive,
-                &mut send
+                &mut send,
             ))?;
 
-            Ok(UtilizationCounter {
-                receive,
-                send
-            })
+            Ok(UtilizationCounter { receive, send })
         }
     }
 
@@ -420,7 +403,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
                 self.device.handle(),
                 self.link,
                 counter as c_uint,
-                state_from_bool(frozen)
+                state_from_bool(frozen),
             ))
         }
     }
@@ -440,7 +423,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     * `Unknown`, on any unexpected error
 
     # Device Support
-    
+
     Supports Pascal or newer fully supported devices.
     */
     // No-run test written
@@ -449,7 +432,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
             nvml_try(nvmlDeviceResetNvLinkUtilizationCounter(
                 self.device.handle(),
                 self.link,
-                counter as c_uint
+                counter as c_uint,
             ))
         }
     }
@@ -496,11 +479,9 @@ mod test {
     #[test]
     fn error_counter() {
         let nvml = nvml();
-        test_with_link(
-            3,
-            &nvml,
-            |link| link.error_counter(ErrorCounter::DlRecovery)
-        )
+        test_with_link(3, &nvml, |link| {
+            link.error_counter(ErrorCounter::DlRecovery)
+        })
     }
 
     // This modifies link state, so we don't want to actually run the test
@@ -522,14 +503,15 @@ mod test {
 
         let settings = UtilizationControl {
             units: UtilizationCountUnit::Cycles,
-            packet_filter: PacketTypes::NO_OP |
-                           PacketTypes::READ |
-                           PacketTypes::WRITE |
-                           PacketTypes::RATOM |
-                           PacketTypes::WITH_DATA
+            packet_filter: PacketTypes::NO_OP
+                | PacketTypes::READ
+                | PacketTypes::WRITE
+                | PacketTypes::RATOM
+                | PacketTypes::WITH_DATA,
         };
 
-        link.set_utilization_control(Counter::One, settings, false).unwrap()
+        link.set_utilization_control(Counter::One, settings, false)
+            .unwrap()
     }
 
     #[test]

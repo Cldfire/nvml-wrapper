@@ -7,7 +7,7 @@ use crate::ffi::bindings::*;
 pub enum FirmwareVersion {
     /// The version is unavailable.
     Unavailable,
-    Version(u32)
+    Version(u32),
 }
 
 impl From<u32> for FirmwareVersion {
@@ -28,7 +28,7 @@ pub enum UsedGpuMemory {
     /// Windows KMD manages all the memory, not the NVIDIA driver.
     Unavailable,
     /// Memory used in bytes.
-    Used(u64)
+    Used(u64),
 }
 
 impl From<u64> for UsedGpuMemory {
@@ -50,7 +50,7 @@ pub enum SampleValue {
     F64(f64),
     U32(u32),
     U64(u64),
-    I64(i64)
+    I64(i64),
 }
 
 impl SampleValue {
@@ -65,7 +65,7 @@ impl SampleValue {
                 // NVML wouldn't return anything larger
                 UnsignedLong => SampleValue::U32(union.ulVal as u32),
                 UnsignedLongLong => SampleValue::U64(union.ullVal),
-                SignedLongLong => SampleValue::I64(union.sllVal)
+                SignedLongLong => SampleValue::I64(union.sllVal),
             }
         }
     }

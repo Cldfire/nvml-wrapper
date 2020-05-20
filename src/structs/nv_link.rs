@@ -5,5 +5,5 @@ pub struct UtilizationCounter {
     /// Receive counter value
     pub receive: u64,
     /// Send counter value
-    pub send: u64
+    pub send: u64,
 }

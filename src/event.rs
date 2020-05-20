@@ -1,16 +1,11 @@
-use crate::NVML;
 use crate::error::{nvml_try, Result};
 use crate::ffi::bindings::*;
+use crate::NVML;
 
 use std::{
-    io::{
-        self,
-        Write
-    },
-    marker::{
-        PhantomData
-    },
-    mem
+    io::{self, Write},
+    marker::PhantomData,
+    mem,
 };
 
 use crate::struct_wrappers::event::EventData;
@@ -28,7 +23,7 @@ from.
 #[derive(Debug)]
 pub struct EventSet<'nvml> {
     set: nvmlEventSet_t,
-    _phantom: PhantomData<&'nvml NVML>
+    _phantom: PhantomData<&'nvml NVML>,
 }
 
 unsafe impl<'nvml> Send for EventSet<'nvml> {}
@@ -37,7 +32,7 @@ impl<'nvml> From<nvmlEventSet_t> for EventSet<'nvml> {
     fn from(set: nvmlEventSet_t) -> Self {
         EventSet {
             set,
-            _phantom: PhantomData
+            _phantom: PhantomData,
         }
     }
 }
@@ -46,7 +41,7 @@ impl<'nvml> EventSet<'nvml> {
     /**
     Use this to release the set's events if you care about handling
     potential errors (*the `Drop` implementation ignores errors!*).
-    
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
@@ -66,17 +61,17 @@ impl<'nvml> EventSet<'nvml> {
     Waits on events for the given timeout (in ms) and delivers one when it arrives.
 
     See the `high_level::event_loop` module for an abstracted version of this.
-    
+
     This method returns immediately if an event is ready to be delivered when it
     is called. If no events are ready it will sleep until an event arrives, but
     not longer than the specified timeout. In certain conditions, this method
     could return before the timeout passes (e.g. when an interrupt arrives).
-    
+
     In the case of an XID error, the function returns the most recent XID error
     type seen by the system. If there are multiple XID errors generated before
     this method is called, the last seen XID error type will be returned for
     all XID error events.
-    
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
@@ -84,9 +79,9 @@ impl<'nvml> EventSet<'nvml> {
     arrived
     * `GpuLost`, if a GPU has fallen off the bus or is otherwise inaccessible
     * `Unknown`, on any unexpected error
-    
+
     # Device Support
-    
+
     Supports Fermi and newer fully supported devices.
     */
     // Checked against local
@@ -128,9 +123,10 @@ impl<'nvml> Drop for EventSet<'nvml> {
                             "WARNING: Error returned by `nvmlEventSetFree()` in Drop \
                              implementation: {:?}",
                             e
-                        ).as_bytes()
+                        )
+                        .as_bytes(),
                     );
-                },
+                }
             }
         }
     }
@@ -149,10 +145,10 @@ mod test {
         test_with_device(3, &nvml, |device| {
             let set = nvml.create_event_set()?;
             let set = device.register_events(
-                EventTypes::PSTATE_CHANGE |
-                EventTypes::CRITICAL_XID_ERROR |
-                EventTypes::CLOCK_CHANGE,
-                set
+                EventTypes::PSTATE_CHANGE
+                    | EventTypes::CRITICAL_XID_ERROR
+                    | EventTypes::CLOCK_CHANGE,
+                set,
             )?;
 
             set.release_events()
@@ -168,12 +164,14 @@ mod test {
         let nvml = nvml();
         let device = device(&nvml);
         let set = nvml.create_event_set().expect("event set");
-        let set = device.register_events(
-            EventTypes::PSTATE_CHANGE |
-            EventTypes::CRITICAL_XID_ERROR |
-            EventTypes::CLOCK_CHANGE,
-            set
-        ).expect("registration");
+        let set = device
+            .register_events(
+                EventTypes::PSTATE_CHANGE
+                    | EventTypes::CRITICAL_XID_ERROR
+                    | EventTypes::CLOCK_CHANGE,
+                set,
+            )
+            .expect("registration");
 
         let data = match set.wait(10_000) {
             Err(Error(ErrorKind::Timeout, _)) => return (),

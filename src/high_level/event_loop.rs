@@ -62,13 +62,13 @@ The functionality in this module is only available on Linux platforms; NVML does
 not support events on any other platform.
 */
 
+use crate::bitmasks::event::EventTypes;
+use crate::enums::event::XidError;
+use crate::error::{Error, ErrorKind, Result};
+use crate::struct_wrappers::event::EventData;
 use crate::Device;
 use crate::EventSet;
 use crate::NVML;
-use crate::bitmasks::event::EventTypes;
-use crate::enums::event::XidError;
-use crate::error::{Result, ErrorKind, Error};
-use crate::struct_wrappers::event::EventData;
 
 // TODO: Tests
 
@@ -89,7 +89,7 @@ pub enum Event<'nvml> {
     SingleBitEccError(Device<'nvml>),
     /// Returned if none of the other `Events` are contained in the `EventData`
     /// the `EventLoop` processes.
-    Unknown
+    Unknown,
 }
 
 impl<'nvml> From<EventData<'nvml>> for Event<'nvml> {
@@ -100,11 +100,17 @@ impl<'nvml> From<EventData<'nvml>> for Event<'nvml> {
             // We can unwrap here because we know `event_data` will be `Some`
             // since the error is `CRITICAL_XID_ERROR`
             Event::CriticalXidError(struct_.device, struct_.event_data.unwrap())
-        } else if struct_.event_type.contains(EventTypes::DOUBLE_BIT_ECC_ERROR) {
+        } else if struct_
+            .event_type
+            .contains(EventTypes::DOUBLE_BIT_ECC_ERROR)
+        {
             Event::DoubleBitEccError(struct_.device)
         } else if struct_.event_type.contains(EventTypes::PSTATE_CHANGE) {
             Event::PowerStateChange(struct_.device)
-        } else if struct_.event_type.contains(EventTypes::SINGLE_BIT_ECC_ERROR) {
+        } else if struct_
+            .event_type
+            .contains(EventTypes::SINGLE_BIT_ECC_ERROR)
+        {
             Event::SingleBitEccError(struct_.device)
         } else {
             Event::Unknown
@@ -123,7 +129,7 @@ cargo run --example event_loop
 ```
 */
 pub struct EventLoop<'nvml> {
-    set: EventSet<'nvml>
+    set: EventSet<'nvml>,
 }
 
 impl<'nvml> EventLoop<'nvml> {
@@ -176,9 +182,7 @@ impl<'nvml> EventLoop<'nvml> {
     where
         F: FnMut(Result<Event<'nvml>>, &mut EventLoopState),
     {
-        let mut state = EventLoopState {
-            interrupted: false
-        };
+        let mut state = EventLoopState { interrupted: false };
 
         loop {
             if state.interrupted {
@@ -188,7 +192,7 @@ impl<'nvml> EventLoop<'nvml> {
             match self.set.wait(1) {
                 Ok(data) => {
                     callback(Ok(data.into()), &mut state);
-                },
+                }
                 Err(Error(ErrorKind::Timeout, _)) => continue,
                 value => callback(value.map(|d| d.into()), &mut state),
             };
@@ -214,9 +218,7 @@ impl<'nvml> EventLoop<'nvml> {
 
 impl<'nvml> From<EventSet<'nvml>> for EventLoop<'nvml> {
     fn from(set: EventSet<'nvml>) -> Self {
-        Self {
-            set
-        }
+        Self { set }
     }
 }
 
@@ -224,7 +226,7 @@ impl<'nvml> From<EventSet<'nvml>> for EventLoop<'nvml> {
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct EventLoopState {
-    interrupted: bool
+    interrupted: bool,
 }
 
 impl EventLoopState {
@@ -262,22 +264,16 @@ impl EventLoopProvider for NVML {
     * `Unknown`, on any unexpected error
 
     # Platform Support
-    
+
     Only supports Linux.
     */
-    fn create_event_loop<'nvml>(
-        &'nvml self,
-        devices: Vec<&Device<'nvml>>,
-    ) -> Result<EventLoop> {
-
+    fn create_event_loop<'nvml>(&'nvml self, devices: Vec<&Device<'nvml>>) -> Result<EventLoop> {
         let mut set = self.create_event_set()?;
 
         for d in devices {
             set = d.register_events(d.supported_event_types()?, set)?;
         }
 
-        Ok(EventLoop {
-            set
-        })
+        Ok(EventLoop { set })
     }
 }

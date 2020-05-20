@@ -3,8 +3,8 @@ use crate::ffi::bindings::*;
 bitflags! {
     /**
     Represents the NvLink utilization counter packet types that can be counted.
-    
-    Only applicable when `UtilizationCountUnit`s are packets or bytes. All 
+
+    Only applicable when `UtilizationCountUnit`s are packets or bytes. All
     packet filter descriptions are target GPU centric.
     */
     // Checked against local

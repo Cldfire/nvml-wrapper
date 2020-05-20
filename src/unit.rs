@@ -1,22 +1,22 @@
-use crate::NVML;
 use crate::device::Device;
 use crate::enum_wrappers::unit::LedColor;
-use crate::enums::unit::{TemperatureReading, LedState};
+use crate::enums::unit::{LedState, TemperatureReading};
 use crate::error::{nvml_try, Result};
 use crate::ffi::bindings::*;
+use crate::struct_wrappers::unit::{FansInfo, PsuInfo, UnitInfo};
+use crate::NVML;
 use std::marker::PhantomData;
 use std::mem;
 use std::os::raw::c_uint;
-use crate::struct_wrappers::unit::{FansInfo, PsuInfo, UnitInfo};
 
 /**
-Struct that represents a unit. 
+Struct that represents a unit.
 
 Obtain a `Unit` with the various methods available to you on the `NVML`
 struct.
 
-I don't know what a unit is, but inferring from the docs leads me to believe 
-it's some kind of high-end something-or-other that 99% of users won't know 
+I don't know what a unit is, but inferring from the docs leads me to believe
+it's some kind of high-end something-or-other that 99% of users won't know
 about either. That being said, I'm wrapping this whole library, so here you go.
 
 Rust's lifetimes will ensure that the NVML instance this `Unit` was created from
@@ -27,7 +27,7 @@ have to worry about calls returning `Uninitialized` errors.
 #[derive(Debug)]
 pub struct Unit<'nvml> {
     unit: nvmlUnit_t,
-    _phantom: PhantomData<&'nvml NVML>
+    _phantom: PhantomData<&'nvml NVML>,
 }
 
 unsafe impl<'nvml> Send for Unit<'nvml> {}
@@ -37,7 +37,7 @@ impl<'nvml> From<nvmlUnit_t> for Unit<'nvml> {
     fn from(unit: nvmlUnit_t) -> Self {
         Unit {
             unit,
-            _phantom: PhantomData
+            _phantom: PhantomData,
         }
     }
 }
@@ -50,13 +50,13 @@ impl<'nvml> Unit<'nvml> {
     works before you use it**. If it works, please let me know; if it doesn't,
     I would love a PR. If NVML is sane this should work, but NVIDIA's docs
     on this call are _anything_ but clear.
-    
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the unit is invalid
     * `Unknown`, on any unexpected error
-    
+
     # Device Support
 
     For S-class products.
@@ -74,7 +74,7 @@ impl<'nvml> Unit<'nvml> {
             nvml_try(nvmlUnitGetDevices(
                 self.unit,
                 &mut count,
-                devices.as_mut_ptr()
+                devices.as_mut_ptr(),
             ))?;
 
             Ok(devices.into_iter().map(Device::from).collect())
@@ -105,7 +105,7 @@ impl<'nvml> Unit<'nvml> {
             /*
             NVIDIA doesn't even say that `count` will be set to the count if
             `InsufficientSize` is returned. But we can assume sanity, right?
-            
+
             The idea here is:
             If there are 0 devices, NVML_SUCCESS is returned, `count` is set
               to 0. We return count, all good.
@@ -119,8 +119,9 @@ impl<'nvml> Unit<'nvml> {
             let mut devices: [nvmlDevice_t; 1] = [mem::zeroed()];
 
             match nvmlUnitGetDevices(self.unit, &mut count, devices.as_mut_ptr()) {
-                nvmlReturn_enum_NVML_SUCCESS |
-                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
+                nvmlReturn_enum_NVML_SUCCESS | nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => {
+                    Ok(count)
+                }
                 // We know that this will be an error
                 other => nvml_try(other).map(|_| 0),
             }
@@ -129,7 +130,7 @@ impl<'nvml> Unit<'nvml> {
 
     /**
     Gets fan information for this `Unit` (fan count and state + speed for each).
-    
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
@@ -137,7 +138,7 @@ impl<'nvml> Unit<'nvml> {
     * `NotSupported`, if this is not an S-class product
     * `UnexpectedVariant`, for which you can read the docs for
     * `Unknown`, on any unexpected error
-    
+
     # Device Support
 
     For S-class products.
@@ -155,7 +156,7 @@ impl<'nvml> Unit<'nvml> {
 
     /**
     Gets the LED state associated with this `Unit`.
-    
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
@@ -163,7 +164,7 @@ impl<'nvml> Unit<'nvml> {
     * `NotSupported`, if this is not an S-class product
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     * `Unknown`, on any unexpected error
-    
+
     # Device Support
 
     For S-class products.
@@ -181,7 +182,7 @@ impl<'nvml> Unit<'nvml> {
 
     /**
     Gets the PSU stats for this `Unit`.
-    
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
@@ -189,7 +190,7 @@ impl<'nvml> Unit<'nvml> {
     * `NotSupported`, if this is not an S-class product
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     * `Unknown`, on any unexpected error
-    
+
     # Device Support
 
     For S-class products.
@@ -207,16 +208,16 @@ impl<'nvml> Unit<'nvml> {
 
     /**
     Gets the temperature for the specified `UnitTemperatureReading`, in °C.
-    
+
     Available readings depend on the product.
-    
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the unit is invalid
     * `NotSupported`, if this is not an S-class product
     * `Unknown`, on any unexpected error
-    
+
     # Device Support
 
     For S-class products. Available readings depend on the product.
@@ -230,7 +231,7 @@ impl<'nvml> Unit<'nvml> {
             nvml_try(nvmlUnitGetTemperature(
                 self.unit,
                 reading_type as c_uint,
-                &mut temp
+                &mut temp,
             ))?;
 
             Ok(temp)
@@ -239,13 +240,13 @@ impl<'nvml> Unit<'nvml> {
 
     /**
     Gets the static information associated with this `Unit`.
-    
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
     * `InvalidArg`, if the unit is invalid
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
-    
+
     # Device Support
 
     For S-class products.
@@ -265,13 +266,13 @@ impl<'nvml> Unit<'nvml> {
 
     /**
     Sets the LED color for this `Unit`.
-    
+
     Requires root/admin permissions. This operation takes effect immediately.
-    
+
     Note: Current S-class products don't provide unique LEDs for each unit. As such,
     both front and back LEDs will be toggled in unison regardless of which unit is
     specified with this method (aka the `Unit` represented by this struct).
-    
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
@@ -279,9 +280,9 @@ impl<'nvml> Unit<'nvml> {
     * `NotSupported`, if this is not an S-class product
     * `NoPermission`, if the user doesn't have permission to perform this operation
     * `Unknown`, on any unexpected error
-    
+
     # Device Support
-    
+
     For S-class products.
     */
     // checked against local
