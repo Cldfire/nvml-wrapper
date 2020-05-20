@@ -16,10 +16,6 @@ exclude = [
     "nvml-wrapper-sys/*"
 ]
 
-[badges]
-travis-ci = { repository = "Cldfire/nvml-wrapper" }
-appveyor = { repository = "Cldfire/nvml-wrapper" }
-
 [dependencies]
 error-chain = "0.12"
 bitflags = "1.2"
