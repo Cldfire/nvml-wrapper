@@ -7,9 +7,6 @@ NVIDIA (primarily Tesla) GPUs.
 ```
 # use nvml_wrapper::NVML;
 # use nvml_wrapper::error::*;
-# fn main() {
-# test().unwrap();    
-# }
 # fn test() -> Result<()> {
 let nvml = NVML::init()?;
 // Get the first `Device` (GPU) in the system
@@ -251,7 +248,6 @@ impl NVML {
     * `Unknown`, on any unexpected error
     */
     // Checked against local
-    #[inline]
     pub fn init() -> Result<Self> {
         unsafe {
             nvml_try(nvmlInit_v2())?;
@@ -286,7 +282,6 @@ impl NVML {
     ```
     */
     // TODO: Example of using multiple flags when multiple flags exist
-    #[inline]
     pub fn init_with_flags(flags: InitFlags) -> Result<Self> {
         unsafe {
             nvml_try(nvmlInitWithFlags(flags.bits()))?;
@@ -307,13 +302,13 @@ impl NVML {
     // Thanks to `sorear` on IRC for suggesting this approach
     // Checked against local
     // Tested
-    #[inline]
     pub fn shutdown(self) -> Result<()> {
         unsafe {
             nvml_try(nvmlShutdown())?;
         }
 
-        Ok(mem::forget(self))
+        mem::forget(self);
+        Ok(())
     }
 
     /**
@@ -328,7 +323,6 @@ impl NVML {
     */
     // Checked against local
     // Tested
-    #[inline]
     pub fn device_count(&self) -> Result<u32> {
         unsafe {
             let mut count: c_uint = mem::zeroed();
@@ -349,7 +343,6 @@ impl NVML {
     */
     // Checked against local
     // Tested
-    #[inline]
     pub fn sys_driver_version(&self) -> Result<String> {
         unsafe {
             let mut version_vec = vec![0; NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE as usize];
@@ -374,7 +367,6 @@ impl NVML {
     */
     // Checked against local
     // Tested
-    #[inline]
     pub fn sys_nvml_version(&self) -> Result<String> {
         unsafe {
             let mut version_vec = vec![0; NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE as usize];
@@ -403,7 +395,6 @@ impl NVML {
     * `FunctionNotFound`, if cuDriverGetVersion() is not found in the shared library
     * `LibraryNotFound`, if libcuda.so.1 or libcuda.dll cannot be found
     */
-    #[inline]
     pub fn sys_cuda_driver_version(&self) -> Result<i32> {
         unsafe {
             let mut version: c_int = mem::zeroed();
@@ -430,7 +421,6 @@ impl NVML {
     // to do anything about that
     // Checked against local
     // Tested
-    #[inline]
     pub fn sys_process_name(&self, pid: u32, length: usize) -> Result<String> {
         unsafe {
             let mut name_vec = vec![0; length];
@@ -477,7 +467,6 @@ impl NVML {
     */
     // Checked against local
     // Tested
-    #[inline]
     pub fn device_by_index(&self, index: u32) -> Result<Device> {
         unsafe {
             let mut device: nvmlDevice_t = mem::zeroed();
@@ -509,7 +498,6 @@ impl NVML {
     */
     // Checked against local
     // Tested
-    #[inline]
     pub fn device_by_pci_bus_id<S: AsRef<str>>(&self, pci_bus_id: S) -> Result<Device>
     where
         Vec<u8>: From<S>,
@@ -531,7 +519,6 @@ impl NVML {
     /// anymore.
     // Tested (for an error)
     #[deprecated(note = "use `.device_by_uuid()`, this errors on dual GPU boards")]
-    #[inline]
     pub fn device_by_serial<S: AsRef<str>>(&self, board_serial: S) -> Result<Device>
     where
         Vec<u8>: From<S>,
@@ -568,7 +555,6 @@ impl NVML {
     */
     // Checked against local
     // Tested
-    #[inline]
     pub fn device_by_uuid<S: AsRef<str>>(&self, uuid: S) -> Result<Device>
     where
         Vec<u8>: From<S>,
@@ -602,7 +588,6 @@ impl NVML {
     // Checked against local
     // Tested
     #[cfg(target_os = "linux")]
-    #[inline]
     pub fn topology_common_ancestor(
         &self,
         device1: &Device,
@@ -612,8 +597,8 @@ impl NVML {
             let mut level: nvmlGpuTopologyLevel_t = mem::zeroed();
 
             nvml_try(nvmlDeviceGetTopologyCommonAncestor(
-                device1.unsafe_raw(),
-                device2.unsafe_raw(),
+                device1.handle(),
+                device2.handle(),
                 &mut level
             ))?;
 
@@ -643,7 +628,6 @@ impl NVML {
     */
     // Checked against local
     // Tested (for an error)
-    #[inline]
     pub fn unit_by_index(&self, index: u32) -> Result<Unit> {
         unsafe {
             let mut unit: nvmlUnit_t = mem::zeroed();
@@ -668,14 +652,13 @@ impl NVML {
     */
     // Checked against local
     // Tested
-    #[inline]
     pub fn are_devices_on_same_board(&self, device1: &Device, device2: &Device) -> Result<bool> {
         unsafe {
             let mut bool_int: c_int = mem::zeroed();
 
             nvml_try(nvmlDeviceOnSameBoard(
-                device1.unsafe_raw(),
-                device2.unsafe_raw(),
+                device1.handle(),
+                device2.handle(),
                 &mut bool_int
             ))?;
 
@@ -701,7 +684,6 @@ impl NVML {
     */
     // Tested
     #[cfg(target_os = "linux")]
-    #[inline]
     pub fn topology_gpu_set(&self, cpu_number: u32) -> Result<Vec<Device>> {
         unsafe {
             let mut count = match self.topology_gpu_set_count(cpu_number)? {
@@ -722,7 +704,6 @@ impl NVML {
 
     // Helper function for the above.
     #[cfg(target_os = "linux")]
-    #[inline]
     fn topology_gpu_set_count(&self, cpu_number: u32) -> Result<c_uint> {
         unsafe {
             // Indicates that we want the count
@@ -752,7 +733,6 @@ impl NVML {
     */
     // Checked against local
     // Tested
-    #[inline]
     pub fn hic_versions(&self) -> Result<Vec<HwbcEntry>> {
         unsafe {
             let mut count: c_uint = match self.hic_count()? {
@@ -779,7 +759,6 @@ impl NVML {
     Supports S-class products.
     */
     // Tested as part of the above method
-    #[inline]
     pub fn hic_count(&self) -> Result<u32> {
         unsafe {
             /*
@@ -821,7 +800,6 @@ impl NVML {
     */
     // Checked against local
     // Tested
-    #[inline]
     pub fn unit_count(&self) -> Result<u32> {
         unsafe {
             let mut count: c_uint = mem::zeroed();
@@ -845,7 +823,6 @@ impl NVML {
     */
     // Checked against local
     // Tested
-    #[inline]
     pub fn create_event_set(&self) -> Result<EventSet> {
         unsafe {
             let mut set: nvmlEventSet_t = mem::zeroed();
@@ -898,7 +875,6 @@ impl NVML {
     // Checked against local
     // Tested
     #[cfg(target_os = "linux")]
-    #[inline]
     pub fn discover_gpus(&self, pci_info: PciInfo) -> Result<()> {
         unsafe { nvml_try(nvmlDeviceDiscoverGpus(&mut pci_info.try_into_c()?)) }
     }
@@ -910,7 +886,6 @@ impl NVML {
 
     Supports all devices.
     */
-    #[inline]
     pub fn blacklist_device_count(&self) -> Result<u32> {
         unsafe {
             let mut count: c_uint = mem::zeroed();
@@ -932,7 +907,6 @@ impl NVML {
 
     Supports all devices.
     */
-    #[inline]
     pub fn blacklist_device_info(&self, index: u32) -> Result<BlacklistDeviceInfo> {
         unsafe {
             let mut info: nvmlBlacklistDeviceInfo_t = mem::zeroed();

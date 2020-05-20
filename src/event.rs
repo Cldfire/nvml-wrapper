@@ -53,13 +53,13 @@ impl<'nvml> EventSet<'nvml> {
     * `Unknown`, on any unexpected error
     */
     // Checked against local
-    #[inline]
     pub fn release_events(self) -> Result<()> {
         unsafe {
             nvml_try(nvmlEventSetFree(self.set))?;
         }
 
-        Ok(mem::forget(self))
+        mem::forget(self);
+        Ok(())
     }
 
     /**
@@ -90,7 +90,6 @@ impl<'nvml> EventSet<'nvml> {
     Supports Fermi and newer fully supported devices.
     */
     // Checked against local
-    #[inline]
     pub fn wait(&self, timeout_ms: u32) -> Result<EventData<'nvml>> {
         unsafe {
             let mut data: nvmlEventData_t = mem::zeroed();
@@ -100,30 +99,17 @@ impl<'nvml> EventSet<'nvml> {
         }
     }
 
-    /// Consume the struct and obtain the raw set handle that it contains.
-    #[inline]
-    pub fn into_raw(self) -> nvmlEventSet_t {
-        let set = self.set;
-        mem::forget(self);
-        set
-    }
-
-    /// Obtain a reference to the raw set handle contained in the struct.
-    #[inline]
-    pub fn as_raw(&self) -> &nvmlEventSet_t {
-        &(self.set)
-    }
-
-    /// Obtain a mutable reference to the raw set handle contained in the
-    /// struct.
-    #[inline]
-    pub fn as_mut_raw(&mut self) -> &mut nvmlEventSet_t {
-        &mut (self.set)
-    }
-
-    #[inline]
-    /// Sometimes necessary for C interop. Use carefully.
-    pub unsafe fn unsafe_raw(&self) -> nvmlEventSet_t {
+    /// Get the raw device handle contained in this struct
+    ///
+    /// Sometimes necessary for C interop.
+    ///
+    /// # Safety
+    ///
+    /// This is unsafe to prevent it from being used without care. In
+    /// particular, you must avoid creating a new `EventSet` from this handle
+    /// and allowing both this `EventSet` and the newly created one to drop
+    /// (which would result in a double-free).
+    pub unsafe fn handle(&self) -> nvmlEventSet_t {
         self.set
     }
 }
@@ -152,24 +138,9 @@ impl<'nvml> Drop for EventSet<'nvml> {
 
 #[cfg(test)]
 mod test {
-    use super::EventSet;
     #[cfg(target_os = "linux")]
     use crate::bitmasks::event::*;
     use crate::test_utils::*;
-
-    // Ensuring that double-free issues don't crop up here.
-    #[test]
-    fn into_raw() {
-        let nvml = nvml();
-        let raw;
-
-        {
-            let set = nvml.create_event_set().expect("set");
-            raw = set.into_raw();
-        }
-
-        EventSet::from(raw);
-    }
 
     #[cfg(target_os = "linux")]
     #[test]

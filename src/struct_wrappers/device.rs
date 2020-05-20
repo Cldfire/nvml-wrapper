@@ -81,6 +81,7 @@ impl PciInfo {
     rather than panicking.
     */
     // Tested
+    #[allow(clippy::comparison_chain)]
     pub fn try_into_c(self) -> Result<nvmlPciInfo_t> {
         // This is more readable than spraying `buf_size as usize` everywhere
         const fn buf_size() -> usize {
@@ -96,7 +97,7 @@ impl PciInfo {
             while bus_id.len() != buf_size() {
                 bus_id.push(0);
             }
-        };
+        }
 
         bus_id_c.clone_from_slice(
             &bus_id
@@ -638,7 +639,7 @@ mod tests {
 
             let raw = unsafe {
                 let mut pci_info: nvmlPciInfo_t = mem::zeroed();
-                nvml_try(nvmlDeviceGetPciInfo_v3(device.unsafe_raw(), &mut pci_info))
+                nvml_try(nvmlDeviceGetPciInfo_v3(device.handle(), &mut pci_info))
                     .expect("raw pci info");
                 pci_info
             };

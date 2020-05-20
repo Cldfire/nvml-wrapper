@@ -63,7 +63,6 @@ impl<'nvml> Unit<'nvml> {
     */
     // Checked against local
     // Tested
-    #[inline]
     pub fn devices(&self) -> Result<Vec<Device>> {
         unsafe {
             let mut count: c_uint = match self.device_count()? {
@@ -101,7 +100,6 @@ impl<'nvml> Unit<'nvml> {
     For S-class products.
     */
     // Tested as part of the above
-    #[inline]
     pub fn device_count(&self) -> Result<u32> {
         unsafe {
             /*
@@ -146,7 +144,6 @@ impl<'nvml> Unit<'nvml> {
     */
     // Checked against local
     // Tested
-    #[inline]
     pub fn fan_info(&self) -> Result<FansInfo> {
         unsafe {
             let mut fans_info: nvmlUnitFanSpeeds_t = mem::zeroed();
@@ -173,7 +170,6 @@ impl<'nvml> Unit<'nvml> {
     */
     // Checked against local
     // Tested
-    #[inline]
     pub fn led_state(&self) -> Result<LedState> {
         unsafe {
             let mut state: nvmlLedState_t = mem::zeroed();
@@ -200,7 +196,6 @@ impl<'nvml> Unit<'nvml> {
     */
     // Checked against local
     // Tested
-    #[inline]
     pub fn psu_info(&self) -> Result<PsuInfo> {
         unsafe {
             let mut info: nvmlPSUInfo_t = mem::zeroed();
@@ -228,7 +223,6 @@ impl<'nvml> Unit<'nvml> {
     */
     // Checked against local
     // Tested
-    #[inline]
     pub fn temperature(&self, reading_type: TemperatureReading) -> Result<u32> {
         unsafe {
             let mut temp: c_uint = mem::zeroed();
@@ -258,7 +252,6 @@ impl<'nvml> Unit<'nvml> {
     */
     // Checked against local
     // Tested
-    #[inline]
     pub fn info(&self) -> Result<UnitInfo> {
         unsafe {
             let mut info: nvmlUnitInfo_t = mem::zeroed();
@@ -293,33 +286,18 @@ impl<'nvml> Unit<'nvml> {
     */
     // checked against local
     // Tested (no-run)
-    #[inline]
     pub fn set_led_color(&mut self, color: LedColor) -> Result<()> {
         unsafe { nvml_try(nvmlUnitSetLedState(self.unit, color.as_c())) }
     }
 
-    /// Consume the struct and obtain the raw unit handle that it contains.
-    #[inline]
-    pub fn into_raw(self) -> nvmlUnit_t {
-        self.unit
-    }
-
-    /// Obtain a reference to the raw unit handle contained in the struct.
-    #[inline]
-    pub fn as_raw(&self) -> &nvmlUnit_t {
-        &(self.unit)
-    }
-
-    /// Obtain a mutable reference to the raw unit handle contained in the
-    /// struct.
-    #[inline]
-    pub fn as_mut_raw(&mut self) -> &mut nvmlUnit_t {
-        &mut (self.unit)
-    }
-
-    /// Sometimes necessary for C interop. Use carefully.
-    #[inline]
-    pub unsafe fn unsafe_raw(&self) -> nvmlUnit_t {
+    /// Get the raw unit handle contained in this struct
+    ///
+    /// Sometimes necessary for C interop.
+    ///
+    /// # Safety
+    ///
+    /// This is unsafe to prevent it from being used without care.
+    pub unsafe fn handle(&self) -> nvmlUnit_t {
         self.unit
     }
 }

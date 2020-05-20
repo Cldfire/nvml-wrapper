@@ -143,7 +143,6 @@ impl<'nvml> EventLoop<'nvml> {
 
     Only supports Linux.
     */
-    #[inline]
     pub fn register_device(mut self, device: &'nvml Device<'nvml>) -> Result<Self> {
         self.set = device.register_events(device.supported_event_types()?, self.set)?;
 
@@ -173,7 +172,6 @@ impl<'nvml> EventLoop<'nvml> {
 
     Only supports Linux.
     */
-    #[inline]
     pub fn run_forever<F>(&mut self, mut callback: F)
     where
         F: FnMut(Result<Event<'nvml>>, &mut EventLoopState),
@@ -198,20 +196,17 @@ impl<'nvml> EventLoop<'nvml> {
     }
 
     /// Obtain a reference to the `EventSet` contained within this struct.
-    #[inline]
     pub fn as_inner(&'nvml self) -> &'nvml EventSet<'nvml> {
         &(self.set)
     }
 
     /// Obtain a mutable reference to the `EventSet` contained within this
     /// struct.
-    #[inline]
     pub fn as_mut_inner(&'nvml mut self) -> &'nvml mut EventSet<'nvml> {
         &mut (self.set)
     }
 
     /// Consumes this `EventLoop` and yields the `EventSet` contained within.
-    #[inline]
     pub fn into_inner(self) -> EventSet<'nvml> {
         self.set
     }
@@ -234,7 +229,6 @@ pub struct EventLoopState {
 
 impl EventLoopState {
     /// Call this to mark the loop as interrupted.
-    #[inline]
     pub fn interrupt(&mut self) {
         self.interrupted = true;
     }
@@ -271,7 +265,6 @@ impl EventLoopProvider for NVML {
     
     Only supports Linux.
     */
-    #[inline]
     fn create_event_loop<'nvml>(
         &'nvml self,
         devices: Vec<&Device<'nvml>>,

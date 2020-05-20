@@ -9,6 +9,12 @@ This file describes the changes / additions / fixes between wrapper releases.
 * `nvml-wrapper` updated to Rust 2018 edition
 * `nvml-wrapper-sys` updated to Rust 2018 edition
 
+### Changes
+
+* Removed `#[inline]` attribute from all functions
+* Merged methods to get raw handles from structs into a single method
+  * `Device.handle()`, `EventSet.handle()`, `Unit.handle()`
+
 ### Dependencies
 
 * `bitflags`: `1.0.x -> 1.2.x`
