@@ -95,10 +95,10 @@ This wrapper is being developed against and currently supports NVML version
 to NVIDIA, so this wrapper should continue to work without issue regardless of
 NVML version bumps.
 
-## Rust Version Support
+## MSRV
 
-Currently supports Rust 1.26.0 or greater. The target version is the **latest**
-stable version; I do not intend to pin to an older one at any time.
+The Minimum Supported Rust Version is currently 1.38.0. I will not go out of my
+way to avoid bumping this.
 
 ## Cargo Features
 
