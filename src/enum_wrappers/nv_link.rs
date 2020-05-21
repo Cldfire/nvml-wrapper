@@ -1,4 +1,4 @@
-use crate::error::{Error, ErrorKind, Result};
+use crate::error::NvmlError;
 use crate::ffi::bindings::*;
 
 /// Represents the NvLink utilization counter packet units.

@@ -18,11 +18,11 @@ a handler for the events. Event handling looks like this (details removed):
 # #[cfg(target_os = "linux")]
 # mod example {
 # use nvml::NVML;
-# use nvml::error::{Error, ErrorKind, Result};
+# use nvml::error::{NvmlError, NvmlErrorWithSource};
 # use nvml::high_level::EventLoopProvider;
 # use nvml::high_level::Event::*;
 #
-# pub fn actual_main() -> Result<()> {
+# pub fn actual_main() -> Result<(), NvmlErrorWithSource> {
 # let nvml = NVML::init()?;
 # let device = nvml.device_by_index(0)?;
 # let mut event_loop = nvml.create_event_loop(vec![&device])?;
@@ -36,9 +36,9 @@ event_loop.run_forever(|event, state| match event {
     },
 
     // If there was an error, handle it
-    Err(Error(error, _)) => match error {
+    Err(error) => match error {
         // If the error is `Unknown`, continue looping and hope for the best
-        ErrorKind::Unknown => {},
+        NvmlError::Unknown => {},
         // The other errors that can occur are almost guaranteed to mean that
         // further looping will never be successful (`GpuLost` and
         // `Uninitialized`), so we stop looping
@@ -64,7 +64,7 @@ not support events on any other platform.
 
 use crate::bitmasks::event::EventTypes;
 use crate::enums::event::XidError;
-use crate::error::{Error, ErrorKind, Result};
+use crate::error::{NvmlError, NvmlErrorWithSource};
 use crate::struct_wrappers::event::EventData;
 use crate::Device;
 use crate::EventSet;
@@ -149,7 +149,10 @@ impl<'nvml> EventLoop<'nvml> {
 
     Only supports Linux.
     */
-    pub fn register_device(mut self, device: &'nvml Device<'nvml>) -> Result<Self> {
+    pub fn register_device(
+        mut self,
+        device: &'nvml Device<'nvml>,
+    ) -> Result<Self, NvmlErrorWithSource> {
         self.set = device.register_events(device.supported_event_types()?, self.set)?;
 
         Ok(self)
@@ -180,7 +183,7 @@ impl<'nvml> EventLoop<'nvml> {
     */
     pub fn run_forever<F>(&mut self, mut callback: F)
     where
-        F: FnMut(Result<Event<'nvml>>, &mut EventLoopState),
+        F: FnMut(Result<Event<'nvml>, NvmlError>, &mut EventLoopState),
     {
         let mut state = EventLoopState { interrupted: false };
 
@@ -193,7 +196,7 @@ impl<'nvml> EventLoop<'nvml> {
                 Ok(data) => {
                     callback(Ok(data.into()), &mut state);
                 }
-                Err(Error(ErrorKind::Timeout, _)) => continue,
+                Err(NvmlError::Timeout) => continue,
                 value => callback(value.map(|d| d.into()), &mut state),
             };
         }
@@ -244,7 +247,7 @@ pub trait EventLoopProvider {
     fn create_event_loop<'nvml>(
         &'nvml self,
         devices: Vec<&'nvml Device<'nvml>>,
-    ) -> Result<EventLoop>;
+    ) -> Result<EventLoop, NvmlErrorWithSource>;
 }
 
 impl EventLoopProvider for NVML {
@@ -267,7 +270,10 @@ impl EventLoopProvider for NVML {
 
     Only supports Linux.
     */
-    fn create_event_loop<'nvml>(&'nvml self, devices: Vec<&Device<'nvml>>) -> Result<EventLoop> {
+    fn create_event_loop<'nvml>(
+        &'nvml self,
+        devices: Vec<&Device<'nvml>>,
+    ) -> Result<EventLoop, NvmlErrorWithSource> {
         let mut set = self.create_event_set()?;
 
         for d in devices {

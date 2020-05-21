@@ -1,11 +1,14 @@
 use crate::bitmasks::device::FbcFlags;
 use crate::enum_wrappers::device::{BridgeChip, EncoderType, FbcSessionType, SampleValueType};
 use crate::enums::device::{FirmwareVersion, SampleValue, UsedGpuMemory};
-use crate::error::{nvml_try, Bits, Error, ErrorKind, Result};
+use crate::error::{nvml_try, Bits, NvmlError};
 use crate::ffi::bindings::*;
 use crate::structs::device::FieldId;
 use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
+use std::{
+    convert::{TryFrom, TryInto},
+    os::raw::c_char,
+};
 
 /// PCI information about a GPU device.
 // Checked against local
@@ -37,7 +40,7 @@ pub struct PciInfo {
 
 impl PciInfo {
     /**
-    Waiting for `TryFrom` to be stable. In the meantime, we do this.
+    Try to create this struct from its C equivalent.
 
     Passing `false` for `sub_sys_id_present` will set the `pci_sub_system_id`
     field to `None`. See the field docs for more.
@@ -46,7 +49,7 @@ impl PciInfo {
 
     * `Utf8Error`, if the string obtained from the C function is not valid Utf8
     */
-    pub fn try_from(struct_: nvmlPciInfo_t, sub_sys_id_present: bool) -> Result<Self> {
+    pub fn try_from(struct_: nvmlPciInfo_t, sub_sys_id_present: bool) -> Result<Self, NvmlError> {
         unsafe {
             let bus_id_raw = CStr::from_ptr(struct_.busId.as_ptr());
 
@@ -64,9 +67,13 @@ impl PciInfo {
             })
         }
     }
+}
+
+impl TryInto<nvmlPciInfo_t> for PciInfo {
+    type Error = NvmlError;
 
     /**
-    Waiting for `TryInto` to be stable. In the meantime, we do this.
+    Convert this `PciInfo` back into its C equivalent.
 
     # Errors
 
@@ -76,9 +83,7 @@ impl PciInfo {
     occur if the user modifies `bus_id` in some fashion. We return an error
     rather than panicking.
     */
-    // Tested
-    #[allow(clippy::comparison_chain)]
-    pub fn try_into_c(self) -> Result<nvmlPciInfo_t> {
+    fn try_into(self) -> Result<nvmlPciInfo_t, Self::Error> {
         // This is more readable than spraying `buf_size as usize` everywhere
         const fn buf_size() -> usize {
             NVML_DEVICE_PCI_BUS_ID_BUFFER_SIZE as usize
@@ -88,7 +93,10 @@ impl PciInfo {
         let mut bus_id = CString::new(self.bus_id)?.into_bytes_with_nul();
 
         if bus_id.len() > buf_size() {
-            bail!(ErrorKind::StringTooLong(buf_size(), bus_id.len()))
+            return Err(NvmlError::StringTooLong {
+                max_len: buf_size(),
+                actual_len: bus_id.len(),
+            });
         } else if bus_id.len() < buf_size() {
             while bus_id.len() != buf_size() {
                 bus_id.push(0);
@@ -143,7 +151,9 @@ pub struct BridgeChipInfo {
     pub chip_type: BridgeChip,
 }
 
-impl BridgeChipInfo {
+impl TryFrom<nvmlBridgeChipInfo_t> for BridgeChipInfo {
+    type Error = NvmlError;
+
     /**
     Construct `BridgeChipInfo` from the corresponding C struct.
 
@@ -151,9 +161,9 @@ impl BridgeChipInfo {
 
     * `UnexpectedVariant`, for which you can read the docs for
     */
-    pub fn try_from(struct_: nvmlBridgeChipInfo_t) -> Result<Self> {
-        let fw_version = FirmwareVersion::from(struct_.fwVersion);
-        let chip_type = BridgeChip::try_from(struct_.type_)?;
+    fn try_from(value: nvmlBridgeChipInfo_t) -> Result<Self, Self::Error> {
+        let fw_version = FirmwareVersion::from(value.fwVersion);
+        let chip_type = BridgeChip::try_from(value.type_)?;
 
         Ok(Self {
             fw_version,
@@ -178,7 +188,9 @@ pub struct BridgeChipHierarchy {
     pub chip_count: u8,
 }
 
-impl BridgeChipHierarchy {
+impl TryFrom<nvmlBridgeChipHierarchy_t> for BridgeChipHierarchy {
+    type Error = NvmlError;
+
     /**
     Construct `BridgeChipHierarchy` from the corresponding C struct.
 
@@ -186,16 +198,16 @@ impl BridgeChipHierarchy {
 
     * `UnexpectedVariant`, for which you can read the docs for
     */
-    pub fn try_from(struct_: nvmlBridgeChipHierarchy_t) -> Result<Self> {
-        let chips_hierarchy = struct_
+    fn try_from(value: nvmlBridgeChipHierarchy_t) -> Result<Self, Self::Error> {
+        let chips_hierarchy = value
             .bridgeChipInfo
             .iter()
             .map(|bci| BridgeChipInfo::try_from(*bci))
-            .collect::<Result<_>>()?;
+            .collect::<Result<_, NvmlError>>()?;
 
         Ok(Self {
             chips_hierarchy,
-            chip_count: struct_.bridgeCount,
+            chip_count: value.bridgeCount,
         })
     }
 }
@@ -403,27 +415,29 @@ pub struct EncoderSessionInfo {
     pub average_latency: u32,
 }
 
-impl EncoderSessionInfo {
+impl TryFrom<nvmlEncoderSessionInfo_t> for EncoderSessionInfo {
+    type Error = NvmlError;
+
     /**
-    Waiting on `TryFrom` to be stable.
+    Construct `EncoderSessionInfo` from the corresponding C struct.
 
     # Errors
 
     * `UnexpectedVariant`, for which you can read the docs for
     */
-    pub fn try_from(struct_: nvmlEncoderSessionInfo_t) -> Result<Self> {
+    fn try_from(value: nvmlEncoderSessionInfo_t) -> Result<Self, Self::Error> {
         Ok(Self {
-            session_id: struct_.sessionId,
-            pid: struct_.pid,
-            vgpu_instance: match struct_.vgpuInstance {
+            session_id: value.sessionId,
+            pid: value.pid,
+            vgpu_instance: match value.vgpuInstance {
                 0 => None,
                 other => Some(other),
             },
-            codec_type: EncoderType::try_from(struct_.codecType)?,
-            hres: struct_.hResolution,
-            vres: struct_.vResolution,
-            average_fps: struct_.averageFps,
-            average_latency: struct_.averageLatency,
+            codec_type: EncoderType::try_from(value.codecType)?,
+            hres: value.hResolution,
+            vres: value.vResolution,
+            average_fps: value.averageFps,
+            average_latency: value.averageLatency,
         })
     }
 }
@@ -480,7 +494,7 @@ impl From<nvmlProcessUtilizationSample_t> for ProcessUtilizationSample {
 
 /// Struct that stores information returned from `Device.field_values_for()`.
 // TODO: Missing a lot of derives because of the `Result`
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct FieldValueSample {
     /// The field that this sample is for.
     pub field: FieldId,
@@ -496,26 +510,28 @@ pub struct FieldValueSample {
     /// The value of this sample.
     ///
     /// Will be an error if retrieving this specific value failed.
-    pub value: Result<SampleValue>,
+    pub value: Result<SampleValue, NvmlError>,
 }
 
-impl FieldValueSample {
+impl TryFrom<nvmlFieldValue_t> for FieldValueSample {
+    type Error = NvmlError;
+
     /**
-    Waiting on `TryFrom` to be stable.
+    Construct `FieldValueSample` from the corresponding C struct.
 
     # Errors
 
     * `UnexpectedVariant`, for which you can read the docs for
     */
-    pub fn try_from(struct_: nvmlFieldValue_t) -> Result<Self> {
+    fn try_from(value: nvmlFieldValue_t) -> Result<Self, Self::Error> {
         Ok(Self {
-            field: FieldId(struct_.fieldId),
-            timestamp: struct_.timestamp,
-            latency: struct_.latencyUsec,
-            value: match nvml_try(struct_.nvmlReturn) {
+            field: FieldId(value.fieldId),
+            timestamp: value.timestamp,
+            latency: value.latencyUsec,
+            value: match nvml_try(value.nvmlReturn) {
                 Ok(_) => Ok(SampleValue::from_tag_and_union(
-                    &SampleValueType::try_from(struct_.valueType)?,
-                    struct_.value,
+                    &SampleValueType::try_from(value.valueType)?,
+                    value.value,
                 )),
                 Err(e) => Err(e),
             },
@@ -576,35 +592,36 @@ pub struct FbcSessionInfo {
     pub average_latency: u32,
 }
 
-impl FbcSessionInfo {
+impl TryFrom<nvmlFBCSessionInfo_t> for FbcSessionInfo {
+    type Error = NvmlError;
+
     /**
-    Waiting on `TryFrom` to be stable.
+    Construct `FbcSessionInfo` from the corresponding C struct.
 
     # Errors
 
     * `UnexpectedVariant`, for which you can read the docs for
     * `IncorrectBits`, if the `sessionFlags` from the given struct do match the
-        wrapper definition
+    wrapper definition
     */
-    pub fn try_from(struct_: nvmlFBCSessionInfo_t) -> Result<Self> {
+    fn try_from(value: nvmlFBCSessionInfo_t) -> Result<Self, Self::Error> {
         Ok(Self {
-            session_id: struct_.sessionId,
-            pid: struct_.pid,
-            vgpu_instance: match struct_.vgpuInstance {
+            session_id: value.sessionId,
+            pid: value.pid,
+            vgpu_instance: match value.vgpuInstance {
                 0 => None,
                 other => Some(other),
             },
-            display_ordinal: struct_.displayOrdinal,
-            session_type: FbcSessionType::try_from(struct_.sessionType)?,
-            session_flags: FbcFlags::from_bits(struct_.sessionFlags).ok_or_else(|| {
-                Error::from(ErrorKind::IncorrectBits(Bits::U32(struct_.sessionFlags)))
-            })?,
-            hres_max: struct_.hMaxResolution,
-            vres_max: struct_.vMaxResolution,
-            hres: struct_.hResolution,
-            vres: struct_.vResolution,
-            average_fps: struct_.averageFPS,
-            average_latency: struct_.averageLatency,
+            display_ordinal: value.displayOrdinal,
+            session_type: FbcSessionType::try_from(value.sessionType)?,
+            session_flags: FbcFlags::from_bits(value.sessionFlags)
+                .ok_or_else(|| NvmlError::IncorrectBits(Bits::U32(value.sessionFlags)))?,
+            hres_max: value.hMaxResolution,
+            vres_max: value.vMaxResolution,
+            hres: value.hResolution,
+            vres: value.vResolution,
+            average_fps: value.averageFPS,
+            average_latency: value.averageLatency,
         })
     }
 }
@@ -615,16 +632,17 @@ mod tests {
     use crate::error::*;
     use crate::ffi::bindings::*;
     use crate::test_utils::*;
+    use std::convert::TryInto;
     use std::mem;
 
     #[test]
     fn pci_info_from_to_c() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
-            let converted = device
+            let converted: nvmlPciInfo_t = device
                 .pci_info()
                 .expect("wrapped pci info")
-                .try_into_c()
+                .try_into()
                 .expect("converted c pci info");
 
             let raw = unsafe {

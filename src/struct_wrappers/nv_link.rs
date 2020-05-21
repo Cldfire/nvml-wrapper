@@ -1,7 +1,8 @@
 use crate::bitmasks::nv_link::PacketTypes;
 use crate::enum_wrappers::nv_link::UtilizationCountUnit;
-use crate::error::Result;
+use crate::error::NvmlError;
 use crate::ffi::bindings::*;
+use std::convert::TryFrom;
 
 /// Defines NvLink counter controls.
 // TODO: Write a test going to / from C repr
@@ -13,8 +14,20 @@ pub struct UtilizationControl {
 }
 
 impl UtilizationControl {
+    /// Obtain this struct's C counterpart.
+    pub fn as_c(&self) -> nvmlNvLinkUtilizationControl_t {
+        nvmlNvLinkUtilizationControl_t {
+            units: self.units.as_c(),
+            pktfilter: self.packet_filter.bits() as i32,
+        }
+    }
+}
+
+impl TryFrom<nvmlNvLinkUtilizationControl_t> for UtilizationControl {
+    type Error = NvmlError;
+
     /**
-    Waiting for `TryFrom` to be stable. In the meantime, we do this.
+    Construct `UtilizationControl` from the corresponding C struct.
 
     The `packet_filter` bitmask is created via the `PacketTypes::from_bits_truncate`
     method, meaning that any bits that don't correspond to flags present in this
@@ -24,20 +37,12 @@ impl UtilizationControl {
 
     * `UnexpectedVariant`, for which you can read the docs for
     */
-    pub fn try_from(struct_: nvmlNvLinkUtilizationControl_t) -> Result<Self> {
-        let bits = struct_.pktfilter as u32;
+    fn try_from(value: nvmlNvLinkUtilizationControl_t) -> Result<Self, Self::Error> {
+        let bits = value.pktfilter as u32;
 
         Ok(UtilizationControl {
-            units: UtilizationCountUnit::try_from(struct_.units)?,
+            units: UtilizationCountUnit::try_from(value.units)?,
             packet_filter: PacketTypes::from_bits_truncate(bits),
         })
-    }
-
-    /// Obtain this struct's C counterpart.
-    pub fn as_c(&self) -> nvmlNvLinkUtilizationControl_t {
-        nvmlNvLinkUtilizationControl_t {
-            units: self.units.as_c(),
-            pktfilter: self.packet_filter.bits() as i32,
-        }
     }
 }

@@ -1,4 +1,4 @@
-use crate::error::{Error, ErrorKind, Result};
+use crate::error::NvmlError;
 use crate::ffi::bindings::*;
 
 /// API types that allow changes to default permission restrictions.

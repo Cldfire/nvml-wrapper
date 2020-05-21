@@ -7,10 +7,11 @@ use crate::enum_wrappers::{
 };
 
 use crate::enums::nv_link::Counter;
-use crate::error::{nvml_try, Result};
+use crate::error::{nvml_try, NvmlError};
 use crate::ffi::bindings::*;
 
 use std::{
+    convert::TryFrom,
     mem,
     os::raw::{c_uint, c_ulonglong},
 };
@@ -65,7 +66,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // Test written
-    pub fn is_active(&self) -> Result<bool> {
+    pub fn is_active(&self) -> Result<bool, NvmlError> {
         unsafe {
             let mut state: nvmlEnableState_t = mem::zeroed();
 
@@ -95,7 +96,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // Test written
-    pub fn version(&self) -> Result<u32> {
+    pub fn version(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut version: c_uint = mem::zeroed();
 
@@ -125,7 +126,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // Test written
-    pub fn has_capability(&self, cap_type: Capability) -> Result<bool> {
+    pub fn has_capability(&self, cap_type: Capability) -> Result<bool, NvmlError> {
         unsafe {
             // NVIDIA says that this should be interpreted as a boolean
             let mut capability: c_uint = mem::zeroed();
@@ -161,7 +162,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // Test written
-    pub fn remote_pci_info(&self) -> Result<PciInfo> {
+    pub fn remote_pci_info(&self) -> Result<PciInfo, NvmlError> {
         unsafe {
             let mut pci_info: nvmlPciInfo_t = mem::zeroed();
 
@@ -191,7 +192,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // Test written
-    pub fn error_counter(&self, counter: ErrorCounter) -> Result<u64> {
+    pub fn error_counter(&self, counter: ErrorCounter) -> Result<u64, NvmlError> {
         unsafe {
             let mut value: c_ulonglong = mem::zeroed();
 
@@ -222,7 +223,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // No-run test written
-    pub fn reset_error_counters(&mut self) -> Result<()> {
+    pub fn reset_error_counters(&mut self) -> Result<(), NvmlError> {
         unsafe {
             nvml_try(nvmlDeviceResetNvLinkErrorCounters(
                 self.device.handle(),
@@ -255,7 +256,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
         counter: Counter,
         settings: UtilizationControl,
         reset_counters: bool,
-    ) -> Result<()> {
+    ) -> Result<(), NvmlError> {
         let reset: c_uint = if reset_counters { 1 } else { 0 };
 
         unsafe {
@@ -286,7 +287,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // Test written
-    pub fn utilization_control(&self, counter: Counter) -> Result<UtilizationControl> {
+    pub fn utilization_control(&self, counter: Counter) -> Result<UtilizationControl, NvmlError> {
         unsafe {
             let mut controls: nvmlNvLinkUtilizationControl_t = mem::zeroed();
 
@@ -334,7 +335,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // No-run test written
-    pub fn utilization_counter(&self, counter: Counter) -> Result<UtilizationCounter> {
+    pub fn utilization_counter(&self, counter: Counter) -> Result<UtilizationCounter, NvmlError> {
         unsafe {
             let mut receive: c_ulonglong = mem::zeroed();
             let mut send: c_ulonglong = mem::zeroed();
@@ -370,7 +371,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // No-run test written
-    pub fn freeze_utilization_counter(&mut self, counter: Counter) -> Result<()> {
+    pub fn freeze_utilization_counter(&mut self, counter: Counter) -> Result<(), NvmlError> {
         self.set_utilization_counter_frozen(counter, true)
     }
 
@@ -393,11 +394,15 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // No-run test written
-    pub fn unfreeze_utilization_counter(&mut self, counter: Counter) -> Result<()> {
+    pub fn unfreeze_utilization_counter(&mut self, counter: Counter) -> Result<(), NvmlError> {
         self.set_utilization_counter_frozen(counter, false)
     }
 
-    fn set_utilization_counter_frozen(&mut self, counter: Counter, frozen: bool) -> Result<()> {
+    fn set_utilization_counter_frozen(
+        &mut self,
+        counter: Counter,
+        frozen: bool,
+    ) -> Result<(), NvmlError> {
         unsafe {
             nvml_try(nvmlDeviceFreezeNvLinkUtilizationCounter(
                 self.device.handle(),
@@ -427,7 +432,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // No-run test written
-    pub fn reset_utilization_counter(&mut self, counter: Counter) -> Result<()> {
+    pub fn reset_utilization_counter(&mut self, counter: Counter) -> Result<(), NvmlError> {
         unsafe {
             nvml_try(nvmlDeviceResetNvLinkUtilizationCounter(
                 self.device.handle(),

@@ -1,5 +1,5 @@
 /*!
-A complete, safe, and ergonomic Rust wrapper for the
+A safe and ergonomic Rust wrapper for the
 [NVIDIA Management Library](https://developer.nvidia.com/nvidia-management-library-nvml)
 (NVML), a C-based programmatic interface for monitoring and managing various states within
 NVIDIA (primarily Tesla) GPUs.
@@ -7,7 +7,7 @@ NVIDIA (primarily Tesla) GPUs.
 ```
 # use nvml_wrapper::NVML;
 # use nvml_wrapper::error::*;
-# fn test() -> Result<()> {
+# fn test() -> Result<(), NvmlError> {
 let nvml = NVML::init()?;
 // Get the first `Device` (GPU) in the system
 let device = nvml.device_by_index(0)?;
@@ -18,7 +18,7 @@ let power_limit = device.enforced_power_limit()?; // 275k milliwatts on my syste
 let encoder_util = device.encoder_utilization()?; // Currently 0 on my system; Not encoding anything
 let memory_info = device.memory_info()?; // Currently 1.63/6.37 GB used on my system
 
-// ... and there's a whole lot more you can do. Everything in NVML is wrapped and ready to go
+// ... and there's a whole lot more you can do. Most everything in NVML is wrapped and ready to go
 # Ok(())
 # }
 ```
@@ -110,17 +110,12 @@ for every NVML data structure.
 #![allow(non_upper_case_globals)]
 
 #[macro_use]
-extern crate error_chain;
-#[macro_use]
 extern crate bitflags;
 #[macro_use]
 extern crate wrapcenum_derive;
 #[cfg(feature = "serde")]
 #[macro_use]
 extern crate serde;
-#[cfg(test)]
-#[cfg_attr(test, macro_use)]
-extern crate assert_matches;
 extern crate nvml_wrapper_sys as ffi;
 
 pub mod bitmasks;
@@ -152,8 +147,11 @@ pub mod sys_exports {
 }
 
 #[cfg(target_os = "linux")]
+use std::convert::TryInto;
+#[cfg(target_os = "linux")]
 use std::ptr;
 use std::{
+    convert::TryFrom,
     ffi::{CStr, CString},
     io::{self, Write},
     mem,
@@ -163,7 +161,7 @@ use std::{
 #[cfg(target_os = "linux")]
 use crate::enum_wrappers::device::TopologyLevel;
 
-use crate::error::{nvml_try, Result};
+use crate::error::{nvml_try, NvmlError};
 use crate::ffi::bindings::*;
 
 use crate::struct_wrappers::BlacklistDeviceInfo;
@@ -239,7 +237,7 @@ impl NVML {
     * `Unknown`, on any unexpected error
     */
     // Checked against local
-    pub fn init() -> Result<Self> {
+    pub fn init() -> Result<Self, NvmlError> {
         unsafe {
             nvml_try(nvmlInit_v2())?;
         }
@@ -265,7 +263,7 @@ impl NVML {
     # use nvml_wrapper::error::*;
     use nvml_wrapper::bitmasks::InitFlags;
 
-    # fn main() -> Result<()> {
+    # fn main() -> Result<(), NvmlError> {
     // Don't fail if the system doesn't have any NVIDIA GPUs
     NVML::init_with_flags(InitFlags::NO_GPUS)?;
     # Ok(())
@@ -273,7 +271,7 @@ impl NVML {
     ```
     */
     // TODO: Example of using multiple flags when multiple flags exist
-    pub fn init_with_flags(flags: InitFlags) -> Result<Self> {
+    pub fn init_with_flags(flags: InitFlags) -> Result<Self, NvmlError> {
         unsafe {
             nvml_try(nvmlInitWithFlags(flags.bits()))?;
         }
@@ -293,7 +291,7 @@ impl NVML {
     // Thanks to `sorear` on IRC for suggesting this approach
     // Checked against local
     // Tested
-    pub fn shutdown(self) -> Result<()> {
+    pub fn shutdown(self) -> Result<(), NvmlError> {
         unsafe {
             nvml_try(nvmlShutdown())?;
         }
@@ -314,7 +312,7 @@ impl NVML {
     */
     // Checked against local
     // Tested
-    pub fn device_count(&self) -> Result<u32> {
+    pub fn device_count(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut count: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetCount_v2(&mut count))?;
@@ -334,7 +332,7 @@ impl NVML {
     */
     // Checked against local
     // Tested
-    pub fn sys_driver_version(&self) -> Result<String> {
+    pub fn sys_driver_version(&self) -> Result<String, NvmlError> {
         unsafe {
             let mut version_vec = vec![0; NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE as usize];
 
@@ -358,7 +356,7 @@ impl NVML {
     */
     // Checked against local
     // Tested
-    pub fn sys_nvml_version(&self) -> Result<String> {
+    pub fn sys_nvml_version(&self) -> Result<String, NvmlError> {
         unsafe {
             let mut version_vec = vec![0; NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE as usize];
 
@@ -386,7 +384,7 @@ impl NVML {
     * `FunctionNotFound`, if cuDriverGetVersion() is not found in the shared library
     * `LibraryNotFound`, if libcuda.so.1 or libcuda.dll cannot be found
     */
-    pub fn sys_cuda_driver_version(&self) -> Result<i32> {
+    pub fn sys_cuda_driver_version(&self) -> Result<i32, NvmlError> {
         unsafe {
             let mut version: c_int = mem::zeroed();
             nvml_try(nvmlSystemGetCudaDriverVersion_v2(&mut version))?;
@@ -412,7 +410,7 @@ impl NVML {
     // to do anything about that
     // Checked against local
     // Tested
-    pub fn sys_process_name(&self, pid: u32, length: usize) -> Result<String> {
+    pub fn sys_process_name(&self, pid: u32, length: usize) -> Result<String, NvmlError> {
         unsafe {
             let mut name_vec = vec![0; length];
 
@@ -458,7 +456,7 @@ impl NVML {
     */
     // Checked against local
     // Tested
-    pub fn device_by_index(&self, index: u32) -> Result<Device> {
+    pub fn device_by_index(&self, index: u32) -> Result<Device, NvmlError> {
         unsafe {
             let mut device: nvmlDevice_t = mem::zeroed();
             nvml_try(nvmlDeviceGetHandleByIndex_v2(index, &mut device))?;
@@ -489,7 +487,7 @@ impl NVML {
     */
     // Checked against local
     // Tested
-    pub fn device_by_pci_bus_id<S: AsRef<str>>(&self, pci_bus_id: S) -> Result<Device>
+    pub fn device_by_pci_bus_id<S: AsRef<str>>(&self, pci_bus_id: S) -> Result<Device, NvmlError>
     where
         Vec<u8>: From<S>,
     {
@@ -510,7 +508,7 @@ impl NVML {
     /// anymore.
     // Tested (for an error)
     #[deprecated(note = "use `.device_by_uuid()`, this errors on dual GPU boards")]
-    pub fn device_by_serial<S: AsRef<str>>(&self, board_serial: S) -> Result<Device>
+    pub fn device_by_serial<S: AsRef<str>>(&self, board_serial: S) -> Result<Device, NvmlError>
     where
         Vec<u8>: From<S>,
     {
@@ -546,7 +544,7 @@ impl NVML {
     */
     // Checked against local
     // Tested
-    pub fn device_by_uuid<S: AsRef<str>>(&self, uuid: S) -> Result<Device>
+    pub fn device_by_uuid<S: AsRef<str>>(&self, uuid: S) -> Result<Device, NvmlError>
     where
         Vec<u8>: From<S>,
     {
@@ -583,7 +581,7 @@ impl NVML {
         &self,
         device1: &Device,
         device2: &Device,
-    ) -> Result<TopologyLevel> {
+    ) -> Result<TopologyLevel, NvmlError> {
         unsafe {
             let mut level: nvmlGpuTopologyLevel_t = mem::zeroed();
 
@@ -619,7 +617,7 @@ impl NVML {
     */
     // Checked against local
     // Tested (for an error)
-    pub fn unit_by_index(&self, index: u32) -> Result<Unit> {
+    pub fn unit_by_index(&self, index: u32) -> Result<Unit, NvmlError> {
         unsafe {
             let mut unit: nvmlUnit_t = mem::zeroed();
             nvml_try(nvmlUnitGetHandleByIndex(index as c_uint, &mut unit))?;
@@ -643,7 +641,11 @@ impl NVML {
     */
     // Checked against local
     // Tested
-    pub fn are_devices_on_same_board(&self, device1: &Device, device2: &Device) -> Result<bool> {
+    pub fn are_devices_on_same_board(
+        &self,
+        device1: &Device,
+        device2: &Device,
+    ) -> Result<bool, NvmlError> {
         unsafe {
             let mut bool_int: c_int = mem::zeroed();
 
@@ -675,7 +677,7 @@ impl NVML {
     */
     // Tested
     #[cfg(target_os = "linux")]
-    pub fn topology_gpu_set(&self, cpu_number: u32) -> Result<Vec<Device>> {
+    pub fn topology_gpu_set(&self, cpu_number: u32) -> Result<Vec<Device>, NvmlError> {
         unsafe {
             let mut count = match self.topology_gpu_set_count(cpu_number)? {
                 0 => return Ok(vec![]),
@@ -695,7 +697,7 @@ impl NVML {
 
     // Helper function for the above.
     #[cfg(target_os = "linux")]
-    fn topology_gpu_set_count(&self, cpu_number: u32) -> Result<c_uint> {
+    fn topology_gpu_set_count(&self, cpu_number: u32) -> Result<c_uint, NvmlError> {
         unsafe {
             // Indicates that we want the count
             let mut count: c_uint = 0;
@@ -724,7 +726,7 @@ impl NVML {
     */
     // Checked against local
     // Tested
-    pub fn hic_versions(&self) -> Result<Vec<HwbcEntry>> {
+    pub fn hic_versions(&self) -> Result<Vec<HwbcEntry>, NvmlError> {
         unsafe {
             let mut count: c_uint = match self.hic_count()? {
                 0 => return Ok(vec![]),
@@ -750,7 +752,7 @@ impl NVML {
     Supports S-class products.
     */
     // Tested as part of the above method
-    pub fn hic_count(&self) -> Result<u32> {
+    pub fn hic_count(&self) -> Result<u32, NvmlError> {
         unsafe {
             /*
             NVIDIA doesn't even say that `count` will be set to the count if
@@ -792,7 +794,7 @@ impl NVML {
     */
     // Checked against local
     // Tested
-    pub fn unit_count(&self) -> Result<u32> {
+    pub fn unit_count(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut count: c_uint = mem::zeroed();
             nvml_try(nvmlUnitGetCount(&mut count))?;
@@ -815,7 +817,7 @@ impl NVML {
     */
     // Checked against local
     // Tested
-    pub fn create_event_set(&self) -> Result<EventSet> {
+    pub fn create_event_set(&self) -> Result<EventSet, NvmlError> {
         unsafe {
             let mut set: nvmlEventSet_t = mem::zeroed();
             nvml_try(nvmlEventSetCreate(&mut set))?;
@@ -867,8 +869,8 @@ impl NVML {
     // Checked against local
     // Tested
     #[cfg(target_os = "linux")]
-    pub fn discover_gpus(&self, pci_info: PciInfo) -> Result<()> {
-        unsafe { nvml_try(nvmlDeviceDiscoverGpus(&mut pci_info.try_into_c()?)) }
+    pub fn discover_gpus(&self, pci_info: PciInfo) -> Result<(), NvmlError> {
+        unsafe { nvml_try(nvmlDeviceDiscoverGpus(&mut pci_info.try_into()?)) }
     }
 
     /**
@@ -878,7 +880,7 @@ impl NVML {
 
     Supports all devices.
     */
-    pub fn blacklist_device_count(&self) -> Result<u32> {
+    pub fn blacklist_device_count(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut count: c_uint = mem::zeroed();
 
@@ -899,7 +901,7 @@ impl NVML {
 
     Supports all devices.
     */
-    pub fn blacklist_device_info(&self, index: u32) -> Result<BlacklistDeviceInfo> {
+    pub fn blacklist_device_info(&self, index: u32) -> Result<BlacklistDeviceInfo, NvmlError> {
         unsafe {
             let mut info: nvmlBlacklistDeviceInfo_t = mem::zeroed();
 
@@ -937,7 +939,7 @@ impl Drop for NVML {
 mod test {
     use super::*;
     use crate::bitmasks::InitFlags;
-    use crate::error::{Error, ErrorKind};
+    use crate::error::NvmlError;
     use crate::test_utils::*;
 
     #[test]
@@ -1000,7 +1002,7 @@ mod test {
         test_with_device(3, &nvml, |device| {
             let processes = device.running_graphics_processes()?;
             match nvml.sys_process_name(processes[0].pid, 64) {
-                Err(Error(ErrorKind::NoPermission, _)) => Ok("No permission error".into()),
+                Err(NvmlError::NoPermission) => Ok("No permission error".into()),
                 v => v,
             }
         })
@@ -1064,7 +1066,7 @@ mod test {
         test(3, || {
             match nvml.unit_by_index(0) {
                 // I have no unit to test with
-                Err(Error(ErrorKind::InvalidArg, _)) => panic!("InvalidArg"),
+                Err(NvmlError::InvalidArg) => panic!("InvalidArg"),
                 other => other,
             }
         })
@@ -1116,7 +1118,7 @@ mod test {
 
             // We don't test with admin perms and therefore expect an error
             match nvml.discover_gpus(pci_info) {
-                Err(Error(ErrorKind::NoPermission, _)) => panic!("NoPermission"),
+                Err(NvmlError::NoPermission) => panic!("NoPermission"),
                 other => other,
             }
         })

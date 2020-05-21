@@ -1,6 +1,6 @@
-use crate::error::{Error, ErrorKind, Result};
+use crate::error::NvmlError;
 use crate::ffi::bindings::*;
-use std::ffi::CStr;
+use std::{convert::TryFrom, ffi::CStr};
 
 /// LED states for an S-class unit.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -12,24 +12,26 @@ pub enum LedState {
     Amber(String),
 }
 
-impl LedState {
+impl TryFrom<nvmlLedState_t> for LedState {
+    type Error = NvmlError;
+
     /**
-    Waiting for `TryFrom` to be stable. In the meantime, we do this.
+    Construct `LedState` from the corresponding C struct.
 
     # Errors
 
-    * `Utf8Error`, if the string obtained from the C function is not valid Utf8
+    * `UnexpectedVariant`, for which you can read the docs for
     */
-    pub fn try_from(struct_: nvmlLedState_t) -> Result<Self> {
-        let color = struct_.color;
+    fn try_from(value: nvmlLedState_t) -> Result<Self, Self::Error> {
+        let color = value.color;
 
         match color {
             nvmlLedColor_enum_NVML_LED_COLOR_GREEN => Ok(LedState::Green),
             nvmlLedColor_enum_NVML_LED_COLOR_AMBER => unsafe {
-                let cause_raw = CStr::from_ptr(struct_.cause.as_ptr());
+                let cause_raw = CStr::from_ptr(value.cause.as_ptr());
                 Ok(LedState::Amber(cause_raw.to_str()?.into()))
             },
-            _ => Err(Error::from_kind(ErrorKind::UnexpectedVariant(color))),
+            _ => Err(NvmlError::UnexpectedVariant(color)),
         }
     }
 }

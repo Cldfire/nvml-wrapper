@@ -5,7 +5,7 @@
 [![Crates.io downloads](https://img.shields.io/crates/d/nvml-wrapper.svg?style=flat-square)](https://crates.io/crates/nvml-wrapper)
 ![CI](https://github.com/Cldfire/nvml-wrapper/workflows/CI/badge.svg)
 
-A complete, safe, and ergonomic Rust wrapper for the
+A safe and ergonomic Rust wrapper for the
 [NVIDIA Management Library](https://developer.nvidia.com/nvidia-management-library-nvml)
 (NVML), a C-based programmatic interface for monitoring and managing various states within
 NVIDIA (primarily Tesla) GPUs.
@@ -24,7 +24,7 @@ let power_limit = device.enforced_power_limit()?; // 275k milliwatts on my syste
 let encoder_util = device.encoder_utilization()?; // Currently 0 on my system; Not encoding anything
 let memory_info = device.memory_info()?; // Currently 1.63/6.37 GB used on my system
 
-// ... and there's a whole lot more you can do. Everything in NVML is wrapped and ready to go
+// ... and there's a whole lot more you can do. Most everything in NVML is wrapped and ready to go
 ```
 
 NVML is intended to be a platform for building 3rd-party applications, and is

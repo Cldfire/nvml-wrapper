@@ -1,13 +1,13 @@
 use crate::device::Device;
 use crate::enum_wrappers::unit::LedColor;
 use crate::enums::unit::{LedState, TemperatureReading};
-use crate::error::{nvml_try, Result};
+use crate::error::{nvml_try, NvmlError};
 use crate::ffi::bindings::*;
 use crate::struct_wrappers::unit::{FansInfo, PsuInfo, UnitInfo};
 use crate::NVML;
 use std::marker::PhantomData;
 use std::mem;
-use std::os::raw::c_uint;
+use std::{convert::TryFrom, os::raw::c_uint};
 
 /**
 Struct that represents a unit.
@@ -63,7 +63,7 @@ impl<'nvml> Unit<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn devices(&self) -> Result<Vec<Device>> {
+    pub fn devices(&self) -> Result<Vec<Device>, NvmlError> {
         unsafe {
             let mut count: c_uint = match self.device_count()? {
                 0 => return Ok(vec![]),
@@ -100,7 +100,7 @@ impl<'nvml> Unit<'nvml> {
     For S-class products.
     */
     // Tested as part of the above
-    pub fn device_count(&self) -> Result<u32> {
+    pub fn device_count(&self) -> Result<u32, NvmlError> {
         unsafe {
             /*
             NVIDIA doesn't even say that `count` will be set to the count if
@@ -145,7 +145,7 @@ impl<'nvml> Unit<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn fan_info(&self) -> Result<FansInfo> {
+    pub fn fan_info(&self) -> Result<FansInfo, NvmlError> {
         unsafe {
             let mut fans_info: nvmlUnitFanSpeeds_t = mem::zeroed();
             nvml_try(nvmlUnitGetFanSpeedInfo(self.unit, &mut fans_info))?;
@@ -171,7 +171,7 @@ impl<'nvml> Unit<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn led_state(&self) -> Result<LedState> {
+    pub fn led_state(&self) -> Result<LedState, NvmlError> {
         unsafe {
             let mut state: nvmlLedState_t = mem::zeroed();
             nvml_try(nvmlUnitGetLedState(self.unit, &mut state))?;
@@ -197,7 +197,7 @@ impl<'nvml> Unit<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn psu_info(&self) -> Result<PsuInfo> {
+    pub fn psu_info(&self) -> Result<PsuInfo, NvmlError> {
         unsafe {
             let mut info: nvmlPSUInfo_t = mem::zeroed();
             nvml_try(nvmlUnitGetPsuInfo(self.unit, &mut info))?;
@@ -224,7 +224,7 @@ impl<'nvml> Unit<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn temperature(&self, reading_type: TemperatureReading) -> Result<u32> {
+    pub fn temperature(&self, reading_type: TemperatureReading) -> Result<u32, NvmlError> {
         unsafe {
             let mut temp: c_uint = mem::zeroed();
 
@@ -253,7 +253,7 @@ impl<'nvml> Unit<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn info(&self) -> Result<UnitInfo> {
+    pub fn info(&self) -> Result<UnitInfo, NvmlError> {
         unsafe {
             let mut info: nvmlUnitInfo_t = mem::zeroed();
             nvml_try(nvmlUnitGetUnitInfo(self.unit, &mut info))?;
@@ -287,7 +287,7 @@ impl<'nvml> Unit<'nvml> {
     */
     // checked against local
     // Tested (no-run)
-    pub fn set_led_color(&mut self, color: LedColor) -> Result<()> {
+    pub fn set_led_color(&mut self, color: LedColor) -> Result<(), NvmlError> {
         unsafe { nvml_try(nvmlUnitSetLedState(self.unit, color.as_c())) }
     }
 

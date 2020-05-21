@@ -11,10 +11,17 @@ This file describes the changes / additions / fixes between wrapper releases.
 * Removed `#[inline]` attribute from all functions
 * Merged methods to get raw handles from structs into a single method
   * `Device.handle()`, `EventSet.handle()`, `Unit.handle()`
+* Ripped `error-chain` out of crate entirely
+  * Replaced with `NvmlError` enum that implements `std::error::Error`
+* Migrated most `try_from()` methods to implementations of `std::convert::TryFrom`
+* Migrated all `try_into_c()` methods to implementations of `std::convert::TryInto`
+* Modernized some of the example code
 
 ### Dependencies
 
 * `bitflags`: `1.0.x -> 1.2.x`
+* `thiserror`: new dependency on `1.0.x`
+* `error-chain`: no longer a dependency
 
 ## 0.5.0 (released 2019-09-10)
 

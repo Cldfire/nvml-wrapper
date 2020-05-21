@@ -4,9 +4,9 @@ pub mod nv_link;
 pub mod unit;
 
 use self::device::PciInfo;
-use crate::error::Result;
+use crate::error::NvmlError;
 use crate::ffi::bindings::*;
-use std::ffi::CStr;
+use std::{convert::TryFrom, ffi::CStr};
 
 /// Information about a blacklisted device
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -16,20 +16,22 @@ pub struct BlacklistDeviceInfo {
     uuid: String,
 }
 
-impl BlacklistDeviceInfo {
+impl TryFrom<nvmlBlacklistDeviceInfo_t> for BlacklistDeviceInfo {
+    type Error = NvmlError;
+
     /**
-    Try converting the C structure into a rustified one.
+    Construct `BlacklistDeviceInfo` from the corresponding C struct.
 
     # Errors
 
-    * `Utf8Error`, if strings obtained from the C function are not valid Utf8
+    * `UnexpectedVariant`, for which you can read the docs for
     */
-    pub fn try_from(struct_: nvmlBlacklistDeviceInfo_t) -> Result<Self> {
+    fn try_from(value: nvmlBlacklistDeviceInfo_t) -> Result<Self, Self::Error> {
         unsafe {
-            let uuid_raw = CStr::from_ptr(struct_.uuid.as_ptr());
+            let uuid_raw = CStr::from_ptr(value.uuid.as_ptr());
 
             Ok(Self {
-                pci_info: PciInfo::try_from(struct_.pciInfo, true)?,
+                pci_info: PciInfo::try_from(value.pciInfo, true)?,
                 uuid: uuid_raw.to_str()?.into(),
             })
         }

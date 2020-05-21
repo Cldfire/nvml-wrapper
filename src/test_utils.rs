@@ -8,7 +8,7 @@ use crate::bitmasks::{device::*, event::*};
 
 use crate::enum_wrappers::device::*;
 use crate::enums::unit::*;
-use crate::error::*;
+use crate::error::NvmlError;
 use crate::event::EventSet;
 use std::fmt::Debug;
 
@@ -67,7 +67,7 @@ impl<'nvml> ShouldPrint for Vec<Device<'nvml>> {}
 impl ShouldPrint for Vec<u32> {}
 impl ShouldPrint for Vec<u64> {}
 impl ShouldPrint for Vec<Sample> {}
-impl ShouldPrint for Vec<Result<FieldValueSample>> {}
+impl ShouldPrint for Vec<Result<FieldValueSample, NvmlError>> {}
 impl ShouldPrint for Vec<HwbcEntry> {}
 impl ShouldPrint for Utilization {}
 impl ShouldPrint for EncoderStats {}
@@ -124,7 +124,7 @@ pub fn assert_sync<T: Sync>() {}
 /// Run all testing methods for the given test.
 pub fn test<T, R>(reps: usize, test: T)
 where
-    T: Fn() -> Result<R>,
+    T: Fn() -> Result<R, NvmlError>,
     R: ShouldPrint,
 {
     single(|| test());
@@ -134,7 +134,7 @@ where
 
 pub fn test_with_device<T, R>(reps: usize, nvml: &NVML, test: T)
 where
-    T: Fn(&Device) -> Result<R>,
+    T: Fn(&Device) -> Result<R, NvmlError>,
     R: ShouldPrint,
 {
     let device = device(nvml);
@@ -147,7 +147,7 @@ where
 #[cfg(not(feature = "test-local"))]
 pub fn test_with_unit<T, R>(reps: usize, nvml: &NVML, test: T)
 where
-    T: Fn(&Unit) -> Result<R>,
+    T: Fn(&Unit) -> Result<R, NvmlError>,
     R: ShouldPrint,
 {
     let unit = unit(nvml);
@@ -160,7 +160,7 @@ where
 #[cfg(not(feature = "test-local"))]
 pub fn test_with_link<T, R>(reps: usize, nvml: &NVML, test: T)
 where
-    T: Fn(&NvLink) -> Result<R>,
+    T: Fn(&NvLink) -> Result<R, NvmlError>,
     R: ShouldPrint,
 {
     // Is 0 a good default???
@@ -175,7 +175,7 @@ where
 /// Run the given test once.
 pub fn single<T, R>(test: T)
 where
-    T: Fn() -> Result<R>,
+    T: Fn() -> Result<R, NvmlError>,
     R: ShouldPrint,
 {
     let res = test().expect("successful single test");
@@ -188,7 +188,7 @@ where
 /// Run the given test multiple times.
 pub fn multi<T, R>(count: usize, test: T)
 where
-    T: Fn() -> Result<R>,
+    T: Fn() -> Result<R, NvmlError>,
     R: ShouldPrint,
 {
     for i in 0..count {

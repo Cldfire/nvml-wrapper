@@ -12,8 +12,8 @@ use crate::bitmasks::Behavior;
 use crate::enum_wrappers::{bool_from_state, device::*, state_from_bool};
 
 #[cfg(target_os = "linux")]
-use crate::error::ResultExt;
-use crate::error::{nvml_try, Bits, Error, ErrorKind, Result};
+use crate::error::NvmlErrorWithSource;
+use crate::error::{nvml_try, Bits, NvmlError};
 
 use crate::ffi::bindings::*;
 
@@ -21,8 +21,11 @@ use crate::struct_wrappers::device::*;
 use crate::structs::device::*;
 
 #[cfg(target_os = "linux")]
+use std::convert::TryInto;
+#[cfg(target_os = "linux")]
 use std::os::raw::c_ulong;
 use std::{
+    convert::TryFrom,
     ffi::CStr,
     marker::PhantomData,
     mem,
@@ -83,7 +86,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested (no-run)
     #[cfg(target_os = "linux")]
-    pub fn clear_cpu_affinity(&mut self) -> Result<()> {
+    pub fn clear_cpu_affinity(&mut self) -> Result<(), NvmlError> {
         unsafe { nvml_try(nvmlDeviceClearCpuAffinity(self.device)) }
     }
 
@@ -114,7 +117,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (except for AutoBoostedClocks)
-    pub fn is_api_restricted(&self, api: Api) -> Result<bool> {
+    pub fn is_api_restricted(&self, api: Api) -> Result<bool, NvmlError> {
         unsafe {
             let mut restricted_state: nvmlEnableState_t = mem::zeroed();
 
@@ -149,7 +152,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn applications_clock(&self, clock_type: Clock) -> Result<u32> {
+    pub fn applications_clock(&self, clock_type: Clock) -> Result<u32, NvmlError> {
         unsafe {
             let mut clock: c_uint = mem::zeroed();
 
@@ -188,7 +191,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
-    pub fn auto_boosted_clocks_enabled(&self) -> Result<AutoBoostClocksEnabledInfo> {
+    pub fn auto_boosted_clocks_enabled(&self) -> Result<AutoBoostClocksEnabledInfo, NvmlError> {
         unsafe {
             let mut is_enabled: nvmlEnableState_t = mem::zeroed();
             let mut is_enabled_default: nvmlEnableState_t = mem::zeroed();
@@ -226,7 +229,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn bar1_memory_info(&self) -> Result<BAR1MemoryInfo> {
+    pub fn bar1_memory_info(&self) -> Result<BAR1MemoryInfo, NvmlError> {
         unsafe {
             let mut mem_info: nvmlBAR1Memory_t = mem::zeroed();
             nvml_try(nvmlDeviceGetBAR1MemoryInfo(self.device, &mut mem_info))?;
@@ -262,7 +265,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn board_id(&self) -> Result<u32> {
+    pub fn board_id(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut id: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetBoardId(self.device, &mut id))?;
@@ -286,7 +289,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local nvml.h
     // Tested
-    pub fn brand(&self) -> Result<Brand> {
+    pub fn brand(&self) -> Result<Brand, NvmlError> {
         unsafe {
             let mut brand: nvmlBrandType_t = mem::zeroed();
             nvml_try(nvmlDeviceGetBrand(self.device, &mut brand))?;
@@ -315,7 +318,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
-    pub fn bridge_chip_info(&self) -> Result<BridgeChipHierarchy> {
+    pub fn bridge_chip_info(&self) -> Result<BridgeChipHierarchy, NvmlError> {
         unsafe {
             let mut info: nvmlBridgeChipHierarchy_t = mem::zeroed();
             nvml_try(nvmlDeviceGetBridgeChipInfo(self.device, &mut info))?;
@@ -341,7 +344,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (except for CustomerMaxBoost)
-    pub fn clock(&self, clock_type: Clock, clock_id: ClockId) -> Result<u32> {
+    pub fn clock(&self, clock_type: Clock, clock_id: ClockId) -> Result<u32, NvmlError> {
         unsafe {
             let mut clock: c_uint = mem::zeroed();
 
@@ -375,7 +378,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
-    pub fn max_customer_boost_clock(&self, clock_type: Clock) -> Result<u32> {
+    pub fn max_customer_boost_clock(&self, clock_type: Clock) -> Result<u32, NvmlError> {
         unsafe {
             let mut clock: c_uint = mem::zeroed();
 
@@ -403,7 +406,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn compute_mode(&self) -> Result<ComputeMode> {
+    pub fn compute_mode(&self) -> Result<ComputeMode, NvmlError> {
         unsafe {
             let mut mode: nvmlComputeMode_t = mem::zeroed();
             nvml_try(nvmlDeviceGetComputeMode(self.device, &mut mode))?;
@@ -425,7 +428,7 @@ impl<'nvml> Device<'nvml> {
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     * `Unknown`, on any unexpected error
     */
-    pub fn cuda_compute_capability(&self) -> Result<CudaComputeCapability> {
+    pub fn cuda_compute_capability(&self) -> Result<CudaComputeCapability, NvmlError> {
         unsafe {
             let mut major: c_int = mem::zeroed();
             let mut minor: c_int = mem::zeroed();
@@ -457,7 +460,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn clock_info(&self, clock_type: Clock) -> Result<u32> {
+    pub fn clock_info(&self, clock_type: Clock) -> Result<u32, NvmlError> {
         unsafe {
             let mut clock: c_uint = mem::zeroed();
 
@@ -486,7 +489,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     */
     // Tested
-    pub fn running_compute_processes(&self) -> Result<Vec<ProcessInfo>> {
+    pub fn running_compute_processes(&self) -> Result<Vec<ProcessInfo>, NvmlError> {
         unsafe {
             let mut count: c_uint = match self.running_compute_processes_count()? {
                 0 => return Ok(vec![]),
@@ -519,7 +522,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     */
     // Tested as part of `.running_compute_processes()`
-    pub fn running_compute_processes_count(&self) -> Result<u32> {
+    pub fn running_compute_processes_count(&self) -> Result<u32, NvmlError> {
         unsafe {
             // Indicates that we want the count
             let mut count: c_uint = 0;
@@ -562,11 +565,11 @@ impl<'nvml> Device<'nvml> {
     // Tested
     // TODO: Should we trim zeros here or leave it to the caller?
     #[cfg(target_os = "linux")]
-    pub fn cpu_affinity(&self, size: usize) -> Result<Vec<c_ulong>> {
+    pub fn cpu_affinity(&self, size: usize) -> Result<Vec<c_ulong>, NvmlError> {
         unsafe {
             if size == 0 {
                 // Return an error containing the minimum size that can be passed.
-                bail!(ErrorKind::InsufficientSize(Some(1)));
+                return Err(NvmlError::InsufficientSize(Some(1)));
             }
 
             let mut affinities: Vec<c_ulong> = vec![mem::zeroed(); size];
@@ -598,7 +601,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn current_pcie_link_gen(&self) -> Result<u32> {
+    pub fn current_pcie_link_gen(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut link_gen: c_uint = mem::zeroed();
 
@@ -628,7 +631,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn current_pcie_link_width(&self) -> Result<u32> {
+    pub fn current_pcie_link_width(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut link_width: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetCurrPcieLinkWidth(self.device, &mut link_width))?;
@@ -654,7 +657,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn decoder_utilization(&self) -> Result<UtilizationInfo> {
+    pub fn decoder_utilization(&self) -> Result<UtilizationInfo, NvmlError> {
         unsafe {
             let mut utilization: c_uint = mem::zeroed();
             let mut sampling_period: c_uint = mem::zeroed();
@@ -687,7 +690,7 @@ impl<'nvml> Device<'nvml> {
     Supports Maxwell or newer fully supported devices.
     */
     // tested
-    pub fn fbc_stats(&self) -> Result<FbcStats> {
+    pub fn fbc_stats(&self) -> Result<FbcStats, NvmlError> {
         unsafe {
             let mut fbc_stats: nvmlFBCStats_t = mem::zeroed();
             nvml_try(nvmlDeviceGetFBCStats(self.device, &mut fbc_stats))?;
@@ -718,7 +721,7 @@ impl<'nvml> Device<'nvml> {
     Supports Maxwell or newer fully supported devices.
     */
     // tested
-    pub fn fbc_sessions_info(&self) -> Result<Vec<FbcSessionInfo>> {
+    pub fn fbc_sessions_info(&self) -> Result<Vec<FbcSessionInfo>, NvmlError> {
         unsafe {
             let mut count: c_uint = match self.fbc_session_count()? {
                 0 => return Ok(vec![]),
@@ -747,7 +750,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     */
     // tested as part of the above
-    pub fn fbc_session_count(&self) -> Result<u32> {
+    pub fn fbc_session_count(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut count: c_uint = 0;
 
@@ -779,7 +782,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn default_applications_clock(&self, clock_type: Clock) -> Result<u32> {
+    pub fn default_applications_clock(&self, clock_type: Clock) -> Result<u32, NvmlError> {
         unsafe {
             let mut clock: c_uint = mem::zeroed();
 
@@ -800,7 +803,7 @@ impl<'nvml> Device<'nvml> {
         &self,
         error_type: MemoryError,
         counter_type: EccCounter,
-    ) -> Result<EccErrorCounts> {
+    ) -> Result<EccErrorCounts, NvmlError> {
         unsafe {
             let mut counts: nvmlEccErrorCounts_t = mem::zeroed();
 
@@ -835,7 +838,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn is_display_active(&self) -> Result<bool> {
+    pub fn is_display_active(&self) -> Result<bool, NvmlError> {
         unsafe {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetDisplayActive(self.device, &mut state))?;
@@ -861,7 +864,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn is_display_connected(&self) -> Result<bool> {
+    pub fn is_display_connected(&self) -> Result<bool, NvmlError> {
         unsafe {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetDisplayMode(self.device, &mut state))?;
@@ -897,7 +900,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested
     #[cfg(target_os = "windows")]
-    pub fn driver_model(&self) -> Result<DriverModelState> {
+    pub fn driver_model(&self) -> Result<DriverModelState, NvmlError> {
         unsafe {
             let mut current: nvmlDriverModel_t = mem::zeroed();
             let mut pending: nvmlDriverModel_t = mem::zeroed();
@@ -937,7 +940,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
-    pub fn is_ecc_enabled(&self) -> Result<EccModeState> {
+    pub fn is_ecc_enabled(&self) -> Result<EccModeState, NvmlError> {
         unsafe {
             let mut current: nvmlEnableState_t = mem::zeroed();
             let mut pending: nvmlEnableState_t = mem::zeroed();
@@ -972,7 +975,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn encoder_utilization(&self) -> Result<UtilizationInfo> {
+    pub fn encoder_utilization(&self) -> Result<UtilizationInfo, NvmlError> {
         unsafe {
             let mut utilization: c_uint = mem::zeroed();
             let mut sampling_period: c_uint = mem::zeroed();
@@ -1006,7 +1009,7 @@ impl<'nvml> Device<'nvml> {
     Supports Maxwell or newer fully supported devices.
     */
     // Tested
-    pub fn encoder_capacity(&self, for_type: EncoderType) -> Result<u32> {
+    pub fn encoder_capacity(&self, for_type: EncoderType) -> Result<u32, NvmlError> {
         unsafe {
             let mut capacity: c_uint = mem::zeroed();
 
@@ -1035,7 +1038,7 @@ impl<'nvml> Device<'nvml> {
     Supports Maxwell or newer fully supported devices.
     */
     // Tested
-    pub fn encoder_stats(&self) -> Result<EncoderStats> {
+    pub fn encoder_stats(&self) -> Result<EncoderStats, NvmlError> {
         unsafe {
             let mut session_count: c_uint = mem::zeroed();
             let mut average_fps: c_uint = mem::zeroed();
@@ -1073,7 +1076,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Tested
     // TODO: Test this with an active session and make sure it works
-    pub fn encoder_sessions(&self) -> Result<Vec<EncoderSessionInfo>> {
+    pub fn encoder_sessions(&self) -> Result<Vec<EncoderSessionInfo>, NvmlError> {
         unsafe {
             let mut count = match self.encoder_sessions_count()? {
                 0 => return Ok(vec![]),
@@ -1091,7 +1094,7 @@ impl<'nvml> Device<'nvml> {
             Ok(sessions
                 .into_iter()
                 .map(EncoderSessionInfo::try_from)
-                .collect::<Result<_>>()?)
+                .collect::<Result<_, NvmlError>>()?)
         }
     }
 
@@ -1106,7 +1109,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     */
     // tested as part of the above
-    fn encoder_sessions_count(&self) -> Result<u32> {
+    fn encoder_sessions_count(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut count: c_uint = 0;
 
@@ -1141,7 +1144,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn enforced_power_limit(&self) -> Result<u32> {
+    pub fn enforced_power_limit(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut limit: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetEnforcedPowerLimit(self.device, &mut limit))?;
@@ -1171,7 +1174,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn fan_speed(&self, fan_idx: u32) -> Result<u32> {
+    pub fn fan_speed(&self, fan_idx: u32) -> Result<u32, NvmlError> {
         unsafe {
             let mut speed: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetFanSpeed_v2(self.device, fan_idx, &mut speed))?;
@@ -1201,7 +1204,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
-    pub fn gpu_operation_mode(&self) -> Result<OperationModeState> {
+    pub fn gpu_operation_mode(&self) -> Result<OperationModeState, NvmlError> {
         unsafe {
             let mut current: nvmlGpuOperationMode_t = mem::zeroed();
             let mut pending: nvmlGpuOperationMode_t = mem::zeroed();
@@ -1232,7 +1235,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     */
     // Tested
-    pub fn running_graphics_processes(&self) -> Result<Vec<ProcessInfo>> {
+    pub fn running_graphics_processes(&self) -> Result<Vec<ProcessInfo>, NvmlError> {
         unsafe {
             let mut count: c_uint = match self.running_graphics_processes_count()? {
                 0 => return Ok(vec![]),
@@ -1265,7 +1268,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     */
     // Tested as part of `.running_graphics_processes()`
-    pub fn running_graphics_processes_count(&self) -> Result<u32> {
+    pub fn running_graphics_processes_count(&self) -> Result<u32, NvmlError> {
         unsafe {
             // Indicates that we want the count
             let mut count: c_uint = 0;
@@ -1303,7 +1306,7 @@ impl<'nvml> Device<'nvml> {
     pub fn process_utilization_stats<T>(
         &self,
         last_seen_timestamp: T,
-    ) -> Result<Vec<ProcessUtilizationSample>>
+    ) -> Result<Vec<ProcessUtilizationSample>, NvmlError>
     where
         T: Into<Option<u64>>,
     {
@@ -1331,7 +1334,7 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
-    fn process_utilization_stats_count(&self) -> Result<c_uint> {
+    fn process_utilization_stats_count(&self) -> Result<c_uint, NvmlError> {
         unsafe {
             let mut count: c_uint = 0;
 
@@ -1358,7 +1361,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn index(&self) -> Result<u32> {
+    pub fn index(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut index: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetIndex(self.device, &mut index))?;
@@ -1389,7 +1392,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
-    pub fn config_checksum(&self) -> Result<u32> {
+    pub fn config_checksum(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut checksum: c_uint = mem::zeroed();
 
@@ -1424,7 +1427,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
-    pub fn info_rom_image_version(&self) -> Result<String> {
+    pub fn info_rom_image_version(&self) -> Result<String, NvmlError> {
         unsafe {
             let mut version_vec = vec![0; NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE as usize];
 
@@ -1462,7 +1465,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
-    pub fn info_rom_version(&self, object: InfoRom) -> Result<String> {
+    pub fn info_rom_version(&self, object: InfoRom) -> Result<String, NvmlError> {
         unsafe {
             let mut version_vec = vec![0; NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE as usize];
 
@@ -1498,7 +1501,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn max_clock_info(&self, clock_type: Clock) -> Result<u32> {
+    pub fn max_clock_info(&self, clock_type: Clock) -> Result<u32, NvmlError> {
         unsafe {
             let mut clock: c_uint = mem::zeroed();
 
@@ -1532,7 +1535,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn max_pcie_link_gen(&self) -> Result<u32> {
+    pub fn max_pcie_link_gen(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut max_gen: c_uint = mem::zeroed();
 
@@ -1565,7 +1568,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn max_pcie_link_width(&self) -> Result<u32> {
+    pub fn max_pcie_link_width(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut max_width: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetMaxPcieLinkWidth(self.device, &mut max_width))?;
@@ -1601,7 +1604,7 @@ impl<'nvml> Device<'nvml> {
         error_type: MemoryError,
         counter_type: EccCounter,
         location: MemoryLocation,
-    ) -> Result<u64> {
+    ) -> Result<u64, NvmlError> {
         unsafe {
             let mut count: c_ulonglong = mem::zeroed();
 
@@ -1639,7 +1642,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn memory_info(&self) -> Result<MemoryInfo> {
+    pub fn memory_info(&self) -> Result<MemoryInfo, NvmlError> {
         unsafe {
             let mut info: nvmlMemory_t = mem::zeroed();
             nvml_try(nvmlDeviceGetMemoryInfo(self.device, &mut info))?;
@@ -1669,7 +1672,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested
     #[cfg(target_os = "linux")]
-    pub fn minor_number(&self) -> Result<u32> {
+    pub fn minor_number(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut number: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetMinorNumber(self.device, &mut number))?;
@@ -1695,7 +1698,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn is_multi_gpu_board(&self) -> Result<bool> {
+    pub fn is_multi_gpu_board(&self) -> Result<bool, NvmlError> {
         unsafe {
             let mut int_bool: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetMultiGpuBoard(self.device, &mut int_bool))?;
@@ -1722,7 +1725,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn name(&self) -> Result<String> {
+    pub fn name(&self) -> Result<String, NvmlError> {
         unsafe {
             let mut name_vec = vec![0; NVML_DEVICE_NAME_BUFFER_SIZE as usize];
 
@@ -1752,7 +1755,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn pci_info(&self) -> Result<PciInfo> {
+    pub fn pci_info(&self) -> Result<PciInfo, NvmlError> {
         unsafe {
             let mut pci_info: nvmlPciInfo_t = mem::zeroed();
             nvml_try(nvmlDeviceGetPciInfo_v3(self.device, &mut pci_info))?;
@@ -1778,7 +1781,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn pcie_replay_counter(&self) -> Result<u32> {
+    pub fn pcie_replay_counter(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut value: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetPcieReplayCounter(self.device, &mut value))?;
@@ -1811,7 +1814,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn pcie_throughput(&self, counter: PcieUtilCounter) -> Result<u32> {
+    pub fn pcie_throughput(&self, counter: PcieUtilCounter) -> Result<u32, NvmlError> {
         unsafe {
             let mut throughput: c_uint = mem::zeroed();
 
@@ -1843,7 +1846,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn performance_state(&self) -> Result<PerformanceState> {
+    pub fn performance_state(&self) -> Result<PerformanceState, NvmlError> {
         unsafe {
             let mut state: nvmlPstates_t = mem::zeroed();
             nvml_try(nvmlDeviceGetPerformanceState(self.device, &mut state))?;
@@ -1874,7 +1877,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested
     #[cfg(target_os = "linux")]
-    pub fn is_in_persistent_mode(&self) -> Result<bool> {
+    pub fn is_in_persistent_mode(&self) -> Result<bool, NvmlError> {
         unsafe {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetPersistenceMode(self.device, &mut state))?;
@@ -1902,7 +1905,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn power_management_limit_default(&self) -> Result<u32> {
+    pub fn power_management_limit_default(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut limit: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetPowerManagementDefaultLimit(
@@ -1938,7 +1941,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn power_management_limit(&self) -> Result<u32> {
+    pub fn power_management_limit(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut limit: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetPowerManagementLimit(self.device, &mut limit))?;
@@ -1964,7 +1967,9 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn power_management_limit_constraints(&self) -> Result<PowerManagementConstraints> {
+    pub fn power_management_limit_constraints(
+        &self,
+    ) -> Result<PowerManagementConstraints, NvmlError> {
         unsafe {
             let mut min_limit: c_uint = mem::zeroed();
             let mut max_limit: c_uint = mem::zeroed();
@@ -1986,7 +1991,7 @@ impl<'nvml> Device<'nvml> {
     /// must use it.
     // Tested
     #[deprecated(note = "NVIDIA states that \"this API has been deprecated.\"")]
-    pub fn is_power_management_algo_active(&self) -> Result<bool> {
+    pub fn is_power_management_algo_active(&self) -> Result<bool, NvmlError> {
         unsafe {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetPowerManagementMode(self.device, &mut state))?;
@@ -1999,7 +2004,7 @@ impl<'nvml> Device<'nvml> {
     /// must use it.
     // Tested
     #[deprecated(note = "use `.performance_state()`.")]
-    pub fn power_state(&self) -> Result<PerformanceState> {
+    pub fn power_state(&self) -> Result<PerformanceState, NvmlError> {
         unsafe {
             let mut state: nvmlPstates_t = mem::zeroed();
             nvml_try(nvmlDeviceGetPowerState(self.device, &mut state))?;
@@ -2029,7 +2034,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn power_usage(&self) -> Result<u32> {
+    pub fn power_usage(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut usage: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetPowerUsage(self.device, &mut usage))?;
@@ -2054,7 +2059,7 @@ impl<'nvml> Device<'nvml> {
 
     Supports Pascal and newer fully supported devices.
     */
-    pub fn total_energy_consumption(&self) -> Result<u64> {
+    pub fn total_energy_consumption(&self) -> Result<u64, NvmlError> {
         unsafe {
             let mut total: c_ulonglong = mem::zeroed();
             nvml_try(nvmlDeviceGetTotalEnergyConsumption(self.device, &mut total))?;
@@ -2085,7 +2090,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
-    pub fn retired_pages(&self, cause: RetirementCause) -> Result<Vec<RetiredPage>> {
+    pub fn retired_pages(&self, cause: RetirementCause) -> Result<Vec<RetiredPage>, NvmlError> {
         unsafe {
             let mut count = match self.retired_pages_count(&cause)? {
                 0 => return Ok(vec![]),
@@ -2111,7 +2116,7 @@ impl<'nvml> Device<'nvml> {
     }
 
     // Helper for the above function. Returns # of samples that can be queried.
-    fn retired_pages_count(&self, cause: &RetirementCause) -> Result<c_uint> {
+    fn retired_pages_count(&self, cause: &RetirementCause) -> Result<c_uint, NvmlError> {
         unsafe {
             let mut count: c_uint = 0;
 
@@ -2146,7 +2151,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
-    pub fn are_pages_pending_retired(&self) -> Result<bool> {
+    pub fn are_pages_pending_retired(&self) -> Result<bool, NvmlError> {
         unsafe {
             let mut state: nvmlEnableState_t = mem::zeroed();
 
@@ -2189,13 +2194,13 @@ impl<'nvml> Device<'nvml> {
     ```
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
-    # fn main() -> Result<()> {
+    # fn main() -> Result<(), NvmlError> {
     # match test() {
-    # Err(Error(ErrorKind::NotFound, _)) => Ok(()),
+    # Err(NvmlError::NotFound) => Ok(()),
     # other => other,
     # }
     # }
-    # fn test() -> Result<()> {
+    # fn test() -> Result<(), NvmlError> {
     # let nvml = NVML::init()?;
     # let device = nvml.device_by_index(0)?;
     use nvml_wrapper::enum_wrappers::device::Sampling;
@@ -2215,7 +2220,11 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn samples<T>(&self, sample_type: Sampling, last_seen_timestamp: T) -> Result<Vec<Sample>>
+    pub fn samples<T>(
+        &self,
+        sample_type: Sampling,
+        last_seen_timestamp: T,
+    ) -> Result<Vec<Sample>, NvmlError>
     where
         T: Into<Option<u64>>,
     {
@@ -2246,7 +2255,7 @@ impl<'nvml> Device<'nvml> {
     }
 
     // Helper for the above function. Returns # of samples that can be queried.
-    fn samples_count(&self, sample_type: &Sampling, timestamp: u64) -> Result<c_uint> {
+    fn samples_count(&self, sample_type: &Sampling, timestamp: u64) -> Result<c_uint, NvmlError> {
         unsafe {
             let mut val_type: nvmlValueType_t = mem::zeroed();
             let mut count: c_uint = mem::zeroed();
@@ -2293,7 +2302,10 @@ impl<'nvml> Device<'nvml> {
     Device support varies per `FieldId` that you pass in.
     */
     // TODO: Example
-    pub fn field_values_for(&self, id_slice: &[FieldId]) -> Result<Vec<Result<FieldValueSample>>> {
+    pub fn field_values_for(
+        &self,
+        id_slice: &[FieldId],
+    ) -> Result<Vec<Result<FieldValueSample, NvmlError>>, NvmlError> {
         unsafe {
             let values_count = id_slice.len();
             let mut field_values: Vec<nvmlFieldValue_t> = Vec::with_capacity(values_count);
@@ -2339,7 +2351,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
-    pub fn serial(&self) -> Result<String> {
+    pub fn serial(&self) -> Result<String, NvmlError> {
         unsafe {
             let mut serial_vec = vec![0; NVML_DEVICE_SERIAL_BUFFER_SIZE as usize];
 
@@ -2369,7 +2381,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
-    pub fn board_part_number(&self) -> Result<String> {
+    pub fn board_part_number(&self) -> Result<String, NvmlError> {
         unsafe {
             let mut part_num_vec = vec![0; NVML_DEVICE_PART_NUMBER_BUFFER_SIZE as usize];
 
@@ -2406,7 +2418,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local.
     // Tested
-    pub fn current_throttle_reasons(&self) -> Result<ThrottleReasons> {
+    pub fn current_throttle_reasons(&self) -> Result<ThrottleReasons, NvmlError> {
         Ok(ThrottleReasons::from_bits_truncate(
             self.current_throttle_reasons_raw()?,
         ))
@@ -2433,15 +2445,15 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local.
     // Tested
-    pub fn current_throttle_reasons_strict(&self) -> Result<ThrottleReasons> {
+    pub fn current_throttle_reasons_strict(&self) -> Result<ThrottleReasons, NvmlError> {
         let reasons = self.current_throttle_reasons_raw()?;
 
         ThrottleReasons::from_bits(reasons)
-            .ok_or_else(|| ErrorKind::IncorrectBits(Bits::U64(reasons)).into())
+            .ok_or_else(|| NvmlError::IncorrectBits(Bits::U64(reasons)))
     }
 
     // Helper for the above methods.
-    fn current_throttle_reasons_raw(&self) -> Result<c_ulonglong> {
+    fn current_throttle_reasons_raw(&self) -> Result<c_ulonglong, NvmlError> {
         unsafe {
             let mut reasons: c_ulonglong = mem::zeroed();
 
@@ -2479,7 +2491,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn supported_throttle_reasons(&self) -> Result<ThrottleReasons> {
+    pub fn supported_throttle_reasons(&self) -> Result<ThrottleReasons, NvmlError> {
         Ok(ThrottleReasons::from_bits_truncate(
             self.supported_throttle_reasons_raw()?,
         ))
@@ -2509,15 +2521,15 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn supported_throttle_reasons_strict(&self) -> Result<ThrottleReasons> {
+    pub fn supported_throttle_reasons_strict(&self) -> Result<ThrottleReasons, NvmlError> {
         let reasons = self.supported_throttle_reasons_raw()?;
 
         ThrottleReasons::from_bits(reasons)
-            .ok_or_else(|| ErrorKind::IncorrectBits(Bits::U64(reasons)).into())
+            .ok_or_else(|| NvmlError::IncorrectBits(Bits::U64(reasons)))
     }
 
     // Helper for the above methods.
-    fn supported_throttle_reasons_raw(&self) -> Result<c_ulonglong> {
+    fn supported_throttle_reasons_raw(&self) -> Result<c_ulonglong, NvmlError> {
         unsafe {
             let mut reasons: c_ulonglong = mem::zeroed();
 
@@ -2549,9 +2561,9 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn supported_graphics_clocks(&self, for_mem_clock: u32) -> Result<Vec<u32>> {
+    pub fn supported_graphics_clocks(&self, for_mem_clock: u32) -> Result<Vec<u32>, NvmlError> {
         match self.supported_graphics_clocks_manual(for_mem_clock, 128) {
-            Err(Error(ErrorKind::InsufficientSize(Some(s)), _)) =>
+            Err(NvmlError::InsufficientSize(Some(s))) =>
             // `s` is the required size for the call; make the call a second time
             {
                 self.supported_graphics_clocks_manual(for_mem_clock, s)
@@ -2565,7 +2577,7 @@ impl<'nvml> Device<'nvml> {
         &self,
         for_mem_clock: u32,
         size: usize,
-    ) -> Result<Vec<u32>> {
+    ) -> Result<Vec<u32>, NvmlError> {
         let mut items: Vec<c_uint> = vec![0; size];
         let mut count = size as c_uint;
 
@@ -2576,10 +2588,9 @@ impl<'nvml> Device<'nvml> {
                 &mut count,
                 items.as_mut_ptr(),
             ) {
-                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE =>
                 // `count` is now the size that is required. Return it in the error.
-                {
-                    bail!(ErrorKind::InsufficientSize(Some(count as usize)))
+                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => {
+                    return Err(NvmlError::InsufficientSize(Some(count as usize)))
                 }
                 value => nvml_try(value)?,
             }
@@ -2607,9 +2618,9 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn supported_memory_clocks(&self) -> Result<Vec<u32>> {
+    pub fn supported_memory_clocks(&self) -> Result<Vec<u32>, NvmlError> {
         match self.supported_memory_clocks_manual(16) {
-            Err(Error(ErrorKind::InsufficientSize(Some(s)), _)) => {
+            Err(NvmlError::InsufficientSize(Some(s))) => {
                 // `s` is the required size for the call; make the call a second time
                 self.supported_memory_clocks_manual(s)
             }
@@ -2618,16 +2629,15 @@ impl<'nvml> Device<'nvml> {
     }
 
     // Removes code duplication in the above function.
-    fn supported_memory_clocks_manual(&self, size: usize) -> Result<Vec<u32>> {
+    fn supported_memory_clocks_manual(&self, size: usize) -> Result<Vec<u32>, NvmlError> {
         let mut items: Vec<c_uint> = vec![0; size];
         let mut count = size as c_uint;
 
         unsafe {
             match nvmlDeviceGetSupportedMemoryClocks(self.device, &mut count, items.as_mut_ptr()) {
-                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE =>
                 // `count` is now the size that is required. Return it in the error.
-                {
-                    bail!(ErrorKind::InsufficientSize(Some(count as usize)))
+                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => {
+                    return Err(NvmlError::InsufficientSize(Some(count as usize)))
                 }
                 value => nvml_try(value)?,
             }
@@ -2650,7 +2660,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn temperature(&self, sensor: TemperatureSensor) -> Result<u32> {
+    pub fn temperature(&self, sensor: TemperatureSensor) -> Result<u32, NvmlError> {
         unsafe {
             let mut temp: c_uint = mem::zeroed();
 
@@ -2681,7 +2691,10 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn temperature_threshold(&self, threshold_type: TemperatureThreshold) -> Result<u32> {
+    pub fn temperature_threshold(
+        &self,
+        threshold_type: TemperatureThreshold,
+    ) -> Result<u32, NvmlError> {
         unsafe {
             let mut temp: c_uint = mem::zeroed();
 
@@ -2712,7 +2725,10 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested
     #[cfg(target_os = "linux")]
-    pub fn topology_common_ancestor(&self, other_device: Device) -> Result<TopologyLevel> {
+    pub fn topology_common_ancestor(
+        &self,
+        other_device: Device,
+    ) -> Result<TopologyLevel, NvmlError> {
         unsafe {
             let mut level: nvmlGpuTopologyLevel_t = mem::zeroed();
 
@@ -2742,7 +2758,10 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested
     #[cfg(target_os = "linux")]
-    pub fn topology_nearest_gpus(&self, level: TopologyLevel) -> Result<Vec<Device<'nvml>>> {
+    pub fn topology_nearest_gpus(
+        &self,
+        level: TopologyLevel,
+    ) -> Result<Vec<Device<'nvml>>, NvmlError> {
         unsafe {
             let mut count = match self.top_nearest_gpus_count(&level)? {
                 0 => return Ok(vec![]),
@@ -2763,7 +2782,7 @@ impl<'nvml> Device<'nvml> {
 
     // Helper for the above function. Returns # of GPUs in the set.
     #[cfg(target_os = "linux")]
-    fn top_nearest_gpus_count(&self, level: &TopologyLevel) -> Result<c_uint> {
+    fn top_nearest_gpus_count(&self, level: &TopologyLevel) -> Result<c_uint, NvmlError> {
         unsafe {
             let mut count: c_uint = 0;
 
@@ -2806,7 +2825,7 @@ impl<'nvml> Device<'nvml> {
         &self,
         error_type: MemoryError,
         counter_type: EccCounter,
-    ) -> Result<u64> {
+    ) -> Result<u64, NvmlError> {
         unsafe {
             let mut count: c_ulonglong = mem::zeroed();
 
@@ -2846,7 +2865,7 @@ impl<'nvml> Device<'nvml> {
     ```no_run
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
-    # fn main() -> Result<()> {
+    # fn main() -> Result<(), NvmlError> {
     # let nvml = NVML::init()?;
     # let device1 = nvml.device_by_index(0)?;
     # let device2 = nvml.device_by_index(1)?;
@@ -2859,7 +2878,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn uuid(&self) -> Result<String> {
+    pub fn uuid(&self) -> Result<String, NvmlError> {
         unsafe {
             let mut uuid_vec = vec![0; NVML_DEVICE_UUID_BUFFER_SIZE as usize];
 
@@ -2895,7 +2914,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn utilization_rates(&self) -> Result<Utilization> {
+    pub fn utilization_rates(&self) -> Result<Utilization, NvmlError> {
         unsafe {
             let mut utilization: nvmlUtilization_t = mem::zeroed();
             nvml_try(nvmlDeviceGetUtilizationRates(self.device, &mut utilization))?;
@@ -2920,7 +2939,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn vbios_version(&self) -> Result<String> {
+    pub fn vbios_version(&self) -> Result<String, NvmlError> {
         unsafe {
             let mut version_vec = vec![0; NVML_DEVICE_VBIOS_VERSION_BUFFER_SIZE as usize];
 
@@ -2958,7 +2977,10 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn violation_status(&self, perf_policy: PerformancePolicy) -> Result<ViolationTime> {
+    pub fn violation_status(
+        &self,
+        perf_policy: PerformancePolicy,
+    ) -> Result<ViolationTime, NvmlError> {
         unsafe {
             let mut viol_time: nvmlViolationTime_t = mem::zeroed();
 
@@ -2985,7 +3007,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn is_on_same_board_as(&self, other_device: &Device) -> Result<bool> {
+    pub fn is_on_same_board_as(&self, other_device: &Device) -> Result<bool, NvmlError> {
         unsafe {
             let mut bool_int: c_int = mem::zeroed();
 
@@ -3029,7 +3051,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
-    pub fn reset_applications_clocks(&mut self) -> Result<()> {
+    pub fn reset_applications_clocks(&mut self) -> Result<(), NvmlError> {
         unsafe { nvml_try(nvmlDeviceResetApplicationsClocks(self.device)) }
     }
 
@@ -3066,7 +3088,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
-    pub fn set_auto_boosted_clocks(&mut self, enabled: bool) -> Result<()> {
+    pub fn set_auto_boosted_clocks(&mut self, enabled: bool) -> Result<(), NvmlError> {
         unsafe {
             nvml_try(nvmlDeviceSetAutoBoostedClocksEnabled(
                 self.device,
@@ -3100,7 +3122,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested (no-run)
     #[cfg(target_os = "linux")]
-    pub fn set_cpu_affinity(&mut self) -> Result<()> {
+    pub fn set_cpu_affinity(&mut self) -> Result<(), NvmlError> {
         unsafe { nvml_try(nvmlDeviceSetCpuAffinity(self.device)) }
     }
 
@@ -3136,7 +3158,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
-    pub fn set_auto_boosted_clocks_default(&mut self, enabled: bool) -> Result<()> {
+    pub fn set_auto_boosted_clocks_default(&mut self, enabled: bool) -> Result<(), NvmlError> {
         unsafe {
             // Passing 0 because NVIDIA says flags are not supported yet
             nvml_try(nvmlDeviceSetDefaultAutoBoostedClocksEnabled(
@@ -3166,7 +3188,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
-    pub fn validate_info_rom(&self) -> Result<()> {
+    pub fn validate_info_rom(&self) -> Result<(), NvmlError> {
         unsafe { nvml_try(nvmlDeviceValidateInforom(self.device)) }
     }
 
@@ -3191,7 +3213,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
-    pub fn clear_accounting_pids(&mut self) -> Result<()> {
+    pub fn clear_accounting_pids(&mut self) -> Result<(), NvmlError> {
         unsafe { nvml_try(nvmlDeviceClearAccountingPids(self.device)) }
     }
 
@@ -3217,7 +3239,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn accounting_buffer_size(&self) -> Result<u32> {
+    pub fn accounting_buffer_size(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut count: c_uint = mem::zeroed();
             nvml_try(nvmlDeviceGetAccountingBufferSize(self.device, &mut count))?;
@@ -3243,7 +3265,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn is_accounting_enabled(&self) -> Result<bool> {
+    pub fn is_accounting_enabled(&self) -> Result<bool, NvmlError> {
         unsafe {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(nvmlDeviceGetAccountingMode(self.device, &mut state))?;
@@ -3269,7 +3291,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
-    pub fn accounting_pids(&self) -> Result<Vec<u32>> {
+    pub fn accounting_pids(&self) -> Result<Vec<u32>, NvmlError> {
         unsafe {
             let mut count = match self.accounting_pids_count()? {
                 0 => return Ok(vec![]),
@@ -3288,7 +3310,7 @@ impl<'nvml> Device<'nvml> {
     }
 
     // Helper function for the above.
-    fn accounting_pids_count(&self) -> Result<c_uint> {
+    fn accounting_pids_count(&self) -> Result<c_uint, NvmlError> {
         unsafe {
             // Indicates that we want the count
             let mut count: c_uint = 0;
@@ -3344,7 +3366,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (for error)
-    pub fn accounting_stats_for(&self, process_id: u32) -> Result<AccountingStats> {
+    pub fn accounting_stats_for(&self, process_id: u32) -> Result<AccountingStats, NvmlError> {
         unsafe {
             let mut stats: nvmlAccountingStats_t = mem::zeroed();
 
@@ -3384,7 +3406,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
-    pub fn set_accounting(&mut self, enabled: bool) -> Result<()> {
+    pub fn set_accounting(&mut self, enabled: bool) -> Result<(), NvmlError> {
         unsafe {
             nvml_try(nvmlDeviceSetAccountingMode(
                 self.device,
@@ -3421,7 +3443,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
-    pub fn clear_ecc_error_counts(&mut self, counter_type: EccCounter) -> Result<()> {
+    pub fn clear_ecc_error_counts(&mut self, counter_type: EccCounter) -> Result<(), NvmlError> {
         unsafe {
             nvml_try(nvmlDeviceClearEccErrorCounts(
                 self.device,
@@ -3455,7 +3477,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
-    pub fn set_api_restricted(&mut self, api_type: Api, restricted: bool) -> Result<()> {
+    pub fn set_api_restricted(&mut self, api_type: Api, restricted: bool) -> Result<(), NvmlError> {
         unsafe {
             nvml_try(nvmlDeviceSetAPIRestriction(
                 self.device,
@@ -3503,7 +3525,11 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
-    pub fn set_applications_clocks(&mut self, mem_clock: u32, graphics_clock: u32) -> Result<()> {
+    pub fn set_applications_clocks(
+        &mut self,
+        mem_clock: u32,
+        graphics_clock: u32,
+    ) -> Result<(), NvmlError> {
         unsafe {
             nvml_try(nvmlDeviceSetApplicationsClocks(
                 self.device,
@@ -3539,7 +3565,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
-    pub fn set_compute_mode(&mut self, mode: ComputeMode) -> Result<()> {
+    pub fn set_compute_mode(&mut self, mode: ComputeMode) -> Result<(), NvmlError> {
         unsafe { nvml_try(nvmlDeviceSetComputeMode(self.device, mode.as_c())) }
     }
 
@@ -3583,7 +3609,7 @@ impl<'nvml> Device<'nvml> {
     ```no_run
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
-    # fn test() -> Result<()> {
+    # fn test() -> Result<(), NvmlError> {
     # let nvml = NVML::init()?;
     # let mut device = nvml.device_by_index(0)?;
     use nvml_wrapper::bitmasks::Behavior;
@@ -3600,7 +3626,11 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested (no-run)
     #[cfg(target_os = "windows")]
-    pub fn set_driver_model(&mut self, model: DriverModel, flags: Behavior) -> Result<()> {
+    pub fn set_driver_model(
+        &mut self,
+        model: DriverModel,
+        flags: Behavior,
+    ) -> Result<(), NvmlError> {
         unsafe {
             nvml_try(nvmlDeviceSetDriverModel(
                 self.device,
@@ -3636,7 +3666,11 @@ impl<'nvml> Device<'nvml> {
     Supports Pascal and newer fully supported devices.
     */
     // Tested (no-run)
-    pub fn set_gpu_locked_clocks(&mut self, min_clock_mhz: u32, max_clock_mhz: u32) -> Result<()> {
+    pub fn set_gpu_locked_clocks(
+        &mut self,
+        min_clock_mhz: u32,
+        max_clock_mhz: u32,
+    ) -> Result<(), NvmlError> {
         unsafe {
             nvml_try(nvmlDeviceSetGpuLockedClocks(
                 self.device,
@@ -3664,7 +3698,7 @@ impl<'nvml> Device<'nvml> {
     Supports Pascal and newer fully supported devices.
     */
     // Tested (no-run)
-    pub fn reset_gpu_locked_clocks(&mut self) -> Result<()> {
+    pub fn reset_gpu_locked_clocks(&mut self) -> Result<(), NvmlError> {
         unsafe { nvml_try(nvmlDeviceResetGpuLockedClocks(self.device)) }
     }
 
@@ -3691,7 +3725,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
-    pub fn set_ecc(&mut self, enabled: bool) -> Result<()> {
+    pub fn set_ecc(&mut self, enabled: bool) -> Result<(), NvmlError> {
         unsafe { nvml_try(nvmlDeviceSetEccMode(self.device, state_from_bool(enabled))) }
     }
 
@@ -3722,7 +3756,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
-    pub fn set_gpu_op_mode(&mut self, mode: OperationMode) -> Result<()> {
+    pub fn set_gpu_op_mode(&mut self, mode: OperationMode) -> Result<(), NvmlError> {
         unsafe { nvml_try(nvmlDeviceSetGpuOperationMode(self.device, mode.as_c())) }
     }
 
@@ -3759,7 +3793,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested (no-run)
     #[cfg(target_os = "linux")]
-    pub fn set_persistent(&mut self, enabled: bool) -> Result<()> {
+    pub fn set_persistent(&mut self, enabled: bool) -> Result<(), NvmlError> {
         unsafe {
             nvml_try(nvmlDeviceSetPersistenceMode(
                 self.device,
@@ -3794,7 +3828,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
-    pub fn set_power_management_limit(&mut self, limit: u32) -> Result<()> {
+    pub fn set_power_management_limit(&mut self, limit: u32) -> Result<(), NvmlError> {
         unsafe { nvml_try(nvmlDeviceSetPowerManagementLimit(self.device, limit)) }
     }
 
@@ -3842,7 +3876,7 @@ impl<'nvml> Device<'nvml> {
     ```
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
-    # fn main() -> Result<()> {
+    # fn main() -> Result<(), NvmlErrorWithSource> {
     # let nvml = NVML::init()?;
     # let device = nvml.device_by_index(0)?;
     use nvml_wrapper::bitmasks::event::EventTypes;
@@ -3874,7 +3908,7 @@ impl<'nvml> Device<'nvml> {
         &self,
         events: EventTypes,
         set: EventSet<'nvml>,
-    ) -> Result<EventSet<'nvml>> {
+    ) -> Result<EventSet<'nvml>, NvmlErrorWithSource> {
         unsafe {
             match nvml_try(nvmlDeviceRegisterEvents(
                 self.device,
@@ -3882,22 +3916,28 @@ impl<'nvml> Device<'nvml> {
                 set.handle(),
             )) {
                 Ok(()) => Ok(set),
-                Err(Error(ErrorKind::Unknown, _)) => {
+                Err(NvmlError::Unknown) => {
                     // NVIDIA says that if an Unknown error is returned, `set` will
                     // be in an undefined state and should be freed.
-                    set.release_events()
-                        .chain_err(|| ErrorKind::SetReleaseFailed)?;
-                    bail!(ErrorKind::Unknown)
+                    if let Err(e) = set.release_events() {
+                        return Err(NvmlErrorWithSource {
+                            error: NvmlError::SetReleaseFailed,
+                            source: Some(e),
+                        });
+                    }
+
+                    Err(NvmlError::Unknown.into())
                 }
                 Err(e) => {
-                    // TODO: So... unfortunately error-chain provides us with no way
-                    // to return the set here, even if it's still valid.
-                    //
-                    // For now we just... get rid of it and force you to create
-                    // another one.
-                    set.release_events()
-                        .chain_err(|| ErrorKind::SetReleaseFailed)?;
-                    Err(e)
+                    // TODO: return set here so you can use it again?
+                    if let Err(e) = set.release_events() {
+                        return Err(NvmlErrorWithSource {
+                            error: NvmlError::SetReleaseFailed,
+                            source: Some(e),
+                        });
+                    }
+
+                    Err(e.into())
                 }
             }
         }
@@ -3929,7 +3969,7 @@ impl<'nvml> Device<'nvml> {
     ```
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
-    # fn main() -> Result<()> {
+    # fn main() -> Result<(), NvmlError> {
     # let nvml = NVML::init()?;
     # let device = nvml.device_by_index(0)?;
     use nvml_wrapper::bitmasks::event::EventTypes;
@@ -3950,7 +3990,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Tested
     #[cfg(target_os = "linux")]
-    pub fn supported_event_types(&self) -> Result<EventTypes> {
+    pub fn supported_event_types(&self) -> Result<EventTypes, NvmlError> {
         Ok(EventTypes::from_bits_truncate(
             self.supported_event_types_raw()?,
         ))
@@ -3978,16 +4018,15 @@ impl<'nvml> Device<'nvml> {
     */
     // Tested
     #[cfg(target_os = "linux")]
-    pub fn supported_event_types_strict(&self) -> Result<EventTypes> {
+    pub fn supported_event_types_strict(&self) -> Result<EventTypes, NvmlError> {
         let ev_types = self.supported_event_types_raw()?;
 
-        EventTypes::from_bits(ev_types)
-            .ok_or_else(|| ErrorKind::IncorrectBits(Bits::U64(ev_types)).into())
+        EventTypes::from_bits(ev_types).ok_or_else(|| NvmlError::IncorrectBits(Bits::U64(ev_types)))
     }
 
     // Helper for the above methods.
     #[cfg(target_os = "linux")]
-    fn supported_event_types_raw(&self) -> Result<c_ulonglong> {
+    fn supported_event_types_raw(&self) -> Result<c_ulonglong, NvmlError> {
         unsafe {
             let mut ev_types: c_ulonglong = mem::zeroed();
             nvml_try(nvmlDeviceGetSupportedEventTypes(self.device, &mut ev_types))?;
@@ -4023,7 +4062,7 @@ impl<'nvml> Device<'nvml> {
     In addition, all of the errors returned by:
 
     * `.pci_info()`
-    * `PciInfo.try_into_c()`
+    * `PciInfo.try_into()`
 
     # Device Support
 
@@ -4040,7 +4079,7 @@ impl<'nvml> Device<'nvml> {
     ```no_run
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
-    # fn test() -> Result<()> {
+    # fn test() -> Result<(), NvmlError> {
     # let nvml = NVML::init()?;
     # let mut device = nvml.device_by_index(0)?;
     // Pass `None`, `.set_drain()` call will grab `PciInfo` for us
@@ -4060,7 +4099,7 @@ impl<'nvml> Device<'nvml> {
         &mut self,
         enabled: bool,
         pci_info: T,
-    ) -> Result<()> {
+    ) -> Result<(), NvmlError> {
         let pci_info = if let Some(info) = pci_info.into() {
             info
         } else {
@@ -4069,7 +4108,7 @@ impl<'nvml> Device<'nvml> {
 
         unsafe {
             nvml_try(nvmlDeviceModifyDrainState(
-                &mut pci_info.try_into_c()?,
+                &mut pci_info.try_into()?,
                 state_from_bool(enabled),
             ))
         }
@@ -4092,7 +4131,7 @@ impl<'nvml> Device<'nvml> {
     In addition, all of the errors returned by:
 
     * `.pci_info()`
-    * `PciInfo.try_into_c()`
+    * `PciInfo.try_into()`
 
     # Device Support
 
@@ -4109,7 +4148,7 @@ impl<'nvml> Device<'nvml> {
     ```
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
-    # fn main() -> Result<()> {
+    # fn main() -> Result<(), NvmlError> {
     # let nvml = NVML::init()?;
     # let mut device = nvml.device_by_index(0)?;
     // Pass `None`, `.is_drain_enabled()` call will grab `PciInfo` for us
@@ -4126,7 +4165,10 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested
     #[cfg(target_os = "linux")]
-    pub fn is_drain_enabled<T: Into<Option<PciInfo>>>(&self, pci_info: T) -> Result<bool> {
+    pub fn is_drain_enabled<T: Into<Option<PciInfo>>>(
+        &self,
+        pci_info: T,
+    ) -> Result<bool, NvmlError> {
         let pci_info = if let Some(info) = pci_info.into() {
             info
         } else {
@@ -4137,7 +4179,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlEnableState_t = mem::zeroed();
 
             nvml_try(nvmlDeviceQueryDrainState(
-                &mut pci_info.try_into_c()?,
+                &mut pci_info.try_into()?,
                 &mut state,
             ))?;
 
@@ -4172,14 +4214,10 @@ impl<'nvml> Device<'nvml> {
 
     # Bad Ergonomics Explanation
 
-    Ideally the `Device` would be returned within the `Error` in the case of an
-    error occuring during this call. Unfortunately, `error-chain` / `quick-error`
-    do not support generic lifetime parameters, meaning I cannot return the
-    `Device` in an `ErrorKind` variant.
-
-    Not being able to recover the `Device` after an error in this call would
-    break the functionality, so I worked around this limitation with a
-    less-than-satisfactory solution.
+    Previously the design of `error-chain` made it impossible to return stuff
+    with generic lifetime parameters. The crate's errors are now based on
+    `std::error::Error`, so this situation no longer needs to be, but I haven't
+    made time to re-work it.
 
     # Errors
 
@@ -4191,7 +4229,7 @@ impl<'nvml> Device<'nvml> {
     In addition, all of the errors returned by:
 
     * `.pci_info()`
-    * `PciInfo.try_into_c()`
+    * `PciInfo.try_into()`
 
     # Device Support
 
@@ -4211,7 +4249,7 @@ impl<'nvml> Device<'nvml> {
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
     # use nvml_wrapper::enum_wrappers::device::{DetachGpuState, PcieLinkState};
-    # fn test() -> Result<()> {
+    # fn test() -> Result<(), NvmlError> {
     # let nvml = NVML::init()?;
     # let mut device = nvml.device_by_index(0)?;
     match device.remove(None, DetachGpuState::Remove, PcieLinkState::ShutDown) {
@@ -4228,7 +4266,7 @@ impl<'nvml> Device<'nvml> {
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
     # use nvml_wrapper::enum_wrappers::device::{DetachGpuState, PcieLinkState};
-    # fn test() -> Result<()> {
+    # fn test() -> Result<(), NvmlErrorWithSource> {
     # let nvml = NVML::init()?;
     # let mut device = nvml.device_by_index(0)?;
     // Pass `None`, `.remove()` call will grab `PciInfo` for us
@@ -4252,19 +4290,35 @@ impl<'nvml> Device<'nvml> {
         pci_info: T,
         gpu_state: DetachGpuState,
         link_state: PcieLinkState,
-    ) -> (Result<()>, Option<Device<'nvml>>) {
+    ) -> (Result<(), NvmlErrorWithSource>, Option<Device<'nvml>>) {
         let pci_info = if let Some(info) = pci_info.into() {
             info
         } else {
             match self.pci_info() {
                 Ok(info) => info,
-                Err(e) => return (Err(e).chain_err(|| ErrorKind::GetPciInfoFailed), Some(self)),
+                Err(error) => {
+                    return (
+                        Err(NvmlErrorWithSource {
+                            error,
+                            source: Some(NvmlError::GetPciInfoFailed),
+                        }),
+                        Some(self),
+                    )
+                }
             }
         };
 
-        let mut raw_pci_info = match pci_info.try_into_c() {
+        let mut raw_pci_info = match pci_info.try_into() {
             Ok(info) => info,
-            Err(e) => return (Err(e).chain_err(|| ErrorKind::PciInfoToCFailed), Some(self)),
+            Err(error) => {
+                return (
+                    Err(NvmlErrorWithSource {
+                        error,
+                        source: Some(NvmlError::PciInfoToCFailed),
+                    }),
+                    Some(self),
+                )
+            }
         };
 
         unsafe {
@@ -4276,7 +4330,7 @@ impl<'nvml> Device<'nvml> {
                 // `Device` removed; call was successful, no `Device` to return
                 Ok(()) => (Ok(()), None),
                 // `Device` has not been removed; unsuccessful call, return `Device`
-                Err(e) => (Err(e), Some(self)),
+                Err(e) => (Err(e.into()), Some(self)),
             }
         }
     }
@@ -4352,18 +4406,10 @@ mod test {
     fn applications_clock() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
-            let gfx_clock = device
-                .applications_clock(Clock::Graphics)
-                .chain_err(|| "graphics clock")?;
-            let sm_clock = device
-                .applications_clock(Clock::SM)
-                .chain_err(|| "sm clock")?;
-            let mem_clock = device
-                .applications_clock(Clock::Memory)
-                .chain_err(|| "memory clock")?;
-            let vid_clock = device
-                .applications_clock(Clock::Video)
-                .chain_err(|| "video clock")?;
+            let gfx_clock = device.applications_clock(Clock::Graphics)?;
+            let sm_clock = device.applications_clock(Clock::SM)?;
+            let mem_clock = device.applications_clock(Clock::Memory)?;
+            let vid_clock = device.applications_clock(Clock::Video)?;
 
             Ok(format!(
                 "Graphics Clock: {}, SM Clock: {}, Memory Clock: {}, Video Clock: {}",
@@ -4410,18 +4456,10 @@ mod test {
     fn clock() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
-            device
-                .clock(Clock::Graphics, ClockId::Current)
-                .chain_err(|| "graphics + current")?;
-            device
-                .clock(Clock::SM, ClockId::TargetAppClock)
-                .chain_err(|| "SM + target")?;
-            device
-                .clock(Clock::Memory, ClockId::DefaultAppClock)
-                .chain_err(|| "mem + default")?;
-            device
-                .clock(Clock::Video, ClockId::TargetAppClock)
-                .chain_err(|| "video + target")
+            device.clock(Clock::Graphics, ClockId::Current)?;
+            device.clock(Clock::SM, ClockId::TargetAppClock)?;
+            device.clock(Clock::Memory, ClockId::DefaultAppClock)?;
+            device.clock(Clock::Video, ClockId::TargetAppClock)
             // My machine does not support CustomerMaxBoost
         })
     }
@@ -4432,18 +4470,10 @@ mod test {
     fn max_customer_boost_clock() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
-            device
-                .max_customer_boost_clock(Clock::Graphics)
-                .chain_err(|| "graphics")?;
-            device
-                .max_customer_boost_clock(Clock::SM)
-                .chain_err(|| "SM")?;
-            device
-                .max_customer_boost_clock(Clock::Memory)
-                .chain_err(|| "mem")?;
-            device
-                .max_customer_boost_clock(Clock::Video)
-                .chain_err(|| "video")
+            device.max_customer_boost_clock(Clock::Graphics)?;
+            device.max_customer_boost_clock(Clock::SM)?;
+            device.max_customer_boost_clock(Clock::Memory)?;
+            device.max_customer_boost_clock(Clock::Video)
         })
     }
 
@@ -4457,16 +4487,10 @@ mod test {
     fn clock_info() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
-            let gfx_clock = device
-                .clock_info(Clock::Graphics)
-                .chain_err(|| "graphics clock")?;
-            let sm_clock = device.clock_info(Clock::SM).chain_err(|| "sm clock")?;
-            let mem_clock = device
-                .clock_info(Clock::Memory)
-                .chain_err(|| "memory clock")?;
-            let vid_clock = device
-                .clock_info(Clock::Video)
-                .chain_err(|| "video clock")?;
+            let gfx_clock = device.clock_info(Clock::Graphics)?;
+            let sm_clock = device.clock_info(Clock::SM)?;
+            let mem_clock = device.clock_info(Clock::Memory)?;
+            let vid_clock = device.clock_info(Clock::Video)?;
 
             Ok(format!(
                 "Graphics Clock: {}, SM Clock: {}, Memory Clock: {}, Video Clock: {}",
@@ -4510,18 +4534,10 @@ mod test {
     fn default_applications_clock() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
-            let gfx_clock = device
-                .default_applications_clock(Clock::Graphics)
-                .chain_err(|| "graphics clock")?;
-            let sm_clock = device
-                .default_applications_clock(Clock::SM)
-                .chain_err(|| "sm clock")?;
-            let mem_clock = device
-                .default_applications_clock(Clock::Memory)
-                .chain_err(|| "memory clock")?;
-            let vid_clock = device
-                .default_applications_clock(Clock::Video)
-                .chain_err(|| "video clock")?;
+            let gfx_clock = device.default_applications_clock(Clock::Graphics)?;
+            let sm_clock = device.default_applications_clock(Clock::SM)?;
+            let mem_clock = device.default_applications_clock(Clock::Memory)?;
+            let vid_clock = device.default_applications_clock(Clock::Video)?;
 
             Ok(format!(
                 "Graphics Clock: {}, SM Clock: {}, Memory Clock: {}, Video Clock: {}",
@@ -4655,11 +4671,9 @@ mod test {
     fn info_rom_version() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
-            device.info_rom_version(InfoRom::OEM).chain_err(|| "oem")?;
-            device.info_rom_version(InfoRom::ECC).chain_err(|| "ecc")?;
-            device
-                .info_rom_version(InfoRom::Power)
-                .chain_err(|| "power")
+            device.info_rom_version(InfoRom::OEM)?;
+            device.info_rom_version(InfoRom::ECC)?;
+            device.info_rom_version(InfoRom::Power)
         })
     }
 
@@ -4667,16 +4681,10 @@ mod test {
     fn max_clock_info() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
-            let gfx_clock = device
-                .max_clock_info(Clock::Graphics)
-                .chain_err(|| "graphics clock")?;
-            let sm_clock = device.max_clock_info(Clock::SM).chain_err(|| "sm clock")?;
-            let mem_clock = device
-                .max_clock_info(Clock::Memory)
-                .chain_err(|| "memory clock")?;
-            let vid_clock = device
-                .max_clock_info(Clock::Video)
-                .chain_err(|| "video clock")?;
+            let gfx_clock = device.max_clock_info(Clock::Graphics)?;
+            let sm_clock = device.max_clock_info(Clock::SM)?;
+            let mem_clock = device.max_clock_info(Clock::Memory)?;
+            let vid_clock = device.max_clock_info(Clock::Video)?;
 
             Ok(format!(
                 "Graphics Clock: {}, SM Clock: {}, Memory Clock: {}, Video Clock: {}",
@@ -4752,12 +4760,8 @@ mod test {
     fn pcie_throughput() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
-            device
-                .pcie_throughput(PcieUtilCounter::Send)
-                .chain_err(|| "send")?;
-            device
-                .pcie_throughput(PcieUtilCounter::Receive)
-                .chain_err(|| "receive")
+            device.pcie_throughput(PcieUtilCounter::Send)?;
+            device.pcie_throughput(PcieUtilCounter::Receive)
         })
     }
 
@@ -4822,12 +4826,8 @@ mod test {
     fn retired_pages() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
-            device
-                .retired_pages(RetirementCause::MultipleSingleBitEccErrors)
-                .chain_err(|| "multiplesinglebit")?;
-            device
-                .retired_pages(RetirementCause::DoubleBitEccError)
-                .chain_err(|| "doublebit")
+            device.retired_pages(RetirementCause::MultipleSingleBitEccErrors)?;
+            device.retired_pages(RetirementCause::DoubleBitEccError)
         })
     }
 
@@ -5002,12 +5002,8 @@ mod test {
     fn temperature_threshold() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
-            let slowdown = device
-                .temperature_threshold(TemperatureThreshold::Slowdown)
-                .chain_err(|| "slowdown")?;
-            let shutdown = device
-                .temperature_threshold(TemperatureThreshold::Shutdown)
-                .chain_err(|| "shutdown")?;
+            let slowdown = device.temperature_threshold(TemperatureThreshold::Slowdown)?;
+            let shutdown = device.temperature_threshold(TemperatureThreshold::Shutdown)?;
 
             Ok((slowdown, shutdown))
         })
@@ -5165,7 +5161,7 @@ mod test {
 
             // We never enable accounting mode, so this should return a `NotFound` error
             match device.accounting_stats_for(processes[0].pid) {
-                Err(Error(ErrorKind::NotFound, _)) => panic!("NotFound"),
+                Err(NvmlError::NotFound) => panic!("NotFound"),
                 other => other,
             }
         })
@@ -5302,12 +5298,14 @@ mod test {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
             let set = nvml.create_event_set()?;
-            let set = device.register_events(
-                EventTypes::PSTATE_CHANGE
-                    | EventTypes::CRITICAL_XID_ERROR
-                    | EventTypes::CLOCK_CHANGE,
-                set,
-            )?;
+            let set = device
+                .register_events(
+                    EventTypes::PSTATE_CHANGE
+                        | EventTypes::CRITICAL_XID_ERROR
+                        | EventTypes::CLOCK_CHANGE,
+                    set,
+                )
+                .map_err(|e| e.error)?;
 
             Ok(())
         })

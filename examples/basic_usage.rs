@@ -1,23 +1,9 @@
-extern crate nvml_wrapper as nvml;
-// This is just used to pretty-print bytes.
-extern crate pretty_bytes;
-
-use crate::nvml::{cuda_driver_version_major, cuda_driver_version_minor, NVML};
-// You would probably want your own error setup in your own code; here we just
-// use the wrapper's error types.
-use crate::nvml::enum_wrappers::device::{Clock, TemperatureSensor};
-use crate::nvml::error::*;
+use nvml_wrapper::enum_wrappers::device::{Clock, TemperatureSensor};
+use nvml_wrapper::error::NvmlError;
+use nvml_wrapper::{cuda_driver_version_major, cuda_driver_version_minor, NVML};
 use pretty_bytes::converter::convert;
 
-fn main() {
-    match actual_main() {
-        Ok(()) => {}
-        Err(e) => println!("\n{:?}. \nDescription: {:?}\n", e, e.description()),
-    }
-}
-
-// We write a function so that we can return a `Result` and use `?`
-fn actual_main() -> Result<()> {
+fn main() -> Result<(), NvmlError> {
     let nvml = NVML::init()?;
 
     let cuda_version = nvml.sys_cuda_driver_version()?;

@@ -1,4 +1,4 @@
-use crate::error::{nvml_try, Result};
+use crate::error::{nvml_try, NvmlError};
 use crate::ffi::bindings::*;
 use crate::NVML;
 
@@ -48,7 +48,7 @@ impl<'nvml> EventSet<'nvml> {
     * `Unknown`, on any unexpected error
     */
     // Checked against local
-    pub fn release_events(self) -> Result<()> {
+    pub fn release_events(self) -> Result<(), NvmlError> {
         unsafe {
             nvml_try(nvmlEventSetFree(self.set))?;
         }
@@ -85,7 +85,7 @@ impl<'nvml> EventSet<'nvml> {
     Supports Fermi and newer fully supported devices.
     */
     // Checked against local
-    pub fn wait(&self, timeout_ms: u32) -> Result<EventData<'nvml>> {
+    pub fn wait(&self, timeout_ms: u32) -> Result<EventData<'nvml>, NvmlError> {
         unsafe {
             let mut data: nvmlEventData_t = mem::zeroed();
             nvml_try(nvmlEventSetWait(self.set, &mut data, timeout_ms))?;
@@ -144,12 +144,14 @@ mod test {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
             let set = nvml.create_event_set()?;
-            let set = device.register_events(
-                EventTypes::PSTATE_CHANGE
-                    | EventTypes::CRITICAL_XID_ERROR
-                    | EventTypes::CLOCK_CHANGE,
-                set,
-            )?;
+            let set = device
+                .register_events(
+                    EventTypes::PSTATE_CHANGE
+                        | EventTypes::CRITICAL_XID_ERROR
+                        | EventTypes::CLOCK_CHANGE,
+                    set,
+                )
+                .map_err(|e| e.error)?;
 
             set.release_events()
         })
@@ -159,7 +161,7 @@ mod test {
     #[cfg(feature = "test-local")]
     #[test]
     fn wait() {
-        use crate::error::*;
+        use crate::error::NvmlError;
 
         let nvml = nvml();
         let device = device(&nvml);
@@ -174,7 +176,7 @@ mod test {
             .expect("registration");
 
         let data = match set.wait(10_000) {
-            Err(Error(ErrorKind::Timeout, _)) => return (),
+            Err(NvmlError::Timeout) => return (),
             Ok(d) => d,
             _ => panic!("An error other than `Timeout` occurred"),
         };

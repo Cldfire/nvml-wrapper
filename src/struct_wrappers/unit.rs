@@ -1,7 +1,7 @@
 use crate::enum_wrappers::unit::FanState;
-use crate::error::Result;
+use crate::error::NvmlError;
 use crate::ffi::bindings::*;
-use std::ffi::CStr;
+use std::{convert::TryFrom, ffi::CStr};
 
 /// Fan information readings for an entire S-class unit.
 // Checked against local
@@ -14,7 +14,9 @@ pub struct FansInfo {
     pub fans: Vec<FanInfo>,
 }
 
-impl FansInfo {
+impl TryFrom<nvmlUnitFanSpeeds_t> for FansInfo {
+    type Error = NvmlError;
+
     /**
     Construct `FansInfo` from the corresponding C struct.
 
@@ -22,15 +24,15 @@ impl FansInfo {
 
     * `UnexpectedVariant`, for which you can read the docs for
     */
-    pub fn try_from(struct_: nvmlUnitFanSpeeds_t) -> Result<Self> {
-        let fans = struct_
+    fn try_from(value: nvmlUnitFanSpeeds_t) -> Result<Self, Self::Error> {
+        let fans = value
             .fans
             .iter()
             .map(|f| FanInfo::try_from(*f))
-            .collect::<Result<_>>()?;
+            .collect::<Result<_, NvmlError>>()?;
 
         Ok(FansInfo {
-            count: struct_.count,
+            count: value.count,
             fans,
         })
     }
@@ -47,7 +49,9 @@ pub struct FanInfo {
     pub state: FanState,
 }
 
-impl FanInfo {
+impl TryFrom<nvmlUnitFanInfo_t> for FanInfo {
+    type Error = NvmlError;
+
     /**
     Construct `FanInfo` from the corresponding C struct.
 
@@ -55,10 +59,10 @@ impl FanInfo {
 
     * `UnexpectedVariant`, for which you can read the docs for
     */
-    pub fn try_from(struct_: nvmlUnitFanInfo_t) -> Result<Self> {
+    fn try_from(value: nvmlUnitFanInfo_t) -> Result<Self, Self::Error> {
         Ok(FanInfo {
-            speed: struct_.speed,
-            state: FanState::try_from(struct_.state)?,
+            speed: value.speed,
+            state: FanState::try_from(value.state)?,
         })
     }
 }
@@ -94,16 +98,24 @@ pub struct PsuInfo {
     pub voltage: u32,
 }
 
-impl PsuInfo {
-    /// Waiting for `TryFrom` to be stable. In the meantime, we do this.
-    pub fn try_from(struct_: nvmlPSUInfo_t) -> Result<Self> {
+impl TryFrom<nvmlPSUInfo_t> for PsuInfo {
+    type Error = NvmlError;
+
+    /**
+    Construct `PsuInfo` from the corresponding C struct.
+
+    # Errors
+
+    * `UnexpectedVariant`, for which you can read the docs for
+    */
+    fn try_from(value: nvmlPSUInfo_t) -> Result<Self, Self::Error> {
         unsafe {
-            let state_raw = CStr::from_ptr(struct_.state.as_ptr());
+            let state_raw = CStr::from_ptr(value.state.as_ptr());
             Ok(PsuInfo {
-                current: struct_.current,
-                power_draw: struct_.power,
+                current: value.current,
+                power_draw: value.power,
                 state: state_raw.to_str()?.into(),
-                voltage: struct_.voltage,
+                voltage: value.voltage,
             })
         }
     }
@@ -122,14 +134,22 @@ pub struct UnitInfo {
     pub serial: String,
 }
 
-impl UnitInfo {
-    /// Waiting for `TryFrom` to be stable. In the meantime, we do this.
-    pub fn try_from(struct_: nvmlUnitInfo_t) -> Result<Self> {
+impl TryFrom<nvmlUnitInfo_t> for UnitInfo {
+    type Error = NvmlError;
+
+    /**
+    Construct `UnitInfo` from the corresponding C struct.
+
+    # Errors
+
+    * `UnexpectedVariant`, for which you can read the docs for
+    */
+    fn try_from(value: nvmlUnitInfo_t) -> Result<Self, Self::Error> {
         unsafe {
-            let version_raw = CStr::from_ptr(struct_.firmwareVersion.as_ptr());
-            let id_raw = CStr::from_ptr(struct_.id.as_ptr());
-            let name_raw = CStr::from_ptr(struct_.name.as_ptr());
-            let serial_raw = CStr::from_ptr(struct_.serial.as_ptr());
+            let version_raw = CStr::from_ptr(value.firmwareVersion.as_ptr());
+            let id_raw = CStr::from_ptr(value.id.as_ptr());
+            let name_raw = CStr::from_ptr(value.name.as_ptr());
+            let serial_raw = CStr::from_ptr(value.serial.as_ptr());
 
             Ok(UnitInfo {
                 firmware_version: version_raw.to_str()?.into(),
@@ -150,13 +170,21 @@ pub struct HwbcEntry {
     pub firmware_version: String,
 }
 
-impl HwbcEntry {
-    /// Waiting for `TryFrom` to be stable. In the meantime, we do this.
-    pub fn try_from(struct_: nvmlHwbcEntry_t) -> Result<Self> {
+impl TryFrom<nvmlHwbcEntry_t> for HwbcEntry {
+    type Error = NvmlError;
+
+    /**
+    Construct `HwbcEntry` from the corresponding C struct.
+
+    # Errors
+
+    * `UnexpectedVariant`, for which you can read the docs for
+    */
+    fn try_from(value: nvmlHwbcEntry_t) -> Result<Self, Self::Error> {
         unsafe {
-            let version_raw = CStr::from_ptr(struct_.firmwareVersion.as_ptr());
+            let version_raw = CStr::from_ptr(value.firmwareVersion.as_ptr());
             Ok(HwbcEntry {
-                id: struct_.hwbcId,
+                id: value.hwbcId,
                 firmware_version: version_raw.to_str()?.into(),
             })
         }
