@@ -4,6 +4,8 @@ use crate::enums::device::{FirmwareVersion, SampleValue, UsedGpuMemory};
 use crate::error::{nvml_try, Bits, NvmlError};
 use crate::ffi::bindings::*;
 use crate::structs::device::FieldId;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::ffi::{CStr, CString};
 use std::{
     convert::{TryFrom, TryInto},

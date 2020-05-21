@@ -1,6 +1,9 @@
 #![allow(deprecated)]
 
 use crate::ffi::bindings::*;
+use bitflags::bitflags;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 bitflags! {
     /// Flags used to specify why a GPU is throttling.

@@ -1,3 +1,6 @@
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 /// A simple wrapper used to encode the `Unknown` value into the type system.
 ///
 /// `Unknown` would otherwise be a value of 999 (if it were not an enum

@@ -1,6 +1,8 @@
 use crate::enum_wrappers::unit::FanState;
 use crate::error::NvmlError;
 use crate::ffi::bindings::*;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::{convert::TryFrom, ffi::CStr};
 
 /// Fan information readings for an entire S-class unit.

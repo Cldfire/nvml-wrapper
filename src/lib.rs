@@ -109,13 +109,6 @@ for every NVML data structure.
 #![recursion_limit = "1024"]
 #![allow(non_upper_case_globals)]
 
-#[macro_use]
-extern crate bitflags;
-#[macro_use]
-extern crate wrapcenum_derive;
-#[cfg(feature = "serde")]
-#[macro_use]
-extern crate serde;
 extern crate nvml_wrapper_sys as ffi;
 
 pub mod bitmasks;

@@ -1,3 +1,6 @@
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 /// Used to specify the counter in `NvLink.set_utilization_control_for()`
 ///
 /// NVIDIA simply says that the counter specified can be either 0 or 1.

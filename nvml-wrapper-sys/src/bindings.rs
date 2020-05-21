@@ -8,12 +8,12 @@
 use std::os::raw;
 
 pub const NVML_API_VERSION: u32 = 10;
-pub const NVML_API_VERSION_STR: &'static [u8; 3usize] = b"10\0";
+pub const NVML_API_VERSION_STR: &[u8; 3usize] = b"10\0";
 pub const NVML_VALUE_NOT_AVAILABLE: i32 = -1;
 pub const NVML_DEVICE_PCI_BUS_ID_BUFFER_SIZE: u32 = 32;
 pub const NVML_DEVICE_PCI_BUS_ID_BUFFER_V2_SIZE: u32 = 16;
-pub const NVML_DEVICE_PCI_BUS_ID_LEGACY_FMT: &'static [u8; 17usize] = b"%04X:%02X:%02X.0\0";
-pub const NVML_DEVICE_PCI_BUS_ID_FMT: &'static [u8; 17usize] = b"%08X:%02X:%02X.0\0";
+pub const NVML_DEVICE_PCI_BUS_ID_LEGACY_FMT: &[u8; 17usize] = b"%04X:%02X:%02X.0\0";
+pub const NVML_DEVICE_PCI_BUS_ID_FMT: &[u8; 17usize] = b"%08X:%02X:%02X.0\0";
 pub const NVML_NVLINK_MAX_LINKS: u32 = 6;
 pub const NVML_MAX_PHYSICAL_BRIDGE: u32 = 128;
 pub const nvmlFlagDefault: u32 = 0;

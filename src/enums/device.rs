@@ -1,5 +1,7 @@
 use crate::enum_wrappers::device::SampleValueType;
 use crate::ffi::bindings::*;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// Respresents possible variants for a firmware version.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]

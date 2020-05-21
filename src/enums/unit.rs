@@ -1,5 +1,7 @@
 use crate::error::NvmlError;
 use crate::ffi::bindings::*;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::{convert::TryFrom, ffi::CStr};
 
 /// LED states for an S-class unit.

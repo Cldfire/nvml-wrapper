@@ -1,4 +1,6 @@
 use crate::ffi::bindings::*;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]

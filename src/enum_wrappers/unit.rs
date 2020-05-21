@@ -1,5 +1,8 @@
 use crate::error::NvmlError;
 use crate::ffi::bindings::*;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+use wrapcenum_derive::EnumWrapper;
 
 /// Unit fan state.
 // Checked against local

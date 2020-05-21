@@ -3,6 +3,9 @@ pub mod event;
 pub mod nv_link;
 
 use crate::ffi::bindings::*;
+use bitflags::bitflags;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 bitflags! {
     /// Generic flags used to specify the default behavior of some functions.

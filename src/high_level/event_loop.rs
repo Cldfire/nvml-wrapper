@@ -69,6 +69,8 @@ use crate::struct_wrappers::event::EventData;
 use crate::Device;
 use crate::EventSet;
 use crate::NVML;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 // TODO: Tests
 
