@@ -27,8 +27,6 @@ wrapcenum-derive = { git = "https://github.com/Cldfire/wrapcenum-derive.git" }
 rusty-hook = "^0.11.1"
 # Used in the `basic_usage` example
 pretty-bytes = "0.2"
-# Used in error-related tests
-assert_matches = "1.3.0"
 
 [features]
 default = []
