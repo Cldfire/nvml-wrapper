@@ -68,11 +68,6 @@ in theory.
 These bindings were generated for NVML version 10.1. Each new version of NVML is
 guaranteed to be backwards-compatible according to NVIDIA, so these bindings
 should be useful regardless of NVML version bumps.
-
-## Rust Version Support
-
-Currently supports Rust 1.19.0 or greater. The target version is the **latest**
-stable version; I do not intend to pin to an older one at any time.
 */
 
 pub mod bindings;

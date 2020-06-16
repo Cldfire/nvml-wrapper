@@ -12,6 +12,10 @@ This release was focused on cleanup and migrating a crate originally written in 
 
 Additionally, the `wrapcenum-derive` dependency (a derive macro used to simplify API generation internally) has been completely re-written and now depends on the `1.0` releases of `syn` and `quote`. There are no user-facing changes as a result of this rewrite, but your crate's dependency tree will likely be very pleased.
 
+### Rust Version Support
+
+The MSRV of this release is 1.42.0.
+
 ### Changes
 
 * `nvml-wrapper` updated to Rust 2018 edition

@@ -67,7 +67,7 @@ NVML version bumps.
 
 ## MSRV
 
-The Minimum Supported Rust Version is currently 1.38.0. I will not go out of my
+The Minimum Supported Rust Version is currently 1.42.0. I will not go out of my
 way to avoid bumping this.
 
 ## Cargo Features
