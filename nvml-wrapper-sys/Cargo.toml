@@ -1,6 +1,6 @@
 [package]
 name = "nvml-wrapper-sys"
-version = "0.4.1"
+version = "0.4.2"
 authors = ["Cldfire"]
 description = "Generated bindings to the NVIDIA Management Library."
 readme = "README.md"

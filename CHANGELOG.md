@@ -4,10 +4,19 @@ This file describes the changes / additions / fixes between wrapper releases.
 
 ## Unreleased
 
+## 0.6.0 (released 2020-06-15)
+
+### Release Summary
+
+This release was focused on cleanup and migrating a crate originally written in 2016 to modern Rust conventions. Notably, `error-chain` has been ripped out of the crate entirely and replaced with an error enum that implements `std::error::Error`.
+
+Additionally, the `wrapcenum-derive` dependency (a derive macro used to simplify API generation internally) has been completely re-written and now depends on the `1.0` releases of `syn` and `quote`. There are no user-facing changes as a result of this rewrite, but your crate's dependency tree will likely be very pleased.
+
 ### Changes
 
 * `nvml-wrapper` updated to Rust 2018 edition
 * `nvml-wrapper-sys` updated to Rust 2018 edition
+* `wrapcenum-derive` has been re-written and now depends on modern versions of `syn` and `quote`
 * Removed `#[inline]` attribute from all functions
 * Merged methods to get raw handles from structs into a single method
   * `Device.handle()`, `EventSet.handle()`, `Unit.handle()`

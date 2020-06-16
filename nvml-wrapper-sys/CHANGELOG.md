@@ -4,9 +4,15 @@ This file describes the changes / additions / fixes between bindings releases.
 
 ## Unreleased
 
+## 0.4.2 (released 2020-06-15)
+
+### Release Summary
+
+The crate was updated to Rust 2018 edition.
+
 ## 0.4.1 (released 2019-09-11)
 
-### Release summary
+### Release Summary
 
 The Windows import library has been regenerated for NVML 10.1.
 
