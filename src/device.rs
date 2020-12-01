@@ -27,7 +27,6 @@ use std::os::raw::c_ulong;
 use std::{
     convert::TryFrom,
     ffi::CStr,
-    marker::PhantomData,
     mem,
     os::raw::{c_int, c_uint, c_ulonglong},
     ptr,
@@ -47,24 +46,23 @@ have to worry about calls returning `Uninitialized` errors.
 #[derive(Debug)]
 pub struct Device<'nvml> {
     device: nvmlDevice_t,
-    _phantom: PhantomData<&'nvml NVML>,
+    pub nvml: &'nvml NVML,
 }
 
 unsafe impl<'nvml> Send for Device<'nvml> {}
 unsafe impl<'nvml> Sync for Device<'nvml> {}
 
-impl<'nvml> From<nvmlDevice_t> for Device<'nvml> {
-    fn from(device: nvmlDevice_t) -> Self {
-        Device {
-            device,
-            _phantom: PhantomData,
-        }
-    }
-}
-
-const nvml_path: &'static str = "libnvidia-ml.so";
-
 impl<'nvml> Device<'nvml> {
+    /**
+    Create a new `Device` wrapper.
+
+    You will most likely never need to call this; see the methods available to you
+    on the `NVML` struct to get one.
+    */
+    pub fn new(device: nvmlDevice_t, nvml: &'nvml NVML) -> Self {
+        Self { device, nvml }
+    }
+
     /**
     Clear all affinity bindings for the calling thread.
 
@@ -90,9 +88,8 @@ impl<'nvml> Device<'nvml> {
     #[cfg(target_os = "linux")]
     pub fn clear_cpu_affinity(&mut self) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             nvml_try(NvmlLib::nvmlDeviceClearCpuAffinity(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
             ))
         }
@@ -127,12 +124,10 @@ impl<'nvml> Device<'nvml> {
     // Tested (except for AutoBoostedClocks)
     pub fn is_api_restricted(&self, api: Api) -> Result<bool, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut restricted_state: nvmlEnableState_t = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetAPIRestriction(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 api.as_c(),
                 &mut restricted_state,
@@ -165,12 +160,10 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn applications_clock(&self, clock_type: Clock) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut clock: c_uint = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetApplicationsClock(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 clock_type.as_c(),
                 &mut clock,
@@ -207,13 +200,11 @@ impl<'nvml> Device<'nvml> {
     // Tested on machines other than my own
     pub fn auto_boosted_clocks_enabled(&self) -> Result<AutoBoostClocksEnabledInfo, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut is_enabled: nvmlEnableState_t = mem::zeroed();
             let mut is_enabled_default: nvmlEnableState_t = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetAutoBoostedClocksEnabled(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut is_enabled,
                 &mut is_enabled_default,
@@ -248,11 +239,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn bar1_memory_info(&self) -> Result<BAR1MemoryInfo, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut mem_info: nvmlBAR1Memory_t = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetBAR1MemoryInfo(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut mem_info,
             ))?;
@@ -290,11 +279,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn board_id(&self) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut id: c_uint = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetBoardId(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut id,
             ))?;
@@ -320,11 +307,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn brand(&self) -> Result<Brand, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut brand: nvmlBrandType_t = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetBrand(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut brand,
             ))?;
@@ -355,11 +340,9 @@ impl<'nvml> Device<'nvml> {
     // Tested on machines other than my own
     pub fn bridge_chip_info(&self) -> Result<BridgeChipHierarchy, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut info: nvmlBridgeChipHierarchy_t = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetBridgeChipInfo(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut info,
             ))?;
@@ -387,12 +370,10 @@ impl<'nvml> Device<'nvml> {
     // Tested (except for CustomerMaxBoost)
     pub fn clock(&self, clock_type: Clock, clock_id: ClockId) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut clock: c_uint = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetClock(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 clock_type.as_c(),
                 clock_id.as_c(),
@@ -424,12 +405,10 @@ impl<'nvml> Device<'nvml> {
     // Tested on machines other than my own
     pub fn max_customer_boost_clock(&self, clock_type: Clock) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut clock: c_uint = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetMaxCustomerBoostClock(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 clock_type.as_c(),
                 &mut clock,
@@ -455,11 +434,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn compute_mode(&self) -> Result<ComputeMode, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut mode: nvmlComputeMode_t = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetComputeMode(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut mode,
             ))?;
@@ -483,13 +460,11 @@ impl<'nvml> Device<'nvml> {
     */
     pub fn cuda_compute_capability(&self) -> Result<CudaComputeCapability, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut major: c_int = mem::zeroed();
             let mut minor: c_int = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetCudaComputeCapability(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut major,
                 &mut minor,
@@ -518,12 +493,10 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn clock_info(&self, clock_type: Clock) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut clock: c_uint = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetClockInfo(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 clock_type.as_c(),
                 &mut clock,
@@ -550,8 +523,6 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn running_compute_processes(&self) -> Result<Vec<ProcessInfo>, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut count: c_uint = match self.running_compute_processes_count()? {
                 0 => return Ok(vec![]),
                 value => value,
@@ -559,7 +530,7 @@ impl<'nvml> Device<'nvml> {
             let mut processes: Vec<nvmlProcessInfo_t> = vec![mem::zeroed(); count as usize];
 
             nvml_try(NvmlLib::nvmlDeviceGetComputeRunningProcesses(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut count,
                 processes.as_mut_ptr(),
@@ -586,14 +557,12 @@ impl<'nvml> Device<'nvml> {
     // Tested as part of `.running_compute_processes()`
     pub fn running_compute_processes_count(&self) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             // Indicates that we want the count
             let mut count: c_uint = 0;
 
             // Passing null doesn't mean we want the count, it's just allowed
             match NvmlLib::nvmlDeviceGetComputeRunningProcesses(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut count,
                 ptr::null_mut(),
@@ -636,8 +605,6 @@ impl<'nvml> Device<'nvml> {
     #[cfg(target_os = "linux")]
     pub fn cpu_affinity(&self, size: usize) -> Result<Vec<c_ulong>, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             if size == 0 {
                 // Return an error containing the minimum size that can be passed.
                 return Err(NvmlError::InsufficientSize(Some(1)));
@@ -646,7 +613,7 @@ impl<'nvml> Device<'nvml> {
             let mut affinities: Vec<c_ulong> = vec![mem::zeroed(); size];
 
             nvml_try(NvmlLib::nvmlDeviceGetCpuAffinity(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 size as c_uint,
                 affinities.as_mut_ptr(),
@@ -675,12 +642,10 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn current_pcie_link_gen(&self) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut link_gen: c_uint = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetCurrPcieLinkGeneration(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut link_gen,
             ))?;
@@ -708,11 +673,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn current_pcie_link_width(&self) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut link_width: c_uint = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetCurrPcieLinkWidth(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut link_width,
             ))?;
@@ -740,13 +703,11 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn decoder_utilization(&self) -> Result<UtilizationInfo, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut utilization: c_uint = mem::zeroed();
             let mut sampling_period: c_uint = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetDecoderUtilization(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut utilization,
                 &mut sampling_period,
@@ -776,11 +737,9 @@ impl<'nvml> Device<'nvml> {
     // tested
     pub fn fbc_stats(&self) -> Result<FbcStats, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut fbc_stats: nvmlFBCStats_t = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetFBCStats(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut fbc_stats,
             ))?;
@@ -813,8 +772,6 @@ impl<'nvml> Device<'nvml> {
     // tested
     pub fn fbc_sessions_info(&self) -> Result<Vec<FbcSessionInfo>, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut count: c_uint = match self.fbc_session_count()? {
                 0 => return Ok(vec![]),
                 value => value,
@@ -822,7 +779,7 @@ impl<'nvml> Device<'nvml> {
             let mut info: Vec<nvmlFBCSessionInfo_t> = vec![mem::zeroed(); count as usize];
 
             nvml_try(NvmlLib::nvmlDeviceGetFBCSessions(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut count,
                 info.as_mut_ptr(),
@@ -845,12 +802,10 @@ impl<'nvml> Device<'nvml> {
     // tested as part of the above
     pub fn fbc_session_count(&self) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut count: c_uint = 0;
 
             nvml_try(NvmlLib::nvmlDeviceGetFBCSessions(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut count,
                 ptr::null_mut(),
@@ -880,12 +835,10 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn default_applications_clock(&self, clock_type: Clock) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut clock: c_uint = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetDefaultApplicationsClock(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 clock_type.as_c(),
                 &mut clock,
@@ -904,12 +857,10 @@ impl<'nvml> Device<'nvml> {
         counter_type: EccCounter,
     ) -> Result<EccErrorCounts, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut counts: nvmlEccErrorCounts_t = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetDetailedEccErrors(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 error_type.as_c(),
                 counter_type.as_c(),
@@ -942,11 +893,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn is_display_active(&self) -> Result<bool, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetDisplayActive(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut state,
             ))?;
@@ -974,11 +923,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn is_display_connected(&self) -> Result<bool, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetDisplayMode(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut state,
             ))?;
@@ -1016,13 +963,11 @@ impl<'nvml> Device<'nvml> {
     #[cfg(target_os = "windows")]
     pub fn driver_model(&self) -> Result<DriverModelState, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut current: nvmlDriverModel_t = mem::zeroed();
             let mut pending: nvmlDriverModel_t = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetDriverModel(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut current,
                 &mut pending,
@@ -1059,13 +1004,11 @@ impl<'nvml> Device<'nvml> {
     // Tested on machines other than my own
     pub fn is_ecc_enabled(&self) -> Result<EccModeState, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut current: nvmlEnableState_t = mem::zeroed();
             let mut pending: nvmlEnableState_t = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetEccMode(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut current,
                 &mut pending,
@@ -1097,13 +1040,11 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn encoder_utilization(&self) -> Result<UtilizationInfo, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut utilization: c_uint = mem::zeroed();
             let mut sampling_period: c_uint = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetEncoderUtilization(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut utilization,
                 &mut sampling_period,
@@ -1134,12 +1075,10 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn encoder_capacity(&self, for_type: EncoderType) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut capacity: c_uint = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetEncoderCapacity(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 for_type.as_c(),
                 &mut capacity,
@@ -1166,14 +1105,12 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn encoder_stats(&self) -> Result<EncoderStats, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut session_count: c_uint = mem::zeroed();
             let mut average_fps: c_uint = mem::zeroed();
             let mut average_latency: c_uint = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetEncoderStats(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut session_count,
                 &mut average_fps,
@@ -1207,8 +1144,6 @@ impl<'nvml> Device<'nvml> {
     // TODO: Test this with an active session and make sure it works
     pub fn encoder_sessions(&self) -> Result<Vec<EncoderSessionInfo>, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut count = match self.encoder_sessions_count()? {
                 0 => return Ok(vec![]),
                 value => value,
@@ -1216,7 +1151,7 @@ impl<'nvml> Device<'nvml> {
             let mut sessions: Vec<nvmlEncoderSessionInfo_t> = vec![mem::zeroed(); count as usize];
 
             nvml_try(NvmlLib::nvmlDeviceGetEncoderSessions(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut count,
                 sessions.as_mut_ptr(),
@@ -1243,12 +1178,10 @@ impl<'nvml> Device<'nvml> {
     // tested as part of the above
     fn encoder_sessions_count(&self) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut count: c_uint = 0;
 
             nvml_try(NvmlLib::nvmlDeviceGetEncoderSessions(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut count,
                 ptr::null_mut(),
@@ -1281,11 +1214,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn enforced_power_limit(&self) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut limit: c_uint = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetEnforcedPowerLimit(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut limit,
             ))?;
@@ -1317,11 +1248,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn fan_speed(&self, fan_idx: u32) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut speed: c_uint = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetFanSpeed_v2(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 fan_idx,
                 &mut speed,
@@ -1354,13 +1283,11 @@ impl<'nvml> Device<'nvml> {
     // Tested on machines other than my own
     pub fn gpu_operation_mode(&self) -> Result<OperationModeState, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut current: nvmlGpuOperationMode_t = mem::zeroed();
             let mut pending: nvmlGpuOperationMode_t = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetGpuOperationMode(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut current,
                 &mut pending,
@@ -1388,8 +1315,6 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn running_graphics_processes(&self) -> Result<Vec<ProcessInfo>, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut count: c_uint = match self.running_graphics_processes_count()? {
                 0 => return Ok(vec![]),
                 value => value,
@@ -1397,7 +1322,7 @@ impl<'nvml> Device<'nvml> {
             let mut processes: Vec<nvmlProcessInfo_t> = vec![mem::zeroed(); count as usize];
 
             nvml_try(NvmlLib::nvmlDeviceGetGraphicsRunningProcesses(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut count,
                 processes.as_mut_ptr(),
@@ -1424,14 +1349,12 @@ impl<'nvml> Device<'nvml> {
     // Tested as part of `.running_graphics_processes()`
     pub fn running_graphics_processes_count(&self) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             // Indicates that we want the count
             let mut count: c_uint = 0;
 
             // Passing null doesn't indicate that we want the count. It's just allowed.
             match NvmlLib::nvmlDeviceGetGraphicsRunningProcesses(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut count,
                 ptr::null_mut(),
@@ -1472,8 +1395,6 @@ impl<'nvml> Device<'nvml> {
         T: Into<Option<u64>>,
     {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let last_seen_timestamp = last_seen_timestamp.into().unwrap_or(0);
             let mut count = match self.process_utilization_stats_count()? {
                 0 => return Ok(vec![]),
@@ -1483,7 +1404,7 @@ impl<'nvml> Device<'nvml> {
                 vec![mem::zeroed(); count as usize];
 
             nvml_try(NvmlLib::nvmlDeviceGetProcessUtilization(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 utilization_samples.as_mut_ptr(),
                 &mut count,
@@ -1500,12 +1421,10 @@ impl<'nvml> Device<'nvml> {
 
     fn process_utilization_stats_count(&self) -> Result<c_uint, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut count: c_uint = 0;
 
             match NvmlLib::nvmlDeviceGetProcessUtilization(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 ptr::null_mut(),
                 &mut count,
@@ -1535,11 +1454,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn index(&self) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut index: c_uint = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetIndex(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut index,
             ))?;
@@ -1572,12 +1489,10 @@ impl<'nvml> Device<'nvml> {
     // Tested on machines other than my own
     pub fn config_checksum(&self) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut checksum: c_uint = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetInforomConfigurationChecksum(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut checksum,
             ))?;
@@ -1610,12 +1525,10 @@ impl<'nvml> Device<'nvml> {
     // Tested on machines other than my own
     pub fn info_rom_image_version(&self) -> Result<String, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut version_vec = vec![0; NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE as usize];
 
             nvml_try(NvmlLib::nvmlDeviceGetInforomImageVersion(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 version_vec.as_mut_ptr(),
                 NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE,
@@ -1651,12 +1564,10 @@ impl<'nvml> Device<'nvml> {
     // Tested on machines other than my own
     pub fn info_rom_version(&self, object: InfoRom) -> Result<String, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut version_vec = vec![0; NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE as usize];
 
             nvml_try(NvmlLib::nvmlDeviceGetInforomVersion(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 object.as_c(),
                 version_vec.as_mut_ptr(),
@@ -1690,12 +1601,10 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn max_clock_info(&self, clock_type: Clock) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut clock: c_uint = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetMaxClockInfo(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 clock_type.as_c(),
                 &mut clock,
@@ -1727,12 +1636,10 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn max_pcie_link_gen(&self) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut max_gen: c_uint = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetMaxPcieLinkGeneration(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut max_gen,
             ))?;
@@ -1763,11 +1670,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn max_pcie_link_width(&self) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut max_width: c_uint = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetMaxPcieLinkWidth(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut max_width,
             ))?;
@@ -1805,12 +1710,10 @@ impl<'nvml> Device<'nvml> {
         location: MemoryLocation,
     ) -> Result<u64, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut count: c_ulonglong = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetMemoryErrorCounter(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 error_type.as_c(),
                 counter_type.as_c(),
@@ -1846,11 +1749,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn memory_info(&self) -> Result<MemoryInfo, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut info: nvmlMemory_t = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetMemoryInfo(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut info,
             ))?;
@@ -1882,11 +1783,9 @@ impl<'nvml> Device<'nvml> {
     #[cfg(target_os = "linux")]
     pub fn minor_number(&self) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut number: c_uint = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetMinorNumber(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut number,
             ))?;
@@ -1914,11 +1813,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn is_multi_gpu_board(&self) -> Result<bool, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut int_bool: c_uint = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetMultiGpuBoard(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut int_bool,
             ))?;
@@ -1947,12 +1844,10 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn name(&self) -> Result<String, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut name_vec = vec![0; NVML_DEVICE_NAME_BUFFER_SIZE as usize];
 
             nvml_try(NvmlLib::nvmlDeviceGetName(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 name_vec.as_mut_ptr(),
                 NVML_DEVICE_NAME_BUFFER_SIZE,
@@ -1980,11 +1875,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn pci_info(&self) -> Result<PciInfo, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut pci_info: nvmlPciInfo_t = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetPciInfo_v3(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut pci_info,
             ))?;
@@ -2012,11 +1905,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn pcie_replay_counter(&self) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut value: c_uint = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetPcieReplayCounter(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut value,
             ))?;
@@ -2051,12 +1942,10 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn pcie_throughput(&self, counter: PcieUtilCounter) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut throughput: c_uint = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetPcieThroughput(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 counter.as_c(),
                 &mut throughput,
@@ -2086,11 +1975,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn performance_state(&self) -> Result<PerformanceState, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut state: nvmlPstates_t = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetPerformanceState(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut state,
             ))?;
@@ -2123,11 +2010,9 @@ impl<'nvml> Device<'nvml> {
     #[cfg(target_os = "linux")]
     pub fn is_in_persistent_mode(&self) -> Result<bool, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetPersistenceMode(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut state,
             ))?;
@@ -2157,11 +2042,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn power_management_limit_default(&self) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut limit: c_uint = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetPowerManagementDefaultLimit(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut limit,
             ))?;
@@ -2196,11 +2079,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn power_management_limit(&self) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut limit: c_uint = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetPowerManagementLimit(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut limit,
             ))?;
@@ -2230,13 +2111,11 @@ impl<'nvml> Device<'nvml> {
         &self,
     ) -> Result<PowerManagementConstraints, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut min_limit: c_uint = mem::zeroed();
             let mut max_limit: c_uint = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetPowerManagementLimitConstraints(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut min_limit,
                 &mut max_limit,
@@ -2255,11 +2134,9 @@ impl<'nvml> Device<'nvml> {
     #[deprecated(note = "NVIDIA states that \"this API has been deprecated.\"")]
     pub fn is_power_management_algo_active(&self) -> Result<bool, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetPowerManagementMode(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut state,
             ))?;
@@ -2274,11 +2151,9 @@ impl<'nvml> Device<'nvml> {
     #[deprecated(note = "use `.performance_state()`.")]
     pub fn power_state(&self) -> Result<PerformanceState, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut state: nvmlPstates_t = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetPowerState(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut state,
             ))?;
@@ -2310,11 +2185,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn power_usage(&self) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut usage: c_uint = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetPowerUsage(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut usage,
             ))?;
@@ -2341,11 +2214,9 @@ impl<'nvml> Device<'nvml> {
     */
     pub fn total_energy_consumption(&self) -> Result<u64, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut total: c_ulonglong = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetTotalEnergyConsumption(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut total,
             ))?;
@@ -2378,8 +2249,6 @@ impl<'nvml> Device<'nvml> {
     // Tested on machines other than my own
     pub fn retired_pages(&self, cause: RetirementCause) -> Result<Vec<RetiredPage>, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut count = match self.retired_pages_count(&cause)? {
                 0 => return Ok(vec![]),
                 value => value,
@@ -2388,7 +2257,7 @@ impl<'nvml> Device<'nvml> {
             let mut timestamps: Vec<c_ulonglong> = vec![mem::zeroed(); count as usize];
 
             nvml_try(NvmlLib::nvmlDeviceGetRetiredPages_v2(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 cause.as_c(),
                 &mut count,
@@ -2407,12 +2276,10 @@ impl<'nvml> Device<'nvml> {
     // Helper for the above function. Returns # of samples that can be queried.
     fn retired_pages_count(&self, cause: &RetirementCause) -> Result<c_uint, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut count: c_uint = 0;
 
             nvml_try(NvmlLib::nvmlDeviceGetRetiredPages(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 cause.as_c(),
                 &mut count,
@@ -2445,12 +2312,10 @@ impl<'nvml> Device<'nvml> {
     // Tested on machines other than my own
     pub fn are_pages_pending_retired(&self) -> Result<bool, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut state: nvmlEnableState_t = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetRetiredPagesPendingStatus(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut state,
             ))?;
@@ -2525,8 +2390,6 @@ impl<'nvml> Device<'nvml> {
     {
         let timestamp = last_seen_timestamp.into().unwrap_or(0);
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut val_type: nvmlValueType_t = mem::zeroed();
             let mut count = match self.samples_count(&sample_type, timestamp)? {
                 0 => return Ok(vec![]),
@@ -2535,7 +2398,7 @@ impl<'nvml> Device<'nvml> {
             let mut samples: Vec<nvmlSample_t> = vec![mem::zeroed(); count as usize];
 
             nvml_try(NvmlLib::nvmlDeviceGetSamples(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 sample_type.as_c(),
                 timestamp,
@@ -2555,13 +2418,11 @@ impl<'nvml> Device<'nvml> {
     // Helper for the above function. Returns # of samples that can be queried.
     fn samples_count(&self, sample_type: &Sampling, timestamp: u64) -> Result<c_uint, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut val_type: nvmlValueType_t = mem::zeroed();
             let mut count: c_uint = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetSamples(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 sample_type.as_c(),
                 timestamp,
@@ -2608,8 +2469,6 @@ impl<'nvml> Device<'nvml> {
         id_slice: &[FieldId],
     ) -> Result<Vec<Result<FieldValueSample, NvmlError>>, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let values_count = id_slice.len();
             let mut field_values: Vec<nvmlFieldValue_t> = Vec::with_capacity(values_count);
 
@@ -2621,7 +2480,7 @@ impl<'nvml> Device<'nvml> {
             }
 
             nvml_try(NvmlLib::nvmlDeviceGetFieldValues(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 values_count as i32,
                 field_values.as_mut_ptr(),
@@ -2657,12 +2516,10 @@ impl<'nvml> Device<'nvml> {
     // Tested on machines other than my own
     pub fn serial(&self) -> Result<String, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut serial_vec = vec![0; NVML_DEVICE_SERIAL_BUFFER_SIZE as usize];
 
             nvml_try(NvmlLib::nvmlDeviceGetSerial(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 serial_vec.as_mut_ptr(),
                 NVML_DEVICE_SERIAL_BUFFER_SIZE,
@@ -2690,12 +2547,10 @@ impl<'nvml> Device<'nvml> {
     // Tested on machines other than my own
     pub fn board_part_number(&self) -> Result<String, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut part_num_vec = vec![0; NVML_DEVICE_PART_NUMBER_BUFFER_SIZE as usize];
 
             nvml_try(NvmlLib::nvmlDeviceGetBoardPartNumber(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 part_num_vec.as_mut_ptr(),
                 NVML_DEVICE_PART_NUMBER_BUFFER_SIZE,
@@ -2765,12 +2620,10 @@ impl<'nvml> Device<'nvml> {
     // Helper for the above methods.
     fn current_throttle_reasons_raw(&self) -> Result<c_ulonglong, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut reasons: c_ulonglong = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetCurrentClocksThrottleReasons(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut reasons,
             ))?;
@@ -2844,12 +2697,10 @@ impl<'nvml> Device<'nvml> {
     // Helper for the above methods.
     fn supported_throttle_reasons_raw(&self) -> Result<c_ulonglong, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut reasons: c_ulonglong = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetSupportedClocksThrottleReasons(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut reasons,
             ))?;
@@ -2898,10 +2749,8 @@ impl<'nvml> Device<'nvml> {
         let mut count = size as c_uint;
 
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             match NvmlLib::nvmlDeviceGetSupportedGraphicsClocks(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 for_mem_clock,
                 &mut count,
@@ -2953,10 +2802,8 @@ impl<'nvml> Device<'nvml> {
         let mut count = size as c_uint;
 
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             match NvmlLib::nvmlDeviceGetSupportedMemoryClocks(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut count,
                 items.as_mut_ptr(),
@@ -2988,12 +2835,10 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn temperature(&self, sensor: TemperatureSensor) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut temp: c_uint = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetTemperature(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 sensor.as_c(),
                 &mut temp,
@@ -3025,12 +2870,10 @@ impl<'nvml> Device<'nvml> {
         threshold_type: TemperatureThreshold,
     ) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut temp: c_uint = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetTemperatureThreshold(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 threshold_type.as_c(),
                 &mut temp,
@@ -3062,12 +2905,10 @@ impl<'nvml> Device<'nvml> {
         other_device: Device,
     ) -> Result<TopologyLevel, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut level: nvmlGpuTopologyLevel_t = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetTopologyCommonAncestor(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 other_device.device,
                 &mut level,
@@ -3098,8 +2939,6 @@ impl<'nvml> Device<'nvml> {
         level: TopologyLevel,
     ) -> Result<Vec<Device<'nvml>>, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut count = match self.top_nearest_gpus_count(&level)? {
                 0 => return Ok(vec![]),
                 value => value,
@@ -3107,14 +2946,17 @@ impl<'nvml> Device<'nvml> {
             let mut gpus: Vec<nvmlDevice_t> = vec![mem::zeroed(); count as usize];
 
             nvml_try(NvmlLib::nvmlDeviceGetTopologyNearestGpus(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 level.as_c(),
                 &mut count,
                 gpus.as_mut_ptr(),
             ))?;
 
-            Ok(gpus.into_iter().map(Device::from).collect())
+            Ok(gpus
+                .into_iter()
+                .map(|d| Device::new(d, self.nvml))
+                .collect())
         }
     }
 
@@ -3122,12 +2964,10 @@ impl<'nvml> Device<'nvml> {
     #[cfg(target_os = "linux")]
     fn top_nearest_gpus_count(&self, level: &TopologyLevel) -> Result<c_uint, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut count: c_uint = 0;
 
             nvml_try(NvmlLib::nvmlDeviceGetTopologyNearestGpus(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 level.as_c(),
                 &mut count,
@@ -3168,12 +3008,10 @@ impl<'nvml> Device<'nvml> {
         counter_type: EccCounter,
     ) -> Result<u64, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut count: c_ulonglong = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetTotalEccErrors(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 error_type.as_c(),
                 counter_type.as_c(),
@@ -3224,12 +3062,10 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn uuid(&self) -> Result<String, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut uuid_vec = vec![0; NVML_DEVICE_UUID_BUFFER_SIZE as usize];
 
             nvml_try(NvmlLib::nvmlDeviceGetUUID(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 uuid_vec.as_mut_ptr(),
                 NVML_DEVICE_UUID_BUFFER_SIZE,
@@ -3263,11 +3099,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn utilization_rates(&self) -> Result<Utilization, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut utilization: nvmlUtilization_t = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetUtilizationRates(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut utilization,
             ))?;
@@ -3294,12 +3128,10 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn vbios_version(&self) -> Result<String, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut version_vec = vec![0; NVML_DEVICE_VBIOS_VERSION_BUFFER_SIZE as usize];
 
             nvml_try(NvmlLib::nvmlDeviceGetVbiosVersion(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 version_vec.as_mut_ptr(),
                 NVML_DEVICE_VBIOS_VERSION_BUFFER_SIZE,
@@ -3338,12 +3170,10 @@ impl<'nvml> Device<'nvml> {
         perf_policy: PerformancePolicy,
     ) -> Result<ViolationTime, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut viol_time: nvmlViolationTime_t = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetViolationStatus(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 perf_policy.as_c(),
                 &mut viol_time,
@@ -3368,12 +3198,10 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn is_on_same_board_as(&self, other_device: &Device) -> Result<bool, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut bool_int: c_int = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceOnSameBoard(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 other_device.handle(),
                 &mut bool_int,
@@ -3415,9 +3243,8 @@ impl<'nvml> Device<'nvml> {
     // Tested (no-run)
     pub fn reset_applications_clocks(&mut self) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             nvml_try(NvmlLib::nvmlDeviceResetApplicationsClocks(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
             ))
         }
@@ -3458,10 +3285,8 @@ impl<'nvml> Device<'nvml> {
     // Tested (no-run)
     pub fn set_auto_boosted_clocks(&mut self, enabled: bool) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             nvml_try(NvmlLib::nvmlDeviceSetAutoBoostedClocksEnabled(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 state_from_bool(enabled),
             ))
@@ -3495,9 +3320,8 @@ impl<'nvml> Device<'nvml> {
     #[cfg(target_os = "linux")]
     pub fn set_cpu_affinity(&mut self) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             nvml_try(NvmlLib::nvmlDeviceSetCpuAffinity(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
             ))
         }
@@ -3537,11 +3361,9 @@ impl<'nvml> Device<'nvml> {
     // Tested (no-run)
     pub fn set_auto_boosted_clocks_default(&mut self, enabled: bool) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             // Passing 0 because NVIDIA says flags are not supported yet
             nvml_try(NvmlLib::nvmlDeviceSetDefaultAutoBoostedClocksEnabled(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 state_from_bool(enabled),
                 0,
@@ -3570,9 +3392,8 @@ impl<'nvml> Device<'nvml> {
     // Tested on machines other than my own
     pub fn validate_info_rom(&self) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             nvml_try(NvmlLib::nvmlDeviceValidateInforom(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
             ))
         }
@@ -3601,9 +3422,8 @@ impl<'nvml> Device<'nvml> {
     // Tested (no-run)
     pub fn clear_accounting_pids(&mut self) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             nvml_try(NvmlLib::nvmlDeviceClearAccountingPids(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
             ))
         }
@@ -3633,11 +3453,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn accounting_buffer_size(&self) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut count: c_uint = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetAccountingBufferSize(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut count,
             ))?;
@@ -3665,11 +3483,9 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn is_accounting_enabled(&self) -> Result<bool, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetAccountingMode(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut state,
             ))?;
@@ -3697,8 +3513,6 @@ impl<'nvml> Device<'nvml> {
     // Tested
     pub fn accounting_pids(&self) -> Result<Vec<u32>, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut count = match self.accounting_pids_count()? {
                 0 => return Ok(vec![]),
                 value => value,
@@ -3706,7 +3520,7 @@ impl<'nvml> Device<'nvml> {
             let mut pids: Vec<c_uint> = vec![mem::zeroed(); count as usize];
 
             nvml_try(NvmlLib::nvmlDeviceGetAccountingPids(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut count,
                 pids.as_mut_ptr(),
@@ -3719,14 +3533,12 @@ impl<'nvml> Device<'nvml> {
     // Helper function for the above.
     fn accounting_pids_count(&self) -> Result<c_uint, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             // Indicates that we want the count
             let mut count: c_uint = 0;
 
             // Null also indicates that we want the count
             match NvmlLib::nvmlDeviceGetAccountingPids(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut count,
                 ptr::null_mut(),
@@ -3782,12 +3594,10 @@ impl<'nvml> Device<'nvml> {
     // Tested (for error)
     pub fn accounting_stats_for(&self, process_id: u32) -> Result<AccountingStats, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut stats: nvmlAccountingStats_t = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceGetAccountingStats(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 process_id,
                 &mut stats,
@@ -3825,10 +3635,8 @@ impl<'nvml> Device<'nvml> {
     // Tested (no-run)
     pub fn set_accounting(&mut self, enabled: bool) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             nvml_try(NvmlLib::nvmlDeviceSetAccountingMode(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 state_from_bool(enabled),
             ))
@@ -3865,10 +3673,8 @@ impl<'nvml> Device<'nvml> {
     // Tested (no-run)
     pub fn clear_ecc_error_counts(&mut self, counter_type: EccCounter) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             nvml_try(NvmlLib::nvmlDeviceClearEccErrorCounts(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 counter_type.as_c(),
             ))
@@ -3902,10 +3708,8 @@ impl<'nvml> Device<'nvml> {
     // Tested (no-run)
     pub fn set_api_restricted(&mut self, api_type: Api, restricted: bool) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             nvml_try(NvmlLib::nvmlDeviceSetAPIRestriction(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 api_type.as_c(),
                 state_from_bool(restricted),
@@ -3957,10 +3761,8 @@ impl<'nvml> Device<'nvml> {
         graphics_clock: u32,
     ) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             nvml_try(NvmlLib::nvmlDeviceSetApplicationsClocks(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 mem_clock,
                 graphics_clock,
@@ -3996,9 +3798,8 @@ impl<'nvml> Device<'nvml> {
     // Tested (no-run)
     pub fn set_compute_mode(&mut self, mode: ComputeMode) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             nvml_try(NvmlLib::nvmlDeviceSetComputeMode(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 mode.as_c(),
             ))
@@ -4068,10 +3869,8 @@ impl<'nvml> Device<'nvml> {
         flags: Behavior,
     ) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             nvml_try(NvmlLib::nvmlDeviceSetDriverModel(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 model.as_c(),
                 flags.bits(),
@@ -4111,10 +3910,8 @@ impl<'nvml> Device<'nvml> {
         max_clock_mhz: u32,
     ) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             nvml_try(NvmlLib::nvmlDeviceSetGpuLockedClocks(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 min_clock_mhz,
                 max_clock_mhz,
@@ -4142,9 +3939,8 @@ impl<'nvml> Device<'nvml> {
     // Tested (no-run)
     pub fn reset_gpu_locked_clocks(&mut self) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             nvml_try(NvmlLib::nvmlDeviceResetGpuLockedClocks(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
             ))
         }
@@ -4175,9 +3971,8 @@ impl<'nvml> Device<'nvml> {
     // Tested (no-run)
     pub fn set_ecc(&mut self, enabled: bool) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             nvml_try(NvmlLib::nvmlDeviceSetEccMode(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 state_from_bool(enabled),
             ))
@@ -4213,9 +4008,8 @@ impl<'nvml> Device<'nvml> {
     // Tested (no-run)
     pub fn set_gpu_op_mode(&mut self, mode: OperationMode) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             nvml_try(NvmlLib::nvmlDeviceSetGpuOperationMode(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 mode.as_c(),
             ))
@@ -4257,10 +4051,8 @@ impl<'nvml> Device<'nvml> {
     #[cfg(target_os = "linux")]
     pub fn set_persistent(&mut self, enabled: bool) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             nvml_try(NvmlLib::nvmlDeviceSetPersistenceMode(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 state_from_bool(enabled),
             ))
@@ -4295,9 +4087,8 @@ impl<'nvml> Device<'nvml> {
     // Tested (no-run)
     pub fn set_power_management_limit(&mut self, limit: u32) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             nvml_try(NvmlLib::nvmlDeviceSetPowerManagementLimit(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 limit,
             ))
@@ -4382,10 +4173,8 @@ impl<'nvml> Device<'nvml> {
         set: EventSet<'nvml>,
     ) -> Result<EventSet<'nvml>, NvmlErrorWithSource> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             match nvml_try(NvmlLib::nvmlDeviceRegisterEvents(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 events.bits(),
                 set.handle(),
@@ -4503,11 +4292,9 @@ impl<'nvml> Device<'nvml> {
     #[cfg(target_os = "linux")]
     fn supported_event_types_raw(&self) -> Result<c_ulonglong, NvmlError> {
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut ev_types: c_ulonglong = mem::zeroed();
             nvml_try(NvmlLib::nvmlDeviceGetSupportedEventTypes(
-                &library_wrapper,
+                &self.nvml.lib,
                 self.device,
                 &mut ev_types,
             ))?;
@@ -4588,10 +4375,8 @@ impl<'nvml> Device<'nvml> {
         };
 
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             nvml_try(NvmlLib::nvmlDeviceModifyDrainState(
-                &library_wrapper,
+                &self.nvml.lib,
                 &mut pci_info.try_into()?,
                 state_from_bool(enabled),
             ))
@@ -4660,12 +4445,10 @@ impl<'nvml> Device<'nvml> {
         };
 
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             let mut state: nvmlEnableState_t = mem::zeroed();
 
             nvml_try(NvmlLib::nvmlDeviceQueryDrainState(
-                &library_wrapper,
+                &self.nvml.lib,
                 &mut pci_info.try_into()?,
                 &mut state,
             ))?;
@@ -4809,10 +4592,8 @@ impl<'nvml> Device<'nvml> {
         };
 
         unsafe {
-            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
-
             match nvml_try(NvmlLib::nvmlDeviceRemoveGpu_v2(
-                &library_wrapper,
+                &self.nvml.lib,
                 &mut raw_pci_info,
                 gpu_state.as_c(),
                 link_state.as_c(),

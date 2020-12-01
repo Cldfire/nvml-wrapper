@@ -1,7 +1,7 @@
-use crate::bitmasks::event::EventTypes;
 use crate::device::Device;
 use crate::enums::event::XidError;
 use crate::ffi::bindings::*;
+use crate::{bitmasks::event::EventTypes, NVML};
 
 /// Information about an event that has occurred.
 // Checked against local
@@ -25,22 +25,22 @@ pub struct EventData<'nvml> {
     pub event_data: Option<XidError>,
 }
 
-impl<'nvml> From<nvmlEventData_t> for EventData<'nvml> {
+impl<'nvml> EventData<'nvml> {
     /**
-    Performs the conversion.
+    Create a new `EventData` wrapper.
 
     The `event_type` bitmask is created via the `EventTypes::from_bits_truncate`
     method, meaning that any bits that don't correspond to flags present in this
     version of the wrapper will be dropped.
     */
-    fn from(struct_: nvmlEventData_t) -> Self {
-        let event_type = EventTypes::from_bits_truncate(struct_.eventType);
+    pub fn new(event_data: nvmlEventData_t, nvml: &'nvml NVML) -> Self {
+        let event_type = EventTypes::from_bits_truncate(event_data.eventType);
 
         EventData {
-            device: struct_.device.into(),
+            device: Device::new(event_data.device, nvml),
             event_type,
             event_data: if event_type.contains(EventTypes::CRITICAL_XID_ERROR) {
-                Some(match struct_.eventData {
+                Some(match event_data.eventData {
                     999 => XidError::Unknown,
                     v => XidError::Value(v),
                 })

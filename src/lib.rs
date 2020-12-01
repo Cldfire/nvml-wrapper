@@ -201,7 +201,6 @@ do not accurately reflect the version of NVML that this library is written for; 
 ideally read the doc comments on an up-to-date NVML API header. Such a header can be downloaded
 as part of the [CUDA toolkit](https://developer.nvidia.com/cuda-downloads).
 */
-//#[derive(Debug)]
 // TODO: this should be named `Nvml`
 pub struct NVML {
     lib: NvmlLib,
@@ -211,6 +210,12 @@ pub struct NVML {
 // implemented without this.
 unsafe impl Send for NVML {}
 unsafe impl Sync for NVML {}
+
+impl std::fmt::Debug for NVML {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("NVML")
+    }
+}
 
 impl NVML {
     /**
@@ -475,7 +480,7 @@ impl NVML {
                 &mut device,
             ))?;
 
-            Ok(device.into())
+            Ok(Device::new(device, self))
         }
     }
 
@@ -515,7 +520,7 @@ impl NVML {
                 &mut device,
             ))?;
 
-            Ok(device.into())
+            Ok(Device::new(device, self))
         }
     }
 
@@ -537,7 +542,7 @@ impl NVML {
                 &mut device,
             ))?;
 
-            Ok(device.into())
+            Ok(Device::new(device, self))
         }
     }
 
@@ -577,7 +582,7 @@ impl NVML {
                 &mut device,
             ))?;
 
-            Ok(device.into())
+            Ok(Device::new(device, self))
         }
     }
 
@@ -650,7 +655,7 @@ impl NVML {
                 &mut unit,
             ))?;
 
-            Ok(unit.into())
+            Ok(Unit::new(unit, self))
         }
     }
 
@@ -721,7 +726,7 @@ impl NVML {
                 devices.as_mut_ptr(),
             ))?;
 
-            Ok(devices.into_iter().map(Device::from).collect())
+            Ok(devices.into_iter().map(|d| Device::new(d, self)).collect())
         }
     }
 
@@ -857,7 +862,7 @@ impl NVML {
             let mut set: nvmlEventSet_t = mem::zeroed();
             nvml_try(NvmlLib::nvmlEventSetCreate(&self.lib, &mut set))?;
 
-            Ok(set.into())
+            Ok(EventSet::new(set, self))
         }
     }
 
