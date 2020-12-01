@@ -37,6 +37,8 @@ impl<'nvml> From<nvmlEventSet_t> for EventSet<'nvml> {
     }
 }
 
+const nvml_path: &'static str = "libnvidia-ml.so";
+
 impl<'nvml> EventSet<'nvml> {
     /**
     Use this to release the set's events if you care about handling
@@ -50,7 +52,8 @@ impl<'nvml> EventSet<'nvml> {
     // Checked against local
     pub fn release_events(self) -> Result<(), NvmlError> {
         unsafe {
-            nvml_try(nvmlEventSetFree(self.set))?;
+            let library_wrapper = nvml::new(nvml_path).unwrap();
+            nvml_try(nvml::nvmlEventSetFree(&library_wrapper, self.set))?;
         }
 
         mem::forget(self);
@@ -87,8 +90,14 @@ impl<'nvml> EventSet<'nvml> {
     // Checked against local
     pub fn wait(&self, timeout_ms: u32) -> Result<EventData<'nvml>, NvmlError> {
         unsafe {
+            let library_wrapper = nvml::new(nvml_path).unwrap();
             let mut data: nvmlEventData_t = mem::zeroed();
-            nvml_try(nvmlEventSetWait(self.set, &mut data, timeout_ms))?;
+            nvml_try(nvml::nvmlEventSetWait_v2(
+                &library_wrapper,
+                self.set,
+                &mut data,
+                timeout_ms,
+            ))?;
 
             Ok(data.into())
         }
@@ -115,7 +124,8 @@ impl<'nvml> Drop for EventSet<'nvml> {
     fn drop(&mut self) {
         #[allow(unused_must_use)]
         unsafe {
-            match nvml_try(nvmlEventSetFree(self.set)) {
+            let library_wrapper = nvml::new(nvml_path).unwrap();
+            match nvml_try(nvml::nvmlEventSetFree(&library_wrapper, self.set)) {
                 Ok(()) => (),
                 Err(e) => {
                     io::stderr().write(

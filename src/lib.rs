@@ -109,6 +109,7 @@ for every NVML data structure.
 #![recursion_limit = "1024"]
 #![allow(non_upper_case_globals)]
 
+extern crate libloading;
 extern crate nvml_wrapper_sys as ffi;
 
 pub mod bitmasks;
@@ -200,8 +201,10 @@ do not accurately reflect the version of NVML that this library is written for; 
 ideally read the doc comments on an up-to-date NVML API header. Such a header can be downloaded
 as part of the [CUDA toolkit](https://developer.nvidia.com/cuda-downloads).
 */
-#[derive(Debug)]
-pub struct NVML;
+//#[derive(Debug)]
+pub struct NVML {
+    lib: nvml,
+}
 
 // Here to clarify that NVML does have these traits. I know they are
 // implemented without this.
@@ -230,12 +233,19 @@ impl NVML {
     * `Unknown`, on any unexpected error
     */
     // Checked against local
-    pub fn init() -> Result<Self, NvmlError> {
+    pub fn new() -> NVML {
         unsafe {
-            nvml_try(nvmlInit_v2())?;
+            NVML {
+                lib: nvml::new("libnvidia-ml.so").unwrap(),
+            }
         }
+    }
 
-        Ok(NVML)
+    pub fn init(self) -> Result<Self, NvmlError> {
+        unsafe {
+            nvml_try(nvml::nvmlInit_v2(&self.lib))?;
+        }
+        Ok(self)
     }
 
     /**
@@ -264,12 +274,12 @@ impl NVML {
     ```
     */
     // TODO: Example of using multiple flags when multiple flags exist
-    pub fn init_with_flags(flags: InitFlags) -> Result<Self, NvmlError> {
+    pub fn init_with_flags(self, flags: InitFlags) -> Result<Self, NvmlError> {
         unsafe {
-            nvml_try(nvmlInitWithFlags(flags.bits()))?;
+            nvml_try(nvml::nvmlInitWithFlags(&self.lib, flags.bits()))?;
         }
 
-        Ok(NVML)
+        Ok(self)
     }
 
     /**
@@ -286,7 +296,7 @@ impl NVML {
     // Tested
     pub fn shutdown(self) -> Result<(), NvmlError> {
         unsafe {
-            nvml_try(nvmlShutdown())?;
+            nvml_try(nvml::nvmlShutdown(&self.lib))?;
         }
 
         mem::forget(self);
@@ -308,7 +318,7 @@ impl NVML {
     pub fn device_count(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut count: c_uint = mem::zeroed();
-            nvml_try(nvmlDeviceGetCount_v2(&mut count))?;
+            nvml_try(nvml::nvmlDeviceGetCount_v2(&self.lib, &mut count))?;
 
             Ok(count as u32)
         }
@@ -329,7 +339,8 @@ impl NVML {
         unsafe {
             let mut version_vec = vec![0; NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE as usize];
 
-            nvml_try(nvmlSystemGetDriverVersion(
+            nvml_try(nvml::nvmlSystemGetDriverVersion(
+                &self.lib,
                 version_vec.as_mut_ptr(),
                 NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE,
             ))?;
@@ -353,7 +364,8 @@ impl NVML {
         unsafe {
             let mut version_vec = vec![0; NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE as usize];
 
-            nvml_try(nvmlSystemGetNVMLVersion(
+            nvml_try(nvml::nvmlSystemGetNVMLVersion(
+                &self.lib,
                 version_vec.as_mut_ptr(),
                 NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE,
             ))?;
@@ -380,7 +392,10 @@ impl NVML {
     pub fn sys_cuda_driver_version(&self) -> Result<i32, NvmlError> {
         unsafe {
             let mut version: c_int = mem::zeroed();
-            nvml_try(nvmlSystemGetCudaDriverVersion_v2(&mut version))?;
+            nvml_try(nvml::nvmlSystemGetCudaDriverVersion_v2(
+                &self.lib,
+                &mut version,
+            ))?;
 
             Ok(version)
         }
@@ -407,7 +422,8 @@ impl NVML {
         unsafe {
             let mut name_vec = vec![0; length];
 
-            nvml_try(nvmlSystemGetProcessName(
+            nvml_try(nvml::nvmlSystemGetProcessName(
+                &self.lib,
                 pid,
                 name_vec.as_mut_ptr(),
                 length as c_uint,
@@ -452,7 +468,11 @@ impl NVML {
     pub fn device_by_index(&self, index: u32) -> Result<Device, NvmlError> {
         unsafe {
             let mut device: nvmlDevice_t = mem::zeroed();
-            nvml_try(nvmlDeviceGetHandleByIndex_v2(index, &mut device))?;
+            nvml_try(nvml::nvmlDeviceGetHandleByIndex_v2(
+                &self.lib,
+                index,
+                &mut device,
+            ))?;
 
             Ok(device.into())
         }
@@ -488,7 +508,8 @@ impl NVML {
             let c_string = CString::new(pci_bus_id)?;
             let mut device: nvmlDevice_t = mem::zeroed();
 
-            nvml_try(nvmlDeviceGetHandleByPciBusId_v2(
+            nvml_try(nvml::nvmlDeviceGetHandleByPciBusId_v2(
+                &self.lib,
                 c_string.as_ptr(),
                 &mut device,
             ))?;
@@ -509,7 +530,11 @@ impl NVML {
             let c_string = CString::new(board_serial)?;
             let mut device: nvmlDevice_t = mem::zeroed();
 
-            nvml_try(nvmlDeviceGetHandleBySerial(c_string.as_ptr(), &mut device))?;
+            nvml_try(nvml::nvmlDeviceGetHandleBySerial(
+                &self.lib,
+                c_string.as_ptr(),
+                &mut device,
+            ))?;
 
             Ok(device.into())
         }
@@ -545,7 +570,11 @@ impl NVML {
             let c_string = CString::new(uuid)?;
             let mut device: nvmlDevice_t = mem::zeroed();
 
-            nvml_try(nvmlDeviceGetHandleByUUID(c_string.as_ptr(), &mut device))?;
+            nvml_try(nvml::nvmlDeviceGetHandleByUUID(
+                &self.lib,
+                c_string.as_ptr(),
+                &mut device,
+            ))?;
 
             Ok(device.into())
         }
@@ -578,7 +607,8 @@ impl NVML {
         unsafe {
             let mut level: nvmlGpuTopologyLevel_t = mem::zeroed();
 
-            nvml_try(nvmlDeviceGetTopologyCommonAncestor(
+            nvml_try(nvml::nvmlDeviceGetTopologyCommonAncestor(
+                &self.lib,
                 device1.handle(),
                 device2.handle(),
                 &mut level,
@@ -613,7 +643,11 @@ impl NVML {
     pub fn unit_by_index(&self, index: u32) -> Result<Unit, NvmlError> {
         unsafe {
             let mut unit: nvmlUnit_t = mem::zeroed();
-            nvml_try(nvmlUnitGetHandleByIndex(index as c_uint, &mut unit))?;
+            nvml_try(nvml::nvmlUnitGetHandleByIndex(
+                &self.lib,
+                index as c_uint,
+                &mut unit,
+            ))?;
 
             Ok(unit.into())
         }
@@ -642,7 +676,8 @@ impl NVML {
         unsafe {
             let mut bool_int: c_int = mem::zeroed();
 
-            nvml_try(nvmlDeviceOnSameBoard(
+            nvml_try(nvml::nvmlDeviceOnSameBoard(
+                &self.lib,
                 device1.handle(),
                 device2.handle(),
                 &mut bool_int,
@@ -678,7 +713,8 @@ impl NVML {
             };
             let mut devices: Vec<nvmlDevice_t> = vec![mem::zeroed(); count as usize];
 
-            nvml_try(nvmlSystemGetTopologyGpuSet(
+            nvml_try(nvml::nvmlSystemGetTopologyGpuSet(
+                &self.lib,
                 cpu_number,
                 &mut count,
                 devices.as_mut_ptr(),
@@ -696,7 +732,8 @@ impl NVML {
             let mut count: c_uint = 0;
 
             // Passing null doesn't indicate that we want the count, just allowed
-            nvml_try(nvmlSystemGetTopologyGpuSet(
+            nvml_try(nvml::nvmlSystemGetTopologyGpuSet(
+                &self.lib,
                 cpu_number,
                 &mut count,
                 ptr::null_mut(),
@@ -727,7 +764,11 @@ impl NVML {
             };
             let mut hics: Vec<nvmlHwbcEntry_t> = vec![mem::zeroed(); count as usize];
 
-            nvml_try(nvmlSystemGetHicVersion(&mut count, hics.as_mut_ptr()))?;
+            nvml_try(nvml::nvmlSystemGetHicVersion(
+                &self.lib,
+                &mut count,
+                hics.as_mut_ptr(),
+            ))?;
 
             hics.into_iter().map(HwbcEntry::try_from).collect()
         }
@@ -763,7 +804,7 @@ impl NVML {
             let mut count: c_uint = 1;
             let mut hics: [nvmlHwbcEntry_t; 1] = [mem::zeroed()];
 
-            match nvmlSystemGetHicVersion(&mut count, hics.as_mut_ptr()) {
+            match nvml::nvmlSystemGetHicVersion(&self.lib, &mut count, hics.as_mut_ptr()) {
                 nvmlReturn_enum_NVML_SUCCESS | nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => {
                     Ok(count)
                 }
@@ -790,7 +831,7 @@ impl NVML {
     pub fn unit_count(&self) -> Result<u32, NvmlError> {
         unsafe {
             let mut count: c_uint = mem::zeroed();
-            nvml_try(nvmlUnitGetCount(&mut count))?;
+            nvml_try(nvml::nvmlUnitGetCount(&self.lib, &mut count))?;
 
             Ok(count)
         }
@@ -813,7 +854,7 @@ impl NVML {
     pub fn create_event_set(&self) -> Result<EventSet, NvmlError> {
         unsafe {
             let mut set: nvmlEventSet_t = mem::zeroed();
-            nvml_try(nvmlEventSetCreate(&mut set))?;
+            nvml_try(nvml::nvmlEventSetCreate(&self.lib, &mut set))?;
 
             Ok(set.into())
         }
@@ -863,7 +904,12 @@ impl NVML {
     // Tested
     #[cfg(target_os = "linux")]
     pub fn discover_gpus(&self, pci_info: PciInfo) -> Result<(), NvmlError> {
-        unsafe { nvml_try(nvmlDeviceDiscoverGpus(&mut pci_info.try_into()?)) }
+        unsafe {
+            nvml_try(nvml::nvmlDeviceDiscoverGpus(
+                &self.lib,
+                &mut pci_info.try_into()?,
+            ))
+        }
     }
 
     /**
@@ -877,7 +923,7 @@ impl NVML {
         unsafe {
             let mut count: c_uint = mem::zeroed();
 
-            nvml_try(nvmlGetBlacklistDeviceCount(&mut count))?;
+            nvml_try(nvml::nvmlGetBlacklistDeviceCount(&self.lib, &mut count))?;
             Ok(count)
         }
     }
@@ -898,7 +944,9 @@ impl NVML {
         unsafe {
             let mut info: nvmlBlacklistDeviceInfo_t = mem::zeroed();
 
-            nvml_try(nvmlGetBlacklistDeviceInfoByIndex(index, &mut info))?;
+            nvml_try(nvml::nvmlGetBlacklistDeviceInfoByIndex(
+                &self.lib, index, &mut info,
+            ))?;
             Ok(BlacklistDeviceInfo::try_from(info)?)
         }
     }
@@ -911,7 +959,7 @@ impl Drop for NVML {
     fn drop(&mut self) {
         #[allow(unused_must_use)]
         unsafe {
-            match nvml_try(nvmlShutdown()) {
+            match nvml_try(nvml::nvmlShutdown(&self.lib)) {
                 Ok(()) => (),
                 Err(e) => {
                     io::stderr().write(
@@ -947,7 +995,7 @@ mod test {
 
     #[test]
     fn init_with_flags() {
-        NVML::init_with_flags(InitFlags::NO_GPUS).unwrap();
+        NVML::new().init_with_flags(InitFlags::NO_GPUS).unwrap();
     }
 
     #[test]

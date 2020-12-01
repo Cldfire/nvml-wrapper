@@ -4,7 +4,8 @@ use nvml_wrapper::{cuda_driver_version_major, cuda_driver_version_minor, NVML};
 use pretty_bytes::converter::convert;
 
 fn main() -> Result<(), NvmlError> {
-    let nvml = NVML::init()?;
+    let nvml_base = NVML::new();
+    let nvml = nvml_base.init()?;
 
     let cuda_version = nvml.sys_cuda_driver_version()?;
 

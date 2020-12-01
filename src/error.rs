@@ -53,7 +53,7 @@ pub enum NvmlError {
     See [this issue](https://github.com/rust-lang/rust/issues/36927).
     */
     #[error("unexpected enum variant value: {0}")]
-    UnexpectedVariant(i32),
+    UnexpectedVariant(u32),
 
     #[error("a call to `EventSet.release_events()` failed")]
     SetReleaseFailed,
