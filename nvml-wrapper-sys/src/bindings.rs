@@ -20,7 +20,6 @@ pub const nvmlFlagForce: u32 = 1;
 pub const NVML_GRID_LICENSE_BUFFER_SIZE: u32 = 128;
 pub const NVML_VGPU_NAME_BUFFER_SIZE: u32 = 64;
 pub const NVML_GRID_LICENSE_FEATURE_MAX_COUNT: u32 = 3;
-pub const INVALID_GPU_INSTANCE_PROFILE_ID: u32 = 4294967295;
 pub const NVML_VGPU_VIRTUALIZATION_CAP_MIGRATION_NO: u32 = 0;
 pub const NVML_VGPU_VIRTUALIZATION_CAP_MIGRATION_YES: u32 = 1;
 pub const NVML_VGPU_PGPU_VIRTUALIZATION_CAP_MIGRATION_NO: u32 = 0;
@@ -178,8 +177,7 @@ pub mod field_id {
     pub const NVML_FI_DEV_REMAPPED_UNC: u32 = 143;
     pub const NVML_FI_DEV_REMAPPED_PENDING: u32 = 144;
     pub const NVML_FI_DEV_REMAPPED_FAILURE: u32 = 145;
-    pub const NVML_FI_DEV_NVLINK_REMOTE_NVLINK_ID: u32 = 146;
-    pub const NVML_FI_MAX: u32 = 147;
+    pub const NVML_FI_MAX: u32 = 146;
 }
 pub const nvmlEventTypeSingleBitEccError: u32 = 1;
 pub const nvmlEventTypeDoubleBitEccError: u32 = 2;
@@ -215,7 +213,6 @@ pub const NVML_DEVICE_PART_NUMBER_BUFFER_SIZE: u32 = 80;
 pub const NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE: u32 = 80;
 pub const NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE: u32 = 80;
 pub const NVML_DEVICE_NAME_BUFFER_SIZE: u32 = 64;
-pub const NVML_DEVICE_NAME_V2_BUFFER_SIZE: u32 = 96;
 pub const NVML_DEVICE_SERIAL_BUFFER_SIZE: u32 = 30;
 pub const NVML_DEVICE_VBIOS_VERSION_BUFFER_SIZE: u32 = 32;
 pub const NVML_AFFINITY_SCOPE_NODE: u32 = 0;
@@ -227,15 +224,13 @@ pub const NVML_GPU_INSTANCE_PROFILE_2_SLICE: u32 = 1;
 pub const NVML_GPU_INSTANCE_PROFILE_3_SLICE: u32 = 2;
 pub const NVML_GPU_INSTANCE_PROFILE_4_SLICE: u32 = 3;
 pub const NVML_GPU_INSTANCE_PROFILE_7_SLICE: u32 = 4;
-pub const NVML_GPU_INSTANCE_PROFILE_8_SLICE: u32 = 5;
-pub const NVML_GPU_INSTANCE_PROFILE_COUNT: u32 = 6;
+pub const NVML_GPU_INSTANCE_PROFILE_COUNT: u32 = 5;
 pub const NVML_COMPUTE_INSTANCE_PROFILE_1_SLICE: u32 = 0;
 pub const NVML_COMPUTE_INSTANCE_PROFILE_2_SLICE: u32 = 1;
 pub const NVML_COMPUTE_INSTANCE_PROFILE_3_SLICE: u32 = 2;
 pub const NVML_COMPUTE_INSTANCE_PROFILE_4_SLICE: u32 = 3;
 pub const NVML_COMPUTE_INSTANCE_PROFILE_7_SLICE: u32 = 4;
-pub const NVML_COMPUTE_INSTANCE_PROFILE_8_SLICE: u32 = 5;
-pub const NVML_COMPUTE_INSTANCE_PROFILE_COUNT: u32 = 6;
+pub const NVML_COMPUTE_INSTANCE_PROFILE_COUNT: u32 = 5;
 pub const NVML_COMPUTE_INSTANCE_ENGINE_PROFILE_SHARED: u32 = 0;
 pub const NVML_COMPUTE_INSTANCE_ENGINE_PROFILE_COUNT: u32 = 1;
 #[repr(C)]
@@ -552,14 +547,12 @@ pub type nvmlBAR1Memory_t = nvmlBAR1Memory_st;
 pub struct nvmlProcessInfo_st {
     pub pid: raw::c_uint,
     pub usedGpuMemory: raw::c_ulonglong,
-    pub gpuInstanceId: raw::c_uint,
-    pub computeInstanceId: raw::c_uint,
 }
 #[test]
 fn bindgen_test_layout_nvmlProcessInfo_st() {
     assert_eq!(
         ::std::mem::size_of::<nvmlProcessInfo_st>(),
-        24usize,
+        16usize,
         concat!("Size of: ", stringify!(nvmlProcessInfo_st))
     );
     assert_eq!(
@@ -589,30 +582,6 @@ fn bindgen_test_layout_nvmlProcessInfo_st() {
             stringify!(usedGpuMemory)
         )
     );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<nvmlProcessInfo_st>())).gpuInstanceId as *const _ as usize
-        },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(nvmlProcessInfo_st),
-            "::",
-            stringify!(gpuInstanceId)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<nvmlProcessInfo_st>())).computeInstanceId as *const _ as usize
-        },
-        20usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(nvmlProcessInfo_st),
-            "::",
-            stringify!(computeInstanceId)
-        )
-    );
 }
 pub type nvmlProcessInfo_t = nvmlProcessInfo_st;
 #[repr(C)]
@@ -624,20 +593,17 @@ pub struct nvmlDeviceAttributes_st {
     pub sharedEncoderCount: raw::c_uint,
     pub sharedJpegCount: raw::c_uint,
     pub sharedOfaCount: raw::c_uint,
-    pub gpuInstanceSliceCount: raw::c_uint,
-    pub computeInstanceSliceCount: raw::c_uint,
-    pub memorySizeMB: raw::c_ulonglong,
 }
 #[test]
 fn bindgen_test_layout_nvmlDeviceAttributes_st() {
     assert_eq!(
         ::std::mem::size_of::<nvmlDeviceAttributes_st>(),
-        40usize,
+        24usize,
         concat!("Size of: ", stringify!(nvmlDeviceAttributes_st))
     );
     assert_eq!(
         ::std::mem::align_of::<nvmlDeviceAttributes_st>(),
-        8usize,
+        4usize,
         concat!("Alignment of ", stringify!(nvmlDeviceAttributes_st))
     );
     assert_eq!(
@@ -716,133 +682,8 @@ fn bindgen_test_layout_nvmlDeviceAttributes_st() {
             stringify!(sharedOfaCount)
         )
     );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<nvmlDeviceAttributes_st>())).gpuInstanceSliceCount as *const _
-                as usize
-        },
-        24usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(nvmlDeviceAttributes_st),
-            "::",
-            stringify!(gpuInstanceSliceCount)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<nvmlDeviceAttributes_st>())).computeInstanceSliceCount
-                as *const _ as usize
-        },
-        28usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(nvmlDeviceAttributes_st),
-            "::",
-            stringify!(computeInstanceSliceCount)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<nvmlDeviceAttributes_st>())).memorySizeMB as *const _ as usize
-        },
-        32usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(nvmlDeviceAttributes_st),
-            "::",
-            stringify!(memorySizeMB)
-        )
-    );
 }
 pub type nvmlDeviceAttributes_t = nvmlDeviceAttributes_st;
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct nvmlRowRemapperHistogramValues_st {
-    pub max: raw::c_uint,
-    pub high: raw::c_uint,
-    pub partial: raw::c_uint,
-    pub low: raw::c_uint,
-    pub none: raw::c_uint,
-}
-#[test]
-fn bindgen_test_layout_nvmlRowRemapperHistogramValues_st() {
-    assert_eq!(
-        ::std::mem::size_of::<nvmlRowRemapperHistogramValues_st>(),
-        20usize,
-        concat!("Size of: ", stringify!(nvmlRowRemapperHistogramValues_st))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<nvmlRowRemapperHistogramValues_st>(),
-        4usize,
-        concat!(
-            "Alignment of ",
-            stringify!(nvmlRowRemapperHistogramValues_st)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<nvmlRowRemapperHistogramValues_st>())).max as *const _ as usize
-        },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(nvmlRowRemapperHistogramValues_st),
-            "::",
-            stringify!(max)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<nvmlRowRemapperHistogramValues_st>())).high as *const _ as usize
-        },
-        4usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(nvmlRowRemapperHistogramValues_st),
-            "::",
-            stringify!(high)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<nvmlRowRemapperHistogramValues_st>())).partial as *const _
-                as usize
-        },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(nvmlRowRemapperHistogramValues_st),
-            "::",
-            stringify!(partial)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<nvmlRowRemapperHistogramValues_st>())).low as *const _ as usize
-        },
-        12usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(nvmlRowRemapperHistogramValues_st),
-            "::",
-            stringify!(low)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<nvmlRowRemapperHistogramValues_st>())).none as *const _ as usize
-        },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(nvmlRowRemapperHistogramValues_st),
-            "::",
-            stringify!(none)
-        )
-    );
-}
-pub type nvmlRowRemapperHistogramValues_t = nvmlRowRemapperHistogramValues_st;
 pub const nvmlBridgeChipType_enum_NVML_BRIDGE_CHIP_PLX: nvmlBridgeChipType_enum = 0;
 pub const nvmlBridgeChipType_enum_NVML_BRIDGE_CHIP_BRO4: nvmlBridgeChipType_enum = 1;
 pub type nvmlBridgeChipType_enum = raw::c_uint;
@@ -3566,50 +3407,6 @@ pub struct nvmlGpuInstance_st {
 pub type nvmlGpuInstance_t = *mut nvmlGpuInstance_st;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct nvmlComputeInstancePlacement_st {
-    pub start: raw::c_uint,
-    pub size: raw::c_uint,
-}
-#[test]
-fn bindgen_test_layout_nvmlComputeInstancePlacement_st() {
-    assert_eq!(
-        ::std::mem::size_of::<nvmlComputeInstancePlacement_st>(),
-        8usize,
-        concat!("Size of: ", stringify!(nvmlComputeInstancePlacement_st))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<nvmlComputeInstancePlacement_st>(),
-        4usize,
-        concat!("Alignment of ", stringify!(nvmlComputeInstancePlacement_st))
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<nvmlComputeInstancePlacement_st>())).start as *const _ as usize
-        },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(nvmlComputeInstancePlacement_st),
-            "::",
-            stringify!(start)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<nvmlComputeInstancePlacement_st>())).size as *const _ as usize
-        },
-        4usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(nvmlComputeInstancePlacement_st),
-            "::",
-            stringify!(size)
-        )
-    );
-}
-pub type nvmlComputeInstancePlacement_t = nvmlComputeInstancePlacement_st;
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
 pub struct nvmlComputeInstanceProfileInfo_st {
     pub id: raw::c_uint,
     pub sliceCount: raw::c_uint,
@@ -3761,13 +3558,12 @@ pub struct nvmlComputeInstanceInfo_st {
     pub gpuInstance: nvmlGpuInstance_t,
     pub id: raw::c_uint,
     pub profileId: raw::c_uint,
-    pub placement: nvmlComputeInstancePlacement_t,
 }
 #[test]
 fn bindgen_test_layout_nvmlComputeInstanceInfo_st() {
     assert_eq!(
         ::std::mem::size_of::<nvmlComputeInstanceInfo_st>(),
-        32usize,
+        24usize,
         concat!("Size of: ", stringify!(nvmlComputeInstanceInfo_st))
     );
     assert_eq!(
@@ -3819,18 +3615,6 @@ fn bindgen_test_layout_nvmlComputeInstanceInfo_st() {
             stringify!(nvmlComputeInstanceInfo_st),
             "::",
             stringify!(profileId)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<nvmlComputeInstanceInfo_st>())).placement as *const _ as usize
-        },
-        24usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(nvmlComputeInstanceInfo_st),
-            "::",
-            stringify!(placement)
         )
     );
 }
@@ -3927,7 +3711,7 @@ pub struct nvml {
         unsafe extern "C" fn(deviceCount: *mut raw::c_uint) -> nvmlReturn_t,
         ::libloading::Error,
     >,
-    pub nvmlDeviceGetAttributes_v2: Result<
+    pub nvmlDeviceGetAttributes: Result<
         unsafe extern "C" fn(
             device: nvmlDevice_t,
             attributes: *mut nvmlDeviceAttributes_t,
@@ -4460,7 +4244,7 @@ pub struct nvml {
         ) -> nvmlReturn_t,
         ::libloading::Error,
     >,
-    pub nvmlDeviceGetComputeRunningProcesses_v2: Result<
+    pub nvmlDeviceGetComputeRunningProcesses: Result<
         unsafe extern "C" fn(
             device: nvmlDevice_t,
             infoCount: *mut raw::c_uint,
@@ -4468,7 +4252,7 @@ pub struct nvml {
         ) -> nvmlReturn_t,
         ::libloading::Error,
     >,
-    pub nvmlDeviceGetGraphicsRunningProcesses_v2: Result<
+    pub nvmlDeviceGetGraphicsRunningProcesses: Result<
         unsafe extern "C" fn(
             device: nvmlDevice_t,
             infoCount: *mut raw::c_uint,
@@ -4575,13 +4359,6 @@ pub struct nvml {
             uncRows: *mut raw::c_uint,
             isPending: *mut raw::c_uint,
             failureOccurred: *mut raw::c_uint,
-        ) -> nvmlReturn_t,
-        ::libloading::Error,
-    >,
-    pub nvmlDeviceGetRowRemapperHistogram: Result<
-        unsafe extern "C" fn(
-            device: nvmlDevice_t,
-            values: *mut nvmlRowRemapperHistogramValues_t,
         ) -> nvmlReturn_t,
         ::libloading::Error,
     >,
@@ -4882,13 +4659,6 @@ pub struct nvml {
             vgpuTypeId: nvmlVgpuTypeId_t,
             vgpuTypeName: *mut raw::c_char,
             size: *mut raw::c_uint,
-        ) -> nvmlReturn_t,
-        ::libloading::Error,
-    >,
-    pub nvmlVgpuTypeGetGpuInstanceProfileId: Result<
-        unsafe extern "C" fn(
-            vgpuTypeId: nvmlVgpuTypeId_t,
-            gpuInstanceProfileId: *mut raw::c_uint,
         ) -> nvmlReturn_t,
         ::libloading::Error,
     >,
@@ -5290,7 +5060,7 @@ pub struct nvml {
         ) -> nvmlReturn_t,
         ::libloading::Error,
     >,
-    pub nvmlComputeInstanceGetInfo_v2: Result<
+    pub nvmlComputeInstanceGetInfo: Result<
         unsafe extern "C" fn(
             computeInstance: nvmlComputeInstance_t,
             info: *mut nvmlComputeInstanceInfo_t,
@@ -5381,8 +5151,8 @@ impl nvml {
         let nvmlDeviceGetCount_v2 = __library
             .get("nvmlDeviceGetCount_v2".as_bytes())
             .map(|sym| *sym);
-        let nvmlDeviceGetAttributes_v2 = __library
-            .get("nvmlDeviceGetAttributes_v2".as_bytes())
+        let nvmlDeviceGetAttributes = __library
+            .get("nvmlDeviceGetAttributes".as_bytes())
             .map(|sym| *sym);
         let nvmlDeviceGetHandleByIndex_v2 = __library
             .get("nvmlDeviceGetHandleByIndex_v2".as_bytes())
@@ -5633,11 +5403,11 @@ impl nvml {
         let nvmlDeviceGetBridgeChipInfo = __library
             .get("nvmlDeviceGetBridgeChipInfo".as_bytes())
             .map(|sym| *sym);
-        let nvmlDeviceGetComputeRunningProcesses_v2 = __library
-            .get("nvmlDeviceGetComputeRunningProcesses_v2".as_bytes())
+        let nvmlDeviceGetComputeRunningProcesses = __library
+            .get("nvmlDeviceGetComputeRunningProcesses".as_bytes())
             .map(|sym| *sym);
-        let nvmlDeviceGetGraphicsRunningProcesses_v2 = __library
-            .get("nvmlDeviceGetGraphicsRunningProcesses_v2".as_bytes())
+        let nvmlDeviceGetGraphicsRunningProcesses = __library
+            .get("nvmlDeviceGetGraphicsRunningProcesses".as_bytes())
             .map(|sym| *sym);
         let nvmlDeviceOnSameBoard = __library
             .get("nvmlDeviceOnSameBoard".as_bytes())
@@ -5677,9 +5447,6 @@ impl nvml {
             .map(|sym| *sym);
         let nvmlDeviceGetRemappedRows = __library
             .get("nvmlDeviceGetRemappedRows".as_bytes())
-            .map(|sym| *sym);
-        let nvmlDeviceGetRowRemapperHistogram = __library
-            .get("nvmlDeviceGetRowRemapperHistogram".as_bytes())
             .map(|sym| *sym);
         let nvmlDeviceGetArchitecture = __library
             .get("nvmlDeviceGetArchitecture".as_bytes())
@@ -5813,9 +5580,6 @@ impl nvml {
             .map(|sym| *sym);
         let nvmlVgpuTypeGetName = __library
             .get("nvmlVgpuTypeGetName".as_bytes())
-            .map(|sym| *sym);
-        let nvmlVgpuTypeGetGpuInstanceProfileId = __library
-            .get("nvmlVgpuTypeGetGpuInstanceProfileId".as_bytes())
             .map(|sym| *sym);
         let nvmlVgpuTypeGetDeviceID = __library
             .get("nvmlVgpuTypeGetDeviceID".as_bytes())
@@ -5976,8 +5740,8 @@ impl nvml {
         let nvmlGpuInstanceGetComputeInstanceById = __library
             .get("nvmlGpuInstanceGetComputeInstanceById".as_bytes())
             .map(|sym| *sym);
-        let nvmlComputeInstanceGetInfo_v2 = __library
-            .get("nvmlComputeInstanceGetInfo_v2".as_bytes())
+        let nvmlComputeInstanceGetInfo = __library
+            .get("nvmlComputeInstanceGetInfo".as_bytes())
             .map(|sym| *sym);
         let nvmlDeviceIsMigDeviceHandle = __library
             .get("nvmlDeviceIsMigDeviceHandle".as_bytes())
@@ -6018,7 +5782,7 @@ impl nvml {
             nvmlUnitGetDevices,
             nvmlSystemGetHicVersion,
             nvmlDeviceGetCount_v2,
-            nvmlDeviceGetAttributes_v2,
+            nvmlDeviceGetAttributes,
             nvmlDeviceGetHandleByIndex_v2,
             nvmlDeviceGetHandleBySerial,
             nvmlDeviceGetHandleByUUID,
@@ -6102,8 +5866,8 @@ impl nvml {
             nvmlDeviceGetDriverModel,
             nvmlDeviceGetVbiosVersion,
             nvmlDeviceGetBridgeChipInfo,
-            nvmlDeviceGetComputeRunningProcesses_v2,
-            nvmlDeviceGetGraphicsRunningProcesses_v2,
+            nvmlDeviceGetComputeRunningProcesses,
+            nvmlDeviceGetGraphicsRunningProcesses,
             nvmlDeviceOnSameBoard,
             nvmlDeviceGetAPIRestriction,
             nvmlDeviceGetSamples,
@@ -6117,7 +5881,6 @@ impl nvml {
             nvmlDeviceGetRetiredPages_v2,
             nvmlDeviceGetRetiredPagesPendingStatus,
             nvmlDeviceGetRemappedRows,
-            nvmlDeviceGetRowRemapperHistogram,
             nvmlDeviceGetArchitecture,
             nvmlUnitSetLedState,
             nvmlDeviceSetPersistenceMode,
@@ -6163,7 +5926,6 @@ impl nvml {
             nvmlDeviceGetCreatableVgpus,
             nvmlVgpuTypeGetClass,
             nvmlVgpuTypeGetName,
-            nvmlVgpuTypeGetGpuInstanceProfileId,
             nvmlVgpuTypeGetDeviceID,
             nvmlVgpuTypeGetFramebufferSize,
             nvmlVgpuTypeGetNumDisplayHeads,
@@ -6217,7 +5979,7 @@ impl nvml {
             nvmlComputeInstanceDestroy,
             nvmlGpuInstanceGetComputeInstances,
             nvmlGpuInstanceGetComputeInstanceById,
-            nvmlComputeInstanceGetInfo_v2,
+            nvmlComputeInstanceGetInfo,
             nvmlDeviceIsMigDeviceHandle,
             nvmlDeviceGetGpuInstanceId,
             nvmlDeviceGetComputeInstanceId,
@@ -6412,13 +6174,13 @@ impl nvml {
             .expect("Expected function, got error.");
         (sym)(deviceCount)
     }
-    pub unsafe fn nvmlDeviceGetAttributes_v2(
+    pub unsafe fn nvmlDeviceGetAttributes(
         &self,
         device: nvmlDevice_t,
         attributes: *mut nvmlDeviceAttributes_t,
     ) -> nvmlReturn_t {
         let sym = self
-            .nvmlDeviceGetAttributes_v2
+            .nvmlDeviceGetAttributes
             .as_ref()
             .expect("Expected function, got error.");
         (sym)(device, attributes)
@@ -7375,26 +7137,26 @@ impl nvml {
             .expect("Expected function, got error.");
         (sym)(device, bridgeHierarchy)
     }
-    pub unsafe fn nvmlDeviceGetComputeRunningProcesses_v2(
+    pub unsafe fn nvmlDeviceGetComputeRunningProcesses(
         &self,
         device: nvmlDevice_t,
         infoCount: *mut raw::c_uint,
         infos: *mut nvmlProcessInfo_t,
     ) -> nvmlReturn_t {
         let sym = self
-            .nvmlDeviceGetComputeRunningProcesses_v2
+            .nvmlDeviceGetComputeRunningProcesses
             .as_ref()
             .expect("Expected function, got error.");
         (sym)(device, infoCount, infos)
     }
-    pub unsafe fn nvmlDeviceGetGraphicsRunningProcesses_v2(
+    pub unsafe fn nvmlDeviceGetGraphicsRunningProcesses(
         &self,
         device: nvmlDevice_t,
         infoCount: *mut raw::c_uint,
         infos: *mut nvmlProcessInfo_t,
     ) -> nvmlReturn_t {
         let sym = self
-            .nvmlDeviceGetGraphicsRunningProcesses_v2
+            .nvmlDeviceGetGraphicsRunningProcesses
             .as_ref()
             .expect("Expected function, got error.");
         (sym)(device, infoCount, infos)
@@ -7565,17 +7327,6 @@ impl nvml {
             .as_ref()
             .expect("Expected function, got error.");
         (sym)(device, corrRows, uncRows, isPending, failureOccurred)
-    }
-    pub unsafe fn nvmlDeviceGetRowRemapperHistogram(
-        &self,
-        device: nvmlDevice_t,
-        values: *mut nvmlRowRemapperHistogramValues_t,
-    ) -> nvmlReturn_t {
-        let sym = self
-            .nvmlDeviceGetRowRemapperHistogram
-            .as_ref()
-            .expect("Expected function, got error.");
-        (sym)(device, values)
     }
     pub unsafe fn nvmlDeviceGetArchitecture(
         &self,
@@ -8083,17 +7834,6 @@ impl nvml {
             .as_ref()
             .expect("Expected function, got error.");
         (sym)(vgpuTypeId, vgpuTypeName, size)
-    }
-    pub unsafe fn nvmlVgpuTypeGetGpuInstanceProfileId(
-        &self,
-        vgpuTypeId: nvmlVgpuTypeId_t,
-        gpuInstanceProfileId: *mut raw::c_uint,
-    ) -> nvmlReturn_t {
-        let sym = self
-            .nvmlVgpuTypeGetGpuInstanceProfileId
-            .as_ref()
-            .expect("Expected function, got error.");
-        (sym)(vgpuTypeId, gpuInstanceProfileId)
     }
     pub unsafe fn nvmlVgpuTypeGetDeviceID(
         &self,
@@ -8720,13 +8460,13 @@ impl nvml {
             .expect("Expected function, got error.");
         (sym)(gpuInstance, id, computeInstance)
     }
-    pub unsafe fn nvmlComputeInstanceGetInfo_v2(
+    pub unsafe fn nvmlComputeInstanceGetInfo(
         &self,
         computeInstance: nvmlComputeInstance_t,
         info: *mut nvmlComputeInstanceInfo_t,
     ) -> nvmlReturn_t {
         let sym = self
-            .nvmlComputeInstanceGetInfo_v2
+            .nvmlComputeInstanceGetInfo
             .as_ref()
             .expect("Expected function, got error.");
         (sym)(computeInstance, info)

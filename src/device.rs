@@ -558,7 +558,7 @@ impl<'nvml> Device<'nvml> {
             };
             let mut processes: Vec<nvmlProcessInfo_t> = vec![mem::zeroed(); count as usize];
 
-            nvml_try(nvml::nvmlDeviceGetComputeRunningProcesses_v2(
+            nvml_try(nvml::nvmlDeviceGetComputeRunningProcesses(
                 &library_wrapper,
                 self.device,
                 &mut count,
@@ -592,7 +592,7 @@ impl<'nvml> Device<'nvml> {
             let mut count: c_uint = 0;
 
             // Passing null doesn't mean we want the count, it's just allowed
-            match nvml::nvmlDeviceGetComputeRunningProcesses_v2(
+            match nvml::nvmlDeviceGetComputeRunningProcesses(
                 &library_wrapper,
                 self.device,
                 &mut count,
@@ -1396,7 +1396,7 @@ impl<'nvml> Device<'nvml> {
             };
             let mut processes: Vec<nvmlProcessInfo_t> = vec![mem::zeroed(); count as usize];
 
-            nvml_try(nvml::nvmlDeviceGetGraphicsRunningProcesses_v2(
+            nvml_try(nvml::nvmlDeviceGetGraphicsRunningProcesses(
                 &library_wrapper,
                 self.device,
                 &mut count,
@@ -1430,7 +1430,7 @@ impl<'nvml> Device<'nvml> {
             let mut count: c_uint = 0;
 
             // Passing null doesn't indicate that we want the count. It's just allowed.
-            match nvml::nvmlDeviceGetGraphicsRunningProcesses_v2(
+            match nvml::nvmlDeviceGetGraphicsRunningProcesses(
                 &library_wrapper,
                 self.device,
                 &mut count,
