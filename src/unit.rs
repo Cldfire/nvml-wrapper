@@ -67,14 +67,14 @@ impl<'nvml> Unit<'nvml> {
     // Tested
     pub fn devices(&self) -> Result<Vec<Device>, NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             let mut count: c_uint = match self.device_count()? {
                 0 => return Ok(vec![]),
                 value => value,
             };
             let mut devices: Vec<nvmlDevice_t> = vec![mem::zeroed(); count as usize];
 
-            nvml_try(nvml::nvmlUnitGetDevices(
+            nvml_try(NvmlLib::nvmlUnitGetDevices(
                 &library_wrapper,
                 self.unit,
                 &mut count,
@@ -106,7 +106,7 @@ impl<'nvml> Unit<'nvml> {
     // Tested as part of the above
     pub fn device_count(&self) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             /*
             NVIDIA doesn't even say that `count` will be set to the count if
             `InsufficientSize` is returned. But we can assume sanity, right?
@@ -123,7 +123,7 @@ impl<'nvml> Unit<'nvml> {
             let mut count: c_uint = 1;
             let mut devices: [nvmlDevice_t; 1] = [mem::zeroed()];
 
-            match nvml::nvmlUnitGetDevices(
+            match NvmlLib::nvmlUnitGetDevices(
                 &library_wrapper,
                 self.unit,
                 &mut count,
@@ -157,9 +157,9 @@ impl<'nvml> Unit<'nvml> {
     // Tested
     pub fn fan_info(&self) -> Result<FansInfo, NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             let mut fans_info: nvmlUnitFanSpeeds_t = mem::zeroed();
-            nvml_try(nvml::nvmlUnitGetFanSpeedInfo(
+            nvml_try(NvmlLib::nvmlUnitGetFanSpeedInfo(
                 &library_wrapper,
                 self.unit,
                 &mut fans_info,
@@ -188,9 +188,9 @@ impl<'nvml> Unit<'nvml> {
     // Tested
     pub fn led_state(&self) -> Result<LedState, NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             let mut state: nvmlLedState_t = mem::zeroed();
-            nvml_try(nvml::nvmlUnitGetLedState(
+            nvml_try(NvmlLib::nvmlUnitGetLedState(
                 &library_wrapper,
                 self.unit,
                 &mut state,
@@ -219,9 +219,9 @@ impl<'nvml> Unit<'nvml> {
     // Tested
     pub fn psu_info(&self) -> Result<PsuInfo, NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             let mut info: nvmlPSUInfo_t = mem::zeroed();
-            nvml_try(nvml::nvmlUnitGetPsuInfo(
+            nvml_try(NvmlLib::nvmlUnitGetPsuInfo(
                 &library_wrapper,
                 self.unit,
                 &mut info,
@@ -251,10 +251,10 @@ impl<'nvml> Unit<'nvml> {
     // Tested
     pub fn temperature(&self, reading_type: TemperatureReading) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             let mut temp: c_uint = mem::zeroed();
 
-            nvml_try(nvml::nvmlUnitGetTemperature(
+            nvml_try(NvmlLib::nvmlUnitGetTemperature(
                 &library_wrapper,
                 self.unit,
                 reading_type as c_uint,
@@ -282,9 +282,9 @@ impl<'nvml> Unit<'nvml> {
     // Tested
     pub fn info(&self) -> Result<UnitInfo, NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             let mut info: nvmlUnitInfo_t = mem::zeroed();
-            nvml_try(nvml::nvmlUnitGetUnitInfo(
+            nvml_try(NvmlLib::nvmlUnitGetUnitInfo(
                 &library_wrapper,
                 self.unit,
                 &mut info,
@@ -321,8 +321,8 @@ impl<'nvml> Unit<'nvml> {
     // Tested (no-run)
     pub fn set_led_color(&mut self, color: LedColor) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
-            nvml_try(nvml::nvmlUnitSetLedState(
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
+            nvml_try(NvmlLib::nvmlUnitSetLedState(
                 &library_wrapper,
                 self.unit,
                 color.as_c(),

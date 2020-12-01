@@ -52,8 +52,8 @@ impl<'nvml> EventSet<'nvml> {
     // Checked against local
     pub fn release_events(self) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
-            nvml_try(nvml::nvmlEventSetFree(&library_wrapper, self.set))?;
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
+            nvml_try(NvmlLib::nvmlEventSetFree(&library_wrapper, self.set))?;
         }
 
         mem::forget(self);
@@ -90,9 +90,9 @@ impl<'nvml> EventSet<'nvml> {
     // Checked against local
     pub fn wait(&self, timeout_ms: u32) -> Result<EventData<'nvml>, NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             let mut data: nvmlEventData_t = mem::zeroed();
-            nvml_try(nvml::nvmlEventSetWait_v2(
+            nvml_try(NvmlLib::nvmlEventSetWait_v2(
                 &library_wrapper,
                 self.set,
                 &mut data,
@@ -124,8 +124,8 @@ impl<'nvml> Drop for EventSet<'nvml> {
     fn drop(&mut self) {
         #[allow(unused_must_use)]
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
-            match nvml_try(nvml::nvmlEventSetFree(&library_wrapper, self.set)) {
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
+            match nvml_try(NvmlLib::nvmlEventSetFree(&library_wrapper, self.set)) {
                 Ok(()) => (),
                 Err(e) => {
                     io::stderr().write(

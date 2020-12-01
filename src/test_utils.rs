@@ -4,8 +4,6 @@ use crate::NvLink;
 use crate::Unit;
 use crate::NVML;
 
-use crate::nvml;
-
 use crate::bitmasks::{device::*, event::*};
 
 use crate::enum_wrappers::device::*;

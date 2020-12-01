@@ -70,10 +70,10 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     // Test written
     pub fn is_active(&self) -> Result<bool, NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             let mut state: nvmlEnableState_t = mem::zeroed();
 
-            nvml_try(nvml::nvmlDeviceGetNvLinkState(
+            nvml_try(NvmlLib::nvmlDeviceGetNvLinkState(
                 &library_wrapper,
                 self.device.handle(),
                 self.link,
@@ -102,10 +102,10 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     // Test written
     pub fn version(&self) -> Result<u32, NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             let mut version: c_uint = mem::zeroed();
 
-            nvml_try(nvml::nvmlDeviceGetNvLinkVersion(
+            nvml_try(NvmlLib::nvmlDeviceGetNvLinkVersion(
                 &library_wrapper,
                 self.device.handle(),
                 self.link,
@@ -134,11 +134,11 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     // Test written
     pub fn has_capability(&self, cap_type: Capability) -> Result<bool, NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             // NVIDIA says that this should be interpreted as a boolean
             let mut capability: c_uint = mem::zeroed();
 
-            nvml_try(nvml::nvmlDeviceGetNvLinkCapability(
+            nvml_try(NvmlLib::nvmlDeviceGetNvLinkCapability(
                 &library_wrapper,
                 self.device.handle(),
                 self.link,
@@ -172,10 +172,10 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     // Test written
     pub fn remote_pci_info(&self) -> Result<PciInfo, NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             let mut pci_info: nvmlPciInfo_t = mem::zeroed();
 
-            nvml_try(nvml::nvmlDeviceGetNvLinkRemotePciInfo_v2(
+            nvml_try(NvmlLib::nvmlDeviceGetNvLinkRemotePciInfo_v2(
                 &library_wrapper,
                 self.device.handle(),
                 self.link,
@@ -204,10 +204,10 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     // Test written
     pub fn error_counter(&self, counter: ErrorCounter) -> Result<u64, NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             let mut value: c_ulonglong = mem::zeroed();
 
-            nvml_try(nvml::nvmlDeviceGetNvLinkErrorCounter(
+            nvml_try(NvmlLib::nvmlDeviceGetNvLinkErrorCounter(
                 &library_wrapper,
                 self.device.handle(),
                 self.link,
@@ -237,8 +237,8 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     // No-run test written
     pub fn reset_error_counters(&mut self) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
-            nvml_try(nvml::nvmlDeviceResetNvLinkErrorCounters(
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
+            nvml_try(NvmlLib::nvmlDeviceResetNvLinkErrorCounters(
                 &library_wrapper,
                 self.device.handle(),
                 self.link,
@@ -274,8 +274,8 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
         let reset: c_uint = if reset_counters { 1 } else { 0 };
 
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
-            nvml_try(nvml::nvmlDeviceSetNvLinkUtilizationControl(
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
+            nvml_try(NvmlLib::nvmlDeviceSetNvLinkUtilizationControl(
                 &library_wrapper,
                 self.device.handle(),
                 self.link,
@@ -305,10 +305,10 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     // Test written
     pub fn utilization_control(&self, counter: Counter) -> Result<UtilizationControl, NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             let mut controls: nvmlNvLinkUtilizationControl_t = mem::zeroed();
 
-            nvml_try(nvml::nvmlDeviceGetNvLinkUtilizationControl(
+            nvml_try(NvmlLib::nvmlDeviceGetNvLinkUtilizationControl(
                 &library_wrapper,
                 self.device.handle(),
                 self.link,
@@ -355,11 +355,11 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     // No-run test written
     pub fn utilization_counter(&self, counter: Counter) -> Result<UtilizationCounter, NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
             let mut receive: c_ulonglong = mem::zeroed();
             let mut send: c_ulonglong = mem::zeroed();
 
-            nvml_try(nvml::nvmlDeviceGetNvLinkUtilizationCounter(
+            nvml_try(NvmlLib::nvmlDeviceGetNvLinkUtilizationCounter(
                 &library_wrapper,
                 self.device.handle(),
                 self.link,
@@ -424,8 +424,8 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
         frozen: bool,
     ) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
-            nvml_try(nvml::nvmlDeviceFreezeNvLinkUtilizationCounter(
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
+            nvml_try(NvmlLib::nvmlDeviceFreezeNvLinkUtilizationCounter(
                 &library_wrapper,
                 self.device.handle(),
                 self.link,
@@ -456,8 +456,8 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     // No-run test written
     pub fn reset_utilization_counter(&mut self, counter: Counter) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
-            nvml_try(nvml::nvmlDeviceResetNvLinkUtilizationCounter(
+            let library_wrapper = NvmlLib::new(nvml_path).unwrap();
+            nvml_try(NvmlLib::nvmlDeviceResetNvLinkUtilizationCounter(
                 &library_wrapper,
                 self.device.handle(),
                 self.link,
