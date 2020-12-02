@@ -4,8 +4,6 @@ use crate::NvLink;
 use crate::Unit;
 use crate::NVML;
 
-use crate::nvml;
-
 use crate::bitmasks::{device::*, event::*};
 
 use crate::enum_wrappers::device::*;
@@ -108,7 +106,7 @@ impl ShouldPrint for UtilizationCounter {}
 impl ShouldPrint for DriverModelState {}
 
 pub fn nvml() -> NVML {
-    NVML::new().init().expect("initialized library")
+    NVML::init().expect("initialized library")
 }
 
 pub fn device<'nvml>(nvml: &'nvml NVML) -> Device<'nvml> {

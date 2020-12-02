@@ -4,7 +4,6 @@ use crate::NVML;
 
 use std::{
     io::{self, Write},
-    marker::PhantomData,
     mem,
 };
 
@@ -23,23 +22,23 @@ from.
 #[derive(Debug)]
 pub struct EventSet<'nvml> {
     set: nvmlEventSet_t,
-    _phantom: PhantomData<&'nvml NVML>,
+    pub nvml: &'nvml NVML,
 }
 
 unsafe impl<'nvml> Send for EventSet<'nvml> {}
 
-impl<'nvml> From<nvmlEventSet_t> for EventSet<'nvml> {
-    fn from(set: nvmlEventSet_t) -> Self {
-        EventSet {
-            set,
-            _phantom: PhantomData,
-        }
-    }
-}
-
-const nvml_path: &'static str = "libnvidia-ml.so";
-
 impl<'nvml> EventSet<'nvml> {
+    /**
+    Create a new `EventSet` wrapper.
+
+    You will most likely never need to call this; see the methods available to you
+    on the `NVML` struct to get one.
+    */
+    // TODO: move constructor to this struct?
+    pub fn new(set: nvmlEventSet_t, nvml: &'nvml NVML) -> Self {
+        Self { set, nvml }
+    }
+
     /**
     Use this to release the set's events if you care about handling
     potential errors (*the `Drop` implementation ignores errors!*).
@@ -52,8 +51,7 @@ impl<'nvml> EventSet<'nvml> {
     // Checked against local
     pub fn release_events(self) -> Result<(), NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
-            nvml_try(nvml::nvmlEventSetFree(&library_wrapper, self.set))?;
+            nvml_try(NvmlLib::nvmlEventSetFree(&self.nvml.lib, self.set))?;
         }
 
         mem::forget(self);
@@ -90,16 +88,15 @@ impl<'nvml> EventSet<'nvml> {
     // Checked against local
     pub fn wait(&self, timeout_ms: u32) -> Result<EventData<'nvml>, NvmlError> {
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
             let mut data: nvmlEventData_t = mem::zeroed();
-            nvml_try(nvml::nvmlEventSetWait_v2(
-                &library_wrapper,
+            nvml_try(NvmlLib::nvmlEventSetWait_v2(
+                &self.nvml.lib,
                 self.set,
                 &mut data,
                 timeout_ms,
             ))?;
 
-            Ok(data.into())
+            Ok(EventData::new(data, self.nvml))
         }
     }
 
@@ -124,8 +121,7 @@ impl<'nvml> Drop for EventSet<'nvml> {
     fn drop(&mut self) {
         #[allow(unused_must_use)]
         unsafe {
-            let library_wrapper = nvml::new(nvml_path).unwrap();
-            match nvml_try(nvml::nvmlEventSetFree(&library_wrapper, self.set)) {
+            match nvml_try(NvmlLib::nvmlEventSetFree(&self.nvml.lib, self.set)) {
                 Ok(()) => (),
                 Err(e) => {
                     io::stderr().write(

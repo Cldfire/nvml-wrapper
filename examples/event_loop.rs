@@ -7,8 +7,7 @@ use nvml_wrapper::high_level::Event::*;
 
 #[cfg(target_os = "linux")]
 fn main() -> Result<(), NvmlErrorWithSource> {
-    let nvml_base = NVML::new();
-    let nvml = nvml_base.init()?;
+    let nvml = NVML::init()?;
     let device = nvml.device_by_index(0)?;
 
     // Create an event loop, registering the single device we obtained above
