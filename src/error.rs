@@ -36,6 +36,17 @@ pub enum NvmlError {
     #[error("a libloading error occurred: {0}")]
     LibloadingError(#[from] libloading::Error),
 
+    /**
+    A function symbol failed to load.
+
+    This variant is constructed with a textual description of a
+    `libloading::Error`. The error variant itself can't be provided because we're
+    unable to take ownership of the error when attempting to use a symbol, and
+    `libloading::Error` doesn't impl `Clone`.
+    */
+    #[error("function symbol failed to load: {0}")]
+    FailedToLoadSymbol(String),
+
     #[error("max string length was {max_len} but string length is {actual_len}")]
     StringTooLong { max_len: usize, actual_len: usize },
 
@@ -186,4 +197,9 @@ pub fn nvml_try(code: nvmlReturn_t) -> Result<(), NvmlError> {
         nvmlReturn_enum_NVML_ERROR_UNKNOWN => Err(Unknown),
         _ => Err(UnexpectedVariant(code)),
     }
+}
+
+/// Helper to map a `&libloading::Error` into an `NvmlError`
+pub fn nvml_sym<'a, T>(sym: Result<&'a T, &libloading::Error>) -> Result<&'a T, NvmlError> {
+    sym.map_err(|e| NvmlError::FailedToLoadSymbol(e.to_string()))
 }
