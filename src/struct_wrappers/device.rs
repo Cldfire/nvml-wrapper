@@ -640,10 +640,6 @@ mod tests {
     #[test]
     fn pci_info_from_to_c() {
         let nvml = nvml();
-        let library_wrapper: NvmlLib;
-        unsafe {
-            library_wrapper = NvmlLib::new("/usr/lib/x86_64-linux-gnu/libnvidia-ml.so").unwrap();
-        }
         test_with_device(3, &nvml, |device| {
             let converted: nvmlPciInfo_t = device
                 .pci_info()
@@ -651,14 +647,11 @@ mod tests {
                 .try_into()
                 .expect("converted c pci info");
 
+            let sym = nvml_sym(nvml.lib.nvmlDeviceGetPciInfo_v3.as_ref())?;
+
             let raw = unsafe {
                 let mut pci_info: nvmlPciInfo_t = mem::zeroed();
-                nvml_try(NvmlLib::nvmlDeviceGetPciInfo_v3(
-                    &library_wrapper,
-                    device.handle(),
-                    &mut pci_info,
-                ))
-                .expect("raw pci info");
+                nvml_try(sym(device.handle(), &mut pci_info)).expect("raw pci info");
                 pci_info
             };
 

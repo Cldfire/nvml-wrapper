@@ -7,7 +7,7 @@ use crate::enum_wrappers::{
 };
 
 use crate::enums::nv_link::Counter;
-use crate::error::{nvml_try, NvmlError};
+use crate::error::{nvml_sym, nvml_try, NvmlError};
 use crate::ffi::bindings::*;
 
 use std::{
@@ -67,15 +67,12 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     */
     // Test written
     pub fn is_active(&self) -> Result<bool, NvmlError> {
+        let sym = nvml_sym(self.device.nvml.lib.nvmlDeviceGetNvLinkState.as_ref())?;
+
         unsafe {
             let mut state: nvmlEnableState_t = mem::zeroed();
 
-            nvml_try(NvmlLib::nvmlDeviceGetNvLinkState(
-                &self.device.nvml.lib,
-                self.device.handle(),
-                self.link,
-                &mut state,
-            ))?;
+            nvml_try(sym(self.device.handle(), self.link, &mut state))?;
 
             Ok(bool_from_state(state)?)
         }
@@ -98,15 +95,12 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     */
     // Test written
     pub fn version(&self) -> Result<u32, NvmlError> {
+        let sym = nvml_sym(self.device.nvml.lib.nvmlDeviceGetNvLinkVersion.as_ref())?;
+
         unsafe {
             let mut version: c_uint = mem::zeroed();
 
-            nvml_try(NvmlLib::nvmlDeviceGetNvLinkVersion(
-                &self.device.nvml.lib,
-                self.device.handle(),
-                self.link,
-                &mut version,
-            ))?;
+            nvml_try(sym(self.device.handle(), self.link, &mut version))?;
 
             Ok(version)
         }
@@ -129,12 +123,13 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     */
     // Test written
     pub fn has_capability(&self, cap_type: Capability) -> Result<bool, NvmlError> {
+        let sym = nvml_sym(self.device.nvml.lib.nvmlDeviceGetNvLinkCapability.as_ref())?;
+
         unsafe {
             // NVIDIA says that this should be interpreted as a boolean
             let mut capability: c_uint = mem::zeroed();
 
-            nvml_try(NvmlLib::nvmlDeviceGetNvLinkCapability(
-                &self.device.nvml.lib,
+            nvml_try(sym(
                 self.device.handle(),
                 self.link,
                 cap_type.as_c(),
@@ -166,15 +161,18 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     */
     // Test written
     pub fn remote_pci_info(&self) -> Result<PciInfo, NvmlError> {
+        let sym = nvml_sym(
+            self.device
+                .nvml
+                .lib
+                .nvmlDeviceGetNvLinkRemotePciInfo_v2
+                .as_ref(),
+        )?;
+
         unsafe {
             let mut pci_info: nvmlPciInfo_t = mem::zeroed();
 
-            nvml_try(NvmlLib::nvmlDeviceGetNvLinkRemotePciInfo_v2(
-                &self.device.nvml.lib,
-                self.device.handle(),
-                self.link,
-                &mut pci_info,
-            ))?;
+            nvml_try(sym(self.device.handle(), self.link, &mut pci_info))?;
 
             Ok(PciInfo::try_from(pci_info, false)?)
         }
@@ -197,11 +195,18 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     */
     // Test written
     pub fn error_counter(&self, counter: ErrorCounter) -> Result<u64, NvmlError> {
+        let sym = nvml_sym(
+            self.device
+                .nvml
+                .lib
+                .nvmlDeviceGetNvLinkErrorCounter
+                .as_ref(),
+        )?;
+
         unsafe {
             let mut value: c_ulonglong = mem::zeroed();
 
-            nvml_try(NvmlLib::nvmlDeviceGetNvLinkErrorCounter(
-                &self.device.nvml.lib,
+            nvml_try(sym(
                 self.device.handle(),
                 self.link,
                 counter.as_c(),
@@ -229,13 +234,15 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     */
     // No-run test written
     pub fn reset_error_counters(&mut self) -> Result<(), NvmlError> {
-        unsafe {
-            nvml_try(NvmlLib::nvmlDeviceResetNvLinkErrorCounters(
-                &self.device.nvml.lib,
-                self.device.handle(),
-                self.link,
-            ))
-        }
+        let sym = nvml_sym(
+            self.device
+                .nvml
+                .lib
+                .nvmlDeviceResetNvLinkErrorCounters
+                .as_ref(),
+        )?;
+
+        unsafe { nvml_try(sym(self.device.handle(), self.link)) }
     }
 
     /**
@@ -265,9 +272,16 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     ) -> Result<(), NvmlError> {
         let reset: c_uint = if reset_counters { 1 } else { 0 };
 
+        let sym = nvml_sym(
+            self.device
+                .nvml
+                .lib
+                .nvmlDeviceSetNvLinkUtilizationControl
+                .as_ref(),
+        )?;
+
         unsafe {
-            nvml_try(NvmlLib::nvmlDeviceSetNvLinkUtilizationControl(
-                &self.device.nvml.lib,
+            nvml_try(sym(
                 self.device.handle(),
                 self.link,
                 counter as c_uint,
@@ -295,11 +309,18 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     */
     // Test written
     pub fn utilization_control(&self, counter: Counter) -> Result<UtilizationControl, NvmlError> {
+        let sym = nvml_sym(
+            self.device
+                .nvml
+                .lib
+                .nvmlDeviceGetNvLinkUtilizationControl
+                .as_ref(),
+        )?;
+
         unsafe {
             let mut controls: nvmlNvLinkUtilizationControl_t = mem::zeroed();
 
-            nvml_try(NvmlLib::nvmlDeviceGetNvLinkUtilizationControl(
-                &self.device.nvml.lib,
+            nvml_try(sym(
                 self.device.handle(),
                 self.link,
                 counter as c_uint,
@@ -344,12 +365,19 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     */
     // No-run test written
     pub fn utilization_counter(&self, counter: Counter) -> Result<UtilizationCounter, NvmlError> {
+        let sym = nvml_sym(
+            self.device
+                .nvml
+                .lib
+                .nvmlDeviceGetNvLinkUtilizationCounter
+                .as_ref(),
+        )?;
+
         unsafe {
             let mut receive: c_ulonglong = mem::zeroed();
             let mut send: c_ulonglong = mem::zeroed();
 
-            nvml_try(NvmlLib::nvmlDeviceGetNvLinkUtilizationCounter(
-                &self.device.nvml.lib,
+            nvml_try(sym(
                 self.device.handle(),
                 self.link,
                 counter as c_uint,
@@ -412,9 +440,16 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
         counter: Counter,
         frozen: bool,
     ) -> Result<(), NvmlError> {
+        let sym = nvml_sym(
+            self.device
+                .nvml
+                .lib
+                .nvmlDeviceFreezeNvLinkUtilizationCounter
+                .as_ref(),
+        )?;
+
         unsafe {
-            nvml_try(NvmlLib::nvmlDeviceFreezeNvLinkUtilizationCounter(
-                &self.device.nvml.lib,
+            nvml_try(sym(
                 self.device.handle(),
                 self.link,
                 counter as c_uint,
@@ -443,14 +478,15 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     */
     // No-run test written
     pub fn reset_utilization_counter(&mut self, counter: Counter) -> Result<(), NvmlError> {
-        unsafe {
-            nvml_try(NvmlLib::nvmlDeviceResetNvLinkUtilizationCounter(
-                &self.device.nvml.lib,
-                self.device.handle(),
-                self.link,
-                counter as c_uint,
-            ))
-        }
+        let sym = nvml_sym(
+            self.device
+                .nvml
+                .lib
+                .nvmlDeviceResetNvLinkUtilizationCounter
+                .as_ref(),
+        )?;
+
+        unsafe { nvml_try(sym(self.device.handle(), self.link, counter as c_uint)) }
     }
 }
 

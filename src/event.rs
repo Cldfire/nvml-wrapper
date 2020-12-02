@@ -1,4 +1,4 @@
-use crate::error::{nvml_try, NvmlError};
+use crate::error::{nvml_sym, nvml_try, NvmlError};
 use crate::ffi::bindings::*;
 use crate::NVML;
 
@@ -50,8 +50,10 @@ impl<'nvml> EventSet<'nvml> {
     */
     // Checked against local
     pub fn release_events(self) -> Result<(), NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlEventSetFree.as_ref())?;
+
         unsafe {
-            nvml_try(NvmlLib::nvmlEventSetFree(&self.nvml.lib, self.set))?;
+            nvml_try(sym(self.set))?;
         }
 
         mem::forget(self);
@@ -87,14 +89,11 @@ impl<'nvml> EventSet<'nvml> {
     */
     // Checked against local
     pub fn wait(&self, timeout_ms: u32) -> Result<EventData<'nvml>, NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlEventSetWait_v2.as_ref())?;
+
         unsafe {
             let mut data: nvmlEventData_t = mem::zeroed();
-            nvml_try(NvmlLib::nvmlEventSetWait_v2(
-                &self.nvml.lib,
-                self.set,
-                &mut data,
-                timeout_ms,
-            ))?;
+            nvml_try(sym(self.set, &mut data, timeout_ms))?;
 
             Ok(EventData::new(data, self.nvml))
         }
@@ -119,9 +118,11 @@ impl<'nvml> EventSet<'nvml> {
 /// method on the `EventSet` struct if you care about handling them.
 impl<'nvml> Drop for EventSet<'nvml> {
     fn drop(&mut self) {
-        #[allow(unused_must_use)]
+        let sym = nvml_sym(self.nvml.lib.nvmlEventSetFree.as_ref()).unwrap();
+
         unsafe {
-            match nvml_try(NvmlLib::nvmlEventSetFree(&self.nvml.lib, self.set)) {
+            #[allow(unused_must_use)]
+            match nvml_try(sym(self.set)) {
                 Ok(()) => (),
                 Err(e) => {
                     io::stderr().write(
