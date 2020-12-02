@@ -118,11 +118,9 @@ impl<'nvml> EventSet<'nvml> {
 /// method on the `EventSet` struct if you care about handling them.
 impl<'nvml> Drop for EventSet<'nvml> {
     fn drop(&mut self) {
-        let sym = nvml_sym(self.nvml.lib.nvmlEventSetFree.as_ref()).unwrap();
-
         unsafe {
             #[allow(unused_must_use)]
-            match nvml_try(sym(self.set)) {
+            match nvml_try(self.nvml.lib.nvmlEventSetFree(self.set)) {
                 Ok(()) => (),
                 Err(e) => {
                     io::stderr().write(
