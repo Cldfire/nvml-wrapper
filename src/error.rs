@@ -11,7 +11,7 @@ pub enum Bits {
 }
 
 /// An `NvmlError` with an optionally present source error for chaining errors
-#[derive(Error, Debug, Clone, Eq, PartialEq)]
+#[derive(Error, Debug)]
 #[error("{error}")]
 pub struct NvmlErrorWithSource {
     pub error: NvmlError,
@@ -27,12 +27,14 @@ impl From<NvmlError> for NvmlErrorWithSource {
     }
 }
 
-#[derive(Error, Debug, Clone, Eq, PartialEq)]
+#[derive(Error, Debug)]
 pub enum NvmlError {
     #[error("could not interpret string as utf-8")]
     Utf8Error(#[from] std::str::Utf8Error),
     #[error("nul byte inside string")]
     NulError(#[from] std::ffi::NulError),
+    #[error("a libloading error occurred: {0}")]
+    LibloadingError(#[from] libloading::Error),
 
     #[error("max string length was {max_len} but string length is {actual_len}")]
     StringTooLong { max_len: usize, actual_len: usize },

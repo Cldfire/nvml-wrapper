@@ -166,6 +166,8 @@ use crate::struct_wrappers::unit::HwbcEntry;
 
 use crate::bitmasks::InitFlags;
 
+const LIB_PATH: &str = "libnvidia-ml.so";
+
 /// Determines the major version of the CUDA driver given the full version.
 ///
 /// Obtain the full version via `NVML.sys_cuda_driver_version()`.
@@ -202,6 +204,7 @@ ideally read the doc comments on an up-to-date NVML API header. Such a header ca
 as part of the [CUDA toolkit](https://developer.nvidia.com/cuda-downloads).
 */
 // TODO: this should be named `Nvml`
+// TODO: provide a way to initialize with a user-provided lib path
 pub struct NVML {
     lib: NvmlLib,
 }
@@ -237,21 +240,19 @@ impl NVML {
     * `DriverNotLoaded`, if the NVIDIA driver is not running
     * `NoPermission`, if NVML does not have permission to talk to the driver
     * `Unknown`, on any unexpected error
+    * `libloading::Error`, if something went wrong trying to dynamically load the
+    NVML lib
     */
     // Checked against local
-    pub fn new() -> NVML {
-        unsafe {
-            NVML {
-                lib: NvmlLib::new("libnvidia-ml.so").unwrap(),
-            }
-        }
-    }
+    pub fn init() -> Result<Self, NvmlError> {
+        let lib = unsafe {
+            let lib = NvmlLib::new(LIB_PATH)?;
+            nvml_try(lib.nvmlInit_v2())?;
 
-    pub fn init(self) -> Result<Self, NvmlError> {
-        unsafe {
-            nvml_try(NvmlLib::nvmlInit_v2(&self.lib))?;
-        }
-        Ok(self)
+            lib
+        };
+
+        Ok(Self { lib })
     }
 
     /**
@@ -264,6 +265,8 @@ impl NVML {
     * `DriverNotLoaded`, if the NVIDIA driver is not running
     * `NoPermission`, if NVML does not have permission to talk to the driver
     * `Unknown`, on any unexpected error
+    * `libloading::Error`, if something went wrong trying to dynamically load the
+    NVML lib
 
     # Examples
 
@@ -280,12 +283,15 @@ impl NVML {
     ```
     */
     // TODO: Example of using multiple flags when multiple flags exist
-    pub fn init_with_flags(self, flags: InitFlags) -> Result<Self, NvmlError> {
-        unsafe {
-            nvml_try(NvmlLib::nvmlInitWithFlags(&self.lib, flags.bits()))?;
-        }
+    pub fn init_with_flags(flags: InitFlags) -> Result<Self, NvmlError> {
+        let lib = unsafe {
+            let lib = NvmlLib::new(LIB_PATH)?;
+            nvml_try(lib.nvmlInitWithFlags(flags.bits()))?;
 
-        Ok(self)
+            lib
+        };
+
+        Ok(Self { lib })
     }
 
     /**
@@ -1001,7 +1007,7 @@ mod test {
 
     #[test]
     fn init_with_flags() {
-        NVML::new().init_with_flags(InitFlags::NO_GPUS).unwrap();
+        NVML::init_with_flags(InitFlags::NO_GPUS).unwrap();
     }
 
     #[test]

@@ -496,7 +496,7 @@ impl From<nvmlProcessUtilizationSample_t> for ProcessUtilizationSample {
 
 /// Struct that stores information returned from `Device.field_values_for()`.
 // TODO: Missing a lot of derives because of the `Result`
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
 pub struct FieldValueSample {
     /// The field that this sample is for.
     pub field: FieldId,
