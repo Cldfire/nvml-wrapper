@@ -3681,7 +3681,7 @@ impl<'nvml> Device<'nvml> {
     # use nvml_wrapper::NVML;
     # use nvml_wrapper::error::*;
     # fn test() -> Result<(), NvmlError> {
-    # let nvml = NvmlLib::init()?;
+    # let nvml = NVML::init()?;
     # let mut device = nvml.device_by_index(0)?;
     use nvml_wrapper::bitmasks::Behavior;
     use nvml_wrapper::enum_wrappers::device::DriverModel;
