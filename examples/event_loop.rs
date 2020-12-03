@@ -50,7 +50,7 @@ fn main() -> Result<(), NvmlErrorWithSource> {
     Ok(())
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(not(target_os = "linux"))]
 fn main() {
-    println!("NVML doesn't support events on windows :(");
+    println!("NVML only supports events on linux :(");
 }
