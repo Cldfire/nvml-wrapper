@@ -1,12 +1,12 @@
-use nvml_wrapper::error::{NvmlError, NvmlErrorWithSource};
-use nvml_wrapper::NVML;
-// Bringing this in allows us to use `NVML.create_event_loop()`
-use nvml_wrapper::high_level::EventLoopProvider;
-// Bringing these in for brevity (Event::SomeEvent vs. SomeEvent)
-use nvml_wrapper::high_level::Event::*;
-
 #[cfg(target_os = "linux")]
 fn main() -> Result<(), NvmlErrorWithSource> {
+    use nvml_wrapper::error::{NvmlError, NvmlErrorWithSource};
+    use nvml_wrapper::NVML;
+    // Bringing this in allows us to use `NVML.create_event_loop()`
+    use nvml_wrapper::high_level::EventLoopProvider;
+    // Bringing these in for brevity (Event::SomeEvent vs. SomeEvent)
+    use nvml_wrapper::high_level::Event::*;
+
     let nvml = NVML::init()?;
     let device = nvml.device_by_index(0)?;
 

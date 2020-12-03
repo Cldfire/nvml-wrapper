@@ -138,12 +138,11 @@ impl<'nvml> Drop for EventSet<'nvml> {
 }
 
 #[cfg(test)]
+#[cfg(target_os = "linux")]
 mod test {
-    #[cfg(target_os = "linux")]
     use crate::bitmasks::event::*;
     use crate::test_utils::*;
 
-    #[cfg(target_os = "linux")]
     #[test]
     fn release_events() {
         let nvml = nvml();
@@ -162,7 +161,6 @@ mod test {
         })
     }
 
-    #[cfg(target_os = "linux")]
     #[cfg(feature = "test-local")]
     #[test]
     fn wait() {

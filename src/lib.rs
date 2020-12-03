@@ -141,15 +141,15 @@ pub mod sys_exports {
 }
 
 #[cfg(target_os = "linux")]
+use std::convert::TryInto;
+#[cfg(target_os = "linux")]
 use std::ptr;
 use std::{
     convert::TryFrom,
     ffi::{CStr, CString},
-    mem,
+    mem::{self, ManuallyDrop},
     os::raw::{c_int, c_uint},
 };
-#[cfg(target_os = "linux")]
-use std::{convert::TryInto, mem::ManuallyDrop};
 
 #[cfg(target_os = "linux")]
 use crate::enum_wrappers::device::TopologyLevel;
@@ -165,6 +165,10 @@ use crate::struct_wrappers::unit::HwbcEntry;
 
 use crate::bitmasks::InitFlags;
 
+#[cfg(not(target_os = "linux"))]
+const LIB_PATH: &str = "nvml.dll";
+
+#[cfg(target_os = "linux")]
 const LIB_PATH: &str = "libnvidia-ml.so";
 
 /// Determines the major version of the CUDA driver given the full version.
