@@ -3627,7 +3627,7 @@ pub struct nvmlComputeInstance_st {
 pub type nvmlComputeInstance_t = *mut nvmlComputeInstance_st;
 extern crate libloading;
 pub struct NvmlLib {
-    __library: ::libloading::Library,
+    pub __library: ::libloading::Library,
     pub nvmlInit_v2: Result<unsafe extern "C" fn() -> nvmlReturn_t, ::libloading::Error>,
     pub nvmlInitWithFlags:
         Result<unsafe extern "C" fn(flags: raw::c_uint) -> nvmlReturn_t, ::libloading::Error>,

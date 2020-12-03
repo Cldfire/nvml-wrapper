@@ -141,16 +141,15 @@ pub mod sys_exports {
 }
 
 #[cfg(target_os = "linux")]
-use std::convert::TryInto;
-#[cfg(target_os = "linux")]
 use std::ptr;
 use std::{
     convert::TryFrom,
     ffi::{CStr, CString},
-    io::{self, Write},
     mem,
     os::raw::{c_int, c_uint},
 };
+#[cfg(target_os = "linux")]
+use std::{convert::TryInto, mem::ManuallyDrop};
 
 #[cfg(target_os = "linux")]
 use crate::enum_wrappers::device::TopologyLevel;
@@ -206,7 +205,7 @@ as part of the [CUDA toolkit](https://developer.nvidia.com/cuda-downloads).
 // TODO: this should be named `Nvml`
 // TODO: provide a way to initialize with a user-provided lib path
 pub struct NVML {
-    lib: NvmlLib,
+    lib: ManuallyDrop<NvmlLib>,
 }
 
 // Here to clarify that NVML does have these traits. I know they are
@@ -248,7 +247,7 @@ impl NVML {
             let sym = nvml_sym(lib.nvmlInit_v2.as_ref())?;
 
             nvml_try(sym())?;
-            lib
+            ManuallyDrop::new(lib)
         };
 
         Ok(Self { lib })
@@ -286,7 +285,7 @@ impl NVML {
             let sym = nvml_sym(lib.nvmlInitWithFlags.as_ref())?;
 
             nvml_try(sym(flags.bits()))?;
-            lib
+            ManuallyDrop::new(lib)
         };
 
         Ok(Self { lib })
@@ -304,12 +303,17 @@ impl NVML {
     // Thanks to `sorear` on IRC for suggesting this approach
     // Checked against local
     // Tested
-    pub fn shutdown(self) -> Result<(), NvmlError> {
+    pub fn shutdown(mut self) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.lib.nvmlShutdown.as_ref())?;
 
         unsafe {
             nvml_try(sym())?;
         }
+
+        // SAFETY: we `mem::forget(self)` after this, so `self.lib` won't get
+        // touched by our `Drop` impl
+        let lib = unsafe { ManuallyDrop::take(&mut self.lib) };
+        lib.__library.close()?;
 
         mem::forget(self);
         Ok(())
@@ -955,21 +959,11 @@ impl NVML {
 /// if you care about handling them.
 impl Drop for NVML {
     fn drop(&mut self) {
-        #[allow(unused_must_use)]
         unsafe {
-            match nvml_try(self.lib.nvmlShutdown()) {
-                Ok(()) => (),
-                Err(e) => {
-                    io::stderr().write(
-                        format!(
-                            "WARNING: Error returned by `nmvlShutdown()` in Drop implementation: \
-                             {:?}",
-                            e
-                        )
-                        .as_bytes(),
-                    );
-                }
-            }
+            self.lib.nvmlShutdown();
+
+            // SAFETY: called after the last usage of `self.lib`
+            ManuallyDrop::drop(&mut self.lib);
         }
     }
 }
