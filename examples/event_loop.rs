@@ -1,6 +1,6 @@
 #[cfg(target_os = "linux")]
-fn main() -> Result<(), NvmlErrorWithSource> {
-    use nvml_wrapper::error::{NvmlError, NvmlErrorWithSource};
+fn main() -> Result<(), nvml_wrapper::error::NvmlErrorWithSource> {
+    use nvml_wrapper::error::NvmlError;
     use nvml_wrapper::NVML;
     // Bringing this in allows us to use `NVML.create_event_loop()`
     use nvml_wrapper::high_level::EventLoopProvider;
