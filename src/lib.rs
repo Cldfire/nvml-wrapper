@@ -323,11 +323,6 @@ impl NVML {
         Ok(())
     }
 
-    /// Obtain a reference to the `NvmlLib` this struct wraps around.
-    pub fn lib(&self) -> &NvmlLib {
-        &self.lib
-    }
-
     /**
     Get the number of compute devices in the system (compute device == one GPU).
 
