@@ -32,11 +32,18 @@ impl<'nvml> EventData<'nvml> {
     The `event_type` bitmask is created via the `EventTypes::from_bits_truncate`
     method, meaning that any bits that don't correspond to flags present in this
     version of the wrapper will be dropped.
+
+    # Safety
+
+    It is your responsibility to ensure that the given `nvmlEventdata_t` pointer
+    is valid.
     */
-    pub fn new(event_data: nvmlEventData_t, nvml: &'nvml NVML) -> Self {
+    pub unsafe fn new(event_data: nvmlEventData_t, nvml: &'nvml NVML) -> Self {
         let event_type = EventTypes::from_bits_truncate(event_data.eventType);
 
         EventData {
+            // SAFETY: it is the callers responsibility to ensure that `event_data`
+            // is a valid pointer (meaning its contents will be valid)
             device: Device::new(event_data.device, nvml),
             event_type,
             event_data: if event_type.contains(EventTypes::CRITICAL_XID_ERROR) {

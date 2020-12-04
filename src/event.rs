@@ -33,9 +33,14 @@ impl<'nvml> EventSet<'nvml> {
 
     You will most likely never need to call this; see the methods available to you
     on the `NVML` struct to get one.
+
+    # Safety
+
+    It is your responsibility to ensure that the given `nvmlEventSet_t` pointer
+    is valid.
     */
     // TODO: move constructor to this struct?
-    pub fn new(set: nvmlEventSet_t, nvml: &'nvml NVML) -> Self {
+    pub unsafe fn new(set: nvmlEventSet_t, nvml: &'nvml NVML) -> Self {
         Self { set, nvml }
     }
 

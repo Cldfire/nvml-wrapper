@@ -38,8 +38,13 @@ impl<'nvml> Unit<'nvml> {
 
     You will most likely never need to call this; see the methods available to you
     on the `NVML` struct to get one.
+
+    # Safety
+
+    It is your responsibility to ensure that the given `nvmlUnit_t` pointer
+    is valid.
     */
-    pub fn new(unit: nvmlUnit_t, nvml: &'nvml NVML) -> Self {
+    pub unsafe fn new(unit: nvmlUnit_t, nvml: &'nvml NVML) -> Self {
         Self { unit, nvml }
     }
 

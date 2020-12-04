@@ -58,8 +58,13 @@ impl<'nvml> Device<'nvml> {
 
     You will most likely never need to call this; see the methods available to you
     on the `NVML` struct to get one.
+
+    # Safety
+
+    It is your responsibility to ensure that the given `nvmlDevice_t` pointer
+    is valid.
     */
-    pub fn new(device: nvmlDevice_t, nvml: &'nvml NVML) -> Self {
+    pub unsafe fn new(device: nvmlDevice_t, nvml: &'nvml NVML) -> Self {
         Self { device, nvml }
     }
 
@@ -542,7 +547,7 @@ impl<'nvml> Device<'nvml> {
     Gets a vector of bitmasks with the ideal CPU affinity for this `Device`.
 
     The results are sized to `size`. For example, if processors 0, 1, 32, and 33 are
-    ideal for this `Device` and `size` == 2, result[0] = 0x3, result[1] = 0x3.
+    ideal for this `Device` and `size` == 2, result\[0\] = 0x3, result\[1\] = 0x3.
 
     64 CPUs per unsigned long on 64-bit machines, 32 on 32-bit machines.
 
