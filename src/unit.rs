@@ -33,6 +33,12 @@ unsafe impl<'nvml> Send for Unit<'nvml> {}
 unsafe impl<'nvml> Sync for Unit<'nvml> {}
 
 impl<'nvml> Unit<'nvml> {
+    /**
+    Create a new `Unit` wrapper.
+
+    You will most likely never need to call this; see the methods available to you
+    on the `NVML` struct to get one.
+    */
     pub fn new(unit: nvmlUnit_t, nvml: &'nvml NVML) -> Self {
         Self { unit, nvml }
     }
