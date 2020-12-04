@@ -4480,6 +4480,8 @@ mod test {
         })
     }
 
+    // My machine does not support this call
+    #[cfg(not(feature = "test-local"))]
     #[test]
     fn applications_clock() {
         let nvml = nvml();
@@ -4530,6 +4532,8 @@ mod test {
         test_with_device(3, &nvml, |device| device.bridge_chip_info())
     }
 
+    // My machine does not support this call
+    #[cfg(not(feature = "test-local"))]
     #[test]
     fn clock() {
         let nvml = nvml();
@@ -4608,6 +4612,8 @@ mod test {
         test_with_device(3, &nvml, |device| device.decoder_utilization())
     }
 
+    // My machine does not support this call
+    #[cfg(not(feature = "test-local"))]
     #[test]
     fn default_applications_clock() {
         let nvml = nvml();
@@ -4917,6 +4923,8 @@ mod test {
         test_with_device(3, &nvml, |device| device.are_pages_pending_retired())
     }
 
+    // My machine does not support this call
+    #[cfg(not(feature = "test-local"))]
     #[test]
     fn samples() {
         let nvml = nvml();
@@ -5023,6 +5031,8 @@ mod test {
         })
     }
 
+    // My machine does not support this call
+    #[cfg(not(feature = "test-local"))]
     #[test]
     fn supported_graphics_clocks() {
         let nvml = nvml();
@@ -5051,6 +5061,8 @@ mod test {
         })
     }
 
+    // My machine does not support this call
+    #[cfg(not(feature = "test-local"))]
     #[test]
     fn supported_memory_clocks() {
         let nvml = nvml();
