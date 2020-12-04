@@ -1,10 +1,9 @@
-use crate::error::{nvml_try, NvmlError};
+use crate::error::{nvml_sym, nvml_try, NvmlError};
 use crate::ffi::bindings::*;
 use crate::NVML;
 
 use std::{
     io::{self, Write},
-    marker::PhantomData,
     mem,
 };
 
@@ -23,21 +22,23 @@ from.
 #[derive(Debug)]
 pub struct EventSet<'nvml> {
     set: nvmlEventSet_t,
-    _phantom: PhantomData<&'nvml NVML>,
+    pub nvml: &'nvml NVML,
 }
 
 unsafe impl<'nvml> Send for EventSet<'nvml> {}
 
-impl<'nvml> From<nvmlEventSet_t> for EventSet<'nvml> {
-    fn from(set: nvmlEventSet_t) -> Self {
-        EventSet {
-            set,
-            _phantom: PhantomData,
-        }
-    }
-}
-
 impl<'nvml> EventSet<'nvml> {
+    /**
+    Create a new `EventSet` wrapper.
+
+    You will most likely never need to call this; see the methods available to you
+    on the `NVML` struct to get one.
+    */
+    // TODO: move constructor to this struct?
+    pub fn new(set: nvmlEventSet_t, nvml: &'nvml NVML) -> Self {
+        Self { set, nvml }
+    }
+
     /**
     Use this to release the set's events if you care about handling
     potential errors (*the `Drop` implementation ignores errors!*).
@@ -49,8 +50,10 @@ impl<'nvml> EventSet<'nvml> {
     */
     // Checked against local
     pub fn release_events(self) -> Result<(), NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlEventSetFree.as_ref())?;
+
         unsafe {
-            nvml_try(nvmlEventSetFree(self.set))?;
+            nvml_try(sym(self.set))?;
         }
 
         mem::forget(self);
@@ -86,11 +89,13 @@ impl<'nvml> EventSet<'nvml> {
     */
     // Checked against local
     pub fn wait(&self, timeout_ms: u32) -> Result<EventData<'nvml>, NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlEventSetWait_v2.as_ref())?;
+
         unsafe {
             let mut data: nvmlEventData_t = mem::zeroed();
-            nvml_try(nvmlEventSetWait(self.set, &mut data, timeout_ms))?;
+            nvml_try(sym(self.set, &mut data, timeout_ms))?;
 
-            Ok(data.into())
+            Ok(EventData::new(data, self.nvml))
         }
     }
 
@@ -113,9 +118,9 @@ impl<'nvml> EventSet<'nvml> {
 /// method on the `EventSet` struct if you care about handling them.
 impl<'nvml> Drop for EventSet<'nvml> {
     fn drop(&mut self) {
-        #[allow(unused_must_use)]
         unsafe {
-            match nvml_try(nvmlEventSetFree(self.set)) {
+            #[allow(unused_must_use)]
+            match nvml_try(self.nvml.lib.nvmlEventSetFree(self.set)) {
                 Ok(()) => (),
                 Err(e) => {
                     io::stderr().write(
@@ -133,12 +138,11 @@ impl<'nvml> Drop for EventSet<'nvml> {
 }
 
 #[cfg(test)]
+#[cfg(target_os = "linux")]
 mod test {
-    #[cfg(target_os = "linux")]
     use crate::bitmasks::event::*;
     use crate::test_utils::*;
 
-    #[cfg(target_os = "linux")]
     #[test]
     fn release_events() {
         let nvml = nvml();
@@ -157,7 +161,6 @@ mod test {
         })
     }
 
-    #[cfg(target_os = "linux")]
     #[cfg(feature = "test-local")]
     #[test]
     fn wait() {

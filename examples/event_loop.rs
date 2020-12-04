@@ -1,12 +1,12 @@
-use nvml_wrapper::error::{NvmlError, NvmlErrorWithSource};
-use nvml_wrapper::NVML;
-// Bringing this in allows us to use `NVML.create_event_loop()`
-use nvml_wrapper::high_level::EventLoopProvider;
-// Bringing these in for brevity (Event::SomeEvent vs. SomeEvent)
-use nvml_wrapper::high_level::Event::*;
-
 #[cfg(target_os = "linux")]
-fn main() -> Result<(), NvmlErrorWithSource> {
+fn main() -> Result<(), nvml_wrapper::error::NvmlErrorWithSource> {
+    use nvml_wrapper::error::NvmlError;
+    use nvml_wrapper::NVML;
+    // Bringing this in allows us to use `NVML.create_event_loop()`
+    use nvml_wrapper::high_level::EventLoopProvider;
+    // Bringing these in for brevity (Event::SomeEvent vs. SomeEvent)
+    use nvml_wrapper::high_level::Event::*;
+
     let nvml = NVML::init()?;
     let device = nvml.device_by_index(0)?;
 
@@ -50,7 +50,7 @@ fn main() -> Result<(), NvmlErrorWithSource> {
     Ok(())
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(not(target_os = "linux"))]
 fn main() {
-    println!("NVML doesn't support events on windows :(");
+    println!("NVML only supports events on linux :(");
 }

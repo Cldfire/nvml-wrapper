@@ -70,4 +70,6 @@ guaranteed to be backwards-compatible according to NVIDIA, so these bindings
 should be useful regardless of NVML version bumps.
 */
 
+// Generate bindings: bindgen --ctypes-prefix raw --no-doc-comments --raw-line '#![allow(non_upper_case_globals)]' --raw-line '#![allow(non_camel_case_types)]' --raw-line '#![allow(non_snake_case)]' --raw-line '#![allow(dead_code)]'  --raw-line 'use std::os::raw;' --rustfmt-bindings --dynamic-loading NvmlLib -o genned_bindings.rs nvml.h
+// Generate lib file (from VS dev console): `dumpbin /EXPORTS nvml.dll > nvml.exports`, paste function names into nvml.def with `EXPORTS` at top, `lib /def:nvml.def /out:nvml.lib /machine:X64`
 pub mod bindings;

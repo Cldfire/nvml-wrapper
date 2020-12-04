@@ -18,6 +18,7 @@ exclude = [
 ]
 
 [dependencies]
+libloading = "0.6.6"
 
 [features]
 default = []

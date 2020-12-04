@@ -20,7 +20,7 @@ impl UtilizationControl {
     pub fn as_c(&self) -> nvmlNvLinkUtilizationControl_t {
         nvmlNvLinkUtilizationControl_t {
             units: self.units.as_c(),
-            pktfilter: self.packet_filter.bits() as i32,
+            pktfilter: self.packet_filter.bits() as u32,
         }
     }
 }

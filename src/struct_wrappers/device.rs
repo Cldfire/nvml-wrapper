@@ -496,7 +496,7 @@ impl From<nvmlProcessUtilizationSample_t> for ProcessUtilizationSample {
 
 /// Struct that stores information returned from `Device.field_values_for()`.
 // TODO: Missing a lot of derives because of the `Result`
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
 pub struct FieldValueSample {
     /// The field that this sample is for.
     pub field: FieldId,
@@ -647,10 +647,11 @@ mod tests {
                 .try_into()
                 .expect("converted c pci info");
 
+            let sym = nvml_sym(nvml.lib.nvmlDeviceGetPciInfo_v3.as_ref())?;
+
             let raw = unsafe {
                 let mut pci_info: nvmlPciInfo_t = mem::zeroed();
-                nvml_try(nvmlDeviceGetPciInfo_v3(device.handle(), &mut pci_info))
-                    .expect("raw pci info");
+                nvml_try(sym(device.handle(), &mut pci_info)).expect("raw pci info");
                 pci_info
             };
 

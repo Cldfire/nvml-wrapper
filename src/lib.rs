@@ -109,6 +109,7 @@ for every NVML data structure.
 #![recursion_limit = "1024"]
 #![allow(non_upper_case_globals)]
 
+extern crate libloading;
 extern crate nvml_wrapper_sys as ffi;
 
 pub mod bitmasks;
@@ -146,15 +147,14 @@ use std::ptr;
 use std::{
     convert::TryFrom,
     ffi::{CStr, CString},
-    io::{self, Write},
-    mem,
+    mem::{self, ManuallyDrop},
     os::raw::{c_int, c_uint},
 };
 
 #[cfg(target_os = "linux")]
 use crate::enum_wrappers::device::TopologyLevel;
 
-use crate::error::{nvml_try, NvmlError};
+use crate::error::{nvml_sym, nvml_try, NvmlError};
 use crate::ffi::bindings::*;
 
 use crate::struct_wrappers::BlacklistDeviceInfo;
@@ -164,6 +164,12 @@ use crate::struct_wrappers::device::PciInfo;
 use crate::struct_wrappers::unit::HwbcEntry;
 
 use crate::bitmasks::InitFlags;
+
+#[cfg(not(target_os = "linux"))]
+const LIB_PATH: &str = "nvml.dll";
+
+#[cfg(target_os = "linux")]
+const LIB_PATH: &str = "libnvidia-ml.so";
 
 /// Determines the major version of the CUDA driver given the full version.
 ///
@@ -200,13 +206,22 @@ do not accurately reflect the version of NVML that this library is written for; 
 ideally read the doc comments on an up-to-date NVML API header. Such a header can be downloaded
 as part of the [CUDA toolkit](https://developer.nvidia.com/cuda-downloads).
 */
-#[derive(Debug)]
-pub struct NVML;
+// TODO: this should be named `Nvml`
+// TODO: provide a way to initialize with a user-provided lib path
+pub struct NVML {
+    lib: ManuallyDrop<NvmlLib>,
+}
 
 // Here to clarify that NVML does have these traits. I know they are
 // implemented without this.
 unsafe impl Send for NVML {}
 unsafe impl Sync for NVML {}
+
+impl std::fmt::Debug for NVML {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("NVML")
+    }
+}
 
 impl NVML {
     /**
@@ -231,11 +246,15 @@ impl NVML {
     */
     // Checked against local
     pub fn init() -> Result<Self, NvmlError> {
-        unsafe {
-            nvml_try(nvmlInit_v2())?;
-        }
+        let lib = unsafe {
+            let lib = NvmlLib::new(LIB_PATH)?;
+            let sym = nvml_sym(lib.nvmlInit_v2.as_ref())?;
 
-        Ok(NVML)
+            nvml_try(sym())?;
+            ManuallyDrop::new(lib)
+        };
+
+        Ok(Self { lib })
     }
 
     /**
@@ -265,11 +284,15 @@ impl NVML {
     */
     // TODO: Example of using multiple flags when multiple flags exist
     pub fn init_with_flags(flags: InitFlags) -> Result<Self, NvmlError> {
-        unsafe {
-            nvml_try(nvmlInitWithFlags(flags.bits()))?;
-        }
+        let lib = unsafe {
+            let lib = NvmlLib::new(LIB_PATH)?;
+            let sym = nvml_sym(lib.nvmlInitWithFlags.as_ref())?;
 
-        Ok(NVML)
+            nvml_try(sym(flags.bits()))?;
+            ManuallyDrop::new(lib)
+        };
+
+        Ok(Self { lib })
     }
 
     /**
@@ -284,13 +307,19 @@ impl NVML {
     // Thanks to `sorear` on IRC for suggesting this approach
     // Checked against local
     // Tested
-    pub fn shutdown(self) -> Result<(), NvmlError> {
+    pub fn shutdown(mut self) -> Result<(), NvmlError> {
+        let sym = nvml_sym(self.lib.nvmlShutdown.as_ref())?;
+
         unsafe {
-            nvml_try(nvmlShutdown())?;
+            nvml_try(sym())?;
         }
 
+        // SAFETY: we `mem::forget(self)` after this, so `self.lib` won't get
+        // touched by our `Drop` impl
+        let lib = unsafe { ManuallyDrop::take(&mut self.lib) };
         mem::forget(self);
-        Ok(())
+
+        Ok(lib.__library.close()?)
     }
 
     /**
@@ -306,9 +335,11 @@ impl NVML {
     // Checked against local
     // Tested
     pub fn device_count(&self) -> Result<u32, NvmlError> {
+        let sym = nvml_sym(self.lib.nvmlDeviceGetCount_v2.as_ref())?;
+
         unsafe {
             let mut count: c_uint = mem::zeroed();
-            nvml_try(nvmlDeviceGetCount_v2(&mut count))?;
+            nvml_try(sym(&mut count))?;
 
             Ok(count as u32)
         }
@@ -326,10 +357,12 @@ impl NVML {
     // Checked against local
     // Tested
     pub fn sys_driver_version(&self) -> Result<String, NvmlError> {
+        let sym = nvml_sym(self.lib.nvmlSystemGetDriverVersion.as_ref())?;
+
         unsafe {
             let mut version_vec = vec![0; NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE as usize];
 
-            nvml_try(nvmlSystemGetDriverVersion(
+            nvml_try(sym(
                 version_vec.as_mut_ptr(),
                 NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE,
             ))?;
@@ -350,10 +383,12 @@ impl NVML {
     // Checked against local
     // Tested
     pub fn sys_nvml_version(&self) -> Result<String, NvmlError> {
+        let sym = nvml_sym(self.lib.nvmlSystemGetNVMLVersion.as_ref())?;
+
         unsafe {
             let mut version_vec = vec![0; NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE as usize];
 
-            nvml_try(nvmlSystemGetNVMLVersion(
+            nvml_try(sym(
                 version_vec.as_mut_ptr(),
                 NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE,
             ))?;
@@ -378,9 +413,11 @@ impl NVML {
     * `LibraryNotFound`, if libcuda.so.1 or libcuda.dll cannot be found
     */
     pub fn sys_cuda_driver_version(&self) -> Result<i32, NvmlError> {
+        let sym = nvml_sym(self.lib.nvmlSystemGetCudaDriverVersion_v2.as_ref())?;
+
         unsafe {
             let mut version: c_int = mem::zeroed();
-            nvml_try(nvmlSystemGetCudaDriverVersion_v2(&mut version))?;
+            nvml_try(sym(&mut version))?;
 
             Ok(version)
         }
@@ -404,14 +441,12 @@ impl NVML {
     // Checked against local
     // Tested
     pub fn sys_process_name(&self, pid: u32, length: usize) -> Result<String, NvmlError> {
+        let sym = nvml_sym(self.lib.nvmlSystemGetProcessName.as_ref())?;
+
         unsafe {
             let mut name_vec = vec![0; length];
 
-            nvml_try(nvmlSystemGetProcessName(
-                pid,
-                name_vec.as_mut_ptr(),
-                length as c_uint,
-            ))?;
+            nvml_try(sym(pid, name_vec.as_mut_ptr(), length as c_uint))?;
 
             let name_raw = CStr::from_ptr(name_vec.as_ptr());
             Ok(name_raw.to_str()?.into())
@@ -450,11 +485,13 @@ impl NVML {
     // Checked against local
     // Tested
     pub fn device_by_index(&self, index: u32) -> Result<Device, NvmlError> {
+        let sym = nvml_sym(self.lib.nvmlDeviceGetHandleByIndex_v2.as_ref())?;
+
         unsafe {
             let mut device: nvmlDevice_t = mem::zeroed();
-            nvml_try(nvmlDeviceGetHandleByIndex_v2(index, &mut device))?;
+            nvml_try(sym(index, &mut device))?;
 
-            Ok(device.into())
+            Ok(Device::new(device, self))
         }
     }
 
@@ -484,16 +521,15 @@ impl NVML {
     where
         Vec<u8>: From<S>,
     {
+        let sym = nvml_sym(self.lib.nvmlDeviceGetHandleByPciBusId_v2.as_ref())?;
+
         unsafe {
             let c_string = CString::new(pci_bus_id)?;
             let mut device: nvmlDevice_t = mem::zeroed();
 
-            nvml_try(nvmlDeviceGetHandleByPciBusId_v2(
-                c_string.as_ptr(),
-                &mut device,
-            ))?;
+            nvml_try(sym(c_string.as_ptr(), &mut device))?;
 
-            Ok(device.into())
+            Ok(Device::new(device, self))
         }
     }
 
@@ -505,13 +541,15 @@ impl NVML {
     where
         Vec<u8>: From<S>,
     {
+        let sym = nvml_sym(self.lib.nvmlDeviceGetHandleBySerial.as_ref())?;
+
         unsafe {
             let c_string = CString::new(board_serial)?;
             let mut device: nvmlDevice_t = mem::zeroed();
 
-            nvml_try(nvmlDeviceGetHandleBySerial(c_string.as_ptr(), &mut device))?;
+            nvml_try(sym(c_string.as_ptr(), &mut device))?;
 
-            Ok(device.into())
+            Ok(Device::new(device, self))
         }
     }
 
@@ -541,13 +579,15 @@ impl NVML {
     where
         Vec<u8>: From<S>,
     {
+        let sym = nvml_sym(self.lib.nvmlDeviceGetHandleByUUID.as_ref())?;
+
         unsafe {
             let c_string = CString::new(uuid)?;
             let mut device: nvmlDevice_t = mem::zeroed();
 
-            nvml_try(nvmlDeviceGetHandleByUUID(c_string.as_ptr(), &mut device))?;
+            nvml_try(sym(c_string.as_ptr(), &mut device))?;
 
-            Ok(device.into())
+            Ok(Device::new(device, self))
         }
     }
 
@@ -575,14 +615,12 @@ impl NVML {
         device1: &Device,
         device2: &Device,
     ) -> Result<TopologyLevel, NvmlError> {
+        let sym = nvml_sym(self.lib.nvmlDeviceGetTopologyCommonAncestor.as_ref())?;
+
         unsafe {
             let mut level: nvmlGpuTopologyLevel_t = mem::zeroed();
 
-            nvml_try(nvmlDeviceGetTopologyCommonAncestor(
-                device1.handle(),
-                device2.handle(),
-                &mut level,
-            ))?;
+            nvml_try(sym(device1.handle(), device2.handle(), &mut level))?;
 
             Ok(TopologyLevel::try_from(level)?)
         }
@@ -611,11 +649,13 @@ impl NVML {
     // Checked against local
     // Tested (for an error)
     pub fn unit_by_index(&self, index: u32) -> Result<Unit, NvmlError> {
+        let sym = nvml_sym(self.lib.nvmlUnitGetHandleByIndex.as_ref())?;
+
         unsafe {
             let mut unit: nvmlUnit_t = mem::zeroed();
-            nvml_try(nvmlUnitGetHandleByIndex(index as c_uint, &mut unit))?;
+            nvml_try(sym(index as c_uint, &mut unit))?;
 
-            Ok(unit.into())
+            Ok(Unit::new(unit, self))
         }
     }
 
@@ -639,14 +679,12 @@ impl NVML {
         device1: &Device,
         device2: &Device,
     ) -> Result<bool, NvmlError> {
+        let sym = nvml_sym(self.lib.nvmlDeviceOnSameBoard.as_ref())?;
+
         unsafe {
             let mut bool_int: c_int = mem::zeroed();
 
-            nvml_try(nvmlDeviceOnSameBoard(
-                device1.handle(),
-                device2.handle(),
-                &mut bool_int,
-            ))?;
+            nvml_try(sym(device1.handle(), device2.handle(), &mut bool_int))?;
 
             match bool_int {
                 0 => Ok(false),
@@ -671,6 +709,8 @@ impl NVML {
     // Tested
     #[cfg(target_os = "linux")]
     pub fn topology_gpu_set(&self, cpu_number: u32) -> Result<Vec<Device>, NvmlError> {
+        let sym = nvml_sym(self.lib.nvmlSystemGetTopologyGpuSet.as_ref())?;
+
         unsafe {
             let mut count = match self.topology_gpu_set_count(cpu_number)? {
                 0 => return Ok(vec![]),
@@ -678,29 +718,23 @@ impl NVML {
             };
             let mut devices: Vec<nvmlDevice_t> = vec![mem::zeroed(); count as usize];
 
-            nvml_try(nvmlSystemGetTopologyGpuSet(
-                cpu_number,
-                &mut count,
-                devices.as_mut_ptr(),
-            ))?;
+            nvml_try(sym(cpu_number, &mut count, devices.as_mut_ptr()))?;
 
-            Ok(devices.into_iter().map(Device::from).collect())
+            Ok(devices.into_iter().map(|d| Device::new(d, self)).collect())
         }
     }
 
     // Helper function for the above.
     #[cfg(target_os = "linux")]
     fn topology_gpu_set_count(&self, cpu_number: u32) -> Result<c_uint, NvmlError> {
+        let sym = nvml_sym(self.lib.nvmlSystemGetTopologyGpuSet.as_ref())?;
+
         unsafe {
             // Indicates that we want the count
             let mut count: c_uint = 0;
 
             // Passing null doesn't indicate that we want the count, just allowed
-            nvml_try(nvmlSystemGetTopologyGpuSet(
-                cpu_number,
-                &mut count,
-                ptr::null_mut(),
-            ))?;
+            nvml_try(sym(cpu_number, &mut count, ptr::null_mut()))?;
 
             Ok(count)
         }
@@ -720,6 +754,8 @@ impl NVML {
     // Checked against local
     // Tested
     pub fn hic_versions(&self) -> Result<Vec<HwbcEntry>, NvmlError> {
+        let sym = nvml_sym(self.lib.nvmlSystemGetHicVersion.as_ref())?;
+
         unsafe {
             let mut count: c_uint = match self.hic_count()? {
                 0 => return Ok(vec![]),
@@ -727,7 +763,7 @@ impl NVML {
             };
             let mut hics: Vec<nvmlHwbcEntry_t> = vec![mem::zeroed(); count as usize];
 
-            nvml_try(nvmlSystemGetHicVersion(&mut count, hics.as_mut_ptr()))?;
+            nvml_try(sym(&mut count, hics.as_mut_ptr()))?;
 
             hics.into_iter().map(HwbcEntry::try_from).collect()
         }
@@ -746,6 +782,8 @@ impl NVML {
     */
     // Tested as part of the above method
     pub fn hic_count(&self) -> Result<u32, NvmlError> {
+        let sym = nvml_sym(self.lib.nvmlSystemGetHicVersion.as_ref())?;
+
         unsafe {
             /*
             NVIDIA doesn't even say that `count` will be set to the count if
@@ -763,7 +801,7 @@ impl NVML {
             let mut count: c_uint = 1;
             let mut hics: [nvmlHwbcEntry_t; 1] = [mem::zeroed()];
 
-            match nvmlSystemGetHicVersion(&mut count, hics.as_mut_ptr()) {
+            match sym(&mut count, hics.as_mut_ptr()) {
                 nvmlReturn_enum_NVML_SUCCESS | nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => {
                     Ok(count)
                 }
@@ -788,9 +826,11 @@ impl NVML {
     // Checked against local
     // Tested
     pub fn unit_count(&self) -> Result<u32, NvmlError> {
+        let sym = nvml_sym(self.lib.nvmlUnitGetCount.as_ref())?;
+
         unsafe {
             let mut count: c_uint = mem::zeroed();
-            nvml_try(nvmlUnitGetCount(&mut count))?;
+            nvml_try(sym(&mut count))?;
 
             Ok(count)
         }
@@ -811,11 +851,13 @@ impl NVML {
     // Checked against local
     // Tested
     pub fn create_event_set(&self) -> Result<EventSet, NvmlError> {
+        let sym = nvml_sym(self.lib.nvmlEventSetCreate.as_ref())?;
+
         unsafe {
             let mut set: nvmlEventSet_t = mem::zeroed();
-            nvml_try(nvmlEventSetCreate(&mut set))?;
+            nvml_try(sym(&mut set))?;
 
-            Ok(set.into())
+            Ok(EventSet::new(set, self))
         }
     }
 
@@ -863,7 +905,9 @@ impl NVML {
     // Tested
     #[cfg(target_os = "linux")]
     pub fn discover_gpus(&self, pci_info: PciInfo) -> Result<(), NvmlError> {
-        unsafe { nvml_try(nvmlDeviceDiscoverGpus(&mut pci_info.try_into()?)) }
+        let sym = nvml_sym(self.lib.nvmlDeviceDiscoverGpus.as_ref())?;
+
+        unsafe { nvml_try(sym(&mut pci_info.try_into()?)) }
     }
 
     /**
@@ -874,10 +918,12 @@ impl NVML {
     Supports all devices.
     */
     pub fn blacklist_device_count(&self) -> Result<u32, NvmlError> {
+        let sym = nvml_sym(self.lib.nvmlGetBlacklistDeviceCount.as_ref())?;
+
         unsafe {
             let mut count: c_uint = mem::zeroed();
 
-            nvml_try(nvmlGetBlacklistDeviceCount(&mut count))?;
+            nvml_try(sym(&mut count))?;
             Ok(count)
         }
     }
@@ -895,10 +941,12 @@ impl NVML {
     Supports all devices.
     */
     pub fn blacklist_device_info(&self, index: u32) -> Result<BlacklistDeviceInfo, NvmlError> {
+        let sym = nvml_sym(self.lib.nvmlGetBlacklistDeviceInfoByIndex.as_ref())?;
+
         unsafe {
             let mut info: nvmlBlacklistDeviceInfo_t = mem::zeroed();
 
-            nvml_try(nvmlGetBlacklistDeviceInfoByIndex(index, &mut info))?;
+            nvml_try(sym(index, &mut info))?;
             Ok(BlacklistDeviceInfo::try_from(info)?)
         }
     }
@@ -909,21 +957,11 @@ impl NVML {
 /// if you care about handling them.
 impl Drop for NVML {
     fn drop(&mut self) {
-        #[allow(unused_must_use)]
         unsafe {
-            match nvml_try(nvmlShutdown()) {
-                Ok(()) => (),
-                Err(e) => {
-                    io::stderr().write(
-                        format!(
-                            "WARNING: Error returned by `nmvlShutdown()` in Drop implementation: \
-                             {:?}",
-                            e
-                        )
-                        .as_bytes(),
-                    );
-                }
-            }
+            self.lib.nvmlShutdown();
+
+            // SAFETY: called after the last usage of `self.lib`
+            ManuallyDrop::drop(&mut self.lib);
         }
     }
 }

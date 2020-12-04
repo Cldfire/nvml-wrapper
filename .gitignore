@@ -1,9 +1,7 @@
 target
 rls
 Cargo.lock
-nvml-9.2.h
-nvml-10.0.h
-nvml-10.1.h
-nvml_copy.h
+nvml-11.h
+genned_bindings.rs
 .idea
 .vscode
