@@ -2948,12 +2948,12 @@ impl<'nvml> Device<'nvml> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetUUID.as_ref())?;
 
         unsafe {
-            let mut uuid_vec = vec![0; NVML_DEVICE_UUID_BUFFER_SIZE as usize];
+            let mut uuid_vec = vec![0; NVML_DEVICE_UUID_V2_BUFFER_SIZE as usize];
 
             nvml_try(sym(
                 self.device,
                 uuid_vec.as_mut_ptr(),
-                NVML_DEVICE_UUID_BUFFER_SIZE,
+                NVML_DEVICE_UUID_V2_BUFFER_SIZE,
             ))?;
 
             let uuid_raw = CStr::from_ptr(uuid_vec.as_ptr());
