@@ -5,10 +5,9 @@
 [![Crates.io downloads](https://img.shields.io/crates/d/nvml-wrapper.svg?style=flat-square)](https://crates.io/crates/nvml-wrapper)
 ![CI](https://github.com/Cldfire/nvml-wrapper/workflows/CI/badge.svg)
 
-A safe and ergonomic Rust wrapper for the
-[NVIDIA Management Library](https://developer.nvidia.com/nvidia-management-library-nvml)
-(NVML), a C-based programmatic interface for monitoring and managing various states within
-NVIDIA (primarily Tesla) GPUs.
+A safe and ergonomic Rust wrapper for the [NVIDIA Management Library][nvml] (NVML),
+a C-based programmatic interface for monitoring and managing various states within
+NVIDIA GPUs.
 
 ```rust
 extern crate nvml_wrapper as nvml;
@@ -30,38 +29,32 @@ let memory_info = device.memory_info()?; // Currently 1.63/6.37 GB used on my sy
 NVML is intended to be a platform for building 3rd-party applications, and is
 also the underlying library for NVIDIA's nvidia-smi tool.
 
-## Compilation
+## Usage
 
-The NVML library comes with the NVIDIA drivers and is essentially present on any
-system with a functioning NVIDIA graphics card. The compilation steps vary
-between Windows and Linux, however.
+`nvml-wrapper` builds on top of generated bindings for NVML that make use of the
+[`libloading`][libloading] crate. This means the NVML library gets loaded upon
+calling `NVML::init` and can return an error if NVML isn't present, making it
+possible to drop NVIDIA-related features in your code at runtime on systems that
+don't have relevant hardware.
 
-### Windows
+Successful execution of `NVML::init` means:
 
-I have been able to successfully compile and run this wrapper's tests using
-both the GNU and MSVC toolchains. An import library (`nvml.lib`) is included for
-compilation with the MSVC toolchain.
+* The NVML library was present on the system and able to be opened
+* The function symbol to initialize NVML was loaded and called successfully
+* An attempt has been made to load all other NVML function symbols
 
-The NVML library dll can be found at `%ProgramW6432%\NVIDIA Corporation\NVSMI\`
-(which is `C:\Program Files\NVIDIA Corporation\NVSMI\` on my machine). I had to add
-this folder to my `PATH` or place a copy of the dll in the same folder as the executable
-in order to have everything work properly at runtime with the GNU toolchain. You may
-need to do the same; I'm not sure if the MSVC toolchain needs this step or not.
+Every function you call thereafter will individually return an error if it couldn't
+be loaded from the NVML library during the `NVML::init` call.
 
-### Linux
-
-The NVML library can be found at `/usr/lib/nvidia-<driver-version>/libnvidia-ml.so`;
-on my system with driver version 375.51 installed, this puts the library at
-`/usr/lib/nvidia-375/libnvidia-ml.so`.
-
-The `sys` crates' build script will automatically add the appropriate directory to
-the paths searched for the library, so you shouldn't have to do anything manually
-in theory.
+Note that it's not advised to repeatedly call `NVML::init` as the constructor
+has to perform all the work of loading the function symbols from the library
+each time it gets called. Instead, call `NVML::init` once and store the resulting
+`NVML` instance somewhere to be accessed throughout the lifetime of your program.
 
 ## NVML Support
 
 This wrapper is being developed against and currently supports NVML version
-10.1. Each new version of NVML is guaranteed to be backwards-compatible according
+11. Each new version of NVML is guaranteed to be backwards-compatible according
 to NVIDIA, so this wrapper should continue to work without issue regardless of
 NVML version bumps.
 
@@ -89,3 +82,6 @@ Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in this crate by you, as defined in the Apache-2.0 license, shall
 be dual licensed as above, without any additional terms or conditions.
 </sub>
+
+[nvml]: https://developer.nvidia.com/nvidia-management-library-nvml
+[libloading]: https://github.com/nagisa/rust_libloading

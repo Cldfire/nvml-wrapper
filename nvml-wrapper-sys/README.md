@@ -4,9 +4,8 @@
 [![Crates.io downloads](https://img.shields.io/crates/d/nvml-wrapper-sys.svg?style=flat-square)](https://crates.io/crates/nvml-wrapper-sys)
 [![Docs.rs docs](https://docs.rs/nvml-wrapper-sys/badge.svg)](https://docs.rs/nvml-wrapper-sys)
 
-Rust bindings for the
-[NVIDIA Management Library][nvml] (NVML), a C-based programmatic interface for monitoring
-and managing various states within NVIDIA (primarily Tesla) GPUs.
+Rust bindings for the [NVIDIA Management Library][nvml] (NVML), a C-based programmatic
+interface for monitoring and managing various states within NVIDIA GPUs.
 
 It is intended to be a platform for building 3rd-party applications, and is also the
 underlying library for NVIDIA's nvidia-smi tool.
