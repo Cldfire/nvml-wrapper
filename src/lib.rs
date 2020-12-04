@@ -317,10 +317,9 @@ impl NVML {
         // SAFETY: we `mem::forget(self)` after this, so `self.lib` won't get
         // touched by our `Drop` impl
         let lib = unsafe { ManuallyDrop::take(&mut self.lib) };
-        lib.__library.close()?;
-
         mem::forget(self);
-        Ok(())
+
+        Ok(lib.__library.close()?)
     }
 
     /**
