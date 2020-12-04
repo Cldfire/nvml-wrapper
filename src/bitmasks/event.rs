@@ -32,5 +32,9 @@ bitflags! {
         const CRITICAL_XID_ERROR    = nvmlEventTypeXidCriticalError as u64;
         /// Only supports the Kepler architecture.
         const CLOCK_CHANGE          = nvmlEventTypeClock as u64;
+        /// Power source change event (battery vs. AC power).
+        const POWER_SOURCE_CHANGE   = nvmlEventTypePowerSourceChange as u64;
+        /// MIG configuration changes.
+        const MIG_CONFIG_CHANGE     = nvmlEventMigConfigChange as u64;
     }
 }
