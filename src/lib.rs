@@ -171,7 +171,6 @@ should ideally read the doc comments on an up-to-date NVML API header. Such a he
 downloaded as part of the [CUDA toolkit](https://developer.nvidia.com/cuda-downloads).
 */
 // TODO: this should be named `Nvml`
-// TODO: provide a way to initialize with a user-provided lib path
 pub struct NVML {
     lib: ManuallyDrop<NvmlLib>,
 }

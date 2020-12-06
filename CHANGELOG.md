@@ -2,9 +2,9 @@
 
 This file describes the changes / additions / fixes between wrapper releases.
 
-## Unreleased
+## [Unreleased]
 
-## 0.6.0 (released 2020-06-15)
+## [0.6.0] (released 2020-06-15)
 
 ### Release Summary
 
@@ -36,7 +36,7 @@ The MSRV of this release is 1.42.0.
 * `thiserror`: new dependency on `1.0.x`
 * `error-chain`: no longer a dependency
 
-## 0.5.0 (released 2019-09-10)
+## [0.5.0] (released 2019-09-10)
 
 ### Release Summary
 
@@ -153,7 +153,7 @@ A long time in the works, 0.5.0 contains the last two years of my extremely spor
 
 * `error-chain`: `0.11.x -> 0.12.x`
 
-## 0.4.1 (released 2019-04-08)
+## [0.4.1] (released 2019-04-08)
 
 ### Release Summary
 
@@ -163,7 +163,7 @@ The version was bumped in order to update the readme with the new information on
 
 * Attempting to compile the library on macOS will now result in an informative error
 
-## 0.4.0 (released 2017-09-28)
+## [0.4.0] (released 2017-09-28)
 
 ### Release Summary
 
@@ -195,7 +195,7 @@ This release **requires** and supports **Rust 1.20.0** or higher.
 * `bitflags`: `0.9.x -> 1.0.x`
 * `error-chain`: `0.10.x -> 0.11.x`
 
-## 0.3.0 (released 2017-07-20)
+## [0.3.0] (released 2017-07-20)
 
 ### Release Summary
 
@@ -242,7 +242,7 @@ This release **requires** and supports **Rust 1.19.0** or higher.
 
 * Markdown headers now have two newlines after them, which is (to my knowledge) how they are supposed to be formatted.
 
-## 0.2.0 (released 2017-06-08)
+## [0.2.0] (released 2017-06-08)
 
 ### Release Summary
 
@@ -316,7 +316,7 @@ This release **requires** and supports **Rust 1.18.0** or higher.
 
 * `bitflags`: `0.8.x -> 0.9.x`
 
-## 0.1.0 (released 2017-05-17)
+## [0.1.0] (released 2017-05-17)
 
 ### Release Summary
 
@@ -325,3 +325,12 @@ Initial release wrapping the majority of the NVML API surface.
 ### Rust Version Support
 
 This release **requires** and supports **Rust 1.17.0** or higher.
+
+[Unreleased]: https://github.com/Cldfire/nvml-wrapper/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/Cldfire/nvml-wrapper/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/Cldfire/nvml-wrapper/compare/v0.4.1...v0.5.0
+[0.4.1]: https://github.com/Cldfire/nvml-wrapper/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/Cldfire/nvml-wrapper/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/Cldfire/nvml-wrapper/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/Cldfire/nvml-wrapper/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/Cldfire/nvml-wrapper/releases/tag/v0.1.0
