@@ -1,8 +1,65 @@
 # nvml-wrapper Changelog
 
-This file describes the changes / additions / fixes between wrapper releases.
+This file describes the changes / additions / fixes between wrapper releases, tracked in a loose version of the [keep a changelog](https://keepachangelog.com/en/1.0.0/) format.
 
 ## [Unreleased]
+
+## [0.7.0] (released ?)
+
+### Release Summary
+
+Dynamically loading the NVML library at runtime is here! Thanks to a [new bindgen feature](https://github.com/rust-lang/rust-bindgen/pull/1846) that landed recently, `nvml-wrapper-sys` now has regenerated bindings that make use of [the `libloading` crate](https://github.com/nagisa/rust_libloading) and don't require linking to NVML at compile-time.
+
+This means it's now possible to drop NVIDIA-related features in your code at runtime on systems that don't have relevant hardware.
+
+### Rust Version Support
+
+The MSRV of this release is 1.42.0.
+
+### Added
+
+* `NVML` struct:
+  * Added methods:
+    * `builder`
+* `NvmlBuilder` struct
+  * A builder struct that provides further flexibility in how NVML is initialized
+* `bitmasks`
+  * Added events:
+    * `POWER_SOURCE_CHANGE`
+    * `MIG_CONFIG_CHANGE`
+  * Added init flags:
+    * `NO_ATTACH`
+* `Device` struct:
+  * Added methods:
+    * `new` (replaces the `From<nvmlDevice_t>` impl)
+    * `nvml`
+* `EventSet` struct:
+  * Added methods:
+    * `new` (replaces the `From<nvmlEventSet_t>` impl)
+* `EventData` struct:
+  * Added methods:
+    * `new` (replaces the `From<nvmlEventData_t>` impl)
+* `Unit` struct:
+  * Added methods:
+    * `new` (replaces the `From<nvmlUnit_t>` impl)
+    * `nvml`
+* `NvmlError`
+  * Added variants:
+    * `LibloadingError`
+    * `FailedToLoadSymbol`
+
+### Changed
+
+* `InitFlags` now implements `Default`
+* `NvmlError` and `NvmlErrorWithSource` no longer implement `Clone`, `Eq`, or `PartialEq`
+  * They can no longer implement these traits because `libloading::Error` doesn't implement them
+  * As a result of this change, `FieldValueSample` no longer implements `Clone` or `PartialEq`
+* `NvmlError::UnexpectedVariant` now contains a `u32` instead of an `i32` due to a change in the generated bindings types
+
+### Dependencies
+
+* `libloading`: new dependency on `0.6.6`
+* `static_assertions`: new dependency on `1.1.x`
 
 ## [0.6.0] (released 2020-06-15)
 
@@ -326,7 +383,8 @@ Initial release wrapping the majority of the NVML API surface.
 
 This release **requires** and supports **Rust 1.17.0** or higher.
 
-[Unreleased]: https://github.com/Cldfire/nvml-wrapper/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/Cldfire/nvml-wrapper/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/Cldfire/nvml-wrapper/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/Cldfire/nvml-wrapper/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/Cldfire/nvml-wrapper/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/Cldfire/nvml-wrapper/compare/v0.4.0...v0.4.1

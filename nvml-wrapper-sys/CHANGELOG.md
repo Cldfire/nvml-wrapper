@@ -4,6 +4,22 @@ This file describes the changes / additions / fixes between bindings releases.
 
 ## Unreleased
 
+## 0.5.0 (released ?)
+
+### Release Summary
+
+The NVML bindings have been regenerated using the [new dynamic loading bindgen feature](https://github.com/rust-lang/rust-bindgen/pull/1846) and for NVML 11. This means that this crate no longer needs to link to the NVML library at buildtime.
+
+These bindings form a thin wrapper over [the `libloading` crate](https://github.com/nagisa/rust_libloading).
+
+### Removed
+
+* The `nvml.lib` import library has been removed from the crate as it is no longer needed now that NVML is loaded dynamically at runtime on Windows
+
+### Dependencies
+
+* `libloading`: new dependency on `0.6.6`
+
 ## 0.4.2 (released 2020-06-15)
 
 ### Release Summary
