@@ -103,15 +103,15 @@ pub mod sys_exports {
 }
 
 #[cfg(target_os = "linux")]
+use std::convert::TryInto;
+#[cfg(target_os = "linux")]
 use std::ptr;
 use std::{
     convert::TryFrom,
-    ffi::{CStr, CString},
+    ffi::{CStr, CString, OsStr},
     mem::{self, ManuallyDrop},
     os::raw::{c_int, c_uint},
 };
-#[cfg(target_os = "linux")]
-use std::{convert::TryInto, ffi::OsStr};
 
 use static_assertions::assert_impl_all;
 
