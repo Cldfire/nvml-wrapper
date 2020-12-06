@@ -239,12 +239,13 @@ impl NVML {
 
     # fn main() -> Result<(), NvmlError> {
     // Don't fail if the system doesn't have any NVIDIA GPUs
-    NVML::init_with_flags(InitFlags::NO_GPUS)?;
+    //
+    // Also, don't attach any GPUs during initialization
+    NVML::init_with_flags(InitFlags::NO_GPUS | InitFlags::NO_ATTACH)?;
     # Ok(())
     # }
     ```
     */
-    // TODO: Example of using multiple flags when multiple flags exist
     pub fn init_with_flags(flags: InitFlags) -> Result<Self, NvmlError> {
         let lib = unsafe {
             let lib = NvmlLib::new(LIB_PATH)?;

@@ -23,5 +23,7 @@ bitflags! {
     pub struct InitFlags: u32 {
         /// Don't fail to initialize when no NVIDIA GPUs are found.
         const NO_GPUS = NVML_INIT_FLAG_NO_GPUS;
+        /// Don't attach GPUs during initialization.
+        const NO_ATTACH = NVML_INIT_FLAG_NO_ATTACH;
     }
 }
