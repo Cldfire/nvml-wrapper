@@ -14,19 +14,32 @@ Struct that represents a unit.
 Obtain a `Unit` with the various methods available to you on the `NVML`
 struct.
 
-I don't know what a unit is, but inferring from the docs leads me to believe
-it's some kind of high-end something-or-other that 99% of users won't know
-about either. That being said, I'm wrapping this whole library, so here you go.
+Lifetimes are used to enforce that each `Unit` instance cannot be used after
+the `NVML` instance it was obtained from is dropped:
 
-Rust's lifetimes will ensure that the NVML instance this `Unit` was created from
-is not allowed to be shutdown until this `Unit` is dropped, meaning you shouldn't
-have to worry about calls returning `Uninitialized` errors.
+```compile_fail
+use nvml_wrapper::NVML;
+# use nvml_wrapper::error::*;
+
+# fn main() -> Result<(), NvmlError> {
+let nvml = NVML::init()?;
+let unit = nvml.unit_by_index(0)?;
+
+drop(nvml);
+
+// This won't compile
+let unit_devices = unit.devices()?;
+# Ok(())
+# }
+```
+
+Note that I cannot test any `Unit` methods myself as I do not have access to
+such hardware. **Test the functionality in this module before you use it**.
 */
-// TODO: Use compiletest to ensure lifetime guarantees
 #[derive(Debug)]
 pub struct Unit<'nvml> {
     unit: nvmlUnit_t,
-    pub nvml: &'nvml NVML,
+    nvml: &'nvml NVML,
 }
 
 unsafe impl<'nvml> Send for Unit<'nvml> {}
@@ -46,6 +59,22 @@ impl<'nvml> Unit<'nvml> {
     */
     pub unsafe fn new(unit: nvmlUnit_t, nvml: &'nvml NVML) -> Self {
         Self { unit, nvml }
+    }
+
+    /// Access the `NVML` reference this struct wraps
+    pub fn nvml(&self) -> &'nvml NVML {
+        self.nvml
+    }
+
+    /// Get the raw unit handle contained in this struct
+    ///
+    /// Sometimes necessary for C interop.
+    ///
+    /// # Safety
+    ///
+    /// This is unsafe to prevent it from being used without care.
+    pub unsafe fn handle(&self) -> nvmlUnit_t {
+        self.unit
     }
 
     /**
@@ -304,17 +333,6 @@ impl<'nvml> Unit<'nvml> {
         let sym = nvml_sym(self.nvml.lib.nvmlUnitSetLedState.as_ref())?;
 
         unsafe { nvml_try(sym(self.unit, color.as_c())) }
-    }
-
-    /// Get the raw unit handle contained in this struct
-    ///
-    /// Sometimes necessary for C interop.
-    ///
-    /// # Safety
-    ///
-    /// This is unsafe to prevent it from being used without care.
-    pub unsafe fn handle(&self) -> nvmlUnit_t {
-        self.unit
     }
 }
 

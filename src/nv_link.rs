@@ -25,9 +25,25 @@ Struct that represents a `Device`'s NvLink.
 
 Obtain this via `Device.link_wrapper_for()`.
 
-Rust's lifetimes will ensure both that the contained `Device` is valid for the
-lifetime of the `NvLink` struct and that the `NVML` instance will be valid for
-the duration of both.
+Lifetimes are used to enforce that each `NvLink` instance cannot be used after
+the `Device` instance it was obtained from is dropped:
+
+```compile_fail
+use nvml_wrapper::NVML;
+# use nvml_wrapper::error::*;
+
+# fn main() -> Result<(), NvmlError> {
+let nvml = NVML::init()?;
+let device = nvml.device_by_index(0)?;
+let link = device.link_wrapper_for(0);
+
+drop(device);
+
+// This won't compile
+link.is_active()?;
+# Ok(())
+# }
+```
 
 Note that I cannot test any `NvLink` methods myself as I do not have access to
 such a link setup. **Test the functionality in this module before you use it**.
@@ -67,7 +83,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     */
     // Test written
     pub fn is_active(&self) -> Result<bool, NvmlError> {
-        let sym = nvml_sym(self.device.nvml.lib.nvmlDeviceGetNvLinkState.as_ref())?;
+        let sym = nvml_sym(self.device.nvml().lib.nvmlDeviceGetNvLinkState.as_ref())?;
 
         unsafe {
             let mut state: nvmlEnableState_t = mem::zeroed();
@@ -95,7 +111,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     */
     // Test written
     pub fn version(&self) -> Result<u32, NvmlError> {
-        let sym = nvml_sym(self.device.nvml.lib.nvmlDeviceGetNvLinkVersion.as_ref())?;
+        let sym = nvml_sym(self.device.nvml().lib.nvmlDeviceGetNvLinkVersion.as_ref())?;
 
         unsafe {
             let mut version: c_uint = mem::zeroed();
@@ -123,7 +139,13 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     */
     // Test written
     pub fn has_capability(&self, cap_type: Capability) -> Result<bool, NvmlError> {
-        let sym = nvml_sym(self.device.nvml.lib.nvmlDeviceGetNvLinkCapability.as_ref())?;
+        let sym = nvml_sym(
+            self.device
+                .nvml()
+                .lib
+                .nvmlDeviceGetNvLinkCapability
+                .as_ref(),
+        )?;
 
         unsafe {
             // NVIDIA says that this should be interpreted as a boolean
@@ -163,7 +185,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     pub fn remote_pci_info(&self) -> Result<PciInfo, NvmlError> {
         let sym = nvml_sym(
             self.device
-                .nvml
+                .nvml()
                 .lib
                 .nvmlDeviceGetNvLinkRemotePciInfo_v2
                 .as_ref(),
@@ -197,7 +219,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     pub fn error_counter(&self, counter: ErrorCounter) -> Result<u64, NvmlError> {
         let sym = nvml_sym(
             self.device
-                .nvml
+                .nvml()
                 .lib
                 .nvmlDeviceGetNvLinkErrorCounter
                 .as_ref(),
@@ -236,7 +258,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     pub fn reset_error_counters(&mut self) -> Result<(), NvmlError> {
         let sym = nvml_sym(
             self.device
-                .nvml
+                .nvml()
                 .lib
                 .nvmlDeviceResetNvLinkErrorCounters
                 .as_ref(),
@@ -274,7 +296,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
         let sym = nvml_sym(
             self.device
-                .nvml
+                .nvml()
                 .lib
                 .nvmlDeviceSetNvLinkUtilizationControl
                 .as_ref(),
@@ -311,7 +333,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     pub fn utilization_control(&self, counter: Counter) -> Result<UtilizationControl, NvmlError> {
         let sym = nvml_sym(
             self.device
-                .nvml
+                .nvml()
                 .lib
                 .nvmlDeviceGetNvLinkUtilizationControl
                 .as_ref(),
@@ -367,7 +389,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     pub fn utilization_counter(&self, counter: Counter) -> Result<UtilizationCounter, NvmlError> {
         let sym = nvml_sym(
             self.device
-                .nvml
+                .nvml()
                 .lib
                 .nvmlDeviceGetNvLinkUtilizationCounter
                 .as_ref(),
@@ -442,7 +464,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     ) -> Result<(), NvmlError> {
         let sym = nvml_sym(
             self.device
-                .nvml
+                .nvml()
                 .lib
                 .nvmlDeviceFreezeNvLinkUtilizationCounter
                 .as_ref(),
@@ -480,7 +502,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     pub fn reset_utilization_counter(&mut self, counter: Counter) -> Result<(), NvmlError> {
         let sym = nvml_sym(
             self.device
-                .nvml
+                .nvml()
                 .lib
                 .nvmlDeviceResetNvLinkUtilizationCounter
                 .as_ref(),

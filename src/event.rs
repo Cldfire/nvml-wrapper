@@ -2,10 +2,7 @@ use crate::error::{nvml_sym, nvml_try, NvmlError};
 use crate::ffi::bindings::*;
 use crate::NVML;
 
-use std::{
-    io::{self, Write},
-    mem,
-};
+use std::mem;
 
 use crate::struct_wrappers::event::EventData;
 
@@ -14,9 +11,26 @@ Handle to a set of events.
 
 **Operations on a set are not thread-safe.** It does not, therefore, implement `Sync`.
 
-You can get yourself an `EventSet` via `NVML.create_event_set()`. Once again, Rust's
-lifetimes will ensure that it does not outlive the `NVML` instance that it was created
-from.
+You can get yourself an `EventSet` via `NVML.create_event_set`.
+
+Lifetimes are used to enforce that each `EventSet` instance cannot be used after
+the `NVML` instance it was obtained from is dropped:
+
+```compile_fail
+use nvml_wrapper::NVML;
+# use nvml_wrapper::error::*;
+
+# fn main() -> Result<(), NvmlError> {
+let nvml = NVML::init()?;
+let event_set = nvml.create_event_set()?;
+
+drop(nvml);
+
+// This won't compile
+event_set.wait(5)?;
+# Ok(())
+# }
+```
 */
 // Checked against local
 #[derive(Debug)]
@@ -124,20 +138,7 @@ impl<'nvml> EventSet<'nvml> {
 impl<'nvml> Drop for EventSet<'nvml> {
     fn drop(&mut self) {
         unsafe {
-            #[allow(unused_must_use)]
-            match nvml_try(self.nvml.lib.nvmlEventSetFree(self.set)) {
-                Ok(()) => (),
-                Err(e) => {
-                    io::stderr().write(
-                        format!(
-                            "WARNING: Error returned by `nvmlEventSetFree()` in Drop \
-                             implementation: {:?}",
-                            e
-                        )
-                        .as_bytes(),
-                    );
-                }
-            }
+            self.nvml.lib.nvmlEventSetFree(self.set);
         }
     }
 }

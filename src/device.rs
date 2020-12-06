@@ -38,15 +38,32 @@ Struct that represents a device on the system.
 Obtain a `Device` with the various methods available to you on the `NVML`
 struct.
 
-Rust's lifetimes will ensure that the NVML instance this `Device` was created from is
-not allowed to be shutdown until this `Device` is dropped, meaning you shouldn't
-have to worry about calls returning `Uninitialized` errors.
+Lifetimes are used to enforce that each `Device` instance cannot be used after
+the `NVML` instance it was obtained from is dropped:
+
+```compile_fail
+use nvml_wrapper::NVML;
+# use nvml_wrapper::error::*;
+
+# fn main() -> Result<(), NvmlError> {
+let nvml = NVML::init()?;
+let device = nvml.device_by_index(0)?;
+
+drop(nvml);
+
+// This won't compile
+device.fan_speed(0)?;
+# Ok(())
+# }
+```
+
+This means you shouldn't have to worry about calls to `Device` methods returning
+`Uninitialized` errors.
 */
-// TODO: Use compiletest to ensure lifetime guarantees
 #[derive(Debug)]
 pub struct Device<'nvml> {
     device: nvmlDevice_t,
-    pub nvml: &'nvml NVML,
+    nvml: &'nvml NVML,
 }
 
 unsafe impl<'nvml> Send for Device<'nvml> {}
@@ -66,6 +83,22 @@ impl<'nvml> Device<'nvml> {
     */
     pub unsafe fn new(device: nvmlDevice_t, nvml: &'nvml NVML) -> Self {
         Self { device, nvml }
+    }
+
+    /// Access the `NVML` reference this struct wraps
+    pub fn nvml(&self) -> &'nvml NVML {
+        self.nvml
+    }
+
+    /// Get the raw device handle contained in this struct
+    ///
+    /// Sometimes necessary for C interop.
+    ///
+    /// # Safety
+    ///
+    /// This is unsafe to prevent it from being used without care.
+    pub unsafe fn handle(&self) -> nvmlDevice_t {
+        self.device
     }
 
     /**
@@ -4423,17 +4456,6 @@ impl<'nvml> Device<'nvml> {
     */
     pub fn link_wrapper_for(&self, link: u32) -> NvLink {
         NvLink { device: self, link }
-    }
-
-    /// Get the raw device handle contained in this struct
-    ///
-    /// Sometimes necessary for C interop.
-    ///
-    /// # Safety
-    ///
-    /// This is unsafe to prevent it from being used without care.
-    pub unsafe fn handle(&self) -> nvmlDevice_t {
-        self.device
     }
 }
 
