@@ -9,6 +9,8 @@ use crate::enum_wrappers::{
 use crate::enums::nv_link::Counter;
 use crate::error::{nvml_sym, nvml_try, NvmlError};
 use crate::ffi::bindings::*;
+use crate::struct_wrappers::{device::PciInfo, nv_link::UtilizationControl};
+use crate::structs::nv_link::UtilizationCounter;
 
 use std::{
     convert::TryFrom,
@@ -16,9 +18,7 @@ use std::{
     os::raw::{c_uint, c_ulonglong},
 };
 
-use crate::struct_wrappers::{device::PciInfo, nv_link::UtilizationControl};
-
-use crate::structs::nv_link::UtilizationCounter;
+use static_assertions::assert_impl_all;
 
 /**
 Struct that represents a `Device`'s NvLink.
@@ -53,6 +53,8 @@ pub struct NvLink<'device, 'nvml: 'device> {
     pub(crate) device: &'device Device<'nvml>,
     pub(crate) link: c_uint,
 }
+
+assert_impl_all!(NvLink: Send, Sync);
 
 impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     /// Obtain the `Device` reference stored within this struct.

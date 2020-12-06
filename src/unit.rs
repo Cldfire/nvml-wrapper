@@ -5,6 +5,7 @@ use crate::error::{nvml_sym, nvml_try, NvmlError};
 use crate::ffi::bindings::*;
 use crate::struct_wrappers::unit::{FansInfo, PsuInfo, UnitInfo};
 use crate::NVML;
+use static_assertions::assert_impl_all;
 use std::mem;
 use std::{convert::TryFrom, os::raw::c_uint};
 
@@ -44,6 +45,8 @@ pub struct Unit<'nvml> {
 
 unsafe impl<'nvml> Send for Unit<'nvml> {}
 unsafe impl<'nvml> Sync for Unit<'nvml> {}
+
+assert_impl_all!(Unit: Send, Sync);
 
 impl<'nvml> Unit<'nvml> {
     /**

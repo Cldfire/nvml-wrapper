@@ -113,6 +113,8 @@ use std::{
     os::raw::{c_int, c_uint},
 };
 
+use static_assertions::assert_impl_all;
+
 #[cfg(target_os = "linux")]
 use crate::enum_wrappers::device::TopologyLevel;
 
@@ -163,10 +165,10 @@ method on this struct. **The `Drop` implementation ignores errors.**
 
 When reading documentation on this struct and its members, remember that a lot of it,
 especially in regards to errors returned, is copied from NVIDIA's docs. While they can be found
-online [here](http://docs.nvidia.com/deploy/nvml-api/index.html), the hosted docs are outdated and
-do not accurately reflect the version of NVML that this library is written for; beware. You should
-ideally read the doc comments on an up-to-date NVML API header. Such a header can be downloaded
-as part of the [CUDA toolkit](https://developer.nvidia.com/cuda-downloads).
+online [here](http://docs.nvidia.com/deploy/nvml-api/index.html), the hosted docs sometimes outdated
+and may not accurately reflect the version of NVML that this library is written for; beware. You
+should ideally read the doc comments on an up-to-date NVML API header. Such a header can be
+downloaded as part of the [CUDA toolkit](https://developer.nvidia.com/cuda-downloads).
 */
 // TODO: this should be named `Nvml`
 // TODO: provide a way to initialize with a user-provided lib path
@@ -174,10 +176,7 @@ pub struct NVML {
     lib: ManuallyDrop<NvmlLib>,
 }
 
-// Here to clarify that NVML does have these traits. I know they are
-// implemented without this.
-unsafe impl Send for NVML {}
-unsafe impl Sync for NVML {}
+assert_impl_all!(NVML: Send, Sync);
 
 impl std::fmt::Debug for NVML {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -189,13 +188,11 @@ impl NVML {
     /**
     Handles NVML initialization and must be called before doing anything else.
 
-    This static function can be called multiple times and multiple NVML structs can be
-    used at the same time. NVIDIA's docs state that "A reference count of the number of
-    initializations is maintained. Shutdown only occurs when the reference count reaches
-    zero."
-
-    In practice, there should be no need to create multiple `NVML` structs; wrap this struct
-    in an `Arc` and go that route.
+    While it is possible to initialize `NVML` multiple times (NVIDIA's docs state
+    that reference counting is used internally), you should strive to initialize
+    `NVML` once at the start of your program's execution; the constructors handle
+    dynamically loading function symbols from the `NVML` lib and are therefore
+    somewhat expensive.
 
     Note that this will initialize NVML but not any GPUs. This means that NVML can
     communicate with a GPU even when other GPUs in a system are bad or unstable.
@@ -935,16 +932,6 @@ mod test {
     use crate::bitmasks::InitFlags;
     use crate::error::NvmlError;
     use crate::test_utils::*;
-
-    #[test]
-    fn nvml_is_send() {
-        assert_send::<NVML>()
-    }
-
-    #[test]
-    fn nvml_is_sync() {
-        assert_sync::<NVML>()
-    }
 
     #[test]
     fn init_with_flags() {

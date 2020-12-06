@@ -32,6 +32,8 @@ use std::{
     ptr,
 };
 
+use static_assertions::assert_impl_all;
+
 /**
 Struct that represents a device on the system.
 
@@ -68,6 +70,8 @@ pub struct Device<'nvml> {
 
 unsafe impl<'nvml> Send for Device<'nvml> {}
 unsafe impl<'nvml> Sync for Device<'nvml> {}
+
+assert_impl_all!(Device: Send, Sync);
 
 impl<'nvml> Device<'nvml> {
     /**
@@ -4462,7 +4466,6 @@ impl<'nvml> Device<'nvml> {
 #[cfg(test)]
 #[deny(unused_mut)]
 mod test {
-    use super::Device;
     #[cfg(target_os = "linux")]
     use crate::bitmasks::event::*;
     #[cfg(target_os = "windows")]
@@ -4472,16 +4475,6 @@ mod test {
     use crate::structs::device::FieldId;
     use crate::sys_exports::field_id::*;
     use crate::test_utils::*;
-
-    #[test]
-    fn device_is_send() {
-        assert_send::<Device>()
-    }
-
-    #[test]
-    fn device_is_sync() {
-        assert_sync::<Device>()
-    }
 
     // This modifies device state, so we don't want to actually run the test
     #[allow(dead_code)]
