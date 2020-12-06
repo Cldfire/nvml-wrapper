@@ -20,6 +20,7 @@ bitflags! {
 bitflags! {
     /// Flags that can be passed to `NVML::init_with_flags()`.
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[derive(Default)]
     pub struct InitFlags: u32 {
         /// Don't fail to initialize when no NVIDIA GPUs are found.
         const NO_GPUS = NVML_INIT_FLAG_NO_GPUS;

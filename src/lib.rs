@@ -103,8 +103,6 @@ pub mod sys_exports {
 }
 
 #[cfg(target_os = "linux")]
-use std::convert::TryInto;
-#[cfg(target_os = "linux")]
 use std::ptr;
 use std::{
     convert::TryFrom,
@@ -112,6 +110,8 @@ use std::{
     mem::{self, ManuallyDrop},
     os::raw::{c_int, c_uint},
 };
+#[cfg(target_os = "linux")]
+use std::{convert::TryInto, ffi::OsStr};
 
 use static_assertions::assert_impl_all;
 
@@ -197,6 +197,10 @@ impl NVML {
     Note that this will initialize NVML but not any GPUs. This means that NVML can
     communicate with a GPU even when other GPUs in a system are bad or unstable.
 
+    By default, initialization looks for "libnvidia-ml.so" on linux and "nvml.dll"
+    on Windows. These default names should work for default installs on those
+    platforms; if further specification is required, use `NVML::builder`.
+
     # Errors
 
     * `DriverNotLoaded`, if the NVIDIA driver is not running
@@ -205,8 +209,12 @@ impl NVML {
     */
     // Checked against local
     pub fn init() -> Result<Self, NvmlError> {
+        Self::init_internal(LIB_PATH)
+    }
+
+    fn init_internal(path: impl AsRef<std::ffi::OsStr>) -> Result<Self, NvmlError> {
         let lib = unsafe {
-            let lib = NvmlLib::new(LIB_PATH)?;
+            let lib = NvmlLib::new(path)?;
             let sym = nvml_sym(lib.nvmlInit_v2.as_ref())?;
 
             nvml_try(sym())?;
@@ -244,8 +252,15 @@ impl NVML {
     ```
     */
     pub fn init_with_flags(flags: InitFlags) -> Result<Self, NvmlError> {
+        Self::init_with_flags_internal(LIB_PATH, flags)
+    }
+
+    fn init_with_flags_internal(
+        path: impl AsRef<std::ffi::OsStr>,
+        flags: InitFlags,
+    ) -> Result<Self, NvmlError> {
         let lib = unsafe {
-            let lib = NvmlLib::new(LIB_PATH)?;
+            let lib = NvmlLib::new(path)?;
             let sym = nvml_sym(lib.nvmlInitWithFlags.as_ref())?;
 
             nvml_try(sym(flags.bits()))?;
@@ -253,6 +268,11 @@ impl NVML {
         };
 
         Ok(Self { lib })
+    }
+
+    /// Create an `NvmlBuilder` for further flexibility in how NVML is initialized.
+    pub fn builder<'a>() -> NvmlBuilder<'a> {
+        NvmlBuilder::default()
     }
 
     /**
@@ -285,7 +305,7 @@ impl NVML {
     /**
     Get the number of compute devices in the system (compute device == one GPU).
 
-    Note that this may return devices you do not have permission to access.
+    Note that this count can include devices you do not have permission to access.
 
     # Errors
 
@@ -922,6 +942,67 @@ impl Drop for NVML {
 
             // SAFETY: called after the last usage of `self.lib`
             ManuallyDrop::drop(&mut self.lib);
+        }
+    }
+}
+
+/**
+A builder struct that provides further flexibility in how NVML is initialized.
+
+# Examples
+
+Initialize NVML with a non-default name for the shared object file:
+
+```
+use nvml_wrapper::NVML;
+use std::ffi::OsStr;
+
+let init_result = NVML::builder().lib_path(OsStr::new("libnvidia-ml-other-name.so")).init();
+```
+
+Initialize NVML with a non-default path to the shared object file:
+
+```
+use nvml_wrapper::NVML;
+use std::ffi::OsStr;
+
+let init_result = NVML::builder().lib_path(OsStr::new("/some/path/to/libnvidia-ml.so")).init();
+```
+*/
+#[derive(Debug, Clone, Eq, PartialEq, Default)]
+pub struct NvmlBuilder<'a> {
+    lib_path: Option<&'a OsStr>,
+    flags: InitFlags,
+}
+
+impl<'a> NvmlBuilder<'a> {
+    /**
+    Set the path to the NVML lib file.
+
+    See [`libloading`'s docs][libloading] for details about how this lib path is
+    handled.
+
+    [libloading]: https://docs.rs/libloading/0.6.6/libloading/struct.Library.html#method.new
+    */
+    pub fn lib_path(&mut self, path: &'a OsStr) -> &mut Self {
+        self.lib_path = Some(path);
+        self
+    }
+
+    /// Set the `InitFlags` to initialize NVML with.
+    pub fn flags(&mut self, flags: InitFlags) -> &mut Self {
+        self.flags = flags;
+        self
+    }
+
+    /// Perform initialization.
+    pub fn init(&self) -> Result<NVML, NvmlError> {
+        let lib_path = self.lib_path.unwrap_or_else(|| LIB_PATH.as_ref());
+
+        if self.flags.is_empty() {
+            NVML::init_internal(lib_path)
+        } else {
+            NVML::init_with_flags_internal(lib_path, self.flags)
         }
     }
 }
