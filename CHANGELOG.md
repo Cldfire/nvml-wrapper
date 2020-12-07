@@ -4,7 +4,7 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 
 ## [Unreleased]
 
-## [0.7.0] (released ?)
+## [0.7.0] (released 2020-12-06)
 
 ### Release Summary
 
@@ -54,7 +54,7 @@ The MSRV of this release is 1.42.0.
 * `NvmlError` and `NvmlErrorWithSource` no longer implement `Clone`, `Eq`, or `PartialEq`
   * They can no longer implement these traits because `libloading::Error` doesn't implement them
   * As a result of this change, `FieldValueSample` no longer implements `Clone` or `PartialEq`
-* `NvmlError::UnexpectedVariant` now contains a `u32` instead of an `i32` due to a change in the generated bindings types
+* `NvmlError::UnexpectedVariant` now contains a `u32` instead of an `i32` due to a change in the types of the generated bindings
 
 ### Dependencies
 
