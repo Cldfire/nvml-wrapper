@@ -6,7 +6,10 @@ use crate::ffi::bindings::*;
 use crate::structs::device::FieldId;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use std::ffi::{CStr, CString};
+use std::{
+    cmp::Ordering,
+    ffi::{CStr, CString},
+};
 use std::{
     convert::{TryFrom, TryInto},
     os::raw::c_char,
@@ -94,14 +97,21 @@ impl TryInto<nvmlPciInfo_t> for PciInfo {
         let mut bus_id_c: [c_char; buf_size()] = [0; buf_size()];
         let mut bus_id = CString::new(self.bus_id)?.into_bytes_with_nul();
 
-        if bus_id.len() > buf_size() {
-            return Err(NvmlError::StringTooLong {
-                max_len: buf_size(),
-                actual_len: bus_id.len(),
-            });
-        } else if bus_id.len() <= buf_size() {
-            while bus_id.len() != buf_size() {
-                bus_id.push(0);
+        // Make the string the same length as the array we need to clone it to
+        match bus_id.len().cmp(&buf_size()) {
+            Ordering::Less => {
+                while bus_id.len() != buf_size() {
+                    bus_id.push(0);
+                }
+            }
+            Ordering::Equal => {
+                // No need to do anything; the buffers are already the same length
+            }
+            Ordering::Greater => {
+                return Err(NvmlError::StringTooLong {
+                    max_len: buf_size(),
+                    actual_len: bus_id.len(),
+                })
             }
         }
 
