@@ -4,6 +4,10 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 
 ## [Unreleased]
 
+### Dependencies
+
+* `libloading`: `0.6.6` -> `0.7.0`
+
 ### Internal
 
 * Re-organized repo using a workspace
