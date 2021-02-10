@@ -4,6 +4,7 @@
 [![Crates.io version](https://img.shields.io/crates/v/nvml-wrapper.svg?style=flat-square)](https://crates.io/crates/nvml-wrapper)
 [![Crates.io downloads](https://img.shields.io/crates/d/nvml-wrapper.svg?style=flat-square)](https://crates.io/crates/nvml-wrapper)
 ![CI](https://github.com/Cldfire/nvml-wrapper/workflows/CI/badge.svg)
+[![dependency status](https://deps.rs/repo/github/cldfire/nvml-wrapper/status.svg)](https://deps.rs/repo/github/cldfire/nvml-wrapper)
 
 A safe and ergonomic Rust wrapper for the [NVIDIA Management Library][nvml] (NVML),
 a C-based programmatic interface for monitoring and managing various states within
