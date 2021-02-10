@@ -1,5 +1,4 @@
 use crate::Device;
-#[cfg(not(feature = "test-local"))]
 use crate::NvLink;
 use crate::Unit;
 use crate::NVML;
@@ -12,12 +11,10 @@ use crate::error::NvmlError;
 use crate::event::EventSet;
 use std::fmt::Debug;
 
-#[cfg(not(feature = "test-local"))]
 use crate::struct_wrappers::nv_link::*;
 use crate::struct_wrappers::{device::*, event::*, unit::*, *};
 
 use crate::structs::device::*;
-#[cfg(not(feature = "test-local"))]
 use crate::structs::nv_link::*;
 
 #[cfg(target_os = "windows")]
@@ -97,9 +94,7 @@ impl ShouldPrint for FansInfo {}
 impl ShouldPrint for LedState {}
 impl ShouldPrint for PsuInfo {}
 impl ShouldPrint for UnitInfo {}
-#[cfg(not(feature = "test-local"))]
 impl ShouldPrint for UtilizationControl {}
-#[cfg(not(feature = "test-local"))]
 impl ShouldPrint for UtilizationCounter {}
 
 #[cfg(target_os = "windows")]
@@ -113,7 +108,6 @@ pub fn device<'nvml>(nvml: &'nvml NVML) -> Device<'nvml> {
     nvml.device_by_index(0).expect("device")
 }
 
-#[cfg(not(feature = "test-local"))]
 pub fn unit<'nvml>(nvml: &'nvml NVML) -> Unit<'nvml> {
     nvml.unit_by_index(0).expect("unit")
 }
@@ -141,7 +135,6 @@ where
     multi(reps, || test(&device));
 }
 
-#[cfg(not(feature = "test-local"))]
 pub fn test_with_unit<T, R>(reps: usize, nvml: &NVML, test: T)
 where
     T: Fn(&Unit) -> Result<R, NvmlError>,
@@ -154,7 +147,6 @@ where
     multi(reps, || test(&unit));
 }
 
-#[cfg(not(feature = "test-local"))]
 pub fn test_with_link<T, R>(reps: usize, nvml: &NVML, test: T)
 where
     T: Fn(&NvLink) -> Result<R, NvmlError>,

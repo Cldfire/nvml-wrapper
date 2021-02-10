@@ -1085,7 +1085,7 @@ mod test {
     }
 
     // Can't get serial on my machine
-    #[cfg(not(feature = "test-local"))]
+    #[ignore = "my machine does not support this call"]
     #[test]
     fn device_by_serial() {
         let nvml = nvml();
@@ -1107,7 +1107,7 @@ mod test {
     }
 
     // I don't have 2 devices
-    #[cfg(not(feature = "test-local"))]
+    #[ignore = "my machine does not support this call"]
     #[cfg(target_os = "linux")]
     #[test]
     fn topology_common_ancestor() {
@@ -1120,21 +1120,16 @@ mod test {
     }
 
     // Errors on my machine
-    #[cfg_attr(feature = "test-local", should_panic(expected = "InvalidArg"))]
+
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn unit_by_index() {
         let nvml = nvml();
-        test(3, || {
-            match nvml.unit_by_index(0) {
-                // I have no unit to test with
-                Err(NvmlError::InvalidArg) => panic!("InvalidArg"),
-                other => other,
-            }
-        })
+        test(3, || nvml.unit_by_index(0))
     }
 
     // I don't have 2 devices
-    #[cfg(not(feature = "test-local"))]
+    #[ignore = "my machine does not support this call"]
     #[test]
     fn are_devices_on_same_board() {
         let nvml = nvml();

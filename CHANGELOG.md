@@ -7,6 +7,7 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 ### Internal
 
 * Re-organized repo using a workspace
+* Tests that can't be run on my machine are now ignored with the `#[ignore]` attribute. The `test-local` feature has been removed as a result
 
 ## [0.7.0] (released 2020-12-06)
 

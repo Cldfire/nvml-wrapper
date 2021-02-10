@@ -343,7 +343,6 @@ impl<'nvml> Unit<'nvml> {
 
 // I do not have access to this hardware and cannot test anything
 #[cfg(test)]
-#[cfg(not(feature = "test-local"))]
 #[deny(unused_mut)]
 mod test {
     use crate::enum_wrappers::unit::LedColor;
@@ -351,6 +350,7 @@ mod test {
     use crate::test_utils::*;
 
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn devices() {
         let nvml = nvml();
         let unit = unit(&nvml);
@@ -358,30 +358,35 @@ mod test {
     }
 
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn fan_info() {
         let nvml = nvml();
         test_with_unit(3, &nvml, |unit| unit.fan_info())
     }
 
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn led_state() {
         let nvml = nvml();
         test_with_unit(3, &nvml, |unit| unit.led_state())
     }
 
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn psu_info() {
         let nvml = nvml();
         test_with_unit(3, &nvml, |unit| unit.psu_info())
     }
 
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn temperature() {
         let nvml = nvml();
         test_with_unit(3, &nvml, |unit| unit.temperature(TemperatureReading::Board))
     }
 
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn info() {
         let nvml = nvml();
         test_with_unit(3, &nvml, |unit| unit.info())

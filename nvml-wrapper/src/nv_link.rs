@@ -516,7 +516,6 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 }
 
 #[cfg(test)]
-#[cfg(not(feature = "test-local"))]
 #[deny(unused_mut)]
 mod test {
     use crate::bitmasks::nv_link::*;
@@ -526,24 +525,28 @@ mod test {
     use crate::test_utils::*;
 
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn is_active() {
         let nvml = nvml();
         test_with_link(3, &nvml, |link| link.is_active())
     }
 
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn version() {
         let nvml = nvml();
         test_with_link(3, &nvml, |link| link.version())
     }
 
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn has_capability() {
         let nvml = nvml();
         test_with_link(3, &nvml, |link| link.has_capability(Capability::P2p))
     }
 
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn remote_pci_info() {
         let nvml = nvml();
         test_with_link(3, &nvml, |link| {
@@ -554,6 +557,7 @@ mod test {
     }
 
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn error_counter() {
         let nvml = nvml();
         test_with_link(3, &nvml, |link| {
@@ -592,6 +596,7 @@ mod test {
     }
 
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn utilization_control() {
         let nvml = nvml();
         test_with_link(3, &nvml, |link| link.utilization_control(Counter::One))

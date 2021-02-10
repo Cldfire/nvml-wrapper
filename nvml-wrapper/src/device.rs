@@ -4496,9 +4496,8 @@ mod test {
         })
     }
 
-    // My machine does not support this call
-    #[cfg(not(feature = "test-local"))]
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn applications_clock() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
@@ -4514,9 +4513,8 @@ mod test {
         })
     }
 
-    // My machine does not support this call
-    #[cfg(not(feature = "test-local"))]
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn auto_boosted_clocks_enabled() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.auto_boosted_clocks_enabled())
@@ -4540,17 +4538,15 @@ mod test {
         test_with_device(3, &nvml, |device| device.brand())
     }
 
-    // My machine does not support this call
-    #[cfg(not(feature = "test-local"))]
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn bridge_chip_info() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.bridge_chip_info())
     }
 
-    // My machine does not support this call
-    #[cfg(not(feature = "test-local"))]
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn clock() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
@@ -4562,9 +4558,8 @@ mod test {
         })
     }
 
-    // My machine does not support this call
-    #[cfg(not(feature = "test-local"))]
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn max_customer_boost_clock() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
@@ -4628,9 +4623,8 @@ mod test {
         test_with_device(3, &nvml, |device| device.decoder_utilization())
     }
 
-    // My machine does not support this call
-    #[cfg(not(feature = "test-local"))]
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn default_applications_clock() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
@@ -4665,9 +4659,8 @@ mod test {
         test_with_device(3, &nvml, |device| device.driver_model())
     }
 
-    // My machine does not support this call
-    #[cfg(not(feature = "test-local"))]
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn is_ecc_enabled() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.is_ecc_enabled())
@@ -4723,9 +4716,8 @@ mod test {
         test_with_device(3, &nvml, |device| device.fan_speed(0))
     }
 
-    // My machine does not support this call
-    #[cfg(not(feature = "test-local"))]
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn gpu_operation_mode() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.gpu_operation_mode())
@@ -4749,25 +4741,22 @@ mod test {
         test_with_device(3, &nvml, |device| device.index())
     }
 
-    // My machine does not support this call
-    #[cfg(not(feature = "test-local"))]
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn config_checksum() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.config_checksum())
     }
 
-    // My machine does not support this call
-    #[cfg(not(feature = "test-local"))]
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn info_rom_image_version() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.info_rom_image_version())
     }
 
-    // My machine does not support this call
-    #[cfg(not(feature = "test-local"))]
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn info_rom_version() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
@@ -4805,9 +4794,8 @@ mod test {
         test_with_device(3, &nvml, |device| device.max_pcie_link_width())
     }
 
-    // My machine does not support this call
-    #[cfg(not(feature = "test-local"))]
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn memory_error_counter() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
@@ -4920,9 +4908,8 @@ mod test {
         test_with_device(3, &nvml, |device| device.power_usage())
     }
 
-    // My machine does not support this call
-    #[cfg(not(feature = "test-local"))]
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn retired_pages() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
@@ -4931,17 +4918,15 @@ mod test {
         })
     }
 
-    // My machine does not support this call
-    #[cfg(not(feature = "test-local"))]
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn are_pages_pending_retired() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.are_pages_pending_retired())
     }
 
-    // My machine does not support this call
-    #[cfg(not(feature = "test-local"))]
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn samples() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
@@ -5005,17 +4990,15 @@ mod test {
         test_with_device(3, &nvml, |device| device.field_values_for(&[]))
     }
 
-    // My machine does not support this call
-    #[cfg(not(feature = "test-local"))]
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn serial() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.serial())
     }
 
-    // My machine does not support this call
-    #[cfg(not(feature = "test-local"))]
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn board_part_number() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.board_part_number())
@@ -5047,50 +5030,24 @@ mod test {
         })
     }
 
-    // My machine does not support this call
-    #[cfg(not(feature = "test-local"))]
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn supported_graphics_clocks() {
         let nvml = nvml();
         #[allow(unused_variables)]
         test_with_device(3, &nvml, |device| {
             let supported = device.supported_graphics_clocks(810)?;
-
-            #[cfg(feature = "test-local")]
-            {
-                assert_eq!(
-                    supported,
-                    vec![
-                        1531, 1519, 1506, 1493, 1481, 1468, 1455, 1443, 1430, 1418, 1405, 1392,
-                        1380, 1367, 1354, 1342, 1329, 1316, 1304, 1291, 1278, 1266, 1253, 1240,
-                        1228, 1215, 1202, 1190, 1177, 1164, 1152, 1139, 1126, 1114, 1101, 1088,
-                        1076, 1063, 1050, 1038, 1025, 1013, 1000, 988, 975, 963, 950, 938, 925,
-                        913, 900, 888, 886, 873, 861, 848, 835, 823, 810, 797, 785, 772, 759, 747,
-                        734, 721, 709, 696, 683, 671, 658, 645, 633, 620, 608, 595, 582, 570, 557,
-                        544, 532, 519, 507, 494, 482, 469, 457, 444, 432, 419, 407, 405, 324, 270,
-                        202, 162, 135
-                    ]
-                )
-            }
-
             Ok(())
         })
     }
 
-    // My machine does not support this call
-    #[cfg(not(feature = "test-local"))]
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn supported_memory_clocks() {
         let nvml = nvml();
         #[allow(unused_variables)]
         test_with_device(3, &nvml, |device| {
             let supported = device.supported_memory_clocks()?;
-
-            #[cfg(feature = "test-local")]
-            #[cfg(target_os = "linux")]
-            {
-                assert_eq!(supported, vec![3505, 3304, 810, 405])
-            }
 
             Ok(())
         })
@@ -5116,7 +5073,7 @@ mod test {
     }
 
     // I do not have 2 devices
-    #[cfg(not(feature = "test-local"))]
+    #[ignore = "my machine does not support this call"]
     #[cfg(target_os = "linux")]
     #[test]
     fn topology_common_ancestor() {
@@ -5137,9 +5094,8 @@ mod test {
         test(3, || device.topology_nearest_gpus(TopologyLevel::System))
     }
 
-    // My machine does not support this call
-    #[cfg(not(feature = "test-local"))]
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn total_ecc_errors() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
@@ -5174,7 +5130,7 @@ mod test {
     }
 
     // I do not have 2 devices
-    #[cfg(not(feature = "test-local"))]
+    #[ignore = "my machine does not support this call"]
     #[test]
     fn is_on_same_board_as() {
         let nvml = nvml();
@@ -5223,9 +5179,8 @@ mod test {
             .expect("set to true")
     }
 
-    // My machine does not support this call
-    #[cfg(not(feature = "test-local"))]
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn validate_info_rom() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.validate_info_rom())
