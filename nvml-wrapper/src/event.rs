@@ -54,6 +54,8 @@ impl<'nvml> EventSet<'nvml> {
     is valid.
     */
     // TODO: move constructor to this struct?
+    // Clippy bug, see https://github.com/rust-lang/rust-clippy/issues/5593
+    #[allow(clippy::missing_safety_doc)]
     pub unsafe fn new(set: nvmlEventSet_t, nvml: &'nvml NVML) -> Self {
         Self { set, nvml }
     }

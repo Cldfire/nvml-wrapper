@@ -85,6 +85,8 @@ impl<'nvml> Device<'nvml> {
     It is your responsibility to ensure that the given `nvmlDevice_t` pointer
     is valid.
     */
+    // Clippy bug, see https://github.com/rust-lang/rust-clippy/issues/5593
+    #[allow(clippy::missing_safety_doc)]
     pub unsafe fn new(device: nvmlDevice_t, nvml: &'nvml NVML) -> Self {
         Self { device, nvml }
     }
@@ -2547,8 +2549,7 @@ impl<'nvml> Device<'nvml> {
     pub fn current_throttle_reasons_strict(&self) -> Result<ThrottleReasons, NvmlError> {
         let reasons = self.current_throttle_reasons_raw()?;
 
-        ThrottleReasons::from_bits(reasons)
-            .ok_or_else(|| NvmlError::IncorrectBits(Bits::U64(reasons)))
+        ThrottleReasons::from_bits(reasons).ok_or(NvmlError::IncorrectBits(Bits::U64(reasons)))
     }
 
     // Helper for the above methods.
@@ -2627,8 +2628,7 @@ impl<'nvml> Device<'nvml> {
     pub fn supported_throttle_reasons_strict(&self) -> Result<ThrottleReasons, NvmlError> {
         let reasons = self.supported_throttle_reasons_raw()?;
 
-        ThrottleReasons::from_bits(reasons)
-            .ok_or_else(|| NvmlError::IncorrectBits(Bits::U64(reasons)))
+        ThrottleReasons::from_bits(reasons).ok_or(NvmlError::IncorrectBits(Bits::U64(reasons)))
     }
 
     // Helper for the above methods.
@@ -3126,6 +3126,7 @@ impl<'nvml> Device<'nvml> {
 
             nvml_try(sym(self.device, other_device.handle(), &mut bool_int))?;
 
+            #[allow(clippy::match_like_matches_macro)]
             Ok(match bool_int {
                 0 => false,
                 _ => true,
@@ -4129,7 +4130,7 @@ impl<'nvml> Device<'nvml> {
     pub fn supported_event_types_strict(&self) -> Result<EventTypes, NvmlError> {
         let ev_types = self.supported_event_types_raw()?;
 
-        EventTypes::from_bits(ev_types).ok_or_else(|| NvmlError::IncorrectBits(Bits::U64(ev_types)))
+        EventTypes::from_bits(ev_types).ok_or(NvmlError::IncorrectBits(Bits::U64(ev_types)))
     }
 
     // Helper for the above methods.

@@ -38,6 +38,8 @@ impl<'nvml> EventData<'nvml> {
     It is your responsibility to ensure that the given `nvmlEventdata_t` pointer
     is valid.
     */
+    // Clippy bug, see https://github.com/rust-lang/rust-clippy/issues/5593
+    #[allow(clippy::missing_safety_doc)]
     pub unsafe fn new(event_data: nvmlEventData_t, nvml: &'nvml NVML) -> Self {
         let event_type = EventTypes::from_bits_truncate(event_data.eventType);
 

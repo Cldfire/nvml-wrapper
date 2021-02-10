@@ -99,7 +99,7 @@ impl TryInto<nvmlPciInfo_t> for PciInfo {
                 max_len: buf_size(),
                 actual_len: bus_id.len(),
             });
-        } else if bus_id.len() < buf_size() {
+        } else if bus_id.len() <= buf_size() {
             while bus_id.len() != buf_size() {
                 bus_id.push(0);
             }
@@ -370,6 +370,7 @@ impl From<nvmlAccountingStats_t> for AccountingStats {
         let not_avail_u64 = (NVML_VALUE_NOT_AVAILABLE) as u64;
         let not_avail_u32 = (NVML_VALUE_NOT_AVAILABLE) as u32;
 
+        #[allow(clippy::match_like_matches_macro)]
         Self {
             gpu_utilization: match struct_.gpuUtilization {
                 v if v == not_avail_u32 => None,
@@ -617,7 +618,7 @@ impl TryFrom<nvmlFBCSessionInfo_t> for FbcSessionInfo {
             display_ordinal: value.displayOrdinal,
             session_type: FbcSessionType::try_from(value.sessionType)?,
             session_flags: FbcFlags::from_bits(value.sessionFlags)
-                .ok_or_else(|| NvmlError::IncorrectBits(Bits::U32(value.sessionFlags)))?,
+                .ok_or(NvmlError::IncorrectBits(Bits::U32(value.sessionFlags)))?,
             hres_max: value.hMaxResolution,
             vres_max: value.vMaxResolution,
             hres: value.hResolution,

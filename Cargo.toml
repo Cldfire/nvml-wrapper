@@ -1,35 +1,5 @@
-[package]
-name = "nvml-wrapper"
-version = "0.7.0"
-authors = ["Cldfire"]
-description = "A safe and ergonomic Rust wrapper for the NVIDIA Management Library"
-readme = "README.md"
-documentation = "https://docs.rs/nvml-wrapper"
-repository = "https://github.com/Cldfire/nvml-wrapper"
-license = "MIT/Apache-2.0"
-edition = "2018"
-
-keywords = ["nvidia", "gpu", "managment", "monitoring", "hardware"]
-categories = ["api-bindings", "hardware-support"]
-
-exclude = [
-    "nvml-wrapper-sys/*"
+[workspace]
+members = [
+    "nvml-wrapper",
+    "nvml-wrapper-sys"
 ]
-
-[dependencies]
-thiserror = "1.0"
-bitflags = "1.2"
-serde = { version = "1.0", optional = true, features = ["derive"] }
-nvml-wrapper-sys = { version = "0.5", path = "nvml-wrapper-sys" }
-wrapcenum-derive = "0.4.0"
-libloading = "0.6.6"
-static_assertions = "1.1"
-
-[dev-dependencies]
-rusty-hook = "^0.11.1"
-# Used in the `basic_usage` example
-pretty-bytes = "0.2"
-
-[features]
-default = []
-test-local = []
