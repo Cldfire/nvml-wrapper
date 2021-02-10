@@ -4,6 +4,10 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 
 ## [Unreleased]
 
+### Internal
+
+* Re-organized repo using a workspace
+
 ## [0.7.0] (released 2020-12-06)
 
 ### Release Summary

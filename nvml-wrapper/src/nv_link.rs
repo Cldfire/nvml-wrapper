@@ -160,6 +160,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
                 &mut capability,
             ))?;
 
+            #[allow(clippy::match_like_matches_macro)]
             Ok(match capability {
                 0 => false,
                 // Not worth an error or a panic if the value is > 1

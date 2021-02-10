@@ -13,8 +13,6 @@ keywords = ["nvidia", "gpu", "managment", "monitoring", "hardware"]
 categories = ["external-ffi-bindings", "hardware-support"]
 
 exclude = [
-    "Cargo.lock",
-    "target/*",
     "nvml.h"
 ]
 

@@ -60,6 +60,8 @@ impl<'nvml> Unit<'nvml> {
     It is your responsibility to ensure that the given `nvmlUnit_t` pointer
     is valid.
     */
+    // Clippy bug, see https://github.com/rust-lang/rust-clippy/issues/5593
+    #[allow(clippy::missing_safety_doc)]
     pub unsafe fn new(unit: nvmlUnit_t, nvml: &'nvml NVML) -> Self {
         Self { unit, nvml }
     }

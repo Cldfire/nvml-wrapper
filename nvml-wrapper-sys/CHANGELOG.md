@@ -4,7 +4,7 @@ This file describes the changes / additions / fixes between bindings releases.
 
 ## Unreleased
 
-## 0.5.0 (released ?)
+## 0.5.0 (released 2020-12-06)
 
 ### Release Summary
 
