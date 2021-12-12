@@ -104,11 +104,11 @@ pub fn nvml() -> NVML {
     NVML::init().expect("initialized library")
 }
 
-pub fn device<'nvml>(nvml: &'nvml NVML) -> Device<'nvml> {
+pub fn device(nvml: &NVML) -> Device<'_> {
     nvml.device_by_index(0).expect("device")
 }
 
-pub fn unit<'nvml>(nvml: &'nvml NVML) -> Unit<'nvml> {
+pub fn unit(nvml: &NVML) -> Unit<'_> {
     nvml.unit_by_index(0).expect("unit")
 }
 
@@ -153,7 +153,7 @@ where
     R: ShouldPrint,
 {
     // Is 0 a good default???
-    let device = device(&nvml);
+    let device = device(nvml);
     let link = device.link_wrapper_for(0);
 
     single(|| test(&link));
@@ -181,6 +181,6 @@ where
     R: ShouldPrint,
 {
     for i in 0..count {
-        test().expect(&format!("successful multi call #{}", i));
+        test().unwrap_or_else(|_| panic!("successful multi call #{}", i));
     }
 }

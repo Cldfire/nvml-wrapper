@@ -601,7 +601,7 @@ impl NVML {
 
             nvml_try(sym(device1.handle(), device2.handle(), &mut level))?;
 
-            Ok(TopologyLevel::try_from(level)?)
+            TopologyLevel::try_from(level)
         }
     }
 
@@ -926,7 +926,7 @@ impl NVML {
             let mut info: nvmlBlacklistDeviceInfo_t = mem::zeroed();
 
             nvml_try(sym(index, &mut info))?;
-            Ok(BlacklistDeviceInfo::try_from(info)?)
+            BlacklistDeviceInfo::try_from(info)
         }
     }
 }

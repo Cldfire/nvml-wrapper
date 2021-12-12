@@ -194,7 +194,7 @@ impl<'nvml> Unit<'nvml> {
             let mut fans_info: nvmlUnitFanSpeeds_t = mem::zeroed();
             nvml_try(sym(self.unit, &mut fans_info))?;
 
-            Ok(FansInfo::try_from(fans_info)?)
+            FansInfo::try_from(fans_info)
         }
     }
 
@@ -222,7 +222,7 @@ impl<'nvml> Unit<'nvml> {
             let mut state: nvmlLedState_t = mem::zeroed();
             nvml_try(sym(self.unit, &mut state))?;
 
-            Ok(LedState::try_from(state)?)
+            LedState::try_from(state)
         }
     }
 
@@ -249,7 +249,7 @@ impl<'nvml> Unit<'nvml> {
             let mut info: nvmlPSUInfo_t = mem::zeroed();
             nvml_try(sym(self.unit, &mut info))?;
 
-            Ok(PsuInfo::try_from(info)?)
+            PsuInfo::try_from(info)
         }
     }
 
@@ -305,7 +305,7 @@ impl<'nvml> Unit<'nvml> {
             let mut info: nvmlUnitInfo_t = mem::zeroed();
             nvml_try(sym(self.unit, &mut info))?;
 
-            Ok(UnitInfo::try_from(info)?)
+            UnitInfo::try_from(info)
         }
     }
 
