@@ -1,6 +1,5 @@
 target
 rls
-Cargo.lock
 nvml-11.h
 genned_bindings.rs
 .idea
