@@ -171,7 +171,7 @@ impl<'nvml> Device<'nvml> {
 
             nvml_try(sym(self.device, api.as_c(), &mut restricted_state))?;
 
-            Ok(bool_from_state(restricted_state)?)
+            bool_from_state(restricted_state)
         }
     }
 
@@ -340,7 +340,7 @@ impl<'nvml> Device<'nvml> {
             let mut brand: nvmlBrandType_t = mem::zeroed();
             nvml_try(sym(self.device, &mut brand))?;
 
-            Ok(Brand::try_from(brand)?)
+            Brand::try_from(brand)
         }
     }
 
@@ -371,7 +371,7 @@ impl<'nvml> Device<'nvml> {
             let mut info: nvmlBridgeChipHierarchy_t = mem::zeroed();
             nvml_try(sym(self.device, &mut info))?;
 
-            Ok(BridgeChipHierarchy::try_from(info)?)
+            BridgeChipHierarchy::try_from(info)
         }
     }
 
@@ -461,7 +461,7 @@ impl<'nvml> Device<'nvml> {
             let mut mode: nvmlComputeMode_t = mem::zeroed();
             nvml_try(sym(self.device, &mut mode))?;
 
-            Ok(ComputeMode::try_from(mode)?)
+            ComputeMode::try_from(mode)
         }
     }
 
@@ -886,7 +886,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(sym(self.device, &mut state))?;
 
-            Ok(bool_from_state(state)?)
+            bool_from_state(state)
         }
     }
 
@@ -914,7 +914,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(sym(self.device, &mut state))?;
 
-            Ok(bool_from_state(state)?)
+            bool_from_state(state)
         }
     }
 
@@ -1128,10 +1128,10 @@ impl<'nvml> Device<'nvml> {
             nvml_try(sym(self.device, &mut count, sessions.as_mut_ptr()))?;
 
             sessions.truncate(count as usize);
-            Ok(sessions
+            sessions
                 .into_iter()
                 .map(EncoderSessionInfo::try_from)
-                .collect::<Result<_, NvmlError>>()?)
+                .collect::<Result<_, NvmlError>>()
         }
     }
 
@@ -1822,7 +1822,7 @@ impl<'nvml> Device<'nvml> {
             let mut pci_info: nvmlPciInfo_t = mem::zeroed();
             nvml_try(sym(self.device, &mut pci_info))?;
 
-            Ok(PciInfo::try_from(pci_info, true)?)
+            PciInfo::try_from(pci_info, true)
         }
     }
 
@@ -1915,7 +1915,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlPstates_t = mem::zeroed();
             nvml_try(sym(self.device, &mut state))?;
 
-            Ok(PerformanceState::try_from(state)?)
+            PerformanceState::try_from(state)
         }
     }
 
@@ -1948,7 +1948,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(sym(self.device, &mut state))?;
 
-            Ok(bool_from_state(state)?)
+            bool_from_state(state)
         }
     }
 
@@ -2073,7 +2073,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(sym(self.device, &mut state))?;
 
-            Ok(bool_from_state(state)?)
+            bool_from_state(state)
         }
     }
 
@@ -2088,7 +2088,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlPstates_t = mem::zeroed();
             nvml_try(sym(self.device, &mut state))?;
 
-            Ok(PerformanceState::try_from(state)?)
+            PerformanceState::try_from(state)
         }
     }
 
@@ -2251,7 +2251,7 @@ impl<'nvml> Device<'nvml> {
 
             nvml_try(sym(self.device, &mut state))?;
 
-            Ok(bool_from_state(state)?)
+            bool_from_state(state)
         }
     }
 
@@ -2837,7 +2837,7 @@ impl<'nvml> Device<'nvml> {
 
             nvml_try(sym(self.device, other_device.device, &mut level))?;
 
-            Ok(TopologyLevel::try_from(level)?)
+            TopologyLevel::try_from(level)
         }
     }
 
@@ -3392,7 +3392,7 @@ impl<'nvml> Device<'nvml> {
             let mut state: nvmlEnableState_t = mem::zeroed();
             nvml_try(sym(self.device, &mut state))?;
 
-            Ok(bool_from_state(state)?)
+            bool_from_state(state)
         }
     }
 
@@ -4290,7 +4290,7 @@ impl<'nvml> Device<'nvml> {
 
             nvml_try(sym(&mut pci_info.try_into()?, &mut state))?;
 
-            Ok(bool_from_state(state)?)
+            bool_from_state(state)
         }
     }
 
