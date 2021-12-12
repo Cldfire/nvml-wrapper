@@ -11,9 +11,9 @@ a C-based programmatic interface for monitoring and managing various states with
 NVIDIA GPUs.
 
 ```rust
-use nvml_wrapper::NVML;
+use nvml_wrapper::Nvml;
 
-let nvml = NVML::init()?;
+let nvml = Nvml::init()?;
 // Get the first `Device` (GPU) in the system
 let device = nvml.device_by_index(0)?;
 
