@@ -4,6 +4,10 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 
 ## [Unreleased]
 
+### Rust Version Support
+
+The MSRV of this release is 1.46.0. This is to accomodate the MSRV of the `bitflags` dependency, which is 1.46.0.
+
 ### Dependencies
 
 * `libloading`: `0.6.6` -> `0.7.0`
@@ -12,6 +16,7 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 
 * Re-organized repo using a workspace
 * Tests that can't be run on my machine are now ignored with the `#[ignore]` attribute. The `test-local` feature has been removed as a result
+* The `Cargo.lock` file is now committed to the repo
 
 ## [0.7.0] (released 2020-12-06)
 
