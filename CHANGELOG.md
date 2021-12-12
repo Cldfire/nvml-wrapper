@@ -4,6 +4,10 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 
 ## [Unreleased]
 
+### Changed
+
+* The `NVML` struct has been renamed to `Nvml` (#22 - @TheJltres)
+
 ### Dependencies
 
 * `libloading`: `0.6.6` -> `0.7.0`
