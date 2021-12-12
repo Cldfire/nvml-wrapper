@@ -29,11 +29,11 @@ Lifetimes are used to enforce that each `NvLink` instance cannot be used after
 the `Device` instance it was obtained from is dropped:
 
 ```compile_fail
-use nvml_wrapper::NVML;
+use nvml_wrapper::Nvml;
 # use nvml_wrapper::error::*;
 
 # fn main() -> Result<(), NvmlError> {
-let nvml = NVML::init()?;
+let nvml = Nvml::init()?;
 let device = nvml.device_by_index(0)?;
 let link = device.link_wrapper_for(0);
 

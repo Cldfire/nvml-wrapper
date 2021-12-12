@@ -18,7 +18,7 @@ bitflags! {
 }
 
 bitflags! {
-    /// Flags that can be passed to `NVML::init_with_flags()`.
+    /// Flags that can be passed to `Nvml::init_with_flags()`.
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(Default)]
     pub struct InitFlags: u32 {

@@ -1,10 +1,10 @@
 use nvml_wrapper::enum_wrappers::device::{Clock, TemperatureSensor};
 use nvml_wrapper::error::NvmlError;
-use nvml_wrapper::{cuda_driver_version_major, cuda_driver_version_minor, NVML};
+use nvml_wrapper::{cuda_driver_version_major, cuda_driver_version_minor, Nvml};
 use pretty_bytes::converter::convert;
 
 fn main() -> Result<(), NvmlError> {
-    let nvml = NVML::init()?;
+    let nvml = Nvml::init()?;
 
     let cuda_version = nvml.sys_cuda_driver_version()?;
 

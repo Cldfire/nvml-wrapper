@@ -4,10 +4,10 @@ a C-based programmatic interface for monitoring and managing various states with
 NVIDIA GPUs.
 
 ```
-# use nvml_wrapper::NVML;
+# use nvml_wrapper::Nvml;
 # use nvml_wrapper::error::*;
 # fn test() -> Result<(), NvmlError> {
-let nvml = NVML::init()?;
+let nvml = Nvml::init()?;
 // Get the first `Device` (GPU) in the system
 let device = nvml.device_by_index(0)?;
 
@@ -28,24 +28,24 @@ also the underlying library for NVIDIA's nvidia-smi tool.
 ## Usage
 
 `nvml-wrapper` builds on top of generated bindings for NVML that make use of the
-[`libloading`][libloading] crate. This means the NVML library gets loaded upon
-calling `NVML::init` and can return an error if NVML isn't present, making it
+[`libloading`][libloading] crate. This means the Nvml library gets loaded upon
+calling `Nvml::init` and can return an error if NVML isn't present, making it
 possible to drop NVIDIA-related features in your code at runtime on systems that
 don't have relevant hardware.
 
-Successful execution of `NVML::init` means:
+Successful execution of `Nvml::init` means:
 
 * The NVML library was present on the system and able to be opened
 * The function symbol to initialize NVML was loaded and called successfully
 * An attempt has been made to load all other NVML function symbols
 
 Every function you call thereafter will individually return an error if it couldn't
-be loaded from the NVML library during the `NVML::init` call.
+be loaded from the NVML library during the `Nvml::init` call.
 
-Note that it's not advised to repeatedly call `NVML::init` as the constructor
+Note that it's not advised to repeatedly call `Nvml::init` as the constructor
 has to perform all the work of loading the function symbols from the library
-each time it gets called. Instead, call `NVML::init` once and store the resulting
-`NVML` instance somewhere to be accessed throughout the lifetime of your program.
+each time it gets called. Instead, call `Nvml::init` once and store the resulting
+`Nvml` instance somewhere to be accessed throughout the lifetime of your program.
 
 ## NVML Support
 
@@ -137,7 +137,7 @@ const LIB_PATH: &str = "libnvidia-ml.so";
 
 /// Determines the major version of the CUDA driver given the full version.
 ///
-/// Obtain the full version via `NVML.sys_cuda_driver_version()`.
+/// Obtain the full version via `Nvml.sys_cuda_driver_version()`.
 pub fn cuda_driver_version_major(version: i32) -> i32 {
     version / 1000
 }
@@ -170,20 +170,19 @@ and may not accurately reflect the version of NVML that this library is written 
 should ideally read the doc comments on an up-to-date NVML API header. Such a header can be
 downloaded as part of the [CUDA toolkit](https://developer.nvidia.com/cuda-downloads).
 */
-// TODO: this should be named `Nvml`
-pub struct NVML {
+pub struct Nvml {
     lib: ManuallyDrop<NvmlLib>,
 }
 
-assert_impl_all!(NVML: Send, Sync);
+assert_impl_all!(Nvml: Send, Sync);
 
-impl std::fmt::Debug for NVML {
+impl std::fmt::Debug for Nvml {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str("NVML")
     }
 }
 
-impl NVML {
+impl Nvml {
     /**
     Handles NVML initialization and must be called before doing anything else.
 
@@ -198,7 +197,7 @@ impl NVML {
 
     By default, initialization looks for "libnvidia-ml.so" on linux and "nvml.dll"
     on Windows. These default names should work for default installs on those
-    platforms; if further specification is required, use `NVML::builder`.
+    platforms; if further specification is required, use `Nvml::builder`.
 
     # Errors
 
@@ -237,7 +236,7 @@ impl NVML {
     # Examples
 
     ```
-    # use nvml_wrapper::NVML;
+    # use nvml_wrapper::Nvml;
     # use nvml_wrapper::error::*;
     use nvml_wrapper::bitmasks::InitFlags;
 
@@ -245,7 +244,7 @@ impl NVML {
     // Don't fail if the system doesn't have any NVIDIA GPUs
     //
     // Also, don't attach any GPUs during initialization
-    NVML::init_with_flags(InitFlags::NO_GPUS | InitFlags::NO_ATTACH)?;
+    Nvml::init_with_flags(InitFlags::NO_GPUS | InitFlags::NO_ATTACH)?;
     # Ok(())
     # }
     ```
@@ -932,9 +931,9 @@ impl NVML {
 }
 
 /// This `Drop` implementation ignores errors! Use the `.shutdown()` method on
-/// the `NVML` struct
+/// the `Nvml` struct
 /// if you care about handling them.
-impl Drop for NVML {
+impl Drop for Nvml {
     fn drop(&mut self) {
         unsafe {
             self.lib.nvmlShutdown();
@@ -953,19 +952,19 @@ A builder struct that provides further flexibility in how NVML is initialized.
 Initialize NVML with a non-default name for the shared object file:
 
 ```
-use nvml_wrapper::NVML;
+use nvml_wrapper::Nvml;
 use std::ffi::OsStr;
 
-let init_result = NVML::builder().lib_path(OsStr::new("libnvidia-ml-other-name.so")).init();
+let init_result = Nvml::builder().lib_path(OsStr::new("libnvidia-ml-other-name.so")).init();
 ```
 
 Initialize NVML with a non-default path to the shared object file:
 
 ```
-use nvml_wrapper::NVML;
+use nvml_wrapper::Nvml;
 use std::ffi::OsStr;
 
-let init_result = NVML::builder().lib_path(OsStr::new("/some/path/to/libnvidia-ml.so")).init();
+let init_result = Nvml::builder().lib_path(OsStr::new("/some/path/to/libnvidia-ml.so")).init();
 ```
 */
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
@@ -995,13 +994,13 @@ impl<'a> NvmlBuilder<'a> {
     }
 
     /// Perform initialization.
-    pub fn init(&self) -> Result<NVML, NvmlError> {
+    pub fn init(&self) -> Result<Nvml, NvmlError> {
         let lib_path = self.lib_path.unwrap_or_else(|| LIB_PATH.as_ref());
 
         if self.flags.is_empty() {
-            NVML::init_internal(lib_path)
+            Nvml::init_internal(lib_path)
         } else {
-            NVML::init_with_flags_internal(lib_path, self.flags)
+            Nvml::init_with_flags_internal(lib_path, self.flags)
         }
     }
 }
@@ -1015,7 +1014,7 @@ mod test {
 
     #[test]
     fn init_with_flags() {
-        NVML::init_with_flags(InitFlags::NO_GPUS).unwrap();
+        Nvml::init_with_flags(InitFlags::NO_GPUS).unwrap();
     }
 
     #[test]

@@ -1,7 +1,7 @@
 use crate::device::Device;
 use crate::enums::event::XidError;
 use crate::ffi::bindings::*;
-use crate::{bitmasks::event::EventTypes, NVML};
+use crate::{bitmasks::event::EventTypes, Nvml};
 
 /// Information about an event that has occurred.
 // Checked against local
@@ -40,7 +40,7 @@ impl<'nvml> EventData<'nvml> {
     */
     // Clippy bug, see https://github.com/rust-lang/rust-clippy/issues/5593
     #[allow(clippy::missing_safety_doc)]
-    pub unsafe fn new(event_data: nvmlEventData_t, nvml: &'nvml NVML) -> Self {
+    pub unsafe fn new(event_data: nvmlEventData_t, nvml: &'nvml Nvml) -> Self {
         let event_type = EventTypes::from_bits_truncate(event_data.eventType);
 
         EventData {

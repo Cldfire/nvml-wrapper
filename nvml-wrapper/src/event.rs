@@ -1,6 +1,6 @@
 use crate::error::{nvml_sym, nvml_try, NvmlError};
 use crate::ffi::bindings::*;
-use crate::NVML;
+use crate::Nvml;
 
 use std::mem;
 
@@ -11,17 +11,17 @@ Handle to a set of events.
 
 **Operations on a set are not thread-safe.** It does not, therefore, implement `Sync`.
 
-You can get yourself an `EventSet` via `NVML.create_event_set`.
+You can get yourself an `EventSet` via `Nvml.create_event_set`.
 
 Lifetimes are used to enforce that each `EventSet` instance cannot be used after
-the `NVML` instance it was obtained from is dropped:
+the `Nvml` instance it was obtained from is dropped:
 
 ```compile_fail
-use nvml_wrapper::NVML;
+use nvml_wrapper::Nvml;
 # use nvml_wrapper::error::*;
 
 # fn main() -> Result<(), NvmlError> {
-let nvml = NVML::init()?;
+let nvml = Nvml::init()?;
 let event_set = nvml.create_event_set()?;
 
 drop(nvml);
@@ -36,7 +36,7 @@ event_set.wait(5)?;
 #[derive(Debug)]
 pub struct EventSet<'nvml> {
     set: nvmlEventSet_t,
-    pub nvml: &'nvml NVML,
+    pub nvml: &'nvml Nvml,
 }
 
 unsafe impl<'nvml> Send for EventSet<'nvml> {}
@@ -46,7 +46,7 @@ impl<'nvml> EventSet<'nvml> {
     Create a new `EventSet` wrapper.
 
     You will most likely never need to call this; see the methods available to you
-    on the `NVML` struct to get one.
+    on the `Nvml` struct to get one.
 
     # Safety
 
@@ -56,7 +56,7 @@ impl<'nvml> EventSet<'nvml> {
     // TODO: move constructor to this struct?
     // Clippy bug, see https://github.com/rust-lang/rust-clippy/issues/5593
     #[allow(clippy::missing_safety_doc)]
-    pub unsafe fn new(set: nvmlEventSet_t, nvml: &'nvml NVML) -> Self {
+    pub unsafe fn new(set: nvmlEventSet_t, nvml: &'nvml Nvml) -> Self {
         Self { set, nvml }
     }
 

@@ -1,7 +1,7 @@
 #[cfg(target_os = "linux")]
 use crate::EventSet;
 use crate::NvLink;
-use crate::NVML;
+use crate::Nvml;
 
 use crate::bitmasks::device::ThrottleReasons;
 #[cfg(target_os = "linux")]
@@ -37,18 +37,18 @@ use static_assertions::assert_impl_all;
 /**
 Struct that represents a device on the system.
 
-Obtain a `Device` with the various methods available to you on the `NVML`
+Obtain a `Device` with the various methods available to you on the `Nvml`
 struct.
 
 Lifetimes are used to enforce that each `Device` instance cannot be used after
-the `NVML` instance it was obtained from is dropped:
+the `Nvml` instance it was obtained from is dropped:
 
 ```compile_fail
-use nvml_wrapper::NVML;
+use nvml_wrapper::Nvml;
 # use nvml_wrapper::error::*;
 
 # fn main() -> Result<(), NvmlError> {
-let nvml = NVML::init()?;
+let nvml = Nvml::init()?;
 let device = nvml.device_by_index(0)?;
 
 drop(nvml);
@@ -65,7 +65,7 @@ This means you shouldn't have to worry about calls to `Device` methods returning
 #[derive(Debug)]
 pub struct Device<'nvml> {
     device: nvmlDevice_t,
-    nvml: &'nvml NVML,
+    nvml: &'nvml Nvml,
 }
 
 unsafe impl<'nvml> Send for Device<'nvml> {}
@@ -78,7 +78,7 @@ impl<'nvml> Device<'nvml> {
     Create a new `Device` wrapper.
 
     You will most likely never need to call this; see the methods available to you
-    on the `NVML` struct to get one.
+    on the `Nvml` struct to get one.
 
     # Safety
 
@@ -87,12 +87,12 @@ impl<'nvml> Device<'nvml> {
     */
     // Clippy bug, see https://github.com/rust-lang/rust-clippy/issues/5593
     #[allow(clippy::missing_safety_doc)]
-    pub unsafe fn new(device: nvmlDevice_t, nvml: &'nvml NVML) -> Self {
+    pub unsafe fn new(device: nvmlDevice_t, nvml: &'nvml Nvml) -> Self {
         Self { device, nvml }
     }
 
-    /// Access the `NVML` reference this struct wraps
-    pub fn nvml(&self) -> &'nvml NVML {
+    /// Access the `Nvml` reference this struct wraps
+    pub fn nvml(&self) -> &'nvml Nvml {
         self.nvml
     }
 
@@ -2283,7 +2283,7 @@ impl<'nvml> Device<'nvml> {
     # Examples
 
     ```
-    # use nvml_wrapper::NVML;
+    # use nvml_wrapper::Nvml;
     # use nvml_wrapper::error::*;
     # fn main() -> Result<(), NvmlError> {
     # match test() {
@@ -2292,7 +2292,7 @@ impl<'nvml> Device<'nvml> {
     # }
     # }
     # fn test() -> Result<(), NvmlError> {
-    # let nvml = NVML::init()?;
+    # let nvml = Nvml::init()?;
     # let device = nvml.device_by_index(0)?;
     use nvml_wrapper::enum_wrappers::device::Sampling;
 
@@ -2971,10 +2971,10 @@ impl<'nvml> Device<'nvml> {
     the same physical device:
 
     ```no_run
-    # use nvml_wrapper::NVML;
+    # use nvml_wrapper::Nvml;
     # use nvml_wrapper::error::*;
     # fn main() -> Result<(), NvmlError> {
-    # let nvml = NVML::init()?;
+    # let nvml = Nvml::init()?;
     # let device1 = nvml.device_by_index(0)?;
     # let device2 = nvml.device_by_index(1)?;
     if device1.uuid()? == device2.uuid()? {
@@ -3721,10 +3721,10 @@ impl<'nvml> Device<'nvml> {
     # Examples
 
     ```no_run
-    # use nvml_wrapper::NVML;
+    # use nvml_wrapper::Nvml;
     # use nvml_wrapper::error::*;
     # fn test() -> Result<(), NvmlError> {
-    # let nvml = NVML::init()?;
+    # let nvml = Nvml::init()?;
     # let mut device = nvml.device_by_index(0)?;
     use nvml_wrapper::bitmasks::Behavior;
     use nvml_wrapper::enum_wrappers::device::DriverModel;
@@ -3885,7 +3885,7 @@ impl<'nvml> Device<'nvml> {
     Note that after disabling persistence on a device that has its own NUMA
     memory, this `Device` handle will no longer be valid, and to continue to
     interact with the physical device that it represents you will need to
-    obtain a new `Device` using the methods available on the `NVML` struct.
+    obtain a new `Device` using the methods available on the `Nvml` struct.
     This limitation is currently only applicable to devices that have a
     coherent NVLink connection to system memory.
 
@@ -3985,10 +3985,10 @@ impl<'nvml> Device<'nvml> {
     # Examples
 
     ```
-    # use nvml_wrapper::NVML;
+    # use nvml_wrapper::Nvml;
     # use nvml_wrapper::error::*;
     # fn main() -> Result<(), NvmlErrorWithSource> {
-    # let nvml = NVML::init()?;
+    # let nvml = Nvml::init()?;
     # let device = nvml.device_by_index(0)?;
     use nvml_wrapper::bitmasks::event::EventTypes;
 
@@ -4076,10 +4076,10 @@ impl<'nvml> Device<'nvml> {
     # Examples
 
     ```
-    # use nvml_wrapper::NVML;
+    # use nvml_wrapper::Nvml;
     # use nvml_wrapper::error::*;
     # fn main() -> Result<(), NvmlError> {
-    # let nvml = NVML::init()?;
+    # let nvml = Nvml::init()?;
     # let device = nvml.device_by_index(0)?;
     use nvml_wrapper::bitmasks::event::EventTypes;
 
@@ -4188,10 +4188,10 @@ impl<'nvml> Device<'nvml> {
     # Examples
 
     ```no_run
-    # use nvml_wrapper::NVML;
+    # use nvml_wrapper::Nvml;
     # use nvml_wrapper::error::*;
     # fn test() -> Result<(), NvmlError> {
-    # let nvml = NVML::init()?;
+    # let nvml = Nvml::init()?;
     # let mut device = nvml.device_by_index(0)?;
     // Pass `None`, `.set_drain()` call will grab `PciInfo` for us
     device.set_drain(true, None)?;
@@ -4254,10 +4254,10 @@ impl<'nvml> Device<'nvml> {
     # Examples
 
     ```
-    # use nvml_wrapper::NVML;
+    # use nvml_wrapper::Nvml;
     # use nvml_wrapper::error::*;
     # fn main() -> Result<(), NvmlError> {
-    # let nvml = NVML::init()?;
+    # let nvml = Nvml::init()?;
     # let mut device = nvml.device_by_index(0)?;
     // Pass `None`, `.is_drain_enabled()` call will grab `PciInfo` for us
     device.is_drain_enabled(None)?;
@@ -4353,11 +4353,11 @@ impl<'nvml> Device<'nvml> {
     How to handle error case:
 
     ```no_run
-    # use nvml_wrapper::NVML;
+    # use nvml_wrapper::Nvml;
     # use nvml_wrapper::error::*;
     # use nvml_wrapper::enum_wrappers::device::{DetachGpuState, PcieLinkState};
     # fn test() -> Result<(), NvmlError> {
-    # let nvml = NVML::init()?;
+    # let nvml = Nvml::init()?;
     # let mut device = nvml.device_by_index(0)?;
     match device.remove(None, DetachGpuState::Remove, PcieLinkState::ShutDown) {
         (Ok(()), None) => println!("Successful call, `Device` removed"),
@@ -4370,11 +4370,11 @@ impl<'nvml> Device<'nvml> {
     Demonstration of the `pci_info` parameter's use:
 
     ```no_run
-    # use nvml_wrapper::NVML;
+    # use nvml_wrapper::Nvml;
     # use nvml_wrapper::error::*;
     # use nvml_wrapper::enum_wrappers::device::{DetachGpuState, PcieLinkState};
     # fn test() -> Result<(), NvmlErrorWithSource> {
-    # let nvml = NVML::init()?;
+    # let nvml = Nvml::init()?;
     # let mut device = nvml.device_by_index(0)?;
     // Pass `None`, `.remove()` call will grab `PciInfo` for us
     device.remove(None, DetachGpuState::Remove, PcieLinkState::ShutDown).0?;

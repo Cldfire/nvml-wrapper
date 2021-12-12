@@ -4,6 +4,10 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 
 ## [Unreleased]
 
+### Changed
+
+* The `NVML` struct has been renamed to `Nvml` (#22 - @TheJltres)
+
 ### Rust Version Support
 
 The MSRV of this release is 1.46.0. This is to accomodate the MSRV of the `bitflags` dependency, which is 1.46.0.

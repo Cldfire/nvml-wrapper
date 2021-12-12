@@ -1,7 +1,7 @@
 use crate::Device;
 use crate::NvLink;
+use crate::Nvml;
 use crate::Unit;
-use crate::NVML;
 
 use crate::bitmasks::{device::*, event::*};
 
@@ -100,15 +100,15 @@ impl ShouldPrint for UtilizationCounter {}
 #[cfg(target_os = "windows")]
 impl ShouldPrint for DriverModelState {}
 
-pub fn nvml() -> NVML {
-    NVML::init().expect("initialized library")
+pub fn nvml() -> Nvml {
+    Nvml::init().expect("initialized library")
 }
 
-pub fn device(nvml: &NVML) -> Device<'_> {
+pub fn device(nvml: &Nvml) -> Device<'_> {
     nvml.device_by_index(0).expect("device")
 }
 
-pub fn unit(nvml: &NVML) -> Unit<'_> {
+pub fn unit(nvml: &Nvml) -> Unit<'_> {
     nvml.unit_by_index(0).expect("unit")
 }
 
@@ -123,7 +123,7 @@ where
     multi(reps, || test());
 }
 
-pub fn test_with_device<T, R>(reps: usize, nvml: &NVML, test: T)
+pub fn test_with_device<T, R>(reps: usize, nvml: &Nvml, test: T)
 where
     T: Fn(&Device) -> Result<R, NvmlError>,
     R: ShouldPrint,
@@ -135,7 +135,7 @@ where
     multi(reps, || test(&device));
 }
 
-pub fn test_with_unit<T, R>(reps: usize, nvml: &NVML, test: T)
+pub fn test_with_unit<T, R>(reps: usize, nvml: &Nvml, test: T)
 where
     T: Fn(&Unit) -> Result<R, NvmlError>,
     R: ShouldPrint,
@@ -147,7 +147,7 @@ where
     multi(reps, || test(&unit));
 }
 
-pub fn test_with_link<T, R>(reps: usize, nvml: &NVML, test: T)
+pub fn test_with_link<T, R>(reps: usize, nvml: &Nvml, test: T)
 where
     T: Fn(&NvLink) -> Result<R, NvmlError>,
     R: ShouldPrint,
