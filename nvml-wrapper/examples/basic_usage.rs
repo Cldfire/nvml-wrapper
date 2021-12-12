@@ -45,11 +45,10 @@ fn main() -> Result<(), NvmlError> {
         max_link_width = max_link_width
     );
 
+    println!();
     if device.is_multi_gpu_board()? {
-        println!();
         println!("This device is on a multi-GPU board.")
     } else {
-        println!();
         println!("This device is not on a multi-GPU board.")
     }
 

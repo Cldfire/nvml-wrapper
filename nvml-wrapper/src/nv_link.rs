@@ -92,7 +92,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
             nvml_try(sym(self.device.handle(), self.link, &mut state))?;
 
-            Ok(bool_from_state(state)?)
+            bool_from_state(state)
         }
     }
 
@@ -199,7 +199,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
 
             nvml_try(sym(self.device.handle(), self.link, &mut pci_info))?;
 
-            Ok(PciInfo::try_from(pci_info, false)?)
+            PciInfo::try_from(pci_info, false)
         }
     }
 
@@ -352,7 +352,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
                 &mut controls,
             ))?;
 
-            Ok(UtilizationControl::try_from(controls)?)
+            UtilizationControl::try_from(controls)
         }
     }
 
