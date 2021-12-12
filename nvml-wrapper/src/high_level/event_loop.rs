@@ -17,13 +17,13 @@ a handler for the events. Event handling looks like this (details removed):
 #
 # #[cfg(target_os = "linux")]
 # mod example {
-# use nvml::NVML;
+# use nvml::Nvml;
 # use nvml::error::{NvmlError, NvmlErrorWithSource};
 # use nvml::high_level::EventLoopProvider;
 # use nvml::high_level::Event::*;
 #
 # pub fn actual_main() -> Result<(), NvmlErrorWithSource> {
-# let nvml = NVML::init()?;
+# let nvml = Nvml::init()?;
 # let device = nvml.device_by_index(0)?;
 # let mut event_loop = nvml.create_event_loop(vec![&device])?;
 #
@@ -241,7 +241,7 @@ impl EventLoopState {
     }
 }
 
-/// Adds a method to obtain an `EventLoop` to the `NVML` struct.
+/// Adds a method to obtain an `EventLoop` to the `Nvml` struct.
 ///
 /// `use` it at your leisure.
 pub trait EventLoopProvider {

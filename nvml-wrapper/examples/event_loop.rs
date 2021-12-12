@@ -2,7 +2,7 @@
 fn main() -> Result<(), nvml_wrapper::error::NvmlErrorWithSource> {
     use nvml_wrapper::error::NvmlError;
     use nvml_wrapper::Nvml;
-    // Bringing this in allows us to use `NVML.create_event_loop()`
+    // Bringing this in allows us to use `Nvml.create_event_loop()`
     use nvml_wrapper::high_level::EventLoopProvider;
     // Bringing these in for brevity (Event::SomeEvent vs. SomeEvent)
     use nvml_wrapper::high_level::Event::*;

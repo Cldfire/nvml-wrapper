@@ -12,18 +12,18 @@ use std::{convert::TryFrom, os::raw::c_uint};
 /**
 Struct that represents a unit.
 
-Obtain a `Unit` with the various methods available to you on the `NVML`
+Obtain a `Unit` with the various methods available to you on the `Nvml`
 struct.
 
 Lifetimes are used to enforce that each `Unit` instance cannot be used after
-the `NVML` instance it was obtained from is dropped:
+the `Nvml` instance it was obtained from is dropped:
 
 ```compile_fail
-use nvml_wrapper::NVML;
+use nvml_wrapper::Nvml;
 # use nvml_wrapper::error::*;
 
 # fn main() -> Result<(), NvmlError> {
-let nvml = NVML::init()?;
+let nvml = Nvml::init()?;
 let unit = nvml.unit_by_index(0)?;
 
 drop(nvml);
@@ -53,7 +53,7 @@ impl<'nvml> Unit<'nvml> {
     Create a new `Unit` wrapper.
 
     You will most likely never need to call this; see the methods available to you
-    on the `NVML` struct to get one.
+    on the `Nvml` struct to get one.
 
     # Safety
 
