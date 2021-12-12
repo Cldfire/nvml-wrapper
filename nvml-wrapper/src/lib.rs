@@ -170,20 +170,19 @@ and may not accurately reflect the version of NVML that this library is written 
 should ideally read the doc comments on an up-to-date NVML API header. Such a header can be
 downloaded as part of the [CUDA toolkit](https://developer.nvidia.com/cuda-downloads).
 */
-// TODO: this should be named `Nvml`
-pub struct NVML {
+pub struct Nvml {
     lib: ManuallyDrop<NvmlLib>,
 }
 
-assert_impl_all!(NVML: Send, Sync);
+assert_impl_all!(Nvml: Send, Sync);
 
-impl std::fmt::Debug for NVML {
+impl std::fmt::Debug for Nvml {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str("NVML")
     }
 }
 
-impl NVML {
+impl Nvml {
     /**
     Handles NVML initialization and must be called before doing anything else.
 
@@ -934,7 +933,7 @@ impl NVML {
 /// This `Drop` implementation ignores errors! Use the `.shutdown()` method on
 /// the `NVML` struct
 /// if you care about handling them.
-impl Drop for NVML {
+impl Drop for Nvml {
     fn drop(&mut self) {
         unsafe {
             self.lib.nvmlShutdown();
@@ -995,13 +994,13 @@ impl<'a> NvmlBuilder<'a> {
     }
 
     /// Perform initialization.
-    pub fn init(&self) -> Result<NVML, NvmlError> {
+    pub fn init(&self) -> Result<Nvml, NvmlError> {
         let lib_path = self.lib_path.unwrap_or_else(|| LIB_PATH.as_ref());
 
         if self.flags.is_empty() {
-            NVML::init_internal(lib_path)
+            Nvml::init_internal(lib_path)
         } else {
-            NVML::init_with_flags_internal(lib_path, self.flags)
+            Nvml::init_with_flags_internal(lib_path, self.flags)
         }
     }
 }
@@ -1015,7 +1014,7 @@ mod test {
 
     #[test]
     fn init_with_flags() {
-        NVML::init_with_flags(InitFlags::NO_GPUS).unwrap();
+        Nvml::init_with_flags(InitFlags::NO_GPUS).unwrap();
     }
 
     #[test]

@@ -1,7 +1,7 @@
 #[cfg(target_os = "linux")]
 use crate::EventSet;
 use crate::NvLink;
-use crate::NVML;
+use crate::Nvml;
 
 use crate::bitmasks::device::ThrottleReasons;
 #[cfg(target_os = "linux")]
@@ -65,7 +65,7 @@ This means you shouldn't have to worry about calls to `Device` methods returning
 #[derive(Debug)]
 pub struct Device<'nvml> {
     device: nvmlDevice_t,
-    nvml: &'nvml NVML,
+    nvml: &'nvml Nvml,
 }
 
 unsafe impl<'nvml> Send for Device<'nvml> {}
@@ -87,12 +87,12 @@ impl<'nvml> Device<'nvml> {
     */
     // Clippy bug, see https://github.com/rust-lang/rust-clippy/issues/5593
     #[allow(clippy::missing_safety_doc)]
-    pub unsafe fn new(device: nvmlDevice_t, nvml: &'nvml NVML) -> Self {
+    pub unsafe fn new(device: nvmlDevice_t, nvml: &'nvml Nvml) -> Self {
         Self { device, nvml }
     }
 
     /// Access the `NVML` reference this struct wraps
-    pub fn nvml(&self) -> &'nvml NVML {
+    pub fn nvml(&self) -> &'nvml Nvml {
         self.nvml
     }
 

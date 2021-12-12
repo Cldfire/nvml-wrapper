@@ -1,6 +1,6 @@
 use crate::error::{nvml_sym, nvml_try, NvmlError};
 use crate::ffi::bindings::*;
-use crate::NVML;
+use crate::Nvml;
 
 use std::mem;
 
@@ -36,7 +36,7 @@ event_set.wait(5)?;
 #[derive(Debug)]
 pub struct EventSet<'nvml> {
     set: nvmlEventSet_t,
-    pub nvml: &'nvml NVML,
+    pub nvml: &'nvml Nvml,
 }
 
 unsafe impl<'nvml> Send for EventSet<'nvml> {}
@@ -56,7 +56,7 @@ impl<'nvml> EventSet<'nvml> {
     // TODO: move constructor to this struct?
     // Clippy bug, see https://github.com/rust-lang/rust-clippy/issues/5593
     #[allow(clippy::missing_safety_doc)]
-    pub unsafe fn new(set: nvmlEventSet_t, nvml: &'nvml NVML) -> Self {
+    pub unsafe fn new(set: nvmlEventSet_t, nvml: &'nvml Nvml) -> Self {
         Self { set, nvml }
     }
 

@@ -68,7 +68,7 @@ use crate::error::{NvmlError, NvmlErrorWithSource};
 use crate::struct_wrappers::event::EventData;
 use crate::Device;
 use crate::EventSet;
-use crate::NVML;
+use crate::Nvml;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -252,7 +252,7 @@ pub trait EventLoopProvider {
     ) -> Result<EventLoop, NvmlErrorWithSource>;
 }
 
-impl EventLoopProvider for NVML {
+impl EventLoopProvider for Nvml {
     /**
     Create an event loop that will register itself to recieve events for the given
     `Device`s.

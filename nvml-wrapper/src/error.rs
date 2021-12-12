@@ -77,7 +77,7 @@ pub enum NvmlError {
     #[error("a call to `PciInfo.try_into_c()` failed")]
     PciInfoToCFailed,
 
-    #[error("NVML was not first initialized with `NVML::init()`")]
+    #[error("NVML was not first initialized with `Nvml::init()`")]
     Uninitialized,
 
     #[error("a supplied argument was invalid")]

@@ -4,7 +4,7 @@ use crate::enums::unit::{LedState, TemperatureReading};
 use crate::error::{nvml_sym, nvml_try, NvmlError};
 use crate::ffi::bindings::*;
 use crate::struct_wrappers::unit::{FansInfo, PsuInfo, UnitInfo};
-use crate::NVML;
+use crate::Nvml;
 use static_assertions::assert_impl_all;
 use std::mem;
 use std::{convert::TryFrom, os::raw::c_uint};
@@ -40,7 +40,7 @@ such hardware. **Test the functionality in this module before you use it**.
 #[derive(Debug)]
 pub struct Unit<'nvml> {
     unit: nvmlUnit_t,
-    nvml: &'nvml NVML,
+    nvml: &'nvml Nvml,
 }
 
 unsafe impl<'nvml> Send for Unit<'nvml> {}
@@ -62,12 +62,12 @@ impl<'nvml> Unit<'nvml> {
     */
     // Clippy bug, see https://github.com/rust-lang/rust-clippy/issues/5593
     #[allow(clippy::missing_safety_doc)]
-    pub unsafe fn new(unit: nvmlUnit_t, nvml: &'nvml NVML) -> Self {
+    pub unsafe fn new(unit: nvmlUnit_t, nvml: &'nvml Nvml) -> Self {
         Self { unit, nvml }
     }
 
     /// Access the `NVML` reference this struct wraps
-    pub fn nvml(&self) -> &'nvml NVML {
+    pub fn nvml(&self) -> &'nvml Nvml {
         self.nvml
     }
 
