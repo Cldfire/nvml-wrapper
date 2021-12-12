@@ -4488,11 +4488,12 @@ mod test {
     }
 
     #[test]
+    #[ignore = "my machine does not support this call"]
     fn is_api_restricted() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
-            device.is_api_restricted(Api::ApplicationClocks)
-            // AutoBoostedClocks is not supported on my machine, so not testing
+            device.is_api_restricted(Api::ApplicationClocks)?;
+            device.is_api_restricted(Api::AutoBoostedClocks)
         })
     }
 
