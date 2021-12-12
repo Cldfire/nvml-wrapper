@@ -4,6 +4,10 @@ This file describes the changes / additions / fixes between bindings releases.
 
 ## Unreleased
 
+### Internal
+
+* The generated layout tests have been removed from the bindings (see https://github.com/rust-lang/rust-bindgen/issues/1651 for rationale)
+
 ## 0.5.0 (released 2020-12-06)
 
 ### Release Summary
