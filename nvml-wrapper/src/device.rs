@@ -536,7 +536,12 @@ impl<'nvml> Device<'nvml> {
     */
     // Tested
     pub fn running_compute_processes(&self) -> Result<Vec<ProcessInfo>, NvmlError> {
-        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetComputeRunningProcesses_v2.as_ref())?;
+        let sym = nvml_sym(
+            self.nvml
+                .lib
+                .nvmlDeviceGetComputeRunningProcesses_v2
+                .as_ref(),
+        )?;
 
         unsafe {
             let mut count: c_uint = match self.running_compute_processes_count()? {
@@ -567,7 +572,12 @@ impl<'nvml> Device<'nvml> {
     */
     // Tested as part of `.running_compute_processes()`
     pub fn running_compute_processes_count(&self) -> Result<u32, NvmlError> {
-        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetComputeRunningProcesses_v2.as_ref())?;
+        let sym = nvml_sym(
+            self.nvml
+                .lib
+                .nvmlDeviceGetComputeRunningProcesses_v2
+                .as_ref(),
+        )?;
 
         unsafe {
             // Indicates that we want the count
@@ -1273,7 +1283,12 @@ impl<'nvml> Device<'nvml> {
     */
     // Tested
     pub fn running_graphics_processes(&self) -> Result<Vec<ProcessInfo>, NvmlError> {
-        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetComputeRunningProcesses_v2.as_ref())?;
+        let sym = nvml_sym(
+            self.nvml
+                .lib
+                .nvmlDeviceGetComputeRunningProcesses_v2
+                .as_ref(),
+        )?;
 
         unsafe {
             let mut count: c_uint = match self.running_graphics_processes_count()? {
@@ -1304,7 +1319,12 @@ impl<'nvml> Device<'nvml> {
     */
     // Tested as part of `.running_graphics_processes()`
     pub fn running_graphics_processes_count(&self) -> Result<u32, NvmlError> {
-        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetComputeRunningProcesses_v2.as_ref())?;
+        let sym = nvml_sym(
+            self.nvml
+                .lib
+                .nvmlDeviceGetComputeRunningProcesses_v2
+                .as_ref(),
+        )?;
 
         unsafe {
             // Indicates that we want the count
