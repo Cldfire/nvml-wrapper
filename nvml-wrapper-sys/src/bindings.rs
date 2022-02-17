@@ -17,9 +17,17 @@ pub const NVML_NVLINK_MAX_LINKS: u32 = 12;
 pub const NVML_MAX_PHYSICAL_BRIDGE: u32 = 128;
 pub const nvmlFlagDefault: u32 = 0;
 pub const nvmlFlagForce: u32 = 1;
+pub const MAX_CLK_DOMAINS: u32 = 32;
+pub const NVML_GRID_LICENSE_EXPIRY_NOT_AVAILABLE: u32 = 0;
+pub const NVML_GRID_LICENSE_EXPIRY_INVALID: u32 = 1;
+pub const NVML_GRID_LICENSE_EXPIRY_VALID: u32 = 2;
+pub const NVML_GRID_LICENSE_EXPIRY_NOT_APPLICABLE: u32 = 3;
+pub const NVML_GRID_LICENSE_EXPIRY_PERMANENT: u32 = 4;
 pub const NVML_GRID_LICENSE_BUFFER_SIZE: u32 = 128;
 pub const NVML_VGPU_NAME_BUFFER_SIZE: u32 = 64;
 pub const NVML_GRID_LICENSE_FEATURE_MAX_COUNT: u32 = 3;
+pub const INVALID_GPU_INSTANCE_PROFILE_ID: u32 = 4294967295;
+pub const INVALID_GPU_INSTANCE_ID: u32 = 4294967295;
 pub const NVML_VGPU_VIRTUALIZATION_CAP_MIGRATION_NO: u32 = 0;
 pub const NVML_VGPU_VIRTUALIZATION_CAP_MIGRATION_YES: u32 = 1;
 pub const NVML_VGPU_PGPU_VIRTUALIZATION_CAP_MIGRATION_NO: u32 = 0;
@@ -31,6 +39,11 @@ pub const NVML_DEVICE_ARCH_VOLTA: u32 = 5;
 pub const NVML_DEVICE_ARCH_TURING: u32 = 6;
 pub const NVML_DEVICE_ARCH_AMPERE: u32 = 7;
 pub const NVML_DEVICE_ARCH_UNKNOWN: u32 = 4294967295;
+pub const NVML_BUS_TYPE_UNKNOWN: u32 = 0;
+pub const NVML_BUS_TYPE_PCI: u32 = 1;
+pub const NVML_BUS_TYPE_PCIE: u32 = 2;
+pub const NVML_BUS_TYPE_FPCI: u32 = 3;
+pub const NVML_BUS_TYPE_AGP: u32 = 4;
 pub mod field_id {
     pub const NVML_FI_DEV_ECC_CURRENT: u32 = 1;
     pub const NVML_FI_DEV_ECC_PENDING: u32 = 2;
@@ -177,7 +190,22 @@ pub mod field_id {
     pub const NVML_FI_DEV_REMAPPED_UNC: u32 = 143;
     pub const NVML_FI_DEV_REMAPPED_PENDING: u32 = 144;
     pub const NVML_FI_DEV_REMAPPED_FAILURE: u32 = 145;
-    pub const NVML_FI_MAX: u32 = 146;
+    pub const NVML_FI_DEV_NVLINK_REMOTE_NVLINK_ID: u32 = 146;
+    pub const NVML_FI_DEV_NVSWITCH_CONNECTED_LINK_COUNT: u32 = 147;
+    pub const NVML_FI_DEV_NVLINK_ECC_DATA_ERROR_COUNT_L0: u32 = 148;
+    pub const NVML_FI_DEV_NVLINK_ECC_DATA_ERROR_COUNT_L1: u32 = 149;
+    pub const NVML_FI_DEV_NVLINK_ECC_DATA_ERROR_COUNT_L2: u32 = 150;
+    pub const NVML_FI_DEV_NVLINK_ECC_DATA_ERROR_COUNT_L3: u32 = 151;
+    pub const NVML_FI_DEV_NVLINK_ECC_DATA_ERROR_COUNT_L4: u32 = 152;
+    pub const NVML_FI_DEV_NVLINK_ECC_DATA_ERROR_COUNT_L5: u32 = 153;
+    pub const NVML_FI_DEV_NVLINK_ECC_DATA_ERROR_COUNT_L6: u32 = 154;
+    pub const NVML_FI_DEV_NVLINK_ECC_DATA_ERROR_COUNT_L7: u32 = 155;
+    pub const NVML_FI_DEV_NVLINK_ECC_DATA_ERROR_COUNT_L8: u32 = 156;
+    pub const NVML_FI_DEV_NVLINK_ECC_DATA_ERROR_COUNT_L9: u32 = 157;
+    pub const NVML_FI_DEV_NVLINK_ECC_DATA_ERROR_COUNT_L10: u32 = 158;
+    pub const NVML_FI_DEV_NVLINK_ECC_DATA_ERROR_COUNT_L11: u32 = 159;
+    pub const NVML_FI_DEV_NVLINK_ECC_DATA_ERROR_COUNT_TOTAL: u32 = 160;
+    pub const NVML_FI_MAX: u32 = 161;
 }
 pub const nvmlEventTypeSingleBitEccError: u32 = 1;
 pub const nvmlEventTypeDoubleBitEccError: u32 = 2;
@@ -199,7 +227,6 @@ pub const nvmlClocksThrottleReasonHwThermalSlowdown: u32 = 64;
 pub const nvmlClocksThrottleReasonHwPowerBrakeSlowdown: u32 = 128;
 pub const nvmlClocksThrottleReasonDisplayClockSetting: u32 = 256;
 pub const nvmlClocksThrottleReasonNone: u32 = 0;
-pub const nvmlClocksThrottleReasonAll: u32 = 511;
 pub const NVML_NVFBC_SESSION_FLAG_DIFFMAP_ENABLED: u32 = 1;
 pub const NVML_NVFBC_SESSION_FLAG_CLASSIFICATIONMAP_ENABLED: u32 = 2;
 pub const NVML_NVFBC_SESSION_FLAG_CAPTURE_WITH_WAIT_NO_WAIT: u32 = 4;
@@ -214,6 +241,7 @@ pub const NVML_DEVICE_PART_NUMBER_BUFFER_SIZE: u32 = 80;
 pub const NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE: u32 = 80;
 pub const NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE: u32 = 80;
 pub const NVML_DEVICE_NAME_BUFFER_SIZE: u32 = 64;
+pub const NVML_DEVICE_NAME_V2_BUFFER_SIZE: u32 = 96;
 pub const NVML_DEVICE_SERIAL_BUFFER_SIZE: u32 = 30;
 pub const NVML_DEVICE_VBIOS_VERSION_BUFFER_SIZE: u32 = 32;
 pub const NVML_AFFINITY_SCOPE_NODE: u32 = 0;
@@ -225,13 +253,18 @@ pub const NVML_GPU_INSTANCE_PROFILE_2_SLICE: u32 = 1;
 pub const NVML_GPU_INSTANCE_PROFILE_3_SLICE: u32 = 2;
 pub const NVML_GPU_INSTANCE_PROFILE_4_SLICE: u32 = 3;
 pub const NVML_GPU_INSTANCE_PROFILE_7_SLICE: u32 = 4;
-pub const NVML_GPU_INSTANCE_PROFILE_COUNT: u32 = 5;
+pub const NVML_GPU_INSTANCE_PROFILE_8_SLICE: u32 = 5;
+pub const NVML_GPU_INSTANCE_PROFILE_6_SLICE: u32 = 6;
+pub const NVML_GPU_INSTANCE_PROFILE_1_SLICE_REV1: u32 = 7;
+pub const NVML_GPU_INSTANCE_PROFILE_COUNT: u32 = 8;
 pub const NVML_COMPUTE_INSTANCE_PROFILE_1_SLICE: u32 = 0;
 pub const NVML_COMPUTE_INSTANCE_PROFILE_2_SLICE: u32 = 1;
 pub const NVML_COMPUTE_INSTANCE_PROFILE_3_SLICE: u32 = 2;
 pub const NVML_COMPUTE_INSTANCE_PROFILE_4_SLICE: u32 = 3;
 pub const NVML_COMPUTE_INSTANCE_PROFILE_7_SLICE: u32 = 4;
-pub const NVML_COMPUTE_INSTANCE_PROFILE_COUNT: u32 = 5;
+pub const NVML_COMPUTE_INSTANCE_PROFILE_8_SLICE: u32 = 5;
+pub const NVML_COMPUTE_INSTANCE_PROFILE_6_SLICE: u32 = 6;
+pub const NVML_COMPUTE_INSTANCE_PROFILE_COUNT: u32 = 7;
 pub const NVML_COMPUTE_INSTANCE_ENGINE_PROFILE_SHARED: u32 = 0;
 pub const NVML_COMPUTE_INSTANCE_ENGINE_PROFILE_COUNT: u32 = 1;
 #[repr(C)]
@@ -286,9 +319,18 @@ pub struct nvmlBAR1Memory_st {
 pub type nvmlBAR1Memory_t = nvmlBAR1Memory_st;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+pub struct nvmlProcessInfo_v1_st {
+    pub pid: raw::c_uint,
+    pub usedGpuMemory: raw::c_ulonglong,
+}
+pub type nvmlProcessInfo_v1_t = nvmlProcessInfo_v1_st;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct nvmlProcessInfo_st {
     pub pid: raw::c_uint,
     pub usedGpuMemory: raw::c_ulonglong,
+    pub gpuInstanceId: raw::c_uint,
+    pub computeInstanceId: raw::c_uint,
 }
 pub type nvmlProcessInfo_t = nvmlProcessInfo_st;
 #[repr(C)]
@@ -300,8 +342,21 @@ pub struct nvmlDeviceAttributes_st {
     pub sharedEncoderCount: raw::c_uint,
     pub sharedJpegCount: raw::c_uint,
     pub sharedOfaCount: raw::c_uint,
+    pub gpuInstanceSliceCount: raw::c_uint,
+    pub computeInstanceSliceCount: raw::c_uint,
+    pub memorySizeMB: raw::c_ulonglong,
 }
 pub type nvmlDeviceAttributes_t = nvmlDeviceAttributes_st;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct nvmlRowRemapperHistogramValues_st {
+    pub max: raw::c_uint,
+    pub high: raw::c_uint,
+    pub partial: raw::c_uint,
+    pub low: raw::c_uint,
+    pub none: raw::c_uint,
+}
+pub type nvmlRowRemapperHistogramValues_t = nvmlRowRemapperHistogramValues_st;
 pub const nvmlBridgeChipType_enum_NVML_BRIDGE_CHIP_PLX: nvmlBridgeChipType_enum = 0;
 pub const nvmlBridgeChipType_enum_NVML_BRIDGE_CHIP_BRO4: nvmlBridgeChipType_enum = 1;
 pub type nvmlBridgeChipType_enum = raw::c_uint;
@@ -361,9 +416,21 @@ pub const nvmlNvLinkErrorCounter_enum_NVML_NVLINK_ERROR_DL_CRC_FLIT: nvmlNvLinkE
     2;
 pub const nvmlNvLinkErrorCounter_enum_NVML_NVLINK_ERROR_DL_CRC_DATA: nvmlNvLinkErrorCounter_enum =
     3;
-pub const nvmlNvLinkErrorCounter_enum_NVML_NVLINK_ERROR_COUNT: nvmlNvLinkErrorCounter_enum = 4;
+pub const nvmlNvLinkErrorCounter_enum_NVML_NVLINK_ERROR_DL_ECC_DATA: nvmlNvLinkErrorCounter_enum =
+    4;
+pub const nvmlNvLinkErrorCounter_enum_NVML_NVLINK_ERROR_COUNT: nvmlNvLinkErrorCounter_enum = 5;
 pub type nvmlNvLinkErrorCounter_enum = raw::c_uint;
 pub use self::nvmlNvLinkErrorCounter_enum as nvmlNvLinkErrorCounter_t;
+pub const nvmlIntNvLinkDeviceType_enum_NVML_NVLINK_DEVICE_TYPE_GPU: nvmlIntNvLinkDeviceType_enum =
+    0;
+pub const nvmlIntNvLinkDeviceType_enum_NVML_NVLINK_DEVICE_TYPE_IBMNPU:
+    nvmlIntNvLinkDeviceType_enum = 1;
+pub const nvmlIntNvLinkDeviceType_enum_NVML_NVLINK_DEVICE_TYPE_SWITCH:
+    nvmlIntNvLinkDeviceType_enum = 2;
+pub const nvmlIntNvLinkDeviceType_enum_NVML_NVLINK_DEVICE_TYPE_UNKNOWN:
+    nvmlIntNvLinkDeviceType_enum = 255;
+pub type nvmlIntNvLinkDeviceType_enum = raw::c_uint;
+pub use self::nvmlIntNvLinkDeviceType_enum as nvmlIntNvLinkDeviceType_t;
 pub const nvmlGpuLevel_enum_NVML_TOPOLOGY_INTERNAL: nvmlGpuLevel_enum = 0;
 pub const nvmlGpuLevel_enum_NVML_TOPOLOGY_SINGLE: nvmlGpuLevel_enum = 10;
 pub const nvmlGpuLevel_enum_NVML_TOPOLOGY_MULTIPLE: nvmlGpuLevel_enum = 20;
@@ -398,7 +465,7 @@ pub struct nvmlBridgeChipInfo_st {
 }
 pub type nvmlBridgeChipInfo_t = nvmlBridgeChipInfo_st;
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct nvmlBridgeChipHierarchy_st {
     pub bridgeCount: raw::c_uchar,
     pub bridgeChipInfo: [nvmlBridgeChipInfo_t; 128usize],
@@ -473,7 +540,17 @@ pub const nvmlBrandType_enum_NVML_BRAND_NVS: nvmlBrandType_enum = 3;
 pub const nvmlBrandType_enum_NVML_BRAND_GRID: nvmlBrandType_enum = 4;
 pub const nvmlBrandType_enum_NVML_BRAND_GEFORCE: nvmlBrandType_enum = 5;
 pub const nvmlBrandType_enum_NVML_BRAND_TITAN: nvmlBrandType_enum = 6;
-pub const nvmlBrandType_enum_NVML_BRAND_COUNT: nvmlBrandType_enum = 7;
+pub const nvmlBrandType_enum_NVML_BRAND_NVIDIA_VAPPS: nvmlBrandType_enum = 7;
+pub const nvmlBrandType_enum_NVML_BRAND_NVIDIA_VPC: nvmlBrandType_enum = 8;
+pub const nvmlBrandType_enum_NVML_BRAND_NVIDIA_VCS: nvmlBrandType_enum = 9;
+pub const nvmlBrandType_enum_NVML_BRAND_NVIDIA_VWS: nvmlBrandType_enum = 10;
+pub const nvmlBrandType_enum_NVML_BRAND_NVIDIA_VGAMING: nvmlBrandType_enum = 11;
+pub const nvmlBrandType_enum_NVML_BRAND_QUADRO_RTX: nvmlBrandType_enum = 12;
+pub const nvmlBrandType_enum_NVML_BRAND_NVIDIA_RTX: nvmlBrandType_enum = 13;
+pub const nvmlBrandType_enum_NVML_BRAND_NVIDIA: nvmlBrandType_enum = 14;
+pub const nvmlBrandType_enum_NVML_BRAND_GEFORCE_RTX: nvmlBrandType_enum = 15;
+pub const nvmlBrandType_enum_NVML_BRAND_TITAN_RTX: nvmlBrandType_enum = 16;
+pub const nvmlBrandType_enum_NVML_BRAND_COUNT: nvmlBrandType_enum = 17;
 pub type nvmlBrandType_enum = raw::c_uint;
 pub use self::nvmlBrandType_enum as nvmlBrandType_t;
 pub const nvmlTemperatureThresholds_enum_NVML_TEMPERATURE_THRESHOLD_SHUTDOWN:
@@ -484,8 +561,14 @@ pub const nvmlTemperatureThresholds_enum_NVML_TEMPERATURE_THRESHOLD_MEM_MAX:
     nvmlTemperatureThresholds_enum = 2;
 pub const nvmlTemperatureThresholds_enum_NVML_TEMPERATURE_THRESHOLD_GPU_MAX:
     nvmlTemperatureThresholds_enum = 3;
-pub const nvmlTemperatureThresholds_enum_NVML_TEMPERATURE_THRESHOLD_COUNT:
+pub const nvmlTemperatureThresholds_enum_NVML_TEMPERATURE_THRESHOLD_ACOUSTIC_MIN:
     nvmlTemperatureThresholds_enum = 4;
+pub const nvmlTemperatureThresholds_enum_NVML_TEMPERATURE_THRESHOLD_ACOUSTIC_CURR:
+    nvmlTemperatureThresholds_enum = 5;
+pub const nvmlTemperatureThresholds_enum_NVML_TEMPERATURE_THRESHOLD_ACOUSTIC_MAX:
+    nvmlTemperatureThresholds_enum = 6;
+pub const nvmlTemperatureThresholds_enum_NVML_TEMPERATURE_THRESHOLD_COUNT:
+    nvmlTemperatureThresholds_enum = 7;
 pub type nvmlTemperatureThresholds_enum = raw::c_uint;
 pub use self::nvmlTemperatureThresholds_enum as nvmlTemperatureThresholds_t;
 pub const nvmlTemperatureSensors_enum_NVML_TEMPERATURE_GPU: nvmlTemperatureSensors_enum = 0;
@@ -499,6 +582,21 @@ pub const nvmlComputeMode_enum_NVML_COMPUTEMODE_EXCLUSIVE_PROCESS: nvmlComputeMo
 pub const nvmlComputeMode_enum_NVML_COMPUTEMODE_COUNT: nvmlComputeMode_enum = 4;
 pub type nvmlComputeMode_enum = raw::c_uint;
 pub use self::nvmlComputeMode_enum as nvmlComputeMode_t;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct nvmlClkMonFaultInfo_struct {
+    pub clkApiDomain: raw::c_uint,
+    pub clkDomainFaultMask: raw::c_uint,
+}
+pub type nvmlClkMonFaultInfo_t = nvmlClkMonFaultInfo_struct;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct nvmlClkMonStatus_status {
+    pub bGlobalStatus: raw::c_uint,
+    pub clkMonListSize: raw::c_uint,
+    pub clkMonList: [nvmlClkMonFaultInfo_t; 32usize],
+}
+pub type nvmlClkMonStatus_t = nvmlClkMonStatus_status;
 pub const nvmlMemoryErrorType_enum_NVML_MEMORY_ERROR_TYPE_CORRECTED: nvmlMemoryErrorType_enum = 0;
 pub const nvmlMemoryErrorType_enum_NVML_MEMORY_ERROR_TYPE_UNCORRECTED: nvmlMemoryErrorType_enum = 1;
 pub const nvmlMemoryErrorType_enum_NVML_MEMORY_ERROR_TYPE_COUNT: nvmlMemoryErrorType_enum = 2;
@@ -581,6 +679,7 @@ pub const nvmlReturn_enum_NVML_ERROR_MEMORY: nvmlReturn_enum = 20;
 pub const nvmlReturn_enum_NVML_ERROR_NO_DATA: nvmlReturn_enum = 21;
 pub const nvmlReturn_enum_NVML_ERROR_VGPU_ECC_NOT_SUPPORTED: nvmlReturn_enum = 22;
 pub const nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_RESOURCES: nvmlReturn_enum = 23;
+pub const nvmlReturn_enum_NVML_ERROR_FREQ_NOT_SUPPORTED: nvmlReturn_enum = 24;
 pub const nvmlReturn_enum_NVML_ERROR_UNKNOWN: nvmlReturn_enum = 999;
 pub type nvmlReturn_enum = raw::c_uint;
 pub use self::nvmlReturn_enum as nvmlReturn_t;
@@ -611,6 +710,18 @@ pub const nvmlRestrictedAPI_enum_NVML_RESTRICTED_API_SET_AUTO_BOOSTED_CLOCKS:
 pub const nvmlRestrictedAPI_enum_NVML_RESTRICTED_API_COUNT: nvmlRestrictedAPI_enum = 2;
 pub type nvmlRestrictedAPI_enum = raw::c_uint;
 pub use self::nvmlRestrictedAPI_enum as nvmlRestrictedAPI_t;
+pub const nvmlNvLinkEccLaneErrorCounter_enum_NVML_NVLINK_ERROR_DL_ECC_LANE0:
+    nvmlNvLinkEccLaneErrorCounter_enum = 0;
+pub const nvmlNvLinkEccLaneErrorCounter_enum_NVML_NVLINK_ERROR_DL_ECC_LANE1:
+    nvmlNvLinkEccLaneErrorCounter_enum = 1;
+pub const nvmlNvLinkEccLaneErrorCounter_enum_NVML_NVLINK_ERROR_DL_ECC_LANE2:
+    nvmlNvLinkEccLaneErrorCounter_enum = 2;
+pub const nvmlNvLinkEccLaneErrorCounter_enum_NVML_NVLINK_ERROR_DL_ECC_LANE3:
+    nvmlNvLinkEccLaneErrorCounter_enum = 3;
+pub const nvmlNvLinkEccLaneErrorCounter_enum_NVML_NVLINK_ERROR_DL_ECC_COUNT:
+    nvmlNvLinkEccLaneErrorCounter_enum = 4;
+pub type nvmlNvLinkEccLaneErrorCounter_enum = raw::c_uint;
+pub use self::nvmlNvLinkEccLaneErrorCounter_enum as nvmlNvLinkEccLaneErrorCounter_t;
 pub const nvmlGpuVirtualizationMode_NVML_GPU_VIRTUALIZATION_MODE_NONE: nvmlGpuVirtualizationMode =
     0;
 pub const nvmlGpuVirtualizationMode_NVML_GPU_VIRTUALIZATION_MODE_PASSTHROUGH:
@@ -637,10 +748,18 @@ pub const nvmlVgpuGuestInfoState_enum_NVML_VGPU_INSTANCE_GUEST_INFO_STATE_INITIA
     nvmlVgpuGuestInfoState_enum = 1;
 pub type nvmlVgpuGuestInfoState_enum = raw::c_uint;
 pub use self::nvmlVgpuGuestInfoState_enum as nvmlVgpuGuestInfoState_t;
+pub const nvmlGridLicenseFeatureCode_t_NVML_GRID_LICENSE_FEATURE_CODE_UNKNOWN:
+    nvmlGridLicenseFeatureCode_t = 0;
 pub const nvmlGridLicenseFeatureCode_t_NVML_GRID_LICENSE_FEATURE_CODE_VGPU:
     nvmlGridLicenseFeatureCode_t = 1;
+pub const nvmlGridLicenseFeatureCode_t_NVML_GRID_LICENSE_FEATURE_CODE_NVIDIA_RTX:
+    nvmlGridLicenseFeatureCode_t = 2;
 pub const nvmlGridLicenseFeatureCode_t_NVML_GRID_LICENSE_FEATURE_CODE_VWORKSTATION:
     nvmlGridLicenseFeatureCode_t = 2;
+pub const nvmlGridLicenseFeatureCode_t_NVML_GRID_LICENSE_FEATURE_CODE_GAMING:
+    nvmlGridLicenseFeatureCode_t = 3;
+pub const nvmlGridLicenseFeatureCode_t_NVML_GRID_LICENSE_FEATURE_CODE_COMPUTE:
+    nvmlGridLicenseFeatureCode_t = 4;
 pub type nvmlGridLicenseFeatureCode_t = raw::c_uint;
 pub type nvmlVgpuTypeId_t = raw::c_uint;
 pub type nvmlVgpuInstance_t = raw::c_uint;
@@ -656,7 +775,7 @@ pub struct nvmlVgpuInstanceUtilizationSample_st {
 }
 pub type nvmlVgpuInstanceUtilizationSample_t = nvmlVgpuInstanceUtilizationSample_st;
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct nvmlVgpuProcessUtilizationSample_st {
     pub vgpuInstance: nvmlVgpuInstance_t,
     pub pid: raw::c_uint,
@@ -670,6 +789,25 @@ pub struct nvmlVgpuProcessUtilizationSample_st {
 pub type nvmlVgpuProcessUtilizationSample_t = nvmlVgpuProcessUtilizationSample_st;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+pub struct nvmlVgpuLicenseExpiry_st {
+    pub year: raw::c_uint,
+    pub month: raw::c_ushort,
+    pub day: raw::c_ushort,
+    pub hour: raw::c_ushort,
+    pub min: raw::c_ushort,
+    pub sec: raw::c_ushort,
+    pub status: raw::c_uchar,
+}
+pub type nvmlVgpuLicenseExpiry_t = nvmlVgpuLicenseExpiry_st;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct nvmlVgpuLicenseInfo_st {
+    pub isLicensed: raw::c_uchar,
+    pub licenseExpiry: nvmlVgpuLicenseExpiry_t,
+}
+pub type nvmlVgpuLicenseInfo_t = nvmlVgpuLicenseInfo_st;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct nvmlProcessUtilizationSample_st {
     pub pid: raw::c_uint,
     pub timeStamp: raw::c_ulonglong,
@@ -680,17 +818,30 @@ pub struct nvmlProcessUtilizationSample_st {
 }
 pub type nvmlProcessUtilizationSample_t = nvmlProcessUtilizationSample_st;
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
+pub struct nvmlGridLicenseExpiry_st {
+    pub year: raw::c_uint,
+    pub month: raw::c_ushort,
+    pub day: raw::c_ushort,
+    pub hour: raw::c_ushort,
+    pub min: raw::c_ushort,
+    pub sec: raw::c_ushort,
+    pub status: raw::c_uchar,
+}
+pub type nvmlGridLicenseExpiry_t = nvmlGridLicenseExpiry_st;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct nvmlGridLicensableFeature_st {
     pub featureCode: nvmlGridLicenseFeatureCode_t,
     pub featureState: raw::c_uint,
     pub licenseInfo: [raw::c_char; 128usize],
     pub productName: [raw::c_char; 128usize],
     pub featureEnabled: raw::c_uint,
+    pub licenseExpiry: nvmlGridLicenseExpiry_t,
 }
 pub type nvmlGridLicensableFeature_t = nvmlGridLicensableFeature_st;
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct nvmlGridLicensableFeatures_st {
     pub isGridLicenseSupported: raw::c_int,
     pub licensableFeaturesCount: raw::c_uint,
@@ -698,6 +849,7 @@ pub struct nvmlGridLicensableFeatures_st {
 }
 pub type nvmlGridLicensableFeatures_t = nvmlGridLicensableFeatures_st;
 pub type nvmlDeviceArchitecture_t = raw::c_uint;
+pub type nvmlBusType_t = raw::c_uint;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct nvmlFieldValue_st {
@@ -732,14 +884,14 @@ pub const nvmlLedColor_enum_NVML_LED_COLOR_AMBER: nvmlLedColor_enum = 1;
 pub type nvmlLedColor_enum = raw::c_uint;
 pub use self::nvmlLedColor_enum as nvmlLedColor_t;
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct nvmlLedState_st {
     pub cause: [raw::c_char; 256usize],
     pub color: nvmlLedColor_t,
 }
 pub type nvmlLedState_t = nvmlLedState_st;
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct nvmlUnitInfo_st {
     pub name: [raw::c_char; 96usize],
     pub id: [raw::c_char; 96usize],
@@ -748,7 +900,7 @@ pub struct nvmlUnitInfo_st {
 }
 pub type nvmlUnitInfo_t = nvmlUnitInfo_st;
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct nvmlPSUInfo_st {
     pub state: [raw::c_char; 256usize],
     pub current: raw::c_uint,
@@ -869,7 +1021,7 @@ pub struct nvmlVgpuVersion_st {
 }
 pub type nvmlVgpuVersion_t = nvmlVgpuVersion_st;
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct nvmlVgpuMetadata_st {
     pub version: raw::c_uint,
     pub revision: raw::c_uint,
@@ -884,7 +1036,7 @@ pub struct nvmlVgpuMetadata_st {
 }
 pub type nvmlVgpuMetadata_t = nvmlVgpuMetadata_st;
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct nvmlVgpuPgpuMetadata_st {
     pub version: raw::c_uint,
     pub revision: raw::c_uint,
@@ -928,12 +1080,12 @@ pub struct nvmlVgpuPgpuCompatibility_st {
 }
 pub type nvmlVgpuPgpuCompatibility_t = nvmlVgpuPgpuCompatibility_st;
 #[repr(C)]
-#[derive(Copy, Clone)]
-pub struct nvmlBlacklistDeviceInfo_st {
+#[derive(Debug, Copy, Clone)]
+pub struct nvmlExcludedDeviceInfo_st {
     pub pciInfo: nvmlPciInfo_t,
     pub uuid: [raw::c_char; 80usize],
 }
-pub type nvmlBlacklistDeviceInfo_t = nvmlBlacklistDeviceInfo_st;
+pub type nvmlExcludedDeviceInfo_t = nvmlExcludedDeviceInfo_st;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct nvmlGpuInstancePlacement_st {
@@ -974,6 +1126,13 @@ pub struct nvmlGpuInstance_st {
 pub type nvmlGpuInstance_t = *mut nvmlGpuInstance_st;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+pub struct nvmlComputeInstancePlacement_st {
+    pub start: raw::c_uint,
+    pub size: raw::c_uint,
+}
+pub type nvmlComputeInstancePlacement_t = nvmlComputeInstancePlacement_st;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct nvmlComputeInstanceProfileInfo_st {
     pub id: raw::c_uint,
     pub sliceCount: raw::c_uint,
@@ -993,6 +1152,7 @@ pub struct nvmlComputeInstanceInfo_st {
     pub gpuInstance: nvmlGpuInstance_t,
     pub id: raw::c_uint,
     pub profileId: raw::c_uint,
+    pub placement: nvmlComputeInstancePlacement_t,
 }
 pub type nvmlComputeInstanceInfo_t = nvmlComputeInstanceInfo_st;
 #[repr(C)]
@@ -1087,7 +1247,7 @@ pub struct NvmlLib {
         unsafe extern "C" fn(deviceCount: *mut raw::c_uint) -> nvmlReturn_t,
         ::libloading::Error,
     >,
-    pub nvmlDeviceGetAttributes: Result<
+    pub nvmlDeviceGetAttributes_v2: Result<
         unsafe extern "C" fn(
             device: nvmlDevice_t,
             attributes: *mut nvmlDeviceAttributes_t,
@@ -1415,6 +1575,14 @@ pub struct NvmlLib {
         ) -> nvmlReturn_t,
         ::libloading::Error,
     >,
+    pub nvmlDeviceSetTemperatureThreshold: Result<
+        unsafe extern "C" fn(
+            device: nvmlDevice_t,
+            thresholdType: nvmlTemperatureThresholds_t,
+            temp: *mut raw::c_int,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
     pub nvmlDeviceGetPerformanceState: Result<
         unsafe extern "C" fn(device: nvmlDevice_t, pState: *mut nvmlPstates_t) -> nvmlReturn_t,
         ::libloading::Error,
@@ -1620,7 +1788,7 @@ pub struct NvmlLib {
         ) -> nvmlReturn_t,
         ::libloading::Error,
     >,
-    pub nvmlDeviceGetComputeRunningProcesses: Result<
+    pub nvmlDeviceGetComputeRunningProcesses_v2: Result<
         unsafe extern "C" fn(
             device: nvmlDevice_t,
             infoCount: *mut raw::c_uint,
@@ -1628,7 +1796,15 @@ pub struct NvmlLib {
         ) -> nvmlReturn_t,
         ::libloading::Error,
     >,
-    pub nvmlDeviceGetGraphicsRunningProcesses: Result<
+    pub nvmlDeviceGetGraphicsRunningProcesses_v2: Result<
+        unsafe extern "C" fn(
+            device: nvmlDevice_t,
+            infoCount: *mut raw::c_uint,
+            infos: *mut nvmlProcessInfo_t,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    pub nvmlDeviceGetMPSComputeRunningProcesses_v2: Result<
         unsafe extern "C" fn(
             device: nvmlDevice_t,
             infoCount: *mut raw::c_uint,
@@ -1676,6 +1852,10 @@ pub struct NvmlLib {
             perfPolicyType: nvmlPerfPolicyType_t,
             violTime: *mut nvmlViolationTime_t,
         ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    pub nvmlDeviceGetIrqNum: Result<
+        unsafe extern "C" fn(device: nvmlDevice_t, irqNum: *mut raw::c_uint) -> nvmlReturn_t,
         ::libloading::Error,
     >,
     pub nvmlDeviceGetAccountingMode: Result<
@@ -1738,6 +1918,13 @@ pub struct NvmlLib {
         ) -> nvmlReturn_t,
         ::libloading::Error,
     >,
+    pub nvmlDeviceGetRowRemapperHistogram: Result<
+        unsafe extern "C" fn(
+            device: nvmlDevice_t,
+            values: *mut nvmlRowRemapperHistogramValues_t,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
     pub nvmlDeviceGetArchitecture: Result<
         unsafe extern "C" fn(
             device: nvmlDevice_t,
@@ -1786,12 +1973,26 @@ pub struct NvmlLib {
     >,
     pub nvmlDeviceResetGpuLockedClocks:
         Result<unsafe extern "C" fn(device: nvmlDevice_t) -> nvmlReturn_t, ::libloading::Error>,
+    pub nvmlDeviceSetMemoryLockedClocks: Result<
+        unsafe extern "C" fn(
+            device: nvmlDevice_t,
+            minMemClockMHz: raw::c_uint,
+            maxMemClockMHz: raw::c_uint,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    pub nvmlDeviceResetMemoryLockedClocks:
+        Result<unsafe extern "C" fn(device: nvmlDevice_t) -> nvmlReturn_t, ::libloading::Error>,
     pub nvmlDeviceSetApplicationsClocks: Result<
         unsafe extern "C" fn(
             device: nvmlDevice_t,
             memClockMHz: raw::c_uint,
             graphicsClockMHz: raw::c_uint,
         ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    pub nvmlDeviceGetClkMonStatus: Result<
+        unsafe extern "C" fn(device: nvmlDevice_t, status: *mut nvmlClkMonStatus_t) -> nvmlReturn_t,
         ::libloading::Error,
     >,
     pub nvmlDeviceSetPowerManagementLimit: Result<
@@ -1908,6 +2109,14 @@ pub struct NvmlLib {
         ) -> nvmlReturn_t,
         ::libloading::Error,
     >,
+    pub nvmlDeviceGetNvLinkRemoteDeviceType: Result<
+        unsafe extern "C" fn(
+            device: nvmlDevice_t,
+            link: raw::c_uint,
+            pNvLinkDeviceType: *mut nvmlIntNvLinkDeviceType_t,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
     pub nvmlEventSetCreate:
         Result<unsafe extern "C" fn(set: *mut nvmlEventSet_t) -> nvmlReturn_t, ::libloading::Error>,
     pub nvmlDeviceRegisterEvents: Result<
@@ -1990,7 +2199,7 @@ pub struct NvmlLib {
         ) -> nvmlReturn_t,
         ::libloading::Error,
     >,
-    pub nvmlDeviceGetGridLicensableFeatures_v3: Result<
+    pub nvmlDeviceGetGridLicensableFeatures_v4: Result<
         unsafe extern "C" fn(
             device: nvmlDevice_t,
             pGridLicensableFeatures: *mut nvmlGridLicensableFeatures_t,
@@ -2035,6 +2244,13 @@ pub struct NvmlLib {
             vgpuTypeId: nvmlVgpuTypeId_t,
             vgpuTypeName: *mut raw::c_char,
             size: *mut raw::c_uint,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    pub nvmlVgpuTypeGetGpuInstanceProfileId: Result<
+        unsafe extern "C" fn(
+            vgpuTypeId: nvmlVgpuTypeId_t,
+            gpuInstanceProfileId: *mut raw::c_uint,
         ) -> nvmlReturn_t,
         ::libloading::Error,
     >,
@@ -2213,6 +2429,13 @@ pub struct NvmlLib {
         ) -> nvmlReturn_t,
         ::libloading::Error,
     >,
+    pub nvmlVgpuInstanceGetGpuInstanceId: Result<
+        unsafe extern "C" fn(
+            vgpuInstance: nvmlVgpuInstance_t,
+            gpuInstanceId: *mut raw::c_uint,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
     pub nvmlVgpuInstanceGetMetadata: Result<
         unsafe extern "C" fn(
             vgpuInstance: nvmlVgpuInstance_t,
@@ -2302,14 +2525,21 @@ pub struct NvmlLib {
         unsafe extern "C" fn(vgpuInstance: nvmlVgpuInstance_t) -> nvmlReturn_t,
         ::libloading::Error,
     >,
-    pub nvmlGetBlacklistDeviceCount: Result<
+    pub nvmlVgpuInstanceGetLicenseInfo: Result<
+        unsafe extern "C" fn(
+            vgpuInstance: nvmlVgpuInstance_t,
+            licenseInfo: *mut nvmlVgpuLicenseInfo_t,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    pub nvmlGetExcludedDeviceCount: Result<
         unsafe extern "C" fn(deviceCount: *mut raw::c_uint) -> nvmlReturn_t,
         ::libloading::Error,
     >,
-    pub nvmlGetBlacklistDeviceInfoByIndex: Result<
+    pub nvmlGetExcludedDeviceInfoByIndex: Result<
         unsafe extern "C" fn(
             index: raw::c_uint,
-            info: *mut nvmlBlacklistDeviceInfo_t,
+            info: *mut nvmlExcludedDeviceInfo_t,
         ) -> nvmlReturn_t,
         ::libloading::Error,
     >,
@@ -2337,7 +2567,7 @@ pub struct NvmlLib {
         ) -> nvmlReturn_t,
         ::libloading::Error,
     >,
-    pub nvmlDeviceGetGpuInstancePossiblePlacements: Result<
+    pub nvmlDeviceGetGpuInstancePossiblePlacements_v2: Result<
         unsafe extern "C" fn(
             device: nvmlDevice_t,
             profileId: raw::c_uint,
@@ -2358,6 +2588,15 @@ pub struct NvmlLib {
         unsafe extern "C" fn(
             device: nvmlDevice_t,
             profileId: raw::c_uint,
+            gpuInstance: *mut nvmlGpuInstance_t,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    pub nvmlDeviceCreateGpuInstanceWithPlacement: Result<
+        unsafe extern "C" fn(
+            device: nvmlDevice_t,
+            profileId: raw::c_uint,
+            placement: *const nvmlGpuInstancePlacement_t,
             gpuInstance: *mut nvmlGpuInstance_t,
         ) -> nvmlReturn_t,
         ::libloading::Error,
@@ -2436,7 +2675,7 @@ pub struct NvmlLib {
         ) -> nvmlReturn_t,
         ::libloading::Error,
     >,
-    pub nvmlComputeInstanceGetInfo: Result<
+    pub nvmlComputeInstanceGetInfo_v2: Result<
         unsafe extern "C" fn(
             computeInstance: nvmlComputeInstance_t,
             info: *mut nvmlComputeInstanceInfo_t,
@@ -2469,6 +2708,10 @@ pub struct NvmlLib {
     >,
     pub nvmlDeviceGetDeviceHandleFromMigDeviceHandle: Result<
         unsafe extern "C" fn(migDevice: nvmlDevice_t, device: *mut nvmlDevice_t) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    pub nvmlDeviceGetBusType: Result<
+        unsafe extern "C" fn(device: nvmlDevice_t, type_: *mut nvmlBusType_t) -> nvmlReturn_t,
         ::libloading::Error,
     >,
 }
@@ -2510,7 +2753,9 @@ impl NvmlLib {
         let nvmlUnitGetDevices = __library.get(b"nvmlUnitGetDevices\0").map(|sym| *sym);
         let nvmlSystemGetHicVersion = __library.get(b"nvmlSystemGetHicVersion\0").map(|sym| *sym);
         let nvmlDeviceGetCount_v2 = __library.get(b"nvmlDeviceGetCount_v2\0").map(|sym| *sym);
-        let nvmlDeviceGetAttributes = __library.get(b"nvmlDeviceGetAttributes\0").map(|sym| *sym);
+        let nvmlDeviceGetAttributes_v2 = __library
+            .get(b"nvmlDeviceGetAttributes_v2\0")
+            .map(|sym| *sym);
         let nvmlDeviceGetHandleByIndex_v2 = __library
             .get(b"nvmlDeviceGetHandleByIndex_v2\0")
             .map(|sym| *sym);
@@ -2632,6 +2877,9 @@ impl NvmlLib {
         let nvmlDeviceGetTemperatureThreshold = __library
             .get(b"nvmlDeviceGetTemperatureThreshold\0")
             .map(|sym| *sym);
+        let nvmlDeviceSetTemperatureThreshold = __library
+            .get(b"nvmlDeviceSetTemperatureThreshold\0")
+            .map(|sym| *sym);
         let nvmlDeviceGetPerformanceState = __library
             .get(b"nvmlDeviceGetPerformanceState\0")
             .map(|sym| *sym);
@@ -2710,11 +2958,14 @@ impl NvmlLib {
         let nvmlDeviceGetBridgeChipInfo = __library
             .get(b"nvmlDeviceGetBridgeChipInfo\0")
             .map(|sym| *sym);
-        let nvmlDeviceGetComputeRunningProcesses = __library
-            .get(b"nvmlDeviceGetComputeRunningProcesses\0")
+        let nvmlDeviceGetComputeRunningProcesses_v2 = __library
+            .get(b"nvmlDeviceGetComputeRunningProcesses_v2\0")
             .map(|sym| *sym);
-        let nvmlDeviceGetGraphicsRunningProcesses = __library
-            .get(b"nvmlDeviceGetGraphicsRunningProcesses\0")
+        let nvmlDeviceGetGraphicsRunningProcesses_v2 = __library
+            .get(b"nvmlDeviceGetGraphicsRunningProcesses_v2\0")
+            .map(|sym| *sym);
+        let nvmlDeviceGetMPSComputeRunningProcesses_v2 = __library
+            .get(b"nvmlDeviceGetMPSComputeRunningProcesses_v2\0")
             .map(|sym| *sym);
         let nvmlDeviceOnSameBoard = __library.get(b"nvmlDeviceOnSameBoard\0").map(|sym| *sym);
         let nvmlDeviceGetAPIRestriction = __library
@@ -2727,6 +2978,7 @@ impl NvmlLib {
         let nvmlDeviceGetViolationStatus = __library
             .get(b"nvmlDeviceGetViolationStatus\0")
             .map(|sym| *sym);
+        let nvmlDeviceGetIrqNum = __library.get(b"nvmlDeviceGetIrqNum\0").map(|sym| *sym);
         let nvmlDeviceGetAccountingMode = __library
             .get(b"nvmlDeviceGetAccountingMode\0")
             .map(|sym| *sym);
@@ -2751,6 +3003,9 @@ impl NvmlLib {
         let nvmlDeviceGetRemappedRows = __library
             .get(b"nvmlDeviceGetRemappedRows\0")
             .map(|sym| *sym);
+        let nvmlDeviceGetRowRemapperHistogram = __library
+            .get(b"nvmlDeviceGetRowRemapperHistogram\0")
+            .map(|sym| *sym);
         let nvmlDeviceGetArchitecture = __library
             .get(b"nvmlDeviceGetArchitecture\0")
             .map(|sym| *sym);
@@ -2770,8 +3025,17 @@ impl NvmlLib {
         let nvmlDeviceResetGpuLockedClocks = __library
             .get(b"nvmlDeviceResetGpuLockedClocks\0")
             .map(|sym| *sym);
+        let nvmlDeviceSetMemoryLockedClocks = __library
+            .get(b"nvmlDeviceSetMemoryLockedClocks\0")
+            .map(|sym| *sym);
+        let nvmlDeviceResetMemoryLockedClocks = __library
+            .get(b"nvmlDeviceResetMemoryLockedClocks\0")
+            .map(|sym| *sym);
         let nvmlDeviceSetApplicationsClocks = __library
             .get(b"nvmlDeviceSetApplicationsClocks\0")
+            .map(|sym| *sym);
+        let nvmlDeviceGetClkMonStatus = __library
+            .get(b"nvmlDeviceGetClkMonStatus\0")
             .map(|sym| *sym);
         let nvmlDeviceSetPowerManagementLimit = __library
             .get(b"nvmlDeviceSetPowerManagementLimit\0")
@@ -2819,6 +3083,9 @@ impl NvmlLib {
         let nvmlDeviceResetNvLinkUtilizationCounter = __library
             .get(b"nvmlDeviceResetNvLinkUtilizationCounter\0")
             .map(|sym| *sym);
+        let nvmlDeviceGetNvLinkRemoteDeviceType = __library
+            .get(b"nvmlDeviceGetNvLinkRemoteDeviceType\0")
+            .map(|sym| *sym);
         let nvmlEventSetCreate = __library.get(b"nvmlEventSetCreate\0").map(|sym| *sym);
         let nvmlDeviceRegisterEvents = __library.get(b"nvmlDeviceRegisterEvents\0").map(|sym| *sym);
         let nvmlDeviceGetSupportedEventTypes = __library
@@ -2844,8 +3111,8 @@ impl NvmlLib {
         let nvmlDeviceSetVirtualizationMode = __library
             .get(b"nvmlDeviceSetVirtualizationMode\0")
             .map(|sym| *sym);
-        let nvmlDeviceGetGridLicensableFeatures_v3 = __library
-            .get(b"nvmlDeviceGetGridLicensableFeatures_v3\0")
+        let nvmlDeviceGetGridLicensableFeatures_v4 = __library
+            .get(b"nvmlDeviceGetGridLicensableFeatures_v4\0")
             .map(|sym| *sym);
         let nvmlDeviceGetProcessUtilization = __library
             .get(b"nvmlDeviceGetProcessUtilization\0")
@@ -2858,6 +3125,9 @@ impl NvmlLib {
             .map(|sym| *sym);
         let nvmlVgpuTypeGetClass = __library.get(b"nvmlVgpuTypeGetClass\0").map(|sym| *sym);
         let nvmlVgpuTypeGetName = __library.get(b"nvmlVgpuTypeGetName\0").map(|sym| *sym);
+        let nvmlVgpuTypeGetGpuInstanceProfileId = __library
+            .get(b"nvmlVgpuTypeGetGpuInstanceProfileId\0")
+            .map(|sym| *sym);
         let nvmlVgpuTypeGetDeviceID = __library.get(b"nvmlVgpuTypeGetDeviceID\0").map(|sym| *sym);
         let nvmlVgpuTypeGetFramebufferSize = __library
             .get(b"nvmlVgpuTypeGetFramebufferSize\0")
@@ -2915,6 +3185,9 @@ impl NvmlLib {
         let nvmlVgpuInstanceGetFBCSessions = __library
             .get(b"nvmlVgpuInstanceGetFBCSessions\0")
             .map(|sym| *sym);
+        let nvmlVgpuInstanceGetGpuInstanceId = __library
+            .get(b"nvmlVgpuInstanceGetGpuInstanceId\0")
+            .map(|sym| *sym);
         let nvmlVgpuInstanceGetMetadata = __library
             .get(b"nvmlVgpuInstanceGetMetadata\0")
             .map(|sym| *sym);
@@ -2945,25 +3218,31 @@ impl NvmlLib {
         let nvmlVgpuInstanceClearAccountingPids = __library
             .get(b"nvmlVgpuInstanceClearAccountingPids\0")
             .map(|sym| *sym);
-        let nvmlGetBlacklistDeviceCount = __library
-            .get(b"nvmlGetBlacklistDeviceCount\0")
+        let nvmlVgpuInstanceGetLicenseInfo = __library
+            .get(b"nvmlVgpuInstanceGetLicenseInfo\0")
             .map(|sym| *sym);
-        let nvmlGetBlacklistDeviceInfoByIndex = __library
-            .get(b"nvmlGetBlacklistDeviceInfoByIndex\0")
+        let nvmlGetExcludedDeviceCount = __library
+            .get(b"nvmlGetExcludedDeviceCount\0")
+            .map(|sym| *sym);
+        let nvmlGetExcludedDeviceInfoByIndex = __library
+            .get(b"nvmlGetExcludedDeviceInfoByIndex\0")
             .map(|sym| *sym);
         let nvmlDeviceSetMigMode = __library.get(b"nvmlDeviceSetMigMode\0").map(|sym| *sym);
         let nvmlDeviceGetMigMode = __library.get(b"nvmlDeviceGetMigMode\0").map(|sym| *sym);
         let nvmlDeviceGetGpuInstanceProfileInfo = __library
             .get(b"nvmlDeviceGetGpuInstanceProfileInfo\0")
             .map(|sym| *sym);
-        let nvmlDeviceGetGpuInstancePossiblePlacements = __library
-            .get(b"nvmlDeviceGetGpuInstancePossiblePlacements\0")
+        let nvmlDeviceGetGpuInstancePossiblePlacements_v2 = __library
+            .get(b"nvmlDeviceGetGpuInstancePossiblePlacements_v2\0")
             .map(|sym| *sym);
         let nvmlDeviceGetGpuInstanceRemainingCapacity = __library
             .get(b"nvmlDeviceGetGpuInstanceRemainingCapacity\0")
             .map(|sym| *sym);
         let nvmlDeviceCreateGpuInstance = __library
             .get(b"nvmlDeviceCreateGpuInstance\0")
+            .map(|sym| *sym);
+        let nvmlDeviceCreateGpuInstanceWithPlacement = __library
+            .get(b"nvmlDeviceCreateGpuInstanceWithPlacement\0")
             .map(|sym| *sym);
         let nvmlGpuInstanceDestroy = __library.get(b"nvmlGpuInstanceDestroy\0").map(|sym| *sym);
         let nvmlDeviceGetGpuInstances = __library
@@ -2991,8 +3270,8 @@ impl NvmlLib {
         let nvmlGpuInstanceGetComputeInstanceById = __library
             .get(b"nvmlGpuInstanceGetComputeInstanceById\0")
             .map(|sym| *sym);
-        let nvmlComputeInstanceGetInfo = __library
-            .get(b"nvmlComputeInstanceGetInfo\0")
+        let nvmlComputeInstanceGetInfo_v2 = __library
+            .get(b"nvmlComputeInstanceGetInfo_v2\0")
             .map(|sym| *sym);
         let nvmlDeviceIsMigDeviceHandle = __library
             .get(b"nvmlDeviceIsMigDeviceHandle\0")
@@ -3012,6 +3291,7 @@ impl NvmlLib {
         let nvmlDeviceGetDeviceHandleFromMigDeviceHandle = __library
             .get(b"nvmlDeviceGetDeviceHandleFromMigDeviceHandle\0")
             .map(|sym| *sym);
+        let nvmlDeviceGetBusType = __library.get(b"nvmlDeviceGetBusType\0").map(|sym| *sym);
         Ok(NvmlLib {
             __library,
             nvmlInit_v2,
@@ -3033,7 +3313,7 @@ impl NvmlLib {
             nvmlUnitGetDevices,
             nvmlSystemGetHicVersion,
             nvmlDeviceGetCount_v2,
-            nvmlDeviceGetAttributes,
+            nvmlDeviceGetAttributes_v2,
             nvmlDeviceGetHandleByIndex_v2,
             nvmlDeviceGetHandleBySerial,
             nvmlDeviceGetHandleByUUID,
@@ -3085,6 +3365,7 @@ impl NvmlLib {
             nvmlDeviceGetFanSpeed_v2,
             nvmlDeviceGetTemperature,
             nvmlDeviceGetTemperatureThreshold,
+            nvmlDeviceSetTemperatureThreshold,
             nvmlDeviceGetPerformanceState,
             nvmlDeviceGetCurrentClocksThrottleReasons,
             nvmlDeviceGetSupportedClocksThrottleReasons,
@@ -3117,13 +3398,15 @@ impl NvmlLib {
             nvmlDeviceGetDriverModel,
             nvmlDeviceGetVbiosVersion,
             nvmlDeviceGetBridgeChipInfo,
-            nvmlDeviceGetComputeRunningProcesses,
-            nvmlDeviceGetGraphicsRunningProcesses,
+            nvmlDeviceGetComputeRunningProcesses_v2,
+            nvmlDeviceGetGraphicsRunningProcesses_v2,
+            nvmlDeviceGetMPSComputeRunningProcesses_v2,
             nvmlDeviceOnSameBoard,
             nvmlDeviceGetAPIRestriction,
             nvmlDeviceGetSamples,
             nvmlDeviceGetBAR1MemoryInfo,
             nvmlDeviceGetViolationStatus,
+            nvmlDeviceGetIrqNum,
             nvmlDeviceGetAccountingMode,
             nvmlDeviceGetAccountingStats,
             nvmlDeviceGetAccountingPids,
@@ -3132,6 +3415,7 @@ impl NvmlLib {
             nvmlDeviceGetRetiredPages_v2,
             nvmlDeviceGetRetiredPagesPendingStatus,
             nvmlDeviceGetRemappedRows,
+            nvmlDeviceGetRowRemapperHistogram,
             nvmlDeviceGetArchitecture,
             nvmlUnitSetLedState,
             nvmlDeviceSetPersistenceMode,
@@ -3141,7 +3425,10 @@ impl NvmlLib {
             nvmlDeviceSetDriverModel,
             nvmlDeviceSetGpuLockedClocks,
             nvmlDeviceResetGpuLockedClocks,
+            nvmlDeviceSetMemoryLockedClocks,
+            nvmlDeviceResetMemoryLockedClocks,
             nvmlDeviceSetApplicationsClocks,
+            nvmlDeviceGetClkMonStatus,
             nvmlDeviceSetPowerManagementLimit,
             nvmlDeviceSetGpuOperationMode,
             nvmlDeviceSetAPIRestriction,
@@ -3158,6 +3445,7 @@ impl NvmlLib {
             nvmlDeviceGetNvLinkUtilizationCounter,
             nvmlDeviceFreezeNvLinkUtilizationCounter,
             nvmlDeviceResetNvLinkUtilizationCounter,
+            nvmlDeviceGetNvLinkRemoteDeviceType,
             nvmlEventSetCreate,
             nvmlDeviceRegisterEvents,
             nvmlDeviceGetSupportedEventTypes,
@@ -3171,12 +3459,13 @@ impl NvmlLib {
             nvmlDeviceGetVirtualizationMode,
             nvmlDeviceGetHostVgpuMode,
             nvmlDeviceSetVirtualizationMode,
-            nvmlDeviceGetGridLicensableFeatures_v3,
+            nvmlDeviceGetGridLicensableFeatures_v4,
             nvmlDeviceGetProcessUtilization,
             nvmlDeviceGetSupportedVgpus,
             nvmlDeviceGetCreatableVgpus,
             nvmlVgpuTypeGetClass,
             nvmlVgpuTypeGetName,
+            nvmlVgpuTypeGetGpuInstanceProfileId,
             nvmlVgpuTypeGetDeviceID,
             nvmlVgpuTypeGetFramebufferSize,
             nvmlVgpuTypeGetNumDisplayHeads,
@@ -3200,6 +3489,7 @@ impl NvmlLib {
             nvmlVgpuInstanceGetEncoderSessions,
             nvmlVgpuInstanceGetFBCStats,
             nvmlVgpuInstanceGetFBCSessions,
+            nvmlVgpuInstanceGetGpuInstanceId,
             nvmlVgpuInstanceGetMetadata,
             nvmlDeviceGetVgpuMetadata,
             nvmlGetVgpuCompatibility,
@@ -3212,14 +3502,16 @@ impl NvmlLib {
             nvmlVgpuInstanceGetAccountingPids,
             nvmlVgpuInstanceGetAccountingStats,
             nvmlVgpuInstanceClearAccountingPids,
-            nvmlGetBlacklistDeviceCount,
-            nvmlGetBlacklistDeviceInfoByIndex,
+            nvmlVgpuInstanceGetLicenseInfo,
+            nvmlGetExcludedDeviceCount,
+            nvmlGetExcludedDeviceInfoByIndex,
             nvmlDeviceSetMigMode,
             nvmlDeviceGetMigMode,
             nvmlDeviceGetGpuInstanceProfileInfo,
-            nvmlDeviceGetGpuInstancePossiblePlacements,
+            nvmlDeviceGetGpuInstancePossiblePlacements_v2,
             nvmlDeviceGetGpuInstanceRemainingCapacity,
             nvmlDeviceCreateGpuInstance,
+            nvmlDeviceCreateGpuInstanceWithPlacement,
             nvmlGpuInstanceDestroy,
             nvmlDeviceGetGpuInstances,
             nvmlDeviceGetGpuInstanceById,
@@ -3230,13 +3522,14 @@ impl NvmlLib {
             nvmlComputeInstanceDestroy,
             nvmlGpuInstanceGetComputeInstances,
             nvmlGpuInstanceGetComputeInstanceById,
-            nvmlComputeInstanceGetInfo,
+            nvmlComputeInstanceGetInfo_v2,
             nvmlDeviceIsMigDeviceHandle,
             nvmlDeviceGetGpuInstanceId,
             nvmlDeviceGetComputeInstanceId,
             nvmlDeviceGetMaxMigDeviceCount,
             nvmlDeviceGetMigDeviceHandleByIndex,
             nvmlDeviceGetDeviceHandleFromMigDeviceHandle,
+            nvmlDeviceGetBusType,
         })
     }
     pub unsafe fn nvmlInit_v2(&self) -> nvmlReturn_t {
@@ -3406,13 +3699,13 @@ impl NvmlLib {
             .as_ref()
             .expect("Expected function, got error."))(deviceCount)
     }
-    pub unsafe fn nvmlDeviceGetAttributes(
+    pub unsafe fn nvmlDeviceGetAttributes_v2(
         &self,
         device: nvmlDevice_t,
         attributes: *mut nvmlDeviceAttributes_t,
     ) -> nvmlReturn_t {
         (self
-            .nvmlDeviceGetAttributes
+            .nvmlDeviceGetAttributes_v2
             .as_ref()
             .expect("Expected function, got error."))(device, attributes)
     }
@@ -3947,6 +4240,17 @@ impl NvmlLib {
             .as_ref()
             .expect("Expected function, got error."))(device, thresholdType, temp)
     }
+    pub unsafe fn nvmlDeviceSetTemperatureThreshold(
+        &self,
+        device: nvmlDevice_t,
+        thresholdType: nvmlTemperatureThresholds_t,
+        temp: *mut raw::c_int,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceSetTemperatureThreshold
+            .as_ref()
+            .expect("Expected function, got error."))(device, thresholdType, temp)
+    }
     pub unsafe fn nvmlDeviceGetPerformanceState(
         &self,
         device: nvmlDevice_t,
@@ -4304,25 +4608,36 @@ impl NvmlLib {
             .as_ref()
             .expect("Expected function, got error."))(device, bridgeHierarchy)
     }
-    pub unsafe fn nvmlDeviceGetComputeRunningProcesses(
+    pub unsafe fn nvmlDeviceGetComputeRunningProcesses_v2(
         &self,
         device: nvmlDevice_t,
         infoCount: *mut raw::c_uint,
         infos: *mut nvmlProcessInfo_t,
     ) -> nvmlReturn_t {
         (self
-            .nvmlDeviceGetComputeRunningProcesses
+            .nvmlDeviceGetComputeRunningProcesses_v2
             .as_ref()
             .expect("Expected function, got error."))(device, infoCount, infos)
     }
-    pub unsafe fn nvmlDeviceGetGraphicsRunningProcesses(
+    pub unsafe fn nvmlDeviceGetGraphicsRunningProcesses_v2(
         &self,
         device: nvmlDevice_t,
         infoCount: *mut raw::c_uint,
         infos: *mut nvmlProcessInfo_t,
     ) -> nvmlReturn_t {
         (self
-            .nvmlDeviceGetGraphicsRunningProcesses
+            .nvmlDeviceGetGraphicsRunningProcesses_v2
+            .as_ref()
+            .expect("Expected function, got error."))(device, infoCount, infos)
+    }
+    pub unsafe fn nvmlDeviceGetMPSComputeRunningProcesses_v2(
+        &self,
+        device: nvmlDevice_t,
+        infoCount: *mut raw::c_uint,
+        infos: *mut nvmlProcessInfo_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetMPSComputeRunningProcesses_v2
             .as_ref()
             .expect("Expected function, got error."))(device, infoCount, infos)
     }
@@ -4389,6 +4704,16 @@ impl NvmlLib {
             .nvmlDeviceGetViolationStatus
             .as_ref()
             .expect("Expected function, got error."))(device, perfPolicyType, violTime)
+    }
+    pub unsafe fn nvmlDeviceGetIrqNum(
+        &self,
+        device: nvmlDevice_t,
+        irqNum: *mut raw::c_uint,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetIrqNum
+            .as_ref()
+            .expect("Expected function, got error."))(device, irqNum)
     }
     pub unsafe fn nvmlDeviceGetAccountingMode(
         &self,
@@ -4488,6 +4813,16 @@ impl NvmlLib {
             failureOccurred,
         )
     }
+    pub unsafe fn nvmlDeviceGetRowRemapperHistogram(
+        &self,
+        device: nvmlDevice_t,
+        values: *mut nvmlRowRemapperHistogramValues_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetRowRemapperHistogram
+            .as_ref()
+            .expect("Expected function, got error."))(device, values)
+    }
     pub unsafe fn nvmlDeviceGetArchitecture(
         &self,
         device: nvmlDevice_t,
@@ -4576,6 +4911,23 @@ impl NvmlLib {
             .as_ref()
             .expect("Expected function, got error."))(device)
     }
+    pub unsafe fn nvmlDeviceSetMemoryLockedClocks(
+        &self,
+        device: nvmlDevice_t,
+        minMemClockMHz: raw::c_uint,
+        maxMemClockMHz: raw::c_uint,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceSetMemoryLockedClocks
+            .as_ref()
+            .expect("Expected function, got error."))(device, minMemClockMHz, maxMemClockMHz)
+    }
+    pub unsafe fn nvmlDeviceResetMemoryLockedClocks(&self, device: nvmlDevice_t) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceResetMemoryLockedClocks
+            .as_ref()
+            .expect("Expected function, got error."))(device)
+    }
     pub unsafe fn nvmlDeviceSetApplicationsClocks(
         &self,
         device: nvmlDevice_t,
@@ -4586,6 +4938,16 @@ impl NvmlLib {
             .nvmlDeviceSetApplicationsClocks
             .as_ref()
             .expect("Expected function, got error."))(device, memClockMHz, graphicsClockMHz)
+    }
+    pub unsafe fn nvmlDeviceGetClkMonStatus(
+        &self,
+        device: nvmlDevice_t,
+        status: *mut nvmlClkMonStatus_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetClkMonStatus
+            .as_ref()
+            .expect("Expected function, got error."))(device, status)
     }
     pub unsafe fn nvmlDeviceSetPowerManagementLimit(
         &self,
@@ -4764,6 +5126,17 @@ impl NvmlLib {
             .as_ref()
             .expect("Expected function, got error."))(device, link, counter)
     }
+    pub unsafe fn nvmlDeviceGetNvLinkRemoteDeviceType(
+        &self,
+        device: nvmlDevice_t,
+        link: raw::c_uint,
+        pNvLinkDeviceType: *mut nvmlIntNvLinkDeviceType_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetNvLinkRemoteDeviceType
+            .as_ref()
+            .expect("Expected function, got error."))(device, link, pNvLinkDeviceType)
+    }
     pub unsafe fn nvmlEventSetCreate(&self, set: *mut nvmlEventSet_t) -> nvmlReturn_t {
         (self
             .nvmlEventSetCreate
@@ -4886,13 +5259,13 @@ impl NvmlLib {
             .as_ref()
             .expect("Expected function, got error."))(device, virtualMode)
     }
-    pub unsafe fn nvmlDeviceGetGridLicensableFeatures_v3(
+    pub unsafe fn nvmlDeviceGetGridLicensableFeatures_v4(
         &self,
         device: nvmlDevice_t,
         pGridLicensableFeatures: *mut nvmlGridLicensableFeatures_t,
     ) -> nvmlReturn_t {
         (self
-            .nvmlDeviceGetGridLicensableFeatures_v3
+            .nvmlDeviceGetGridLicensableFeatures_v4
             .as_ref()
             .expect("Expected function, got error."))(device, pGridLicensableFeatures)
     }
@@ -4956,6 +5329,16 @@ impl NvmlLib {
             .nvmlVgpuTypeGetName
             .as_ref()
             .expect("Expected function, got error."))(vgpuTypeId, vgpuTypeName, size)
+    }
+    pub unsafe fn nvmlVgpuTypeGetGpuInstanceProfileId(
+        &self,
+        vgpuTypeId: nvmlVgpuTypeId_t,
+        gpuInstanceProfileId: *mut raw::c_uint,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlVgpuTypeGetGpuInstanceProfileId
+            .as_ref()
+            .expect("Expected function, got error."))(vgpuTypeId, gpuInstanceProfileId)
     }
     pub unsafe fn nvmlVgpuTypeGetDeviceID(
         &self,
@@ -5212,6 +5595,16 @@ impl NvmlLib {
             vgpuInstance, sessionCount, sessionInfo
         )
     }
+    pub unsafe fn nvmlVgpuInstanceGetGpuInstanceId(
+        &self,
+        vgpuInstance: nvmlVgpuInstance_t,
+        gpuInstanceId: *mut raw::c_uint,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlVgpuInstanceGetGpuInstanceId
+            .as_ref()
+            .expect("Expected function, got error."))(vgpuInstance, gpuInstanceId)
+    }
     pub unsafe fn nvmlVgpuInstanceGetMetadata(
         &self,
         vgpuInstance: nvmlVgpuInstance_t,
@@ -5351,22 +5744,29 @@ impl NvmlLib {
             .as_ref()
             .expect("Expected function, got error."))(vgpuInstance)
     }
-    pub unsafe fn nvmlGetBlacklistDeviceCount(
+    pub unsafe fn nvmlVgpuInstanceGetLicenseInfo(
         &self,
-        deviceCount: *mut raw::c_uint,
+        vgpuInstance: nvmlVgpuInstance_t,
+        licenseInfo: *mut nvmlVgpuLicenseInfo_t,
     ) -> nvmlReturn_t {
         (self
-            .nvmlGetBlacklistDeviceCount
+            .nvmlVgpuInstanceGetLicenseInfo
+            .as_ref()
+            .expect("Expected function, got error."))(vgpuInstance, licenseInfo)
+    }
+    pub unsafe fn nvmlGetExcludedDeviceCount(&self, deviceCount: *mut raw::c_uint) -> nvmlReturn_t {
+        (self
+            .nvmlGetExcludedDeviceCount
             .as_ref()
             .expect("Expected function, got error."))(deviceCount)
     }
-    pub unsafe fn nvmlGetBlacklistDeviceInfoByIndex(
+    pub unsafe fn nvmlGetExcludedDeviceInfoByIndex(
         &self,
         index: raw::c_uint,
-        info: *mut nvmlBlacklistDeviceInfo_t,
+        info: *mut nvmlExcludedDeviceInfo_t,
     ) -> nvmlReturn_t {
         (self
-            .nvmlGetBlacklistDeviceInfoByIndex
+            .nvmlGetExcludedDeviceInfoByIndex
             .as_ref()
             .expect("Expected function, got error."))(index, info)
     }
@@ -5403,7 +5803,7 @@ impl NvmlLib {
             .as_ref()
             .expect("Expected function, got error."))(device, profile, info)
     }
-    pub unsafe fn nvmlDeviceGetGpuInstancePossiblePlacements(
+    pub unsafe fn nvmlDeviceGetGpuInstancePossiblePlacements_v2(
         &self,
         device: nvmlDevice_t,
         profileId: raw::c_uint,
@@ -5411,7 +5811,7 @@ impl NvmlLib {
         count: *mut raw::c_uint,
     ) -> nvmlReturn_t {
         (self
-            .nvmlDeviceGetGpuInstancePossiblePlacements
+            .nvmlDeviceGetGpuInstancePossiblePlacements_v2
             .as_ref()
             .expect("Expected function, got error."))(device, profileId, placements, count)
     }
@@ -5436,6 +5836,20 @@ impl NvmlLib {
             .nvmlDeviceCreateGpuInstance
             .as_ref()
             .expect("Expected function, got error."))(device, profileId, gpuInstance)
+    }
+    pub unsafe fn nvmlDeviceCreateGpuInstanceWithPlacement(
+        &self,
+        device: nvmlDevice_t,
+        profileId: raw::c_uint,
+        placement: *const nvmlGpuInstancePlacement_t,
+        gpuInstance: *mut nvmlGpuInstance_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceCreateGpuInstanceWithPlacement
+            .as_ref()
+            .expect("Expected function, got error."))(
+            device, profileId, placement, gpuInstance
+        )
     }
     pub unsafe fn nvmlGpuInstanceDestroy(&self, gpuInstance: nvmlGpuInstance_t) -> nvmlReturn_t {
         (self
@@ -5549,13 +5963,13 @@ impl NvmlLib {
             .as_ref()
             .expect("Expected function, got error."))(gpuInstance, id, computeInstance)
     }
-    pub unsafe fn nvmlComputeInstanceGetInfo(
+    pub unsafe fn nvmlComputeInstanceGetInfo_v2(
         &self,
         computeInstance: nvmlComputeInstance_t,
         info: *mut nvmlComputeInstanceInfo_t,
     ) -> nvmlReturn_t {
         (self
-            .nvmlComputeInstanceGetInfo
+            .nvmlComputeInstanceGetInfo_v2
             .as_ref()
             .expect("Expected function, got error."))(computeInstance, info)
     }
@@ -5619,5 +6033,15 @@ impl NvmlLib {
             .nvmlDeviceGetDeviceHandleFromMigDeviceHandle
             .as_ref()
             .expect("Expected function, got error."))(migDevice, device)
+    }
+    pub unsafe fn nvmlDeviceGetBusType(
+        &self,
+        device: nvmlDevice_t,
+        type_: *mut nvmlBusType_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetBusType
+            .as_ref()
+            .expect("Expected function, got error."))(device, type_)
     }
 }

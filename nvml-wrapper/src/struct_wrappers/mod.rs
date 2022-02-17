@@ -18,7 +18,7 @@ pub struct BlacklistDeviceInfo {
     uuid: String,
 }
 
-impl TryFrom<nvmlBlacklistDeviceInfo_t> for BlacklistDeviceInfo {
+impl TryFrom<nvmlExcludedDeviceInfo_t> for BlacklistDeviceInfo {
     type Error = NvmlError;
 
     /**
@@ -28,7 +28,7 @@ impl TryFrom<nvmlBlacklistDeviceInfo_t> for BlacklistDeviceInfo {
 
     * `UnexpectedVariant`, for which you can read the docs for
     */
-    fn try_from(value: nvmlBlacklistDeviceInfo_t) -> Result<Self, Self::Error> {
+    fn try_from(value: nvmlExcludedDeviceInfo_t) -> Result<Self, Self::Error> {
         unsafe {
             let uuid_raw = CStr::from_ptr(value.uuid.as_ptr());
 

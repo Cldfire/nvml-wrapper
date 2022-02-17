@@ -896,7 +896,7 @@ impl Nvml {
     Supports all devices.
     */
     pub fn blacklist_device_count(&self) -> Result<u32, NvmlError> {
-        let sym = nvml_sym(self.lib.nvmlGetBlacklistDeviceCount.as_ref())?;
+        let sym = nvml_sym(self.lib.nvmlGetExcludedDeviceCount.as_ref())?;
 
         unsafe {
             let mut count: c_uint = mem::zeroed();
@@ -919,10 +919,10 @@ impl Nvml {
     Supports all devices.
     */
     pub fn blacklist_device_info(&self, index: u32) -> Result<BlacklistDeviceInfo, NvmlError> {
-        let sym = nvml_sym(self.lib.nvmlGetBlacklistDeviceInfoByIndex.as_ref())?;
+        let sym = nvml_sym(self.lib.nvmlGetExcludedDeviceInfoByIndex.as_ref())?;
 
         unsafe {
-            let mut info: nvmlBlacklistDeviceInfo_t = mem::zeroed();
+            let mut info: nvmlExcludedDeviceInfo_t = mem::zeroed();
 
             nvml_try(sym(index, &mut info))?;
             BlacklistDeviceInfo::try_from(info)
