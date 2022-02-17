@@ -3806,6 +3806,16 @@ impl<'nvml> Device<'nvml> {
         unsafe { nvml_try(sym(self.device, min_clock_mhz, max_clock_mhz)) }
     }
 
+    pub fn set_mem_locked_clocks(
+        &mut self,
+        min_clock_mhz: u32,
+        max_clock_mhz: u32,
+    ) -> Result<(), NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceSetMemoryLockedClocks.as_ref())?;
+
+        unsafe { nvml_try(sym(self.device, min_clock_mhz, max_clock_mhz)) }
+    }
+
     /**
     Reset this `Device`'s clocks to their default values.
 
@@ -3826,6 +3836,12 @@ impl<'nvml> Device<'nvml> {
     // Tested (no-run)
     pub fn reset_gpu_locked_clocks(&mut self) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceResetGpuLockedClocks.as_ref())?;
+
+        unsafe { nvml_try(sym(self.device)) }
+    }
+
+    pub fn reset_mem_locked_clocks(&mut self) -> Result<(), NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceResetMemoryLockedClocks.as_ref())?;
 
         unsafe { nvml_try(sym(self.device)) }
     }
@@ -5330,6 +5346,26 @@ mod test {
         let mut device = device(&nvml);
 
         device.reset_gpu_locked_clocks().expect("clocks reset")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn set_mem_locked_clocks() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device
+            .set_gpu_locked_clocks(1000, 1500)
+            .expect("set to a range")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn reset_mem_locked_clocks() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.reset_mem_locked_clocks().expect("clocks reset")
     }
 
     // This modifies device state, so we don't want to actually run the test
