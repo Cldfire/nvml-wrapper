@@ -11,6 +11,7 @@ This file describes the changes / additions / fixes between wrapper releases, tr
     * `set_mem_locked_clocks()`
     * `reset_mem_locked_clocks()`
     * `num_cores()`
+    * `num_fans()`
 
 ### Changed
 

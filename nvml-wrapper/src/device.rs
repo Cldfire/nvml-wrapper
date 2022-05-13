@@ -1207,6 +1207,8 @@ impl<'nvml> Device<'nvml> {
     Note: The reported speed is the intended fan speed. If the fan is physically blocked
     and unable to spin, the output will not match the actual fan speed.
 
+    You can determine valid fan indices using [`Self::num_fans()`].
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
@@ -1229,6 +1231,31 @@ impl<'nvml> Device<'nvml> {
             nvml_try(sym(self.device, fan_idx, &mut speed))?;
 
             Ok(speed)
+        }
+    }
+
+    /**
+    Gets the number of fans on this [`Device`].
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `NotSupported`, if this `Device` does not have a fan
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+
+    # Device Support
+
+    Supports all discrete products with dedicated fans.
+    */
+    pub fn num_fans(&self) -> Result<u32, NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetNumFans.as_ref())?;
+
+        unsafe {
+            let mut count: c_uint = mem::zeroed();
+            nvml_try(sym(self.device, &mut count))?;
+
+            Ok(count)
         }
     }
 
@@ -4810,6 +4837,12 @@ mod test {
     fn fan_speed() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.fan_speed(0))
+    }
+
+    #[test]
+    fn num_fans() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.num_fans())
     }
 
     #[test]
