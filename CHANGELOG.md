@@ -10,10 +10,12 @@ This file describes the changes / additions / fixes between wrapper releases, tr
   * Methods:
     * `set_mem_locked_clocks()`
     * `reset_mem_locked_clocks()`
+    * `num_cores()`
 
 ### Changed
 
 * The `NVML` struct has been renamed to `Nvml` (#22 - @TheJltres)
+* The `basic_usage` example now prints the number of CUDA cores your device has
 * Some methods on `Nvml` have been renamed:
   * `Nvml.blacklist_device_count()` -> `Nvml.excluded_device_count()`
   * `Nvml.blacklist_device_info()` -> `Nvml.excluded_device_info()`

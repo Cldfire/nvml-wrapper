@@ -3126,6 +3126,30 @@ impl<'nvml> Device<'nvml> {
     }
 
     /**
+    Gets the core count for this [`Device`].
+
+    The cores represented in the count here are commonly referred to as
+    "CUDA cores".
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `NotSupported`, if this query is not supported by this `Device`
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    */
+    pub fn num_cores(&self) -> Result<u32, NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetNumGpuCores.as_ref())?;
+
+        unsafe {
+            let mut count: c_uint = mem::zeroed();
+
+            nvml_try(sym(self.device, &mut count))?;
+
+            Ok(count)
+        }
+    }
+
+    /**
     Checks if this `Device` and the passed-in device are on the same physical board.
 
     # Errors
@@ -5199,6 +5223,12 @@ mod test {
         test_with_device(3, &nvml, |device| {
             device.violation_status(PerformancePolicy::Power)
         })
+    }
+
+    #[test]
+    fn num_cores() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.num_cores())
     }
 
     // I do not have 2 devices
