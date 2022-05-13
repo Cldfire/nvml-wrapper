@@ -26,7 +26,7 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 
 ### Rust Version Support
 
-The MSRV of this release is 1.46.0. This is to accomodate the MSRV of the `bitflags` dependency, which is 1.46.0.
+The MSRV of this release is 1.51.0. This is needed for const generics and the ability to implement `Debug` for arrays of any size.
 
 ### Dependencies
 
