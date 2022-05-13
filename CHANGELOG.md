@@ -4,6 +4,13 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 
 ## [Unreleased]
 
+### Added
+
+* `Device`:
+  * Methods:
+    * `set_mem_locked_clocks()`
+    * `reset_mem_locked_clocks()`
+
 ### Changed
 
 * The `NVML` struct has been renamed to `Nvml` (#22 - @TheJltres)

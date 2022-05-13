@@ -3793,7 +3793,7 @@ impl<'nvml> Device<'nvml> {
 
     # Device Support
 
-    Supports Pascal and newer fully supported devices.
+    Supports Volta and newer fully supported devices.
     */
     // Tested (no-run)
     pub fn set_gpu_locked_clocks(
@@ -3807,10 +3807,11 @@ impl<'nvml> Device<'nvml> {
     }
 
     /**
-    Reset this `Device`'s clocks to their default values.
+    Reset this [`Device`]'s clocks to their default values.
 
     This resets to the same values that would be used after a reboot or driver
-    reload (idle clocks, configurable via `set_applications_clocks()`).
+    reload (defaults to idle clocks but can be configured via
+    [`Self::set_applications_clocks()`]).
 
     # Errors
 
@@ -3821,11 +3822,61 @@ impl<'nvml> Device<'nvml> {
 
     # Device Support
 
-    Supports Pascal and newer fully supported devices.
+    Supports Volta and newer fully supported devices.
     */
     // Tested (no-run)
     pub fn reset_gpu_locked_clocks(&mut self) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceResetGpuLockedClocks.as_ref())?;
+
+        unsafe { nvml_try(sym(self.device)) }
+    }
+
+    /**
+    Lock this [`Device`]'s memory clocks to a specific frequency range.
+
+    This setting supercedes application clock values and takes effect regardless
+    of whether or not any CUDA apps are running. It can be used to request
+    constant performance. See also [`Self::set_applications_clocks()`].
+
+    After a system reboot or a driver reload the clocks go back to their default
+    values. See also [`Self::reset_mem_locked_clocks()`].
+
+    # Device Support
+
+    Supports Ampere and newer fully supported devices.
+    */
+    // Tested (no-run)
+    pub fn set_mem_locked_clocks(
+        &mut self,
+        min_clock_mhz: u32,
+        max_clock_mhz: u32,
+    ) -> Result<(), NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceSetMemoryLockedClocks.as_ref())?;
+
+        unsafe { nvml_try(sym(self.device, min_clock_mhz, max_clock_mhz)) }
+    }
+
+    /**
+    Reset this [`Device`]'s memory clocks to their default values.
+
+    This resets to the same values that would be used after a reboot or driver
+    reload (defaults to idle clocks but can be configured via
+    [`Self::set_applications_clocks()`]).
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `NotSupported`, if this `Device` does not support this feature
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+
+    # Device Support
+
+    Supports Ampere and newer fully supported devices.
+    */
+    // Tested (no-run)
+    pub fn reset_mem_locked_clocks(&mut self) -> Result<(), NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceResetMemoryLockedClocks.as_ref())?;
 
         unsafe { nvml_try(sym(self.device)) }
     }
@@ -5330,6 +5381,26 @@ mod test {
         let mut device = device(&nvml);
 
         device.reset_gpu_locked_clocks().expect("clocks reset")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn set_mem_locked_clocks() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device
+            .set_mem_locked_clocks(1048, 1139)
+            .expect("set to a range")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn reset_mem_locked_clocks() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.reset_mem_locked_clocks().expect("clocks reset")
     }
 
     // This modifies device state, so we don't want to actually run the test
