@@ -7,6 +7,12 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 ### Changed
 
 * The `NVML` struct has been renamed to `Nvml` (#22 - @TheJltres)
+* Some methods on `Nvml` have been renamed:
+  * `Nvml.blacklist_device_count()` -> `Nvml.excluded_device_count()`
+  * `Nvml.blacklist_device_info()` -> `Nvml.excluded_device_info()`
+* Some struct wrappers have gotten renamed:
+  * `BlacklistDeviceInfo` -> `ExcludedDeviceInfo`
+* `Device.name()` now creates a buffer sized to the new `NVML_DEVICE_NAME_V2_BUFFER_SIZE` constant
 
 ### Rust Version Support
 

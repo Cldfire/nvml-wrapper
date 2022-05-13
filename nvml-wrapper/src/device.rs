@@ -536,7 +536,12 @@ impl<'nvml> Device<'nvml> {
     */
     // Tested
     pub fn running_compute_processes(&self) -> Result<Vec<ProcessInfo>, NvmlError> {
-        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetComputeRunningProcesses.as_ref())?;
+        let sym = nvml_sym(
+            self.nvml
+                .lib
+                .nvmlDeviceGetComputeRunningProcesses_v3
+                .as_ref(),
+        )?;
 
         unsafe {
             let mut count: c_uint = match self.running_compute_processes_count()? {
@@ -567,7 +572,12 @@ impl<'nvml> Device<'nvml> {
     */
     // Tested as part of `.running_compute_processes()`
     pub fn running_compute_processes_count(&self) -> Result<u32, NvmlError> {
-        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetComputeRunningProcesses.as_ref())?;
+        let sym = nvml_sym(
+            self.nvml
+                .lib
+                .nvmlDeviceGetComputeRunningProcesses_v3
+                .as_ref(),
+        )?;
 
         unsafe {
             // Indicates that we want the count
@@ -1273,7 +1283,12 @@ impl<'nvml> Device<'nvml> {
     */
     // Tested
     pub fn running_graphics_processes(&self) -> Result<Vec<ProcessInfo>, NvmlError> {
-        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetGraphicsRunningProcesses.as_ref())?;
+        let sym = nvml_sym(
+            self.nvml
+                .lib
+                .nvmlDeviceGetGraphicsRunningProcesses_v3
+                .as_ref(),
+        )?;
 
         unsafe {
             let mut count: c_uint = match self.running_graphics_processes_count()? {
@@ -1304,7 +1319,12 @@ impl<'nvml> Device<'nvml> {
     */
     // Tested as part of `.running_graphics_processes()`
     pub fn running_graphics_processes_count(&self) -> Result<u32, NvmlError> {
-        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetGraphicsRunningProcesses.as_ref())?;
+        let sym = nvml_sym(
+            self.nvml
+                .lib
+                .nvmlDeviceGetGraphicsRunningProcesses_v3
+                .as_ref(),
+        )?;
 
         unsafe {
             // Indicates that we want the count
@@ -1787,12 +1807,12 @@ impl<'nvml> Device<'nvml> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetName.as_ref())?;
 
         unsafe {
-            let mut name_vec = vec![0; NVML_DEVICE_NAME_BUFFER_SIZE as usize];
+            let mut name_vec = vec![0; NVML_DEVICE_NAME_V2_BUFFER_SIZE as usize];
 
             nvml_try(sym(
                 self.device,
                 name_vec.as_mut_ptr(),
-                NVML_DEVICE_NAME_BUFFER_SIZE,
+                NVML_DEVICE_NAME_V2_BUFFER_SIZE,
             ))?;
 
             let name_raw = CStr::from_ptr(name_vec.as_ptr());

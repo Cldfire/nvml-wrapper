@@ -80,7 +80,7 @@ impl ShouldPrint for EccModeState {}
 impl ShouldPrint for OperationModeState {}
 impl ShouldPrint for InfoRom {}
 impl ShouldPrint for Vec<RetiredPage> {}
-impl ShouldPrint for BlacklistDeviceInfo {}
+impl ShouldPrint for ExcludedDeviceInfo {}
 impl ShouldPrint for MemoryInfo {}
 impl ShouldPrint for PciInfo {}
 impl ShouldPrint for PerformanceState {}
