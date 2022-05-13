@@ -8,13 +8,12 @@ documentation = "https://docs.rs/nvml-wrapper-sys"
 repository = "https://github.com/Cldfire/nvml-wrapper"
 license = "MIT/Apache-2.0"
 edition = "2018"
+rust-version = "1.51.0"
 
 keywords = ["nvidia", "gpu", "managment", "monitoring", "hardware"]
 categories = ["external-ffi-bindings", "hardware-support"]
 
-exclude = [
-    "nvml.h"
-]
+exclude = ["nvml.h"]
 
 [dependencies]
 libloading = "0.7.0"
