@@ -546,8 +546,12 @@ impl<'nvml> Device<'nvml> {
         unsafe {
             let mut count: c_uint = match self.running_compute_processes_count()? {
                 0 => return Ok(vec![]),
-                value => value,
+                value => value + 5,
             };
+            // Add a bit of headroom in case more processes are launched in
+            // between the above call to get the expected count and the time we
+            // actually make the call to get data below.
+            count += 5;
             let mut processes: Vec<nvmlProcessInfo_t> = vec![mem::zeroed(); count as usize];
 
             nvml_try(sym(self.device, &mut count, processes.as_mut_ptr()))?;
@@ -1322,6 +1326,10 @@ impl<'nvml> Device<'nvml> {
                 0 => return Ok(vec![]),
                 value => value,
             };
+            // Add a bit of headroom in case more processes are launched in
+            // between the above call to get the expected count and the time we
+            // actually make the call to get data below.
+            count += 5;
             let mut processes: Vec<nvmlProcessInfo_t> = vec![mem::zeroed(); count as usize];
 
             nvml_try(sym(self.device, &mut count, processes.as_mut_ptr()))?;
@@ -3691,10 +3699,12 @@ impl<'nvml> Device<'nvml> {
     boosting above the clock value being set here.
 
     You can determine valid `mem_clock` and `graphics_clock` arg values via
-    `.supported_memory_clocks()` and `.supported_graphics_clocks()`.
+    [`Self::supported_memory_clocks()`] and [`Self::supported_graphics_clocks()`].
 
     Note that after a system reboot or driver reload applications clocks go back
     to their default value.
+
+    See also [`Self::set_mem_locked_clocks()`].
 
     # Errors
 
@@ -3891,6 +3901,9 @@ impl<'nvml> Device<'nvml> {
 
     After a system reboot or a driver reload the clocks go back to their default
     values. See also [`Self::reset_mem_locked_clocks()`].
+
+    You can use [`Self::supported_memory_clocks()`] to determine valid
+    frequency combinations to pass into this call.
 
     # Device Support
 

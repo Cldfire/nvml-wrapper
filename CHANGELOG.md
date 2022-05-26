@@ -18,11 +18,15 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 * The `NVML` struct has been renamed to `Nvml` (#22 - @TheJltres)
 * The `basic_usage` example now prints the number of CUDA cores your device has
 * Some methods on `Nvml` have been renamed:
-  * `Nvml.blacklist_device_count()` -> `Nvml.excluded_device_count()`
-  * `Nvml.blacklist_device_info()` -> `Nvml.excluded_device_info()`
-* Some struct wrappers have gotten renamed:
-  * `BlacklistDeviceInfo` -> `ExcludedDeviceInfo`
-* `Device.name()` now creates a buffer sized to the new `NVML_DEVICE_NAME_V2_BUFFER_SIZE` constant
+  * `Nvml::blacklist_device_count()` -> `Nvml::excluded_device_count()`
+  * `Nvml::blacklist_device_info()` -> `Nvml::excluded_device_info()`
+* Some struct wrappers have been modified:
+  * `BlacklistDeviceInfo` renamed to `ExcludedDeviceInfo`
+  * `ProcessInfo` gained new fields:
+    * `gpu_instance_id`
+    * `compute_instance_id`
+* `Device::name()` now creates a buffer sized to the new `NVML_DEVICE_NAME_V2_BUFFER_SIZE` constant
+* `Device::running_compute_processes()` and `Device::running_graphics_processes()` now allocate a bit of headroom in case the process count increases between when they make a call to figure out how much to allocate and when they make a call to get data
 
 ### Rust Version Support
 
