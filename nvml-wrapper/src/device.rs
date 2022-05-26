@@ -12,6 +12,7 @@ use crate::bitmasks::Behavior;
 use crate::enum_wrappers::{bool_from_state, device::*, state_from_bool};
 
 use crate::enums::device::BusType;
+use crate::enums::device::DeviceArchitecture;
 use crate::enums::device::GpuLockedClocksSetting;
 use crate::enums::device::PowerSource;
 #[cfg(target_os = "linux")]
@@ -3232,6 +3233,27 @@ impl<'nvml> Device<'nvml> {
     }
 
     /**
+    Gets the architecture of this [`Device`].
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    */
+    pub fn architecture(&self) -> Result<DeviceArchitecture, NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetArchitecture.as_ref())?;
+
+        let architecture_c = unsafe {
+            let mut architecture: nvmlDeviceArchitecture_t = mem::zeroed();
+
+            nvml_try(sym(self.device, &mut architecture))?;
+
+            architecture
+        };
+
+        DeviceArchitecture::try_from(architecture_c)
+    }
+
+    /**
     Checks if this `Device` and the passed-in device are on the same physical board.
 
     # Errors
@@ -5336,6 +5358,12 @@ mod test {
     fn bus_type() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.bus_type())
+    }
+
+    #[test]
+    fn architecture() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.architecture())
     }
 
     // I do not have 2 devices

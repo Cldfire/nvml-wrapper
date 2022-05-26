@@ -1,4 +1,5 @@
 use std::convert::TryFrom;
+use std::fmt::Display;
 
 use crate::enum_wrappers::device::{ClockLimitId, SampleValueType};
 use crate::error::NvmlError;
@@ -194,6 +195,76 @@ impl TryFrom<nvmlPowerSource_t> for PowerSource {
             NVML_POWER_SOURCE_AC => Ok(Self::Ac),
             NVML_POWER_SOURCE_BATTERY => Ok(Self::Battery),
             _ => Err(NvmlError::UnexpectedVariant(data)),
+        }
+    }
+}
+
+/// Returned by [`crate::Device::architecture()`].
+///
+/// This is the simplified chip architecture of the device.
+// TODO: technically this is an "enum wrapper" but the type on the C side isn't
+// an enum
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum DeviceArchitecture {
+    /// <https://en.wikipedia.org/wiki/Kepler_(microarchitecture)>
+    Kepler,
+    /// <https://en.wikipedia.org/wiki/Maxwell_(microarchitecture)>
+    Maxwell,
+    /// <https://en.wikipedia.org/wiki/Pascal_(microarchitecture)>
+    Pascal,
+    /// <https://en.wikipedia.org/wiki/Volta_(microarchitecture)>
+    Volta,
+    /// <https://en.wikipedia.org/wiki/Turing_(microarchitecture)>
+    Turing,
+    /// <https://en.wikipedia.org/wiki/Ampere_(microarchitecture)>
+    Ampere,
+    /// Unknown device architecture (most likely something newer).
+    Unknown,
+}
+
+impl DeviceArchitecture {
+    /// Returns the C constant equivalent for the given Rust enum variant.
+    pub fn as_c(&self) -> nvmlDeviceArchitecture_t {
+        match *self {
+            DeviceArchitecture::Kepler => NVML_DEVICE_ARCH_KEPLER,
+            DeviceArchitecture::Maxwell => NVML_DEVICE_ARCH_MAXWELL,
+            DeviceArchitecture::Pascal => NVML_DEVICE_ARCH_PASCAL,
+            DeviceArchitecture::Volta => NVML_DEVICE_ARCH_VOLTA,
+            DeviceArchitecture::Turing => NVML_DEVICE_ARCH_TURING,
+            DeviceArchitecture::Ampere => NVML_DEVICE_ARCH_AMPERE,
+            DeviceArchitecture::Unknown => NVML_DEVICE_ARCH_UNKNOWN,
+        }
+    }
+}
+
+impl TryFrom<nvmlDeviceArchitecture_t> for DeviceArchitecture {
+    type Error = NvmlError;
+
+    fn try_from(data: nvmlDeviceArchitecture_t) -> Result<Self, Self::Error> {
+        match data {
+            NVML_DEVICE_ARCH_KEPLER => Ok(Self::Kepler),
+            NVML_DEVICE_ARCH_MAXWELL => Ok(Self::Maxwell),
+            NVML_DEVICE_ARCH_PASCAL => Ok(Self::Pascal),
+            NVML_DEVICE_ARCH_VOLTA => Ok(Self::Volta),
+            NVML_DEVICE_ARCH_TURING => Ok(Self::Turing),
+            NVML_DEVICE_ARCH_AMPERE => Ok(Self::Ampere),
+            NVML_DEVICE_ARCH_UNKNOWN => Ok(Self::Unknown),
+            _ => Err(NvmlError::UnexpectedVariant(data)),
+        }
+    }
+}
+
+impl Display for DeviceArchitecture {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DeviceArchitecture::Kepler => f.write_str("Kepler"),
+            DeviceArchitecture::Maxwell => f.write_str("Maxwell"),
+            DeviceArchitecture::Pascal => f.write_str("Pascal"),
+            DeviceArchitecture::Volta => f.write_str("Volta"),
+            DeviceArchitecture::Turing => f.write_str("Turing"),
+            DeviceArchitecture::Ampere => f.write_str("Ampere"),
+            DeviceArchitecture::Unknown => f.write_str("Unknown"),
         }
     }
 }

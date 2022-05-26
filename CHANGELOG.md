@@ -14,11 +14,12 @@ This file describes the changes / additions / fixes between wrapper releases, tr
     * `num_fans()`
     * `bus_type()`
     * `power_source()`
+    * `architecture()`
 
 ### Changed
 
 * The `NVML` struct has been renamed to `Nvml` ([#22](https://github.com/Cldfire/nvml-wrapper/pull/22) - @TheJltres)
-* The `basic_usage` example now prints the number of CUDA cores your device has
+* The `basic_usage` example now prints your device's architecture and number of CUDA cores
 * Some methods on `Nvml` have been renamed:
   * `Nvml::blacklist_device_count()` -> `Nvml::excluded_device_count()`
   * `Nvml::blacklist_device_info()` -> `Nvml::excluded_device_info()`

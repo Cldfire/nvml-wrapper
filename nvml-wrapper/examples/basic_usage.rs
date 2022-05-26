@@ -24,16 +24,18 @@ fn main() -> Result<(), NvmlError> {
     let max_link_gen = device.max_pcie_link_gen()?;
     let max_link_width = device.max_pcie_link_width()?;
     let cuda_cores = device.num_cores()?;
+    let architecture = device.architecture()?;
 
     // And we can use that data (here we just print it)
     print!("\n\n");
     println!(
-        "Your {name} (CUDA cores: {cuda_cores}) is currently sitting at \
-        {temperature} °C with a graphics clock of {graphics_clock} MHz and a \
-        memory clock of {mem_clock} MHz. Memory usage is {used_mem} out of an \
-        available {total_mem}. Right now the device is connected via a PCIe \
-        gen {link_gen} x{link_width} interface; the max your hardware supports \
-        is PCIe gen {max_link_gen} x{max_link_width}.",
+        "Your {name} (architecture: {architecture}, CUDA cores: {cuda_cores}) \
+        is currently sitting at {temperature} °C with a graphics clock of \
+        {graphics_clock} MHz and a memory clock of {mem_clock} MHz. Memory \
+        usage is {used_mem} out of an available {total_mem}. Right now the \
+        device is connected via a PCIe gen {link_gen} x{link_width} interface; \
+        the max your hardware supports is PCIe gen {max_link_gen} \
+        x{max_link_width}.",
         name = name,
         temperature = temperature,
         graphics_clock = graphics_clock,
@@ -45,6 +47,7 @@ fn main() -> Result<(), NvmlError> {
         max_link_gen = max_link_gen,
         max_link_width = max_link_width,
         cuda_cores = cuda_cores,
+        architecture = architecture,
     );
 
     println!();
