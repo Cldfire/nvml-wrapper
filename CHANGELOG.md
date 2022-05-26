@@ -15,7 +15,7 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 
 ### Changed
 
-* The `NVML` struct has been renamed to `Nvml` (#22 - @TheJltres)
+* The `NVML` struct has been renamed to `Nvml` ([#22](https://github.com/Cldfire/nvml-wrapper/pull/22) - @TheJltres)
 * The `basic_usage` example now prints the number of CUDA cores your device has
 * Some methods on `Nvml` have been renamed:
   * `Nvml::blacklist_device_count()` -> `Nvml::excluded_device_count()`
@@ -25,8 +25,10 @@ This file describes the changes / additions / fixes between wrapper releases, tr
   * `ProcessInfo` gained new fields:
     * `gpu_instance_id`
     * `compute_instance_id`
-* `Device::name()` now creates a buffer sized to the new `NVML_DEVICE_NAME_V2_BUFFER_SIZE` constant
-* `Device::running_compute_processes()` and `Device::running_graphics_processes()` now allocate a bit of headroom in case the process count increases between when they make a call to figure out how much to allocate and when they make a call to get data
+* `Device`:
+  * `Device::name()` now creates a buffer sized to the new `NVML_DEVICE_NAME_V2_BUFFER_SIZE` constant
+  * `Device::running_compute_processes()` and `Device::running_graphics_processes()` now allocate a bit of headroom in case the process count increases between when they make a call to figure out how much to allocate and when they make a call to get data
+  * `Device::set_gpu_locked_clocks()` now takes in `GpuLockedClocksSetting` allowing for both numeric ranges and symbolic boundaries
 
 ### Rust Version Support
 

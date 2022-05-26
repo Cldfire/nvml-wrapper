@@ -11,6 +11,7 @@ use crate::bitmasks::Behavior;
 
 use crate::enum_wrappers::{bool_from_state, device::*, state_from_bool};
 
+use crate::enums::device::GpuLockedClocksSetting;
 #[cfg(target_os = "linux")]
 use crate::error::NvmlErrorWithSource;
 use crate::error::{nvml_sym, nvml_try, Bits, NvmlError};
@@ -3859,10 +3860,11 @@ impl<'nvml> Device<'nvml> {
     // Tested (no-run)
     pub fn set_gpu_locked_clocks(
         &mut self,
-        min_clock_mhz: u32,
-        max_clock_mhz: u32,
+        setting: GpuLockedClocksSetting,
     ) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceSetGpuLockedClocks.as_ref())?;
+
+        let (min_clock_mhz, max_clock_mhz) = setting.into_min_and_max_clocks();
 
         unsafe { nvml_try(sym(self.device, min_clock_mhz, max_clock_mhz)) }
     }
@@ -4607,6 +4609,7 @@ mod test {
     #[cfg(target_os = "windows")]
     use crate::bitmasks::Behavior;
     use crate::enum_wrappers::device::*;
+    use crate::enums::device::GpuLockedClocksSetting;
     use crate::error::*;
     use crate::structs::device::FieldId;
     use crate::sys_exports::field_id::*;
@@ -5446,7 +5449,10 @@ mod test {
         let mut device = device(&nvml);
 
         device
-            .set_gpu_locked_clocks(1048, 1139)
+            .set_gpu_locked_clocks(GpuLockedClocksSetting::Numeric {
+                min_clock_mhz: 1048,
+                max_clock_mhz: 1139,
+            })
             .expect("set to a range")
     }
 

@@ -1,4 +1,4 @@
-use crate::enum_wrappers::device::SampleValueType;
+use crate::enum_wrappers::device::{ClockLimitId, SampleValueType};
 use crate::ffi::bindings::*;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -69,6 +69,44 @@ impl SampleValue {
                 UnsignedLongLong => SampleValue::U64(union.ullVal),
                 SignedLongLong => SampleValue::I64(union.sllVal),
             }
+        }
+    }
+}
+
+/// Represents different types of sample values.
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum GpuLockedClocksSetting {
+    /// Numeric setting that allows you to explicitly define minimum and
+    /// maximum clock frequencies.
+    Numeric {
+        min_clock_mhz: u32,
+        max_clock_mhz: u32,
+    },
+    /// Symbolic setting that allows you to define lower and upper bounds for
+    /// clock speed with various possibilities.
+    ///
+    /// Not all combinations of `lower_bound` and `upper_bound` are valid.
+    /// Please see the docs for `nvmlDeviceSetGpuLockedClocks` in `nvml.h` to
+    /// learn more.
+    Symbolic {
+        lower_bound: ClockLimitId,
+        upper_bound: ClockLimitId,
+    },
+}
+
+impl GpuLockedClocksSetting {
+    /// Returns `(min_clock_mhz, max_clock_mhz)`.
+    pub fn into_min_and_max_clocks(self) -> (u32, u32) {
+        match self {
+            GpuLockedClocksSetting::Numeric {
+                min_clock_mhz,
+                max_clock_mhz,
+            } => (min_clock_mhz, max_clock_mhz),
+            GpuLockedClocksSetting::Symbolic {
+                lower_bound,
+                upper_bound,
+            } => (lower_bound.as_c(), upper_bound.as_c()),
         }
     }
 }

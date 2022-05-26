@@ -559,7 +559,7 @@ pub enum FbcSessionType {
     HwEnc,
 }
 
-/// Options to pass to Device.remove()
+/// Options to pass to [`crate::Device::remove()`].
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[wrap(c_enum = "nvmlDetachGpuState_enum")]
@@ -570,7 +570,7 @@ pub enum DetachGpuState {
     Remove,
 }
 
-/// Options to pass to Device.remove()
+/// Options to pass to [`crate::Device::remove()`].
 #[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[wrap(c_enum = "nvmlPcieLinkState_enum")]
@@ -579,4 +579,17 @@ pub enum PcieLinkState {
     Keep,
     #[wrap(c_variant = "NVML_PCIE_LINK_SHUT_DOWN")]
     ShutDown,
+}
+
+/// Clock limit IDs for use with [`crate::Device::set_gpu_locked_clocks()`].
+#[derive(EnumWrapper, Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[wrap(c_enum = "nvmlClockLimitId_enum")]
+pub enum ClockLimitId {
+    /// Bound clock speed by the TDP of the device.
+    #[wrap(c_variant = "NVML_CLOCK_LIMIT_ID_TDP")]
+    Tdp,
+    /// No bound for clock speed.
+    #[wrap(c_variant = "NVML_CLOCK_LIMIT_ID_UNLIMITED")]
+    Unlimited,
 }
