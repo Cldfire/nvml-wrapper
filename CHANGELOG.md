@@ -12,6 +12,7 @@ This file describes the changes / additions / fixes between wrapper releases, tr
     * `reset_mem_locked_clocks()`
     * `num_cores()`
     * `num_fans()`
+    * `bus_type()`
 
 ### Changed
 

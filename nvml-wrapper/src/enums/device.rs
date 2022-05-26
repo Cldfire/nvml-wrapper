@@ -1,4 +1,7 @@
+use std::convert::TryFrom;
+
 use crate::enum_wrappers::device::{ClockLimitId, SampleValueType};
+use crate::error::NvmlError;
 use crate::ffi::bindings::*;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -107,6 +110,56 @@ impl GpuLockedClocksSetting {
                 lower_bound,
                 upper_bound,
             } => (lower_bound.as_c(), upper_bound.as_c()),
+        }
+    }
+}
+
+/// Returned by [`crate::Device::bus_type()`].
+// TODO: technically this is an "enum wrapper" but the type on the C side isn't
+// an enum
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum BusType {
+    /// Unknown bus type.
+    Unknown,
+    /// PCI (Peripheral Component Interconnect) bus type.
+    Pci,
+    /// PCIE (Peripheral Component Interconnect Express) bus type.
+    ///
+    /// This is the most common bus type.
+    Pcie,
+    /// FPCI (Fast Peripheral Component Interconnect) bus type.
+    Fpci,
+    /// AGP (Accelerated Graphics Port) bus type.
+    ///
+    /// This is old and was dropped in favor of PCIE.
+    Agp,
+}
+
+impl BusType {
+    /// Returns the C constant equivalent for the given Rust enum variant.
+    pub fn as_c(&self) -> nvmlBusType_t {
+        match *self {
+            BusType::Unknown => NVML_BUS_TYPE_UNKNOWN,
+            BusType::Pci => NVML_BUS_TYPE_PCI,
+            BusType::Pcie => NVML_BUS_TYPE_PCIE,
+            BusType::Fpci => NVML_BUS_TYPE_FPCI,
+            BusType::Agp => NVML_BUS_TYPE_AGP,
+        }
+    }
+}
+
+impl TryFrom<nvmlBusType_t> for BusType {
+    type Error = NvmlError;
+
+    fn try_from(data: nvmlBusType_t) -> Result<Self, Self::Error> {
+        match data {
+            NVML_BUS_TYPE_UNKNOWN => Ok(Self::Unknown),
+            NVML_BUS_TYPE_PCI => Ok(Self::Pci),
+            NVML_BUS_TYPE_PCIE => Ok(Self::Pcie),
+            NVML_BUS_TYPE_FPCI => Ok(Self::Fpci),
+            NVML_BUS_TYPE_AGP => Ok(Self::Agp),
+            _ => Err(NvmlError::UnexpectedVariant(data)),
         }
     }
 }

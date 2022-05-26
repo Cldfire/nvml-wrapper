@@ -6,6 +6,7 @@ use crate::Unit;
 use crate::bitmasks::{device::*, event::*};
 
 use crate::enum_wrappers::device::*;
+use crate::enums::device::BusType;
 use crate::enums::unit::*;
 use crate::error::NvmlError;
 use crate::event::EventSet;
@@ -96,6 +97,7 @@ impl ShouldPrint for PsuInfo {}
 impl ShouldPrint for UnitInfo {}
 impl ShouldPrint for UtilizationControl {}
 impl ShouldPrint for UtilizationCounter {}
+impl ShouldPrint for BusType {}
 
 #[cfg(target_os = "windows")]
 impl ShouldPrint for DriverModelState {}
