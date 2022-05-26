@@ -13,6 +13,7 @@ This file describes the changes / additions / fixes between wrapper releases, tr
     * `num_cores()`
     * `num_fans()`
     * `bus_type()`
+    * `power_source()`
 
 ### Changed
 

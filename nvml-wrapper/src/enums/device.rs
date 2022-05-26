@@ -163,3 +163,37 @@ impl TryFrom<nvmlBusType_t> for BusType {
         }
     }
 }
+
+/// Returned by [`crate::Device::power_source()`].
+// TODO: technically this is an "enum wrapper" but the type on the C side isn't
+// an enum
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum PowerSource {
+    /// AC power (receiving power from some external source).
+    Ac,
+    /// Battery power.
+    Battery,
+}
+
+impl PowerSource {
+    /// Returns the C constant equivalent for the given Rust enum variant.
+    pub fn as_c(&self) -> nvmlPowerSource_t {
+        match *self {
+            PowerSource::Ac => NVML_POWER_SOURCE_AC,
+            PowerSource::Battery => NVML_POWER_SOURCE_BATTERY,
+        }
+    }
+}
+
+impl TryFrom<nvmlPowerSource_t> for PowerSource {
+    type Error = NvmlError;
+
+    fn try_from(data: nvmlPowerSource_t) -> Result<Self, Self::Error> {
+        match data {
+            NVML_POWER_SOURCE_AC => Ok(Self::Ac),
+            NVML_POWER_SOURCE_BATTERY => Ok(Self::Battery),
+            _ => Err(NvmlError::UnexpectedVariant(data)),
+        }
+    }
+}

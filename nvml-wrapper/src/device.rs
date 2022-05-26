@@ -13,6 +13,7 @@ use crate::enum_wrappers::{bool_from_state, device::*, state_from_bool};
 
 use crate::enums::device::BusType;
 use crate::enums::device::GpuLockedClocksSetting;
+use crate::enums::device::PowerSource;
 #[cfg(target_os = "linux")]
 use crate::error::NvmlErrorWithSource;
 use crate::error::{nvml_sym, nvml_try, Bits, NvmlError};
@@ -3187,6 +3188,29 @@ impl<'nvml> Device<'nvml> {
     }
 
     /**
+    Gets the power source of this [`Device`].
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `NotSupported`, if this query is not supported by this `Device`
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    */
+    pub fn power_source(&self) -> Result<PowerSource, NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetPowerSource.as_ref())?;
+
+        let power_source_c = unsafe {
+            let mut power_source: nvmlPowerSource_t = mem::zeroed();
+
+            nvml_try(sym(self.device, &mut power_source))?;
+
+            power_source
+        };
+
+        PowerSource::try_from(power_source_c)
+    }
+
+    /**
     Gets the type of bus by which this [`Device`] is connected.
 
     # Errors
@@ -5300,6 +5324,12 @@ mod test {
     fn num_cores() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.num_cores())
+    }
+
+    #[test]
+    fn power_source() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.power_source())
     }
 
     #[test]
