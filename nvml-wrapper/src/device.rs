@@ -14,6 +14,7 @@ use crate::enum_wrappers::{bool_from_state, device::*, state_from_bool};
 use crate::enums::device::BusType;
 use crate::enums::device::DeviceArchitecture;
 use crate::enums::device::GpuLockedClocksSetting;
+use crate::enums::device::PcieLinkMaxSpeed;
 use crate::enums::device::PowerSource;
 #[cfg(target_os = "linux")]
 use crate::error::NvmlErrorWithSource;
@@ -3212,6 +3213,29 @@ impl<'nvml> Device<'nvml> {
     }
 
     /**
+    Gets the max PCIe link speed for this [`Device`].
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `NotSupported`, if this query is not supported by this `Device`
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    */
+    pub fn pcie_link_max_speed(&self) -> Result<PcieLinkMaxSpeed, NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetPcieLinkMaxSpeed.as_ref())?;
+
+        let pcie_link_max_speed_c = unsafe {
+            let mut pcie_link_max_speed: c_uint = mem::zeroed();
+
+            nvml_try(sym(self.device, &mut pcie_link_max_speed))?;
+
+            pcie_link_max_speed
+        };
+
+        PcieLinkMaxSpeed::try_from(pcie_link_max_speed_c)
+    }
+
+    /**
     Gets the type of bus by which this [`Device`] is connected.
 
     # Errors
@@ -5352,6 +5376,12 @@ mod test {
     fn power_source() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.power_source())
+    }
+
+    #[test]
+    fn pcie_link_max_speed() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.pcie_link_max_speed())
     }
 
     #[test]

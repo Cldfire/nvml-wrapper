@@ -15,6 +15,7 @@ This file describes the changes / additions / fixes between wrapper releases, tr
     * `bus_type()`
     * `power_source()`
     * `architecture()`
+    * `pcie_link_max_speed()`
 
 ### Changed
 

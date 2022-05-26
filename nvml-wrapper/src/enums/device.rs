@@ -1,5 +1,6 @@
 use std::convert::TryFrom;
 use std::fmt::Display;
+use std::os::raw::c_uint;
 
 use crate::enum_wrappers::device::{ClockLimitId, SampleValueType};
 use crate::error::NvmlError;
@@ -141,11 +142,11 @@ impl BusType {
     /// Returns the C constant equivalent for the given Rust enum variant.
     pub fn as_c(&self) -> nvmlBusType_t {
         match *self {
-            BusType::Unknown => NVML_BUS_TYPE_UNKNOWN,
-            BusType::Pci => NVML_BUS_TYPE_PCI,
-            BusType::Pcie => NVML_BUS_TYPE_PCIE,
-            BusType::Fpci => NVML_BUS_TYPE_FPCI,
-            BusType::Agp => NVML_BUS_TYPE_AGP,
+            Self::Unknown => NVML_BUS_TYPE_UNKNOWN,
+            Self::Pci => NVML_BUS_TYPE_PCI,
+            Self::Pcie => NVML_BUS_TYPE_PCIE,
+            Self::Fpci => NVML_BUS_TYPE_FPCI,
+            Self::Agp => NVML_BUS_TYPE_AGP,
         }
     }
 }
@@ -181,8 +182,8 @@ impl PowerSource {
     /// Returns the C constant equivalent for the given Rust enum variant.
     pub fn as_c(&self) -> nvmlPowerSource_t {
         match *self {
-            PowerSource::Ac => NVML_POWER_SOURCE_AC,
-            PowerSource::Battery => NVML_POWER_SOURCE_BATTERY,
+            Self::Ac => NVML_POWER_SOURCE_AC,
+            Self::Battery => NVML_POWER_SOURCE_BATTERY,
         }
     }
 }
@@ -227,13 +228,13 @@ impl DeviceArchitecture {
     /// Returns the C constant equivalent for the given Rust enum variant.
     pub fn as_c(&self) -> nvmlDeviceArchitecture_t {
         match *self {
-            DeviceArchitecture::Kepler => NVML_DEVICE_ARCH_KEPLER,
-            DeviceArchitecture::Maxwell => NVML_DEVICE_ARCH_MAXWELL,
-            DeviceArchitecture::Pascal => NVML_DEVICE_ARCH_PASCAL,
-            DeviceArchitecture::Volta => NVML_DEVICE_ARCH_VOLTA,
-            DeviceArchitecture::Turing => NVML_DEVICE_ARCH_TURING,
-            DeviceArchitecture::Ampere => NVML_DEVICE_ARCH_AMPERE,
-            DeviceArchitecture::Unknown => NVML_DEVICE_ARCH_UNKNOWN,
+            Self::Kepler => NVML_DEVICE_ARCH_KEPLER,
+            Self::Maxwell => NVML_DEVICE_ARCH_MAXWELL,
+            Self::Pascal => NVML_DEVICE_ARCH_PASCAL,
+            Self::Volta => NVML_DEVICE_ARCH_VOLTA,
+            Self::Turing => NVML_DEVICE_ARCH_TURING,
+            Self::Ampere => NVML_DEVICE_ARCH_AMPERE,
+            Self::Unknown => NVML_DEVICE_ARCH_UNKNOWN,
         }
     }
 }
@@ -258,13 +259,63 @@ impl TryFrom<nvmlDeviceArchitecture_t> for DeviceArchitecture {
 impl Display for DeviceArchitecture {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DeviceArchitecture::Kepler => f.write_str("Kepler"),
-            DeviceArchitecture::Maxwell => f.write_str("Maxwell"),
-            DeviceArchitecture::Pascal => f.write_str("Pascal"),
-            DeviceArchitecture::Volta => f.write_str("Volta"),
-            DeviceArchitecture::Turing => f.write_str("Turing"),
-            DeviceArchitecture::Ampere => f.write_str("Ampere"),
-            DeviceArchitecture::Unknown => f.write_str("Unknown"),
+            Self::Kepler => f.write_str("Kepler"),
+            Self::Maxwell => f.write_str("Maxwell"),
+            Self::Pascal => f.write_str("Pascal"),
+            Self::Volta => f.write_str("Volta"),
+            Self::Turing => f.write_str("Turing"),
+            Self::Ampere => f.write_str("Ampere"),
+            Self::Unknown => f.write_str("Unknown"),
+        }
+    }
+}
+
+/// Returned by [`crate::Device::pcie_link_max_speed()`].
+///
+/// Note, the NVML header says these are all MBPS (Megabytes Per Second) but
+/// they don't line up with the throughput numbers on this page:
+/// <https://en.wikipedia.org/wiki/PCI_Express>
+///
+/// They _do_ line up with the "transfer rate per lane" numbers, though.
+// TODO: technically this is an "enum wrapper" but the type on the C side isn't
+// an enum
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum PcieLinkMaxSpeed {
+    Invalid,
+    MegabytesPerSecond2500,
+    MegabytesPerSecond5000,
+    MegabytesPerSecond8000,
+    MegabytesPerSecond16000,
+    MegabytesPerSecond32000,
+}
+
+impl PcieLinkMaxSpeed {
+    /// Returns the C constant equivalent for the given Rust enum variant.
+    pub fn as_c(&self) -> c_uint {
+        match *self {
+            Self::Invalid => NVML_PCIE_LINK_MAX_SPEED_INVALID,
+            Self::MegabytesPerSecond2500 => NVML_PCIE_LINK_MAX_SPEED_2500MBPS,
+            Self::MegabytesPerSecond5000 => NVML_PCIE_LINK_MAX_SPEED_5000MBPS,
+            Self::MegabytesPerSecond8000 => NVML_PCIE_LINK_MAX_SPEED_8000MBPS,
+            Self::MegabytesPerSecond16000 => NVML_PCIE_LINK_MAX_SPEED_16000MBPS,
+            Self::MegabytesPerSecond32000 => NVML_PCIE_LINK_MAX_SPEED_32000MBPS,
+        }
+    }
+}
+
+impl TryFrom<c_uint> for PcieLinkMaxSpeed {
+    type Error = NvmlError;
+
+    fn try_from(data: c_uint) -> Result<Self, Self::Error> {
+        match data {
+            NVML_PCIE_LINK_MAX_SPEED_INVALID => Ok(Self::Invalid),
+            NVML_PCIE_LINK_MAX_SPEED_2500MBPS => Ok(Self::MegabytesPerSecond2500),
+            NVML_PCIE_LINK_MAX_SPEED_5000MBPS => Ok(Self::MegabytesPerSecond5000),
+            NVML_PCIE_LINK_MAX_SPEED_8000MBPS => Ok(Self::MegabytesPerSecond8000),
+            NVML_PCIE_LINK_MAX_SPEED_16000MBPS => Ok(Self::MegabytesPerSecond16000),
+            NVML_PCIE_LINK_MAX_SPEED_32000MBPS => Ok(Self::MegabytesPerSecond32000),
+            _ => Err(NvmlError::UnexpectedVariant(data)),
         }
     }
 }
