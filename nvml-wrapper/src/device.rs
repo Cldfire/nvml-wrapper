@@ -3166,6 +3166,29 @@ impl<'nvml> Device<'nvml> {
     }
 
     /**
+    Gets the interrupt number for this [`Device`].
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `NotSupported`, if this query is not supported by this `Device`
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    */
+    pub fn irq_num(&self) -> Result<u32, NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetIrqNum.as_ref())?;
+
+        let irq_num = unsafe {
+            let mut irq_num: c_uint = mem::zeroed();
+
+            nvml_try(sym(self.device, &mut irq_num))?;
+
+            irq_num
+        };
+
+        Ok(irq_num)
+    }
+
+    /**
     Gets the core count for this [`Device`].
 
     The cores represented in the count here are commonly referred to as
@@ -3210,6 +3233,31 @@ impl<'nvml> Device<'nvml> {
         };
 
         PowerSource::try_from(power_source_c)
+    }
+
+    /**
+    Gets the memory bus width of this [`Device`].
+
+    The returned value is in bits (i.e. 320 for a 320-bit bus width).
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `NotSupported`, if this query is not supported by this `Device`
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    */
+    pub fn memory_bus_width(&self) -> Result<u32, NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetMemoryBusWidth.as_ref())?;
+
+        let memory_bus_width = unsafe {
+            let mut memory_bus_width: c_uint = mem::zeroed();
+
+            nvml_try(sym(self.device, &mut memory_bus_width))?;
+
+            memory_bus_width
+        };
+
+        Ok(memory_bus_width)
     }
 
     /**
@@ -5373,9 +5421,21 @@ mod test {
     }
 
     #[test]
+    fn irq_num() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.irq_num())
+    }
+
+    #[test]
     fn power_source() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.power_source())
+    }
+
+    #[test]
+    fn memory_bus_width() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.memory_bus_width())
     }
 
     #[test]
