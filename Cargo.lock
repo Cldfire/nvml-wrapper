@@ -161,7 +161,7 @@ checksum = "ab250442c86f1850815b5d268639dff018c0627022bc1940eb2d642ca1ce12f0"
 
 [[package]]
 name = "nvml-wrapper"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "bitflags",
  "libloading",
@@ -176,7 +176,7 @@ dependencies = [
 
 [[package]]
 name = "nvml-wrapper-sys"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "libloading",
 ]
