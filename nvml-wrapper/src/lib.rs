@@ -121,7 +121,7 @@ use crate::enum_wrappers::device::TopologyLevel;
 use crate::error::{nvml_sym, nvml_try, NvmlError};
 use crate::ffi::bindings::*;
 
-use crate::struct_wrappers::BlacklistDeviceInfo;
+use crate::struct_wrappers::ExcludedDeviceInfo;
 
 #[cfg(target_os = "linux")]
 use crate::struct_wrappers::device::PciInfo;
@@ -889,14 +889,14 @@ impl Nvml {
     }
 
     /**
-    Gets the number of blacklisted GPU devices in the system.
+    Gets the number of excluded GPU devices in the system.
 
     # Device Support
 
     Supports all devices.
     */
-    pub fn blacklist_device_count(&self) -> Result<u32, NvmlError> {
-        let sym = nvml_sym(self.lib.nvmlGetBlacklistDeviceCount.as_ref())?;
+    pub fn excluded_device_count(&self) -> Result<u32, NvmlError> {
+        let sym = nvml_sym(self.lib.nvmlGetExcludedDeviceCount.as_ref())?;
 
         unsafe {
             let mut count: c_uint = mem::zeroed();
@@ -907,7 +907,7 @@ impl Nvml {
     }
 
     /**
-    Gets information for the specified blacklisted device.
+    Gets information for the specified excluded device.
 
     # Errors
 
@@ -918,14 +918,14 @@ impl Nvml {
 
     Supports all devices.
     */
-    pub fn blacklist_device_info(&self, index: u32) -> Result<BlacklistDeviceInfo, NvmlError> {
-        let sym = nvml_sym(self.lib.nvmlGetBlacklistDeviceInfoByIndex.as_ref())?;
+    pub fn excluded_device_info(&self, index: u32) -> Result<ExcludedDeviceInfo, NvmlError> {
+        let sym = nvml_sym(self.lib.nvmlGetExcludedDeviceInfoByIndex.as_ref())?;
 
         unsafe {
-            let mut info: nvmlBlacklistDeviceInfo_t = mem::zeroed();
+            let mut info: nvmlExcludedDeviceInfo_t = mem::zeroed();
 
             nvml_try(sym(index, &mut info))?;
-            BlacklistDeviceInfo::try_from(info)
+            ExcludedDeviceInfo::try_from(info)
         }
     }
 }
@@ -1180,17 +1180,17 @@ mod test {
     }
 
     #[test]
-    fn blacklist_device_count() {
+    fn excluded_device_count() {
         let nvml = nvml();
-        test(3, || nvml.blacklist_device_count())
+        test(3, || nvml.excluded_device_count())
     }
 
     #[test]
-    fn blacklist_device_info() {
+    fn excluded_device_info() {
         let nvml = nvml();
 
-        if nvml.blacklist_device_count().unwrap() > 0 {
-            test(3, || nvml.blacklist_device_info(0))
+        if nvml.excluded_device_count().unwrap() > 0 {
+            test(3, || nvml.excluded_device_info(0))
         }
     }
 }

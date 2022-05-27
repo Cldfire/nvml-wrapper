@@ -10,25 +10,25 @@ use crate::ffi::bindings::*;
 use serde::{Deserialize, Serialize};
 use std::{convert::TryFrom, ffi::CStr};
 
-/// Information about a blacklisted device
+/// Information about an excluded device.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct BlacklistDeviceInfo {
+pub struct ExcludedDeviceInfo {
     pci_info: PciInfo,
     uuid: String,
 }
 
-impl TryFrom<nvmlBlacklistDeviceInfo_t> for BlacklistDeviceInfo {
+impl TryFrom<nvmlExcludedDeviceInfo_t> for ExcludedDeviceInfo {
     type Error = NvmlError;
 
     /**
-    Construct `BlacklistDeviceInfo` from the corresponding C struct.
+    Construct [`ExcludedDeviceInfo`] from the corresponding C struct.
 
     # Errors
 
     * `UnexpectedVariant`, for which you can read the docs for
     */
-    fn try_from(value: nvmlBlacklistDeviceInfo_t) -> Result<Self, Self::Error> {
+    fn try_from(value: nvmlExcludedDeviceInfo_t) -> Result<Self, Self::Error> {
         unsafe {
             let uuid_raw = CStr::from_ptr(value.uuid.as_ptr());
 

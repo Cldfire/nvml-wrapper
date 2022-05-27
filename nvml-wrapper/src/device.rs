@@ -11,6 +11,11 @@ use crate::bitmasks::Behavior;
 
 use crate::enum_wrappers::{bool_from_state, device::*, state_from_bool};
 
+use crate::enums::device::BusType;
+use crate::enums::device::DeviceArchitecture;
+use crate::enums::device::GpuLockedClocksSetting;
+use crate::enums::device::PcieLinkMaxSpeed;
+use crate::enums::device::PowerSource;
 #[cfg(target_os = "linux")]
 use crate::error::NvmlErrorWithSource;
 use crate::error::{nvml_sym, nvml_try, Bits, NvmlError};
@@ -536,13 +541,22 @@ impl<'nvml> Device<'nvml> {
     */
     // Tested
     pub fn running_compute_processes(&self) -> Result<Vec<ProcessInfo>, NvmlError> {
-        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetComputeRunningProcesses.as_ref())?;
+        let sym = nvml_sym(
+            self.nvml
+                .lib
+                .nvmlDeviceGetComputeRunningProcesses_v3
+                .as_ref(),
+        )?;
 
         unsafe {
             let mut count: c_uint = match self.running_compute_processes_count()? {
                 0 => return Ok(vec![]),
-                value => value,
+                value => value + 5,
             };
+            // Add a bit of headroom in case more processes are launched in
+            // between the above call to get the expected count and the time we
+            // actually make the call to get data below.
+            count += 5;
             let mut processes: Vec<nvmlProcessInfo_t> = vec![mem::zeroed(); count as usize];
 
             nvml_try(sym(self.device, &mut count, processes.as_mut_ptr()))?;
@@ -567,7 +581,12 @@ impl<'nvml> Device<'nvml> {
     */
     // Tested as part of `.running_compute_processes()`
     pub fn running_compute_processes_count(&self) -> Result<u32, NvmlError> {
-        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetComputeRunningProcesses.as_ref())?;
+        let sym = nvml_sym(
+            self.nvml
+                .lib
+                .nvmlDeviceGetComputeRunningProcesses_v3
+                .as_ref(),
+        )?;
 
         unsafe {
             // Indicates that we want the count
@@ -1197,6 +1216,8 @@ impl<'nvml> Device<'nvml> {
     Note: The reported speed is the intended fan speed. If the fan is physically blocked
     and unable to spin, the output will not match the actual fan speed.
 
+    You can determine valid fan indices using [`Self::num_fans()`].
+
     # Errors
 
     * `Uninitialized`, if the library has not been successfully initialized
@@ -1219,6 +1240,31 @@ impl<'nvml> Device<'nvml> {
             nvml_try(sym(self.device, fan_idx, &mut speed))?;
 
             Ok(speed)
+        }
+    }
+
+    /**
+    Gets the number of fans on this [`Device`].
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `NotSupported`, if this `Device` does not have a fan
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+
+    # Device Support
+
+    Supports all discrete products with dedicated fans.
+    */
+    pub fn num_fans(&self) -> Result<u32, NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetNumFans.as_ref())?;
+
+        unsafe {
+            let mut count: c_uint = mem::zeroed();
+            nvml_try(sym(self.device, &mut count))?;
+
+            Ok(count)
         }
     }
 
@@ -1273,13 +1319,22 @@ impl<'nvml> Device<'nvml> {
     */
     // Tested
     pub fn running_graphics_processes(&self) -> Result<Vec<ProcessInfo>, NvmlError> {
-        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetGraphicsRunningProcesses.as_ref())?;
+        let sym = nvml_sym(
+            self.nvml
+                .lib
+                .nvmlDeviceGetGraphicsRunningProcesses_v3
+                .as_ref(),
+        )?;
 
         unsafe {
             let mut count: c_uint = match self.running_graphics_processes_count()? {
                 0 => return Ok(vec![]),
                 value => value,
             };
+            // Add a bit of headroom in case more processes are launched in
+            // between the above call to get the expected count and the time we
+            // actually make the call to get data below.
+            count += 5;
             let mut processes: Vec<nvmlProcessInfo_t> = vec![mem::zeroed(); count as usize];
 
             nvml_try(sym(self.device, &mut count, processes.as_mut_ptr()))?;
@@ -1304,7 +1359,12 @@ impl<'nvml> Device<'nvml> {
     */
     // Tested as part of `.running_graphics_processes()`
     pub fn running_graphics_processes_count(&self) -> Result<u32, NvmlError> {
-        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetGraphicsRunningProcesses.as_ref())?;
+        let sym = nvml_sym(
+            self.nvml
+                .lib
+                .nvmlDeviceGetGraphicsRunningProcesses_v3
+                .as_ref(),
+        )?;
 
         unsafe {
             // Indicates that we want the count
@@ -1787,12 +1847,12 @@ impl<'nvml> Device<'nvml> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetName.as_ref())?;
 
         unsafe {
-            let mut name_vec = vec![0; NVML_DEVICE_NAME_BUFFER_SIZE as usize];
+            let mut name_vec = vec![0; NVML_DEVICE_NAME_V2_BUFFER_SIZE as usize];
 
             nvml_try(sym(
                 self.device,
                 name_vec.as_mut_ptr(),
-                NVML_DEVICE_NAME_BUFFER_SIZE,
+                NVML_DEVICE_NAME_V2_BUFFER_SIZE,
             ))?;
 
             let name_raw = CStr::from_ptr(name_vec.as_ptr());
@@ -3106,6 +3166,166 @@ impl<'nvml> Device<'nvml> {
     }
 
     /**
+    Gets the interrupt number for this [`Device`].
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `NotSupported`, if this query is not supported by this `Device`
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    */
+    pub fn irq_num(&self) -> Result<u32, NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetIrqNum.as_ref())?;
+
+        let irq_num = unsafe {
+            let mut irq_num: c_uint = mem::zeroed();
+
+            nvml_try(sym(self.device, &mut irq_num))?;
+
+            irq_num
+        };
+
+        Ok(irq_num)
+    }
+
+    /**
+    Gets the core count for this [`Device`].
+
+    The cores represented in the count here are commonly referred to as
+    "CUDA cores".
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `NotSupported`, if this query is not supported by this `Device`
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    */
+    pub fn num_cores(&self) -> Result<u32, NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetNumGpuCores.as_ref())?;
+
+        unsafe {
+            let mut count: c_uint = mem::zeroed();
+
+            nvml_try(sym(self.device, &mut count))?;
+
+            Ok(count)
+        }
+    }
+
+    /**
+    Gets the power source of this [`Device`].
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `NotSupported`, if this query is not supported by this `Device`
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    */
+    pub fn power_source(&self) -> Result<PowerSource, NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetPowerSource.as_ref())?;
+
+        let power_source_c = unsafe {
+            let mut power_source: nvmlPowerSource_t = mem::zeroed();
+
+            nvml_try(sym(self.device, &mut power_source))?;
+
+            power_source
+        };
+
+        PowerSource::try_from(power_source_c)
+    }
+
+    /**
+    Gets the memory bus width of this [`Device`].
+
+    The returned value is in bits (i.e. 320 for a 320-bit bus width).
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `NotSupported`, if this query is not supported by this `Device`
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    */
+    pub fn memory_bus_width(&self) -> Result<u32, NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetMemoryBusWidth.as_ref())?;
+
+        let memory_bus_width = unsafe {
+            let mut memory_bus_width: c_uint = mem::zeroed();
+
+            nvml_try(sym(self.device, &mut memory_bus_width))?;
+
+            memory_bus_width
+        };
+
+        Ok(memory_bus_width)
+    }
+
+    /**
+    Gets the max PCIe link speed for this [`Device`].
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `NotSupported`, if this query is not supported by this `Device`
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    */
+    pub fn pcie_link_max_speed(&self) -> Result<PcieLinkMaxSpeed, NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetPcieLinkMaxSpeed.as_ref())?;
+
+        let pcie_link_max_speed_c = unsafe {
+            let mut pcie_link_max_speed: c_uint = mem::zeroed();
+
+            nvml_try(sym(self.device, &mut pcie_link_max_speed))?;
+
+            pcie_link_max_speed
+        };
+
+        PcieLinkMaxSpeed::try_from(pcie_link_max_speed_c)
+    }
+
+    /**
+    Gets the type of bus by which this [`Device`] is connected.
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    */
+    pub fn bus_type(&self) -> Result<BusType, NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetBusType.as_ref())?;
+
+        let bus_type_c = unsafe {
+            let mut bus_type: nvmlBusType_t = mem::zeroed();
+
+            nvml_try(sym(self.device, &mut bus_type))?;
+
+            bus_type
+        };
+
+        BusType::try_from(bus_type_c)
+    }
+
+    /**
+    Gets the architecture of this [`Device`].
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    */
+    pub fn architecture(&self) -> Result<DeviceArchitecture, NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetArchitecture.as_ref())?;
+
+        let architecture_c = unsafe {
+            let mut architecture: nvmlDeviceArchitecture_t = mem::zeroed();
+
+            nvml_try(sym(self.device, &mut architecture))?;
+
+            architecture
+        };
+
+        DeviceArchitecture::try_from(architecture_c)
+    }
+
+    /**
     Checks if this `Device` and the passed-in device are on the same physical board.
 
     # Errors
@@ -3620,10 +3840,12 @@ impl<'nvml> Device<'nvml> {
     boosting above the clock value being set here.
 
     You can determine valid `mem_clock` and `graphics_clock` arg values via
-    `.supported_memory_clocks()` and `.supported_graphics_clocks()`.
+    [`Self::supported_memory_clocks()`] and [`Self::supported_graphics_clocks()`].
 
     Note that after a system reboot or driver reload applications clocks go back
     to their default value.
+
+    See also [`Self::set_mem_locked_clocks()`].
 
     # Errors
 
@@ -3773,24 +3995,26 @@ impl<'nvml> Device<'nvml> {
 
     # Device Support
 
-    Supports Pascal and newer fully supported devices.
+    Supports Volta and newer fully supported devices.
     */
     // Tested (no-run)
     pub fn set_gpu_locked_clocks(
         &mut self,
-        min_clock_mhz: u32,
-        max_clock_mhz: u32,
+        setting: GpuLockedClocksSetting,
     ) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceSetGpuLockedClocks.as_ref())?;
+
+        let (min_clock_mhz, max_clock_mhz) = setting.into_min_and_max_clocks();
 
         unsafe { nvml_try(sym(self.device, min_clock_mhz, max_clock_mhz)) }
     }
 
     /**
-    Reset this `Device`'s clocks to their default values.
+    Reset this [`Device`]'s clocks to their default values.
 
     This resets to the same values that would be used after a reboot or driver
-    reload (idle clocks, configurable via `set_applications_clocks()`).
+    reload (defaults to idle clocks but can be configured via
+    [`Self::set_applications_clocks()`]).
 
     # Errors
 
@@ -3801,11 +4025,64 @@ impl<'nvml> Device<'nvml> {
 
     # Device Support
 
-    Supports Pascal and newer fully supported devices.
+    Supports Volta and newer fully supported devices.
     */
     // Tested (no-run)
     pub fn reset_gpu_locked_clocks(&mut self) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceResetGpuLockedClocks.as_ref())?;
+
+        unsafe { nvml_try(sym(self.device)) }
+    }
+
+    /**
+    Lock this [`Device`]'s memory clocks to a specific frequency range.
+
+    This setting supercedes application clock values and takes effect regardless
+    of whether or not any CUDA apps are running. It can be used to request
+    constant performance. See also [`Self::set_applications_clocks()`].
+
+    After a system reboot or a driver reload the clocks go back to their default
+    values. See also [`Self::reset_mem_locked_clocks()`].
+
+    You can use [`Self::supported_memory_clocks()`] to determine valid
+    frequency combinations to pass into this call.
+
+    # Device Support
+
+    Supports Ampere and newer fully supported devices.
+    */
+    // Tested (no-run)
+    pub fn set_mem_locked_clocks(
+        &mut self,
+        min_clock_mhz: u32,
+        max_clock_mhz: u32,
+    ) -> Result<(), NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceSetMemoryLockedClocks.as_ref())?;
+
+        unsafe { nvml_try(sym(self.device, min_clock_mhz, max_clock_mhz)) }
+    }
+
+    /**
+    Reset this [`Device`]'s memory clocks to their default values.
+
+    This resets to the same values that would be used after a reboot or driver
+    reload (defaults to idle clocks but can be configured via
+    [`Self::set_applications_clocks()`]).
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `NotSupported`, if this `Device` does not support this feature
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+
+    # Device Support
+
+    Supports Ampere and newer fully supported devices.
+    */
+    // Tested (no-run)
+    pub fn reset_mem_locked_clocks(&mut self) -> Result<(), NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceResetMemoryLockedClocks.as_ref())?;
 
         unsafe { nvml_try(sym(self.device)) }
     }
@@ -4472,6 +4749,7 @@ mod test {
     #[cfg(target_os = "windows")]
     use crate::bitmasks::Behavior;
     use crate::enum_wrappers::device::*;
+    use crate::enums::device::GpuLockedClocksSetting;
     use crate::error::*;
     use crate::structs::device::FieldId;
     use crate::sys_exports::field_id::*;
@@ -4715,6 +4993,12 @@ mod test {
     fn fan_speed() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.fan_speed(0))
+    }
+
+    #[test]
+    fn num_fans() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.num_fans())
     }
 
     #[test]
@@ -5130,6 +5414,48 @@ mod test {
         })
     }
 
+    #[test]
+    fn num_cores() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.num_cores())
+    }
+
+    #[test]
+    fn irq_num() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.irq_num())
+    }
+
+    #[test]
+    fn power_source() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.power_source())
+    }
+
+    #[test]
+    fn memory_bus_width() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.memory_bus_width())
+    }
+
+    #[test]
+    fn pcie_link_max_speed() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.pcie_link_max_speed())
+    }
+
+    #[test]
+    fn bus_type() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.bus_type())
+    }
+
+    #[test]
+    fn architecture() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.architecture())
+    }
+
     // I do not have 2 devices
     #[ignore = "my machine does not support this call"]
     #[test]
@@ -5299,7 +5625,10 @@ mod test {
         let mut device = device(&nvml);
 
         device
-            .set_gpu_locked_clocks(1048, 1139)
+            .set_gpu_locked_clocks(GpuLockedClocksSetting::Numeric {
+                min_clock_mhz: 1048,
+                max_clock_mhz: 1139,
+            })
             .expect("set to a range")
     }
 
@@ -5310,6 +5639,26 @@ mod test {
         let mut device = device(&nvml);
 
         device.reset_gpu_locked_clocks().expect("clocks reset")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn set_mem_locked_clocks() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device
+            .set_mem_locked_clocks(1048, 1139)
+            .expect("set to a range")
+    }
+
+    // This modifies device state, so we don't want to actually run the test
+    #[allow(dead_code)]
+    fn reset_mem_locked_clocks() {
+        let nvml = nvml();
+        let mut device = device(&nvml);
+
+        device.reset_mem_locked_clocks().expect("clocks reset")
     }
 
     // This modifies device state, so we don't want to actually run the test

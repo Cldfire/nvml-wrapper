@@ -4,13 +4,41 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 
 ## [Unreleased]
 
+### Added
+
+* `Device`:
+  * Methods:
+    * `set_mem_locked_clocks()` ([#27](https://github.com/Cldfire/nvml-wrapper/pull/27) - @benrod3k)
+    * `reset_mem_locked_clocks()`
+    * `num_cores()`
+    * `num_fans()`
+    * `bus_type()`
+    * `power_source()`
+    * `architecture()`
+    * `pcie_link_max_speed()`
+    * `memory_bus_width()`
+    * `irq_num`
+
 ### Changed
 
-* The `NVML` struct has been renamed to `Nvml` (#22 - @TheJltres)
+* The `NVML` struct has been renamed to `Nvml` ([#22](https://github.com/Cldfire/nvml-wrapper/pull/22) - @TheJltres)
+* The `basic_usage` example now prints your device's architecture and number of CUDA cores
+* Some methods on `Nvml` have been renamed:
+  * `Nvml::blacklist_device_count()` -> `Nvml::excluded_device_count()`
+  * `Nvml::blacklist_device_info()` -> `Nvml::excluded_device_info()`
+* Some struct wrappers have been modified:
+  * `BlacklistDeviceInfo` renamed to `ExcludedDeviceInfo`
+  * `ProcessInfo` gained new fields:
+    * `gpu_instance_id`
+    * `compute_instance_id`
+* `Device`:
+  * `Device::name()` now creates a buffer sized to the new `NVML_DEVICE_NAME_V2_BUFFER_SIZE` constant
+  * `Device::running_compute_processes()` and `Device::running_graphics_processes()` now allocate a bit of headroom in case the process count increases between when they make a call to figure out how much to allocate and when they make a call to get data
+  * `Device::set_gpu_locked_clocks()` now takes in `GpuLockedClocksSetting` allowing for both numeric ranges and symbolic boundaries
 
 ### Rust Version Support
 
-The MSRV of this release is 1.46.0. This is to accomodate the MSRV of the `bitflags` dependency, which is 1.46.0.
+The MSRV of this release is 1.51.0. This is needed for const generics and the ability to implement `Debug` for arrays of any size.
 
 ### Dependencies
 

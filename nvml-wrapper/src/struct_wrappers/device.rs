@@ -233,13 +233,30 @@ pub struct ProcessInfo {
     pub pid: u32,
     /// Amount of used GPU memory in bytes.
     pub used_gpu_memory: UsedGpuMemory,
+    /// The ID of the GPU instance this process is running on, if applicable.
+    ///
+    /// MIG (Multi-Instance GPU) must be enabled on the device for this field
+    /// to be set.
+    pub gpu_instance_id: Option<u32>,
+    /// The ID of the compute instance this process is running on, if applicable.
+    ///
+    /// MIG (Multi-Instance GPU) must be enabled on the device for this field
+    /// to be set.
+    pub compute_instance_id: Option<u32>,
 }
 
 impl From<nvmlProcessInfo_t> for ProcessInfo {
     fn from(struct_: nvmlProcessInfo_t) -> Self {
+        const NO_VALUE: u32 = 0xFFFFFFFF;
+
+        let gpu_instance_id = Some(struct_.gpuInstanceId).filter(|id| *id != NO_VALUE);
+        let compute_instance_id = Some(struct_.computeInstanceId).filter(|id| *id != NO_VALUE);
+
         Self {
             pid: struct_.pid,
             used_gpu_memory: UsedGpuMemory::from(struct_.usedGpuMemory),
+            gpu_instance_id,
+            compute_instance_id,
         }
     }
 }

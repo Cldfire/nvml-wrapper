@@ -4,6 +4,8 @@ This file describes the changes / additions / fixes between bindings releases.
 
 ## Unreleased
 
+Bindings have been regenerated using the NVML 11.6 update 2 header and bindgen 0.59.2.
+
 ### Internal
 
 * The generated layout tests have been removed from the bindings (see https://github.com/rust-lang/rust-bindgen/issues/1651 for rationale)

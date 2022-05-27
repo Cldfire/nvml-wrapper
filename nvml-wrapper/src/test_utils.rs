@@ -6,6 +6,10 @@ use crate::Unit;
 use crate::bitmasks::{device::*, event::*};
 
 use crate::enum_wrappers::device::*;
+use crate::enums::device::BusType;
+use crate::enums::device::DeviceArchitecture;
+use crate::enums::device::PcieLinkMaxSpeed;
+use crate::enums::device::PowerSource;
 use crate::enums::unit::*;
 use crate::error::NvmlError;
 use crate::event::EventSet;
@@ -80,7 +84,7 @@ impl ShouldPrint for EccModeState {}
 impl ShouldPrint for OperationModeState {}
 impl ShouldPrint for InfoRom {}
 impl ShouldPrint for Vec<RetiredPage> {}
-impl ShouldPrint for BlacklistDeviceInfo {}
+impl ShouldPrint for ExcludedDeviceInfo {}
 impl ShouldPrint for MemoryInfo {}
 impl ShouldPrint for PciInfo {}
 impl ShouldPrint for PerformanceState {}
@@ -96,6 +100,10 @@ impl ShouldPrint for PsuInfo {}
 impl ShouldPrint for UnitInfo {}
 impl ShouldPrint for UtilizationControl {}
 impl ShouldPrint for UtilizationCounter {}
+impl ShouldPrint for BusType {}
+impl ShouldPrint for PowerSource {}
+impl ShouldPrint for DeviceArchitecture {}
+impl ShouldPrint for PcieLinkMaxSpeed {}
 
 #[cfg(target_os = "windows")]
 impl ShouldPrint for DriverModelState {}
