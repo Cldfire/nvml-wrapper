@@ -8,7 +8,7 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 
 * `Device`:
   * Methods:
-    * `set_mem_locked_clocks()`
+    * `set_mem_locked_clocks()` ([#27](https://github.com/Cldfire/nvml-wrapper/pull/27) - @benrod3k)
     * `reset_mem_locked_clocks()`
     * `num_cores()`
     * `num_fans()`
