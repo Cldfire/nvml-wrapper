@@ -4,6 +4,12 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 
 ## [Unreleased]
 
+## [0.8.0] (released 2022-05-26)
+
+### Release Summary
+
+Updates for the latest version of NVML (11.6 update 2). More wrapped methods!
+
 ### Added
 
 * `Device`:
@@ -429,7 +435,8 @@ Initial release wrapping the majority of the NVML API surface.
 
 This release **requires** and supports **Rust 1.17.0** or higher.
 
-[Unreleased]: https://github.com/Cldfire/nvml-wrapper/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/Cldfire/nvml-wrapper/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/Cldfire/nvml-wrapper/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/Cldfire/nvml-wrapper/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/Cldfire/nvml-wrapper/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/Cldfire/nvml-wrapper/compare/v0.4.1...v0.5.0

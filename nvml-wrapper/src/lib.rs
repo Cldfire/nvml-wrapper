@@ -4,9 +4,10 @@ a C-based programmatic interface for monitoring and managing various states with
 NVIDIA GPUs.
 
 ```
-# use nvml_wrapper::Nvml;
+use nvml_wrapper::Nvml;
 # use nvml_wrapper::error::*;
 # fn test() -> Result<(), NvmlError> {
+
 let nvml = Nvml::init()?;
 // Get the first `Device` (GPU) in the system
 let device = nvml.device_by_index(0)?;
@@ -28,7 +29,7 @@ also the underlying library for NVIDIA's nvidia-smi tool.
 ## Usage
 
 `nvml-wrapper` builds on top of generated bindings for NVML that make use of the
-[`libloading`][libloading] crate. This means the Nvml library gets loaded upon
+[`libloading`][libloading] crate. This means the NVML library gets loaded upon
 calling `Nvml::init` and can return an error if NVML isn't present, making it
 possible to drop NVIDIA-related features in your code at runtime on systems that
 don't have relevant hardware.
@@ -45,7 +46,8 @@ be loaded from the NVML library during the `Nvml::init` call.
 Note that it's not advised to repeatedly call `Nvml::init` as the constructor
 has to perform all the work of loading the function symbols from the library
 each time it gets called. Instead, call `Nvml::init` once and store the resulting
-`Nvml` instance somewhere to be accessed throughout the lifetime of your program.
+`Nvml` instance somewhere to be accessed throughout the lifetime of your program
+(perhaps in a [`once_cell`][once_cell]).
 
 ## NVML Support
 
@@ -56,7 +58,7 @@ NVML version bumps.
 
 ## MSRV
 
-The Minimum Supported Rust Version is currently 1.42.0. I will not go out of my
+The Minimum Supported Rust Version is currently 1.51.0. I will not go out of my
 way to avoid bumping this.
 
 ## Cargo Features
@@ -66,6 +68,7 @@ for every NVML data structure.
 
 [nvml]: https://developer.nvidia.com/nvidia-management-library-nvml
 [libloading]: https://github.com/nagisa/rust_libloading
+[once_cell]: https://docs.rs/once_cell/latest/once_cell/sync/struct.Lazy.html
 */
 
 #![recursion_limit = "1024"]

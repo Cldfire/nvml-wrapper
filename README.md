@@ -26,6 +26,8 @@ let memory_info = device.memory_info()?; // Currently 1.63/6.37 GB used on my sy
 // ... and there's a whole lot more you can do. Most everything in NVML is wrapped and ready to go
 ```
 
+_try the [`basic_usage`](nvml-wrapper/examples/basic_usage.rs) example on your system_
+
 NVML is intended to be a platform for building 3rd-party applications, and is
 also the underlying library for NVIDIA's nvidia-smi tool.
 
@@ -49,7 +51,9 @@ be loaded from the NVML library during the `Nvml::init` call.
 Note that it's not advised to repeatedly call `Nvml::init` as the constructor
 has to perform all the work of loading the function symbols from the library
 each time it gets called. Instead, call `Nvml::init` once and store the resulting
-`Nvml` instance somewhere to be accessed throughout the lifetime of your program.
+`Nvml` instance somewhere to be accessed throughout the lifetime of your program
+(perhaps in a
+[`once_cell`](https://docs.rs/once_cell/latest/once_cell/sync/struct.Lazy.html)).
 
 ## NVML Support
 
