@@ -84,6 +84,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // Test written
+    #[doc(alias = "nvmlDeviceGetNvLinkState")]
     pub fn is_active(&self) -> Result<bool, NvmlError> {
         let sym = nvml_sym(self.device.nvml().lib.nvmlDeviceGetNvLinkState.as_ref())?;
 
@@ -112,6 +113,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // Test written
+    #[doc(alias = "nvmlDeviceGetNvLinkVersion")]
     pub fn version(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.device.nvml().lib.nvmlDeviceGetNvLinkVersion.as_ref())?;
 

@@ -70,6 +70,7 @@ impl<'nvml> EventSet<'nvml> {
     * `Unknown`, on any unexpected error
     */
     // Checked against local
+    #[doc(alias = "nvmlEventSetFree")]
     pub fn release_events(self) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlEventSetFree.as_ref())?;
 
@@ -109,6 +110,7 @@ impl<'nvml> EventSet<'nvml> {
     Supports Fermi and newer fully supported devices.
     */
     // Checked against local
+    #[doc(alias = "nvmlEventSetWait_v2")]
     pub fn wait(&self, timeout_ms: u32) -> Result<EventData<'nvml>, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlEventSetWait_v2.as_ref())?;
 
@@ -138,6 +140,7 @@ impl<'nvml> EventSet<'nvml> {
 /// This `Drop` implementation ignores errors! Use the `.release_events()`
 /// method on the `EventSet` struct if you care about handling them.
 impl<'nvml> Drop for EventSet<'nvml> {
+    #[doc(alias = "nvmlEventSetFree")]
     fn drop(&mut self) {
         unsafe {
             self.nvml.lib.nvmlEventSetFree(self.set);
