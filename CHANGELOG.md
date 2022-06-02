@@ -6,7 +6,7 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 
 ### Added
 
-* Wrapper methods are now annotated with the `#[doc(alias = "...")]` attribute to make them searchable by C function name in rustdoc ([#27](https://github.com/Cldfire/nvml-wrapper/pull/31) - @arpankapoor)
+* Wrapper methods are now annotated with the `#[doc(alias = "...")]` attribute to make them searchable by C function name in rustdoc ([#31](https://github.com/Cldfire/nvml-wrapper/pull/31) - @arpankapoor)
 
 ## [0.8.0] (released 2022-05-26)
 
