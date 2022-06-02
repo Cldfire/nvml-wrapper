@@ -209,6 +209,7 @@ impl Nvml {
     * `Unknown`, on any unexpected error
     */
     // Checked against local
+    #[doc(alias = "nvmlInit_v2")]
     pub fn init() -> Result<Self, NvmlError> {
         Self::init_internal(LIB_PATH)
     }
@@ -252,6 +253,7 @@ impl Nvml {
     # }
     ```
     */
+    #[doc(alias = "nvmlInitWithFlags")]
     pub fn init_with_flags(flags: InitFlags) -> Result<Self, NvmlError> {
         Self::init_with_flags_internal(LIB_PATH, flags)
     }
@@ -288,6 +290,7 @@ impl Nvml {
     // Thanks to `sorear` on IRC for suggesting this approach
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlShutdown")]
     pub fn shutdown(mut self) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.lib.nvmlShutdown.as_ref())?;
 
@@ -315,6 +318,7 @@ impl Nvml {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetCount_v2")]
     pub fn device_count(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.lib.nvmlDeviceGetCount_v2.as_ref())?;
 
@@ -337,6 +341,7 @@ impl Nvml {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlSystemGetDriverVersion")]
     pub fn sys_driver_version(&self) -> Result<String, NvmlError> {
         let sym = nvml_sym(self.lib.nvmlSystemGetDriverVersion.as_ref())?;
 
@@ -363,6 +368,7 @@ impl Nvml {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlSystemGetNVMLVersion")]
     pub fn sys_nvml_version(&self) -> Result<String, NvmlError> {
         let sym = nvml_sym(self.lib.nvmlSystemGetNVMLVersion.as_ref())?;
 
@@ -393,6 +399,7 @@ impl Nvml {
     * `FunctionNotFound`, if cuDriverGetVersion() is not found in the shared library
     * `LibraryNotFound`, if libcuda.so.1 or libcuda.dll cannot be found
     */
+    #[doc(alias = "nvmlSystemGetCudaDriverVersion_v2")]
     pub fn sys_cuda_driver_version(&self) -> Result<i32, NvmlError> {
         let sym = nvml_sym(self.lib.nvmlSystemGetCudaDriverVersion_v2.as_ref())?;
 
@@ -421,6 +428,7 @@ impl Nvml {
     // to do anything about that
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlSystemGetProcessName")]
     pub fn sys_process_name(&self, pid: u32, length: usize) -> Result<String, NvmlError> {
         let sym = nvml_sym(self.lib.nvmlSystemGetProcessName.as_ref())?;
 
@@ -465,6 +473,7 @@ impl Nvml {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetHandleByIndex_v2")]
     pub fn device_by_index(&self, index: u32) -> Result<Device, NvmlError> {
         let sym = nvml_sym(self.lib.nvmlDeviceGetHandleByIndex_v2.as_ref())?;
 
@@ -498,6 +507,7 @@ impl Nvml {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetHandleByPciBusId_v2")]
     pub fn device_by_pci_bus_id<S: AsRef<str>>(&self, pci_bus_id: S) -> Result<Device, NvmlError>
     where
         Vec<u8>: From<S>,
@@ -518,6 +528,7 @@ impl Nvml {
     /// anymore.
     // Tested (for an error)
     #[deprecated(note = "use `.device_by_uuid()`, this errors on dual GPU boards")]
+    #[doc(alias = "nvmlDeviceGetHandleBySerial")]
     pub fn device_by_serial<S: AsRef<str>>(&self, board_serial: S) -> Result<Device, NvmlError>
     where
         Vec<u8>: From<S>,
@@ -556,6 +567,7 @@ impl Nvml {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetHandleByUUID")]
     pub fn device_by_uuid<S: AsRef<str>>(&self, uuid: S) -> Result<Device, NvmlError>
     where
         Vec<u8>: From<S>,
@@ -591,6 +603,7 @@ impl Nvml {
     // Checked against local
     // Tested
     #[cfg(target_os = "linux")]
+    #[doc(alias = "nvmlDeviceGetTopologyCommonAncestor")]
     pub fn topology_common_ancestor(
         &self,
         device1: &Device,
@@ -629,6 +642,7 @@ impl Nvml {
     */
     // Checked against local
     // Tested (for an error)
+    #[doc(alias = "nvmlUnitGetHandleByIndex")]
     pub fn unit_by_index(&self, index: u32) -> Result<Unit, NvmlError> {
         let sym = nvml_sym(self.lib.nvmlUnitGetHandleByIndex.as_ref())?;
 
@@ -655,6 +669,7 @@ impl Nvml {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceOnSameBoard")]
     pub fn are_devices_on_same_board(
         &self,
         device1: &Device,
@@ -689,6 +704,7 @@ impl Nvml {
     */
     // Tested
     #[cfg(target_os = "linux")]
+    #[doc(alias = "nvmlSystemGetTopologyGpuSet")]
     pub fn topology_gpu_set(&self, cpu_number: u32) -> Result<Vec<Device>, NvmlError> {
         let sym = nvml_sym(self.lib.nvmlSystemGetTopologyGpuSet.as_ref())?;
 
@@ -734,6 +750,7 @@ impl Nvml {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlSystemGetHicVersion")]
     pub fn hic_versions(&self) -> Result<Vec<HwbcEntry>, NvmlError> {
         let sym = nvml_sym(self.lib.nvmlSystemGetHicVersion.as_ref())?;
 
@@ -762,6 +779,7 @@ impl Nvml {
     Supports S-class products.
     */
     // Tested as part of the above method
+    #[doc(alias = "nvmlSystemGetHicVersion")]
     pub fn hic_count(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.lib.nvmlSystemGetHicVersion.as_ref())?;
 
@@ -806,6 +824,7 @@ impl Nvml {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlUnitGetCount")]
     pub fn unit_count(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.lib.nvmlUnitGetCount.as_ref())?;
 
@@ -831,6 +850,7 @@ impl Nvml {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlEventSetCreate")]
     pub fn create_event_set(&self) -> Result<EventSet, NvmlError> {
         let sym = nvml_sym(self.lib.nvmlEventSetCreate.as_ref())?;
 
@@ -885,6 +905,7 @@ impl Nvml {
     // Checked against local
     // Tested
     #[cfg(target_os = "linux")]
+    #[doc(alias = "nvmlDeviceDiscoverGpus")]
     pub fn discover_gpus(&self, pci_info: PciInfo) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.lib.nvmlDeviceDiscoverGpus.as_ref())?;
 
@@ -898,6 +919,7 @@ impl Nvml {
 
     Supports all devices.
     */
+    #[doc(alias = "nvmlGetExcludedDeviceCount")]
     pub fn excluded_device_count(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.lib.nvmlGetExcludedDeviceCount.as_ref())?;
 
@@ -921,6 +943,7 @@ impl Nvml {
 
     Supports all devices.
     */
+    #[doc(alias = "nvmlGetExcludedDeviceInfoByIndex")]
     pub fn excluded_device_info(&self, index: u32) -> Result<ExcludedDeviceInfo, NvmlError> {
         let sym = nvml_sym(self.lib.nvmlGetExcludedDeviceInfoByIndex.as_ref())?;
 
@@ -937,6 +960,7 @@ impl Nvml {
 /// the `Nvml` struct
 /// if you care about handling them.
 impl Drop for Nvml {
+    #[doc(alias = "nvmlShutdown")]
     fn drop(&mut self) {
         unsafe {
             self.lib.nvmlShutdown();

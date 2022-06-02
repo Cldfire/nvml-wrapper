@@ -135,6 +135,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested (no-run)
     #[cfg(target_os = "linux")]
+    #[doc(alias = "nvmlDeviceClearCpuAffinity")]
     pub fn clear_cpu_affinity(&mut self) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceClearCpuAffinity.as_ref())?;
 
@@ -168,6 +169,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (except for AutoBoostedClocks)
+    #[doc(alias = "nvmlDeviceGetAPIRestriction")]
     pub fn is_api_restricted(&self, api: Api) -> Result<bool, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetAPIRestriction.as_ref())?;
 
@@ -201,6 +203,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetApplicationsClock")]
     pub fn applications_clock(&self, clock_type: Clock) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetApplicationsClock.as_ref())?;
 
@@ -238,6 +241,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
+    #[doc(alias = "nvmlDeviceGetAutoBoostedClocksEnabled")]
     pub fn auto_boosted_clocks_enabled(&self) -> Result<AutoBoostClocksEnabledInfo, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetAutoBoostedClocksEnabled.as_ref())?;
 
@@ -274,6 +278,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetBAR1MemoryInfo")]
     pub fn bar1_memory_info(&self) -> Result<BAR1MemoryInfo, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetBAR1MemoryInfo.as_ref())?;
 
@@ -312,6 +317,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetBoardId")]
     pub fn board_id(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetBoardId.as_ref())?;
 
@@ -338,6 +344,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local nvml.h
     // Tested
+    #[doc(alias = "nvmlDeviceGetBrand")]
     pub fn brand(&self) -> Result<Brand, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetBrand.as_ref())?;
 
@@ -369,6 +376,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
+    #[doc(alias = "nvmlDeviceGetBridgeChipInfo")]
     pub fn bridge_chip_info(&self) -> Result<BridgeChipHierarchy, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetBridgeChipInfo.as_ref())?;
 
@@ -397,6 +405,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (except for CustomerMaxBoost)
+    #[doc(alias = "nvmlDeviceGetClock")]
     pub fn clock(&self, clock_type: Clock, clock_id: ClockId) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetClock.as_ref())?;
 
@@ -433,6 +442,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
+    #[doc(alias = "nvmlDeviceGetMaxCustomerBoostClock")]
     pub fn max_customer_boost_clock(&self, clock_type: Clock) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetMaxCustomerBoostClock.as_ref())?;
 
@@ -459,6 +469,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetComputeMode")]
     pub fn compute_mode(&self) -> Result<ComputeMode, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetComputeMode.as_ref())?;
 
@@ -483,6 +494,7 @@ impl<'nvml> Device<'nvml> {
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     * `Unknown`, on any unexpected error
     */
+    #[doc(alias = "nvmlDeviceGetCudaComputeCapability")]
     pub fn cuda_compute_capability(&self) -> Result<CudaComputeCapability, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetCudaComputeCapability.as_ref())?;
 
@@ -513,6 +525,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetClockInfo")]
     pub fn clock_info(&self, clock_type: Clock) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetClockInfo.as_ref())?;
 
@@ -540,6 +553,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     */
     // Tested
+    #[doc(alias = "nvmlDeviceGetComputeRunningProcesses_v3")]
     pub fn running_compute_processes(&self) -> Result<Vec<ProcessInfo>, NvmlError> {
         let sym = nvml_sym(
             self.nvml
@@ -580,6 +594,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     */
     // Tested as part of `.running_compute_processes()`
+    #[doc(alias = "nvmlDeviceGetComputeRunningProcesses_v3")]
     pub fn running_compute_processes_count(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(
             self.nvml
@@ -630,6 +645,7 @@ impl<'nvml> Device<'nvml> {
     // Tested
     // TODO: Should we trim zeros here or leave it to the caller?
     #[cfg(target_os = "linux")]
+    #[doc(alias = "nvmlDeviceGetCpuAffinity")]
     pub fn cpu_affinity(&self, size: usize) -> Result<Vec<c_ulong>, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetCpuAffinity.as_ref())?;
 
@@ -664,6 +680,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetCurrPcieLinkGeneration")]
     pub fn current_pcie_link_gen(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetCurrPcieLinkGeneration.as_ref())?;
 
@@ -693,6 +710,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetCurrPcieLinkWidth")]
     pub fn current_pcie_link_width(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetCurrPcieLinkWidth.as_ref())?;
 
@@ -721,6 +739,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetDecoderUtilization")]
     pub fn decoder_utilization(&self) -> Result<UtilizationInfo, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetDecoderUtilization.as_ref())?;
 
@@ -752,6 +771,7 @@ impl<'nvml> Device<'nvml> {
     Supports Maxwell or newer fully supported devices.
     */
     // tested
+    #[doc(alias = "nvmlDeviceGetFBCStats")]
     pub fn fbc_stats(&self) -> Result<FbcStats, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetFBCStats.as_ref())?;
 
@@ -785,6 +805,7 @@ impl<'nvml> Device<'nvml> {
     Supports Maxwell or newer fully supported devices.
     */
     // tested
+    #[doc(alias = "nvmlDeviceGetFBCSessions")]
     pub fn fbc_sessions_info(&self) -> Result<Vec<FbcSessionInfo>, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetFBCSessions.as_ref())?;
 
@@ -812,6 +833,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     */
     // tested as part of the above
+    #[doc(alias = "nvmlDeviceGetFBCSessions")]
     pub fn fbc_session_count(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetFBCSessions.as_ref())?;
 
@@ -842,6 +864,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetDefaultApplicationsClock")]
     pub fn default_applications_clock(&self, clock_type: Clock) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetDefaultApplicationsClock.as_ref())?;
 
@@ -857,6 +880,7 @@ impl<'nvml> Device<'nvml> {
     /// Not documenting this because it's deprecated. Read NVIDIA's docs if you
     /// must use it.
     #[deprecated(note = "use `Device.memory_error_counter()`")]
+    #[doc(alias = "nvmlDeviceGetDetailedEccErrors")]
     pub fn detailed_ecc_errors(
         &self,
         error_type: MemoryError,
@@ -898,6 +922,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetDisplayActive")]
     pub fn is_display_active(&self) -> Result<bool, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetDisplayActive.as_ref())?;
 
@@ -926,6 +951,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetDisplayMode")]
     pub fn is_display_connected(&self) -> Result<bool, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetDisplayMode.as_ref())?;
 
@@ -964,6 +990,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested
     #[cfg(target_os = "windows")]
+    #[doc(alias = "nvmlDeviceGetDriverModel")]
     pub fn driver_model(&self) -> Result<DriverModelState, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetDriverModel.as_ref())?;
 
@@ -1002,6 +1029,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
+    #[doc(alias = "nvmlDeviceGetEccMode")]
     pub fn is_ecc_enabled(&self) -> Result<EccModeState, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetEccMode.as_ref())?;
 
@@ -1035,6 +1063,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetEncoderUtilization")]
     pub fn encoder_utilization(&self) -> Result<UtilizationInfo, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetEncoderUtilization.as_ref())?;
 
@@ -1067,6 +1096,7 @@ impl<'nvml> Device<'nvml> {
     Supports Maxwell or newer fully supported devices.
     */
     // Tested
+    #[doc(alias = "nvmlDeviceGetEncoderCapacity")]
     pub fn encoder_capacity(&self, for_type: EncoderType) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetEncoderCapacity.as_ref())?;
 
@@ -1094,6 +1124,7 @@ impl<'nvml> Device<'nvml> {
     Supports Maxwell or newer fully supported devices.
     */
     // Tested
+    #[doc(alias = "nvmlDeviceGetEncoderStats")]
     pub fn encoder_stats(&self) -> Result<EncoderStats, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetEncoderStats.as_ref())?;
 
@@ -1134,6 +1165,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Tested
     // TODO: Test this with an active session and make sure it works
+    #[doc(alias = "nvmlDeviceGetEncoderSessions")]
     pub fn encoder_sessions(&self) -> Result<Vec<EncoderSessionInfo>, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetEncoderSessions.as_ref())?;
 
@@ -1198,6 +1230,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetEnforcedPowerLimit")]
     pub fn enforced_power_limit(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetEnforcedPowerLimit.as_ref())?;
 
@@ -1232,6 +1265,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetFanSpeed_v2")]
     pub fn fan_speed(&self, fan_idx: u32) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetFanSpeed_v2.as_ref())?;
 
@@ -1257,6 +1291,7 @@ impl<'nvml> Device<'nvml> {
 
     Supports all discrete products with dedicated fans.
     */
+    #[doc(alias = "nvmlDeviceGetNumFans")]
     pub fn num_fans(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetNumFans.as_ref())?;
 
@@ -1289,6 +1324,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
+    #[doc(alias = "nvmlDeviceGetGpuOperationMode")]
     pub fn gpu_operation_mode(&self) -> Result<OperationModeState, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetGpuOperationMode.as_ref())?;
 
@@ -1318,6 +1354,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     */
     // Tested
+    #[doc(alias = "nvmlDeviceGetGraphicsRunningProcesses_v3")]
     pub fn running_graphics_processes(&self) -> Result<Vec<ProcessInfo>, NvmlError> {
         let sym = nvml_sym(
             self.nvml
@@ -1358,6 +1395,7 @@ impl<'nvml> Device<'nvml> {
     * `Unknown`, on any unexpected error
     */
     // Tested as part of `.running_graphics_processes()`
+    #[doc(alias = "nvmlDeviceGetGraphicsRunningProcesses_v3")]
     pub fn running_graphics_processes_count(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(
             self.nvml
@@ -1400,6 +1438,7 @@ impl<'nvml> Device<'nvml> {
 
     Supports Maxwell or newer fully supported devices.
     */
+    #[doc(alias = "nvmlDeviceGetProcessUtilization")]
     pub fn process_utilization_stats<T>(
         &self,
         last_seen_timestamp: T,
@@ -1462,6 +1501,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetIndex")]
     pub fn index(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetIndex.as_ref())?;
 
@@ -1495,6 +1535,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
+    #[doc(alias = "nvmlDeviceGetInforomConfigurationChecksum")]
     pub fn config_checksum(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(
             self.nvml
@@ -1534,6 +1575,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
+    #[doc(alias = "nvmlDeviceGetInforomImageVersion")]
     pub fn info_rom_image_version(&self) -> Result<String, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetInforomImageVersion.as_ref())?;
 
@@ -1574,6 +1616,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
+    #[doc(alias = "nvmlDeviceGetInforomVersion")]
     pub fn info_rom_version(&self, object: InfoRom) -> Result<String, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetInforomVersion.as_ref())?;
 
@@ -1612,6 +1655,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetMaxClockInfo")]
     pub fn max_clock_info(&self, clock_type: Clock) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetMaxClockInfo.as_ref())?;
 
@@ -1644,6 +1688,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetMaxPcieLinkGeneration")]
     pub fn max_pcie_link_gen(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetMaxPcieLinkGeneration.as_ref())?;
 
@@ -1676,6 +1721,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetMaxPcieLinkWidth")]
     pub fn max_pcie_link_width(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetMaxPcieLinkWidth.as_ref())?;
 
@@ -1709,6 +1755,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
+    #[doc(alias = "nvmlDeviceGetMemoryErrorCounter")]
     pub fn memory_error_counter(
         &self,
         error_type: MemoryError,
@@ -1754,6 +1801,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetMemoryInfo")]
     pub fn memory_info(&self) -> Result<MemoryInfo, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetMemoryInfo.as_ref())?;
 
@@ -1786,6 +1834,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested
     #[cfg(target_os = "linux")]
+    #[doc(alias = "nvmlDeviceGetMinorNumber")]
     pub fn minor_number(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetMinorNumber.as_ref())?;
 
@@ -1814,6 +1863,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetMultiGpuBoard")]
     pub fn is_multi_gpu_board(&self) -> Result<bool, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetMultiGpuBoard.as_ref())?;
 
@@ -1843,6 +1893,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetName")]
     pub fn name(&self) -> Result<String, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetName.as_ref())?;
 
@@ -1875,6 +1926,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetPciInfo_v3")]
     pub fn pci_info(&self) -> Result<PciInfo, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetPciInfo_v3.as_ref())?;
 
@@ -1903,6 +1955,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetPcieReplayCounter")]
     pub fn pcie_replay_counter(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetPcieReplayCounter.as_ref())?;
 
@@ -1938,6 +1991,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetPcieThroughput")]
     pub fn pcie_throughput(&self, counter: PcieUtilCounter) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetPcieThroughput.as_ref())?;
 
@@ -1968,6 +2022,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetPerformanceState")]
     pub fn performance_state(&self) -> Result<PerformanceState, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetPerformanceState.as_ref())?;
 
@@ -2001,6 +2056,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested
     #[cfg(target_os = "linux")]
+    #[doc(alias = "nvmlDeviceGetPersistenceMode")]
     pub fn is_in_persistent_mode(&self) -> Result<bool, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetPersistenceMode.as_ref())?;
 
@@ -2031,6 +2087,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetPowerManagementDefaultLimit")]
     pub fn power_management_limit_default(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(
             self.nvml
@@ -2071,6 +2128,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetPowerManagementLimit")]
     pub fn power_management_limit(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetPowerManagementLimit.as_ref())?;
 
@@ -2099,6 +2157,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetPowerManagementLimitConstraints")]
     pub fn power_management_limit_constraints(
         &self,
     ) -> Result<PowerManagementConstraints, NvmlError> {
@@ -2126,6 +2185,7 @@ impl<'nvml> Device<'nvml> {
     /// must use it.
     // Tested
     #[deprecated(note = "NVIDIA states that \"this API has been deprecated.\"")]
+    #[doc(alias = "nvmlDeviceGetPowerManagementMode")]
     pub fn is_power_management_algo_active(&self) -> Result<bool, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetPowerManagementMode.as_ref())?;
 
@@ -2141,6 +2201,7 @@ impl<'nvml> Device<'nvml> {
     /// must use it.
     // Tested
     #[deprecated(note = "use `.performance_state()`.")]
+    #[doc(alias = "nvmlDeviceGetPowerState")]
     pub fn power_state(&self) -> Result<PerformanceState, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetPowerState.as_ref())?;
 
@@ -2173,6 +2234,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetPowerUsage")]
     pub fn power_usage(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetPowerUsage.as_ref())?;
 
@@ -2200,6 +2262,7 @@ impl<'nvml> Device<'nvml> {
 
     Supports Pascal and newer fully supported devices.
     */
+    #[doc(alias = "nvmlDeviceGetTotalEnergyConsumption")]
     pub fn total_energy_consumption(&self) -> Result<u64, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetTotalEnergyConsumption.as_ref())?;
 
@@ -2233,6 +2296,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
+    #[doc(alias = "nvmlDeviceGetRetiredPages_v2")]
     pub fn retired_pages(&self, cause: RetirementCause) -> Result<Vec<RetiredPage>, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetRetiredPages_v2.as_ref())?;
 
@@ -2298,6 +2362,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
+    #[doc(alias = "nvmlDeviceGetRetiredPagesPendingStatus")]
     pub fn are_pages_pending_retired(&self) -> Result<bool, NvmlError> {
         let sym = nvml_sym(
             self.nvml
@@ -2371,6 +2436,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetSamples")]
     pub fn samples<T>(
         &self,
         sample_type: Sampling,
@@ -2457,6 +2523,7 @@ impl<'nvml> Device<'nvml> {
     Device support varies per `FieldId` that you pass in.
     */
     // TODO: Example
+    #[doc(alias = "nvmlDeviceGetFieldValues")]
     pub fn field_values_for(
         &self,
         id_slice: &[FieldId],
@@ -2508,6 +2575,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
+    #[doc(alias = "nvmlDeviceGetSerial")]
     pub fn serial(&self) -> Result<String, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetSerial.as_ref())?;
 
@@ -2540,6 +2608,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
+    #[doc(alias = "nvmlDeviceGetBoardPartNumber")]
     pub fn board_part_number(&self) -> Result<String, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetBoardPartNumber.as_ref())?;
 
@@ -2579,6 +2648,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local.
     // Tested
+    #[doc(alias = "nvmlDeviceGetCurrentClocksThrottleReasons")]
     pub fn current_throttle_reasons(&self) -> Result<ThrottleReasons, NvmlError> {
         Ok(ThrottleReasons::from_bits_truncate(
             self.current_throttle_reasons_raw()?,
@@ -2655,6 +2725,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetSupportedClocksThrottleReasons")]
     pub fn supported_throttle_reasons(&self) -> Result<ThrottleReasons, NvmlError> {
         Ok(ThrottleReasons::from_bits_truncate(
             self.supported_throttle_reasons_raw()?,
@@ -2727,6 +2798,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetSupportedGraphicsClocks")]
     pub fn supported_graphics_clocks(&self, for_mem_clock: u32) -> Result<Vec<u32>, NvmlError> {
         match self.supported_graphics_clocks_manual(for_mem_clock, 128) {
             Err(NvmlError::InsufficientSize(Some(s))) =>
@@ -2781,6 +2853,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetSupportedMemoryClocks")]
     pub fn supported_memory_clocks(&self) -> Result<Vec<u32>, NvmlError> {
         match self.supported_memory_clocks_manual(16) {
             Err(NvmlError::InsufficientSize(Some(s))) => {
@@ -2825,6 +2898,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetTemperature")]
     pub fn temperature(&self, sensor: TemperatureSensor) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetTemperature.as_ref())?;
 
@@ -2854,6 +2928,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetTemperatureThreshold")]
     pub fn temperature_threshold(
         &self,
         threshold_type: TemperatureThreshold,
@@ -2886,6 +2961,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested
     #[cfg(target_os = "linux")]
+    #[doc(alias = "nvmlDeviceGetTopologyCommonAncestor")]
     pub fn topology_common_ancestor(
         &self,
         other_device: Device,
@@ -2917,6 +2993,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested
     #[cfg(target_os = "linux")]
+    #[doc(alias = "nvmlDeviceGetTopologyNearestGpus")]
     pub fn topology_nearest_gpus(
         &self,
         level: TopologyLevel,
@@ -2987,6 +3064,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
+    #[doc(alias = "nvmlDeviceGetTotalEccErrors")]
     pub fn total_ecc_errors(
         &self,
         error_type: MemoryError,
@@ -3046,6 +3124,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetUUID")]
     pub fn uuid(&self) -> Result<String, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetUUID.as_ref())?;
 
@@ -3084,6 +3163,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetUtilizationRates")]
     pub fn utilization_rates(&self) -> Result<Utilization, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetUtilizationRates.as_ref())?;
 
@@ -3111,6 +3191,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetVbiosVersion")]
     pub fn vbios_version(&self) -> Result<String, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetVbiosVersion.as_ref())?;
 
@@ -3151,6 +3232,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetViolationStatus")]
     pub fn violation_status(
         &self,
         perf_policy: PerformancePolicy,
@@ -3174,6 +3256,7 @@ impl<'nvml> Device<'nvml> {
     * `NotSupported`, if this query is not supported by this `Device`
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     */
+    #[doc(alias = "nvmlDeviceGetIrqNum")]
     pub fn irq_num(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetIrqNum.as_ref())?;
 
@@ -3200,6 +3283,7 @@ impl<'nvml> Device<'nvml> {
     * `NotSupported`, if this query is not supported by this `Device`
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     */
+    #[doc(alias = "nvmlDeviceGetNumGpuCores")]
     pub fn num_cores(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetNumGpuCores.as_ref())?;
 
@@ -3221,6 +3305,7 @@ impl<'nvml> Device<'nvml> {
     * `NotSupported`, if this query is not supported by this `Device`
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     */
+    #[doc(alias = "nvmlDeviceGetPowerSource")]
     pub fn power_source(&self) -> Result<PowerSource, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetPowerSource.as_ref())?;
 
@@ -3246,6 +3331,7 @@ impl<'nvml> Device<'nvml> {
     * `NotSupported`, if this query is not supported by this `Device`
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     */
+    #[doc(alias = "nvmlDeviceGetMemoryBusWidth")]
     pub fn memory_bus_width(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetMemoryBusWidth.as_ref())?;
 
@@ -3269,6 +3355,7 @@ impl<'nvml> Device<'nvml> {
     * `NotSupported`, if this query is not supported by this `Device`
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     */
+    #[doc(alias = "nvmlDeviceGetPcieLinkMaxSpeed")]
     pub fn pcie_link_max_speed(&self) -> Result<PcieLinkMaxSpeed, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetPcieLinkMaxSpeed.as_ref())?;
 
@@ -3290,6 +3377,7 @@ impl<'nvml> Device<'nvml> {
 
     * `Uninitialized`, if the library has not been successfully initialized
     */
+    #[doc(alias = "nvmlDeviceGetBusType")]
     pub fn bus_type(&self) -> Result<BusType, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetBusType.as_ref())?;
 
@@ -3311,6 +3399,7 @@ impl<'nvml> Device<'nvml> {
 
     * `Uninitialized`, if the library has not been successfully initialized
     */
+    #[doc(alias = "nvmlDeviceGetArchitecture")]
     pub fn architecture(&self) -> Result<DeviceArchitecture, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetArchitecture.as_ref())?;
 
@@ -3338,6 +3427,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceOnSameBoard")]
     pub fn is_on_same_board_as(&self, other_device: &Device) -> Result<bool, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceOnSameBoard.as_ref())?;
 
@@ -3381,6 +3471,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
+    #[doc(alias = "nvmlDeviceResetApplicationsClocks")]
     pub fn reset_applications_clocks(&mut self) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceResetApplicationsClocks.as_ref())?;
 
@@ -3420,6 +3511,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
+    #[doc(alias = "nvmlDeviceSetAutoBoostedClocksEnabled")]
     pub fn set_auto_boosted_clocks(&mut self, enabled: bool) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceSetAutoBoostedClocksEnabled.as_ref())?;
 
@@ -3451,6 +3543,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested (no-run)
     #[cfg(target_os = "linux")]
+    #[doc(alias = "nvmlDeviceSetCpuAffinity")]
     pub fn set_cpu_affinity(&mut self) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceSetCpuAffinity.as_ref())?;
 
@@ -3489,6 +3582,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
+    #[doc(alias = "nvmlDeviceSetDefaultAutoBoostedClocksEnabled")]
     pub fn set_auto_boosted_clocks_default(&mut self, enabled: bool) -> Result<(), NvmlError> {
         let sym = nvml_sym(
             self.nvml
@@ -3522,6 +3616,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested on machines other than my own
+    #[doc(alias = "nvmlDeviceValidateInforom")]
     pub fn validate_info_rom(&self) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceValidateInforom.as_ref())?;
 
@@ -3549,6 +3644,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
+    #[doc(alias = "nvmlDeviceClearAccountingPids")]
     pub fn clear_accounting_pids(&mut self) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceClearAccountingPids.as_ref())?;
 
@@ -3577,6 +3673,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetAccountingBufferSize")]
     pub fn accounting_buffer_size(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetAccountingBufferSize.as_ref())?;
 
@@ -3605,6 +3702,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetAccountingMode")]
     pub fn is_accounting_enabled(&self) -> Result<bool, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetAccountingMode.as_ref())?;
 
@@ -3633,6 +3731,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlDeviceGetAccountingPids")]
     pub fn accounting_pids(&self) -> Result<Vec<u32>, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetAccountingPids.as_ref())?;
 
@@ -3708,6 +3807,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (for error)
+    #[doc(alias = "nvmlDeviceGetAccountingStats")]
     pub fn accounting_stats_for(&self, process_id: u32) -> Result<AccountingStats, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetAccountingStats.as_ref())?;
 
@@ -3746,6 +3846,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
+    #[doc(alias = "nvmlDeviceSetAccountingMode")]
     pub fn set_accounting(&mut self, enabled: bool) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceSetAccountingMode.as_ref())?;
 
@@ -3780,6 +3881,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
+    #[doc(alias = "nvmlDeviceClearEccErrorCounts")]
     pub fn clear_ecc_error_counts(&mut self, counter_type: EccCounter) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceClearEccErrorCounts.as_ref())?;
 
@@ -3811,6 +3913,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
+    #[doc(alias = "nvmlDeviceSetAPIRestriction")]
     pub fn set_api_restricted(&mut self, api_type: Api, restricted: bool) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceSetAPIRestriction.as_ref())?;
 
@@ -3863,6 +3966,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
+    #[doc(alias = "nvmlDeviceSetApplicationsClocks")]
     pub fn set_applications_clocks(
         &mut self,
         mem_clock: u32,
@@ -3899,6 +4003,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
+    #[doc(alias = "nvmlDeviceSetComputeMode")]
     pub fn set_compute_mode(&mut self, mode: ComputeMode) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceSetComputeMode.as_ref())?;
 
@@ -3962,6 +4067,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested (no-run)
     #[cfg(target_os = "windows")]
+    #[doc(alias = "nvmlDeviceSetDriverModel")]
     pub fn set_driver_model(
         &mut self,
         model: DriverModel,
@@ -3998,6 +4104,7 @@ impl<'nvml> Device<'nvml> {
     Supports Volta and newer fully supported devices.
     */
     // Tested (no-run)
+    #[doc(alias = "nvmlDeviceSetGpuLockedClocks")]
     pub fn set_gpu_locked_clocks(
         &mut self,
         setting: GpuLockedClocksSetting,
@@ -4028,6 +4135,7 @@ impl<'nvml> Device<'nvml> {
     Supports Volta and newer fully supported devices.
     */
     // Tested (no-run)
+    #[doc(alias = "nvmlDeviceResetGpuLockedClocks")]
     pub fn reset_gpu_locked_clocks(&mut self) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceResetGpuLockedClocks.as_ref())?;
 
@@ -4052,6 +4160,7 @@ impl<'nvml> Device<'nvml> {
     Supports Ampere and newer fully supported devices.
     */
     // Tested (no-run)
+    #[doc(alias = "nvmlDeviceSetMemoryLockedClocks")]
     pub fn set_mem_locked_clocks(
         &mut self,
         min_clock_mhz: u32,
@@ -4081,6 +4190,7 @@ impl<'nvml> Device<'nvml> {
     Supports Ampere and newer fully supported devices.
     */
     // Tested (no-run)
+    #[doc(alias = "nvmlDeviceResetMemoryLockedClocks")]
     pub fn reset_mem_locked_clocks(&mut self) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceResetMemoryLockedClocks.as_ref())?;
 
@@ -4110,6 +4220,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
+    #[doc(alias = "nvmlDeviceSetEccMode")]
     pub fn set_ecc(&mut self, enabled: bool) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceSetEccMode.as_ref())?;
 
@@ -4143,6 +4254,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
+    #[doc(alias = "nvmlDeviceSetGpuOperationMode")]
     pub fn set_gpu_op_mode(&mut self, mode: OperationMode) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceSetGpuOperationMode.as_ref())?;
 
@@ -4182,6 +4294,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested (no-run)
     #[cfg(target_os = "linux")]
+    #[doc(alias = "nvmlDeviceSetPersistenceMode")]
     pub fn set_persistent(&mut self, enabled: bool) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceSetPersistenceMode.as_ref())?;
 
@@ -4214,6 +4327,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     // Tested (no-run)
+    #[doc(alias = "nvmlDeviceSetPowerManagementLimit")]
     pub fn set_power_management_limit(&mut self, limit: u32) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceSetPowerManagementLimit.as_ref())?;
 
@@ -4292,6 +4406,7 @@ impl<'nvml> Device<'nvml> {
     // Tested
     // Thanks to Thinkofname for helping resolve lifetime issues
     #[cfg(target_os = "linux")]
+    #[doc(alias = "nvmlDeviceRegisterEvents")]
     pub fn register_events(
         &self,
         events: EventTypes,
@@ -4376,6 +4491,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Tested
     #[cfg(target_os = "linux")]
+    #[doc(alias = "nvmlDeviceGetSupportedEventTypes")]
     pub fn supported_event_types(&self) -> Result<EventTypes, NvmlError> {
         Ok(EventTypes::from_bits_truncate(
             self.supported_event_types_raw()?,
@@ -4483,6 +4599,7 @@ impl<'nvml> Device<'nvml> {
     */
     // Checked against local
     #[cfg(target_os = "linux")]
+    #[doc(alias = "nvmlDeviceModifyDrainState")]
     pub fn set_drain<T: Into<Option<PciInfo>>>(
         &mut self,
         enabled: bool,
@@ -4550,6 +4667,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // Tested
     #[cfg(target_os = "linux")]
+    #[doc(alias = "nvmlDeviceQueryDrainState")]
     pub fn is_drain_enabled<T: Into<Option<PciInfo>>>(
         &self,
         pci_info: T,
@@ -4669,6 +4787,7 @@ impl<'nvml> Device<'nvml> {
     // Checked against local
     // TODO: Fix ergonomics here when possible.
     #[cfg(target_os = "linux")]
+    #[doc(alias = "nvmlDeviceRemoveGpu_v2")]
     pub fn remove<T: Into<Option<PciInfo>>>(
         self,
         pci_info: T,

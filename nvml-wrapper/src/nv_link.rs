@@ -84,6 +84,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // Test written
+    #[doc(alias = "nvmlDeviceGetNvLinkState")]
     pub fn is_active(&self) -> Result<bool, NvmlError> {
         let sym = nvml_sym(self.device.nvml().lib.nvmlDeviceGetNvLinkState.as_ref())?;
 
@@ -112,6 +113,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // Test written
+    #[doc(alias = "nvmlDeviceGetNvLinkVersion")]
     pub fn version(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.device.nvml().lib.nvmlDeviceGetNvLinkVersion.as_ref())?;
 
@@ -140,6 +142,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // Test written
+    #[doc(alias = "nvmlDeviceGetNvLinkCapability")]
     pub fn has_capability(&self, cap_type: Capability) -> Result<bool, NvmlError> {
         let sym = nvml_sym(
             self.device
@@ -185,6 +188,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // Test written
+    #[doc(alias = "nvmlDeviceGetNvLinkRemotePciInfo_v2")]
     pub fn remote_pci_info(&self) -> Result<PciInfo, NvmlError> {
         let sym = nvml_sym(
             self.device
@@ -219,6 +223,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // Test written
+    #[doc(alias = "nvmlDeviceGetNvLinkErrorCounter")]
     pub fn error_counter(&self, counter: ErrorCounter) -> Result<u64, NvmlError> {
         let sym = nvml_sym(
             self.device
@@ -258,6 +263,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // No-run test written
+    #[doc(alias = "nvmlDeviceResetNvLinkErrorCounters")]
     pub fn reset_error_counters(&mut self) -> Result<(), NvmlError> {
         let sym = nvml_sym(
             self.device
@@ -289,6 +295,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // No-run test written
+    #[doc(alias = "nvmlDeviceSetNvLinkUtilizationControl")]
     pub fn set_utilization_control(
         &mut self,
         counter: Counter,
@@ -333,6 +340,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // Test written
+    #[doc(alias = "nvmlDeviceGetNvLinkUtilizationControl")]
     pub fn utilization_control(&self, counter: Counter) -> Result<UtilizationControl, NvmlError> {
         let sym = nvml_sym(
             self.device
@@ -389,6 +397,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // No-run test written
+    #[doc(alias = "nvmlDeviceGetNvLinkUtilizationCounter")]
     pub fn utilization_counter(&self, counter: Counter) -> Result<UtilizationCounter, NvmlError> {
         let sym = nvml_sym(
             self.device
@@ -433,6 +442,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // No-run test written
+    #[doc(alias = "nvmlDeviceFreezeNvLinkUtilizationCounter")]
     pub fn freeze_utilization_counter(&mut self, counter: Counter) -> Result<(), NvmlError> {
         self.set_utilization_counter_frozen(counter, true)
     }
@@ -456,6 +466,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // No-run test written
+    #[doc(alias = "nvmlDeviceFreezeNvLinkUtilizationCounter")]
     pub fn unfreeze_utilization_counter(&mut self, counter: Counter) -> Result<(), NvmlError> {
         self.set_utilization_counter_frozen(counter, false)
     }
@@ -502,6 +513,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
     Supports Pascal or newer fully supported devices.
     */
     // No-run test written
+    #[doc(alias = "nvmlDeviceResetNvLinkUtilizationCounter")]
     pub fn reset_utilization_counter(&mut self, counter: Counter) -> Result<(), NvmlError> {
         let sym = nvml_sym(
             self.device

@@ -102,6 +102,7 @@ impl<'nvml> Unit<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlUnitGetDevices")]
     pub fn devices(&self) -> Result<Vec<Device>, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlUnitGetDevices.as_ref())?;
 
@@ -140,6 +141,7 @@ impl<'nvml> Unit<'nvml> {
     For S-class products.
     */
     // Tested as part of the above
+    #[doc(alias = "nvmlUnitGetDevices")]
     pub fn device_count(&self) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlUnitGetDevices.as_ref())?;
 
@@ -187,6 +189,7 @@ impl<'nvml> Unit<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlUnitGetFanSpeedInfo")]
     pub fn fan_info(&self) -> Result<FansInfo, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlUnitGetFanSpeedInfo.as_ref())?;
 
@@ -215,6 +218,7 @@ impl<'nvml> Unit<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlUnitGetLedState")]
     pub fn led_state(&self) -> Result<LedState, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlUnitGetLedState.as_ref())?;
 
@@ -243,6 +247,7 @@ impl<'nvml> Unit<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlUnitGetPsuInfo")]
     pub fn psu_info(&self) -> Result<PsuInfo, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlUnitGetPsuInfo.as_ref())?;
         unsafe {
@@ -271,6 +276,7 @@ impl<'nvml> Unit<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlUnitGetTemperature")]
     pub fn temperature(&self, reading_type: TemperatureReading) -> Result<u32, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlUnitGetTemperature.as_ref())?;
 
@@ -298,6 +304,7 @@ impl<'nvml> Unit<'nvml> {
     */
     // Checked against local
     // Tested
+    #[doc(alias = "nvmlUnitGetUnitInfo")]
     pub fn info(&self) -> Result<UnitInfo, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlUnitGetUnitInfo.as_ref())?;
 
@@ -334,6 +341,7 @@ impl<'nvml> Unit<'nvml> {
     */
     // checked against local
     // Tested (no-run)
+    #[doc(alias = "nvmlUnitSetLedState")]
     pub fn set_led_color(&mut self, color: LedColor) -> Result<(), NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlUnitSetLedState.as_ref())?;
 
