@@ -6,7 +6,7 @@ description = "A safe and ergonomic Rust wrapper for the NVIDIA Management Libra
 readme = "../README.md"
 documentation = "https://docs.rs/nvml-wrapper"
 repository = "https://github.com/Cldfire/nvml-wrapper"
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 edition = "2018"
 rust-version = "1.51.0"
 
