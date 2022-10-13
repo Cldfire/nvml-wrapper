@@ -565,7 +565,7 @@ impl<'nvml> Device<'nvml> {
         unsafe {
             let mut count: c_uint = match self.running_compute_processes_count()? {
                 0 => return Ok(vec![]),
-                value => value + 5,
+                value => value,
             };
             // Add a bit of headroom in case more processes are launched in
             // between the above call to get the expected count and the time we
@@ -575,6 +575,7 @@ impl<'nvml> Device<'nvml> {
 
             nvml_try(sym(self.device, &mut count, processes.as_mut_ptr()))?;
 
+            processes.truncate(count as usize);
             Ok(processes.into_iter().map(ProcessInfo::from).collect())
         }
     }
