@@ -4,6 +4,8 @@ This file describes the changes / additions / fixes between bindings releases.
 
 ## Unreleased
 
+Bindings have been regenerated using the NVML 11.8 header and bindgen 0.63.0.
+
 ## 0.6.0 (released 2022-05-26)
 
 ### Release Summary

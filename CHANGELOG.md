@@ -8,6 +8,16 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 
 * Wrapper methods are now annotated with the `#[doc(alias = "...")]` attribute to make them searchable by C function name in rustdoc ([#31](https://github.com/Cldfire/nvml-wrapper/pull/31) - @arpankapoor)
 
+### Changed
+
+* `enum_wrappers::device`
+  * `Brand`
+    * Added new variants ([#35](https://github.com/Cldfire/nvml-wrapper/pull/35) - @nemosupremo)
+
+### Internal
+
+* SPDX expressions in `Cargo.toml` files have been updated to avoid using the now-deprecated slash syntax ([#32](https://github.com/Cldfire/nvml-wrapper/pull/32) - @KisaragiEffective)
+
 ## [0.8.0] (released 2022-05-26)
 
 ### Release Summary
