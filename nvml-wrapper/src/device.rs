@@ -618,6 +618,85 @@ impl<'nvml> Device<'nvml> {
     }
 
     /**
+    Gets information about processes with a compute context running on this `Device`.
+
+    This only returns information about running compute processes (such as a CUDA application
+    with an active context). Graphics applications (OpenGL, DirectX) won't be listed by this
+    function.
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if this `Device` is invalid
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+    */
+    #[doc(alias = "nvmlDeviceGetComputeRunningProcesses_v2")]
+    #[cfg(feature = "legacy-functions")]
+    pub fn running_compute_processes_v2(&self) -> Result<Vec<ProcessInfo>, NvmlError> {
+        let sym = nvml_sym(
+            self.nvml
+                .lib
+                .nvmlDeviceGetComputeRunningProcesses_v2
+                .as_ref(),
+        )?;
+
+        unsafe {
+            let mut count: c_uint = match self.running_compute_processes_count_v2()? {
+                0 => return Ok(vec![]),
+                value => value,
+            };
+            // Add a bit of headroom in case more processes are launched in
+            // between the above call to get the expected count and the time we
+            // actually make the call to get data below.
+            count += 5;
+            let mut processes: Vec<nvmlProcessInfo_v2_t> = vec![mem::zeroed(); count as usize];
+
+            nvml_try(sym(self.device, &mut count, processes.as_mut_ptr()))?;
+
+            processes.truncate(count as usize);
+            Ok(processes.into_iter().map(ProcessInfo::from).collect())
+        }
+    }
+
+    /**
+    Gets the number of processes with a compute context running on this `Device`.
+
+    This only returns the count of running compute processes (such as a CUDA application
+    with an active context). Graphics applications (OpenGL, DirectX) won't be counted by this
+    function.
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if this `Device` is invalid
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+    */
+    #[doc(alias = "nvmlDeviceGetComputeRunningProcesses_v2")]
+    #[cfg(feature = "legacy-functions")]
+    pub fn running_compute_processes_count_v2(&self) -> Result<u32, NvmlError> {
+        let sym = nvml_sym(
+            self.nvml
+                .lib
+                .nvmlDeviceGetComputeRunningProcesses_v2
+                .as_ref(),
+        )?;
+
+        unsafe {
+            // Indicates that we want the count
+            let mut count: c_uint = 0;
+
+            // Passing null doesn't mean we want the count, it's just allowed
+            match sym(self.device, &mut count, ptr::null_mut()) {
+                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
+                // If success, return 0; otherwise, return error
+                other => nvml_try(other).map(|_| 0),
+            }
+        }
+    }
+
+    /**
     Gets a vector of bitmasks with the ideal CPU affinity for this `Device`.
 
     The results are sized to `size`. For example, if processors 0, 1, 32, and 33 are
@@ -1402,6 +1481,82 @@ impl<'nvml> Device<'nvml> {
             self.nvml
                 .lib
                 .nvmlDeviceGetGraphicsRunningProcesses_v3
+                .as_ref(),
+        )?;
+
+        unsafe {
+            // Indicates that we want the count
+            let mut count: c_uint = 0;
+
+            // Passing null doesn't indicate that we want the count. It's just allowed.
+            match sym(self.device, &mut count, ptr::null_mut()) {
+                nvmlReturn_enum_NVML_ERROR_INSUFFICIENT_SIZE => Ok(count),
+                // If success, return 0; otherwise, return error
+                other => nvml_try(other).map(|_| 0),
+            }
+        }
+    }
+
+    /**
+    Gets information about processes with a graphics context running on this `Device`.
+
+    This only returns information about graphics based processes (OpenGL, DirectX, etc.).
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if this `Device` is invalid
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `Unknown`, on any unexpected error
+    */
+    #[doc(alias = "nvmlDeviceGetGraphicsRunningProcesses_v2")]
+    #[cfg(feature = "legacy-functions")]
+    pub fn running_graphics_processes_v2(&self) -> Result<Vec<ProcessInfo>, NvmlError> {
+        let sym = nvml_sym(
+            self.nvml
+                .lib
+                .nvmlDeviceGetGraphicsRunningProcesses_v2
+                .as_ref(),
+        )?;
+
+        unsafe {
+            let mut count: c_uint = match self.running_graphics_processes_count_v2()? {
+                0 => return Ok(vec![]),
+                value => value,
+            };
+            // Add a bit of headroom in case more processes are launched in
+            // between the above call to get the expected count and the time we
+            // actually make the call to get data below.
+            count += 5;
+            let mut processes: Vec<nvmlProcessInfo_v2_t> = vec![mem::zeroed(); count as usize];
+
+            nvml_try(sym(self.device, &mut count, processes.as_mut_ptr()))?;
+            processes.truncate(count as usize);
+
+            Ok(processes.into_iter().map(ProcessInfo::from).collect())
+        }
+    }
+
+    /**
+    Gets the number of processes with a graphics context running on this `Device`.
+
+    This only returns the count of graphics based processes (OpenGL, DirectX).
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `InvalidArg`, if this `Device` is invalid
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    * `UnexpectedVariant`, for which you can read the docs for
+    * `Unknown`, on any unexpected error
+    */
+    #[doc(alias = "nvmlDeviceGetGraphicsRunningProcesses_v2")]
+    #[cfg(feature = "legacy-functions")]
+    pub fn running_graphics_processes_count_v2(&self) -> Result<u32, NvmlError> {
+        let sym = nvml_sym(
+            self.nvml
+                .lib
+                .nvmlDeviceGetGraphicsRunningProcesses_v2
                 .as_ref(),
         )?;
 
@@ -4997,6 +5152,13 @@ mod test {
         test_with_device(3, &nvml, |device| device.running_compute_processes())
     }
 
+    #[cfg(feature = "legacy-functions")]
+    #[cfg_attr(feature = "legacy-functions", test)]
+    fn running_compute_processes_v2() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.running_compute_processes_v2())
+    }
+
     #[cfg(target_os = "linux")]
     #[test]
     fn cpu_affinity() {
@@ -5132,6 +5294,13 @@ mod test {
     fn running_graphics_processes() {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| device.running_graphics_processes())
+    }
+
+    #[cfg(feature = "legacy-functions")]
+    #[cfg_attr(feature = "legacy-functions", test)]
+    fn running_graphics_processes_v2() {
+        let nvml = nvml();
+        test_with_device(3, &nvml, |device| device.running_graphics_processes_v2())
     }
 
     #[test]

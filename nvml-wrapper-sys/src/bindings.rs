@@ -3196,6 +3196,171 @@ pub struct NvmlLib {
         ) -> nvmlReturn_t,
         ::libloading::Error,
     >,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlInit: Result<unsafe extern "C" fn() -> nvmlReturn_t, ::libloading::Error>,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlDeviceGetCount: Result<
+        unsafe extern "C" fn(deviceCount: *mut raw::c_uint) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlDeviceGetHandleByIndex: Result<
+        unsafe extern "C" fn(index: raw::c_uint, device: *mut nvmlDevice_t) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlDeviceGetHandleByPciBusId: Result<
+        unsafe extern "C" fn(
+            pciBusId: *const raw::c_char,
+            device: *mut nvmlDevice_t,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlDeviceGetPciInfo: Result<
+        unsafe extern "C" fn(device: nvmlDevice_t, pci: *mut nvmlPciInfo_t) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlDeviceGetPciInfo_v2: Result<
+        unsafe extern "C" fn(device: nvmlDevice_t, pci: *mut nvmlPciInfo_t) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlDeviceGetNvLinkRemotePciInfo: Result<
+        unsafe extern "C" fn(
+            device: nvmlDevice_t,
+            link: raw::c_uint,
+            pci: *mut nvmlPciInfo_t,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlDeviceGetGridLicensableFeatures: Result<
+        unsafe extern "C" fn(
+            device: nvmlDevice_t,
+            pGridLicensableFeatures: *mut nvmlGridLicensableFeatures_t,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlDeviceGetGridLicensableFeatures_v2: Result<
+        unsafe extern "C" fn(
+            device: nvmlDevice_t,
+            pGridLicensableFeatures: *mut nvmlGridLicensableFeatures_t,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlDeviceGetGridLicensableFeatures_v3: Result<
+        unsafe extern "C" fn(
+            device: nvmlDevice_t,
+            pGridLicensableFeatures: *mut nvmlGridLicensableFeatures_t,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlDeviceRemoveGpu: Result<
+        unsafe extern "C" fn(pciInfo: *mut nvmlPciInfo_t) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlEventSetWait: Result<
+        unsafe extern "C" fn(
+            set: nvmlEventSet_t,
+            data: *mut nvmlEventData_t,
+            timeoutms: raw::c_uint,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlDeviceGetAttributes: Result<
+        unsafe extern "C" fn(
+            device: nvmlDevice_t,
+            attributes: *mut nvmlDeviceAttributes_t,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlComputeInstanceGetInfo: Result<
+        unsafe extern "C" fn(
+            computeInstance: nvmlComputeInstance_t,
+            info: *mut nvmlComputeInstanceInfo_t,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlDeviceGetComputeRunningProcesses: Result<
+        unsafe extern "C" fn(
+            device: nvmlDevice_t,
+            infoCount: *mut raw::c_uint,
+            infos: *mut nvmlProcessInfo_v1_t,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlDeviceGetComputeRunningProcesses_v2: Result<
+        unsafe extern "C" fn(
+            device: nvmlDevice_t,
+            infoCount: *mut raw::c_uint,
+            infos: *mut nvmlProcessInfo_v2_t,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlDeviceGetGraphicsRunningProcesses: Result<
+        unsafe extern "C" fn(
+            device: nvmlDevice_t,
+            infoCount: *mut raw::c_uint,
+            infos: *mut nvmlProcessInfo_v1_t,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlDeviceGetGraphicsRunningProcesses_v2: Result<
+        unsafe extern "C" fn(
+            device: nvmlDevice_t,
+            infoCount: *mut raw::c_uint,
+            infos: *mut nvmlProcessInfo_v2_t,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlDeviceGetMPSComputeRunningProcesses: Result<
+        unsafe extern "C" fn(
+            device: nvmlDevice_t,
+            infoCount: *mut raw::c_uint,
+            infos: *mut nvmlProcessInfo_v1_t,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlDeviceGetMPSComputeRunningProcesses_v2: Result<
+        unsafe extern "C" fn(
+            device: nvmlDevice_t,
+            infoCount: *mut raw::c_uint,
+            infos: *mut nvmlProcessInfo_v2_t,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlDeviceGetGpuInstancePossiblePlacements: Result<
+        unsafe extern "C" fn(
+            device: nvmlDevice_t,
+            profileId: raw::c_uint,
+            placements: *mut nvmlGpuInstancePlacement_t,
+            count: *mut raw::c_uint,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
+    #[cfg(feature = "legacy-functions")]
+    pub nvmlVgpuInstanceGetLicenseInfo: Result<
+        unsafe extern "C" fn(
+            vgpuInstance: nvmlVgpuInstance_t,
+            licenseInfo: *mut nvmlVgpuLicenseInfo_t,
+        ) -> nvmlReturn_t,
+        ::libloading::Error,
+    >,
 }
 impl NvmlLib {
     pub unsafe fn new<P>(path: P) -> Result<Self, ::libloading::Error>
@@ -3863,6 +4028,80 @@ impl NvmlLib {
         let nvmlGpmQueryDeviceSupport = __library
             .get(b"nvmlGpmQueryDeviceSupport\0")
             .map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlInit = __library.get(b"nvmlInit\0").map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlDeviceGetCount = __library.get(b"nvmlDeviceGetCount\0").map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlDeviceGetHandleByIndex = __library
+            .get(b"nvmlDeviceGetHandleByIndex\0")
+            .map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlDeviceGetHandleByPciBusId = __library
+            .get(b"nvmlDeviceGetHandleByPciBusId\0")
+            .map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlDeviceGetPciInfo = __library.get(b"nvmlDeviceGetPciInfo\0").map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlDeviceGetPciInfo_v2 = __library.get(b"nvmlDeviceGetPciInfo_v2\0").map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlDeviceGetNvLinkRemotePciInfo = __library
+            .get(b"nvmlDeviceGetNvLinkRemotePciInfo\0")
+            .map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlDeviceGetGridLicensableFeatures = __library
+            .get(b"nvmlDeviceGetGridLicensableFeatures\0")
+            .map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlDeviceGetGridLicensableFeatures_v2 = __library
+            .get(b"nvmlDeviceGetGridLicensableFeatures_v2\0")
+            .map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlDeviceGetGridLicensableFeatures_v3 = __library
+            .get(b"nvmlDeviceGetGridLicensableFeatures_v3\0")
+            .map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlDeviceRemoveGpu = __library.get(b"nvmlDeviceRemoveGpu\0").map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlEventSetWait = __library.get(b"nvmlEventSetWait\0").map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlDeviceGetAttributes = __library.get(b"nvmlDeviceGetAttributes\0").map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlComputeInstanceGetInfo = __library
+            .get(b"nvmlComputeInstanceGetInfo\0")
+            .map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlDeviceGetComputeRunningProcesses = __library
+            .get(b"nvmlDeviceGetComputeRunningProcesses\0")
+            .map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlDeviceGetComputeRunningProcesses_v2 = __library
+            .get(b"nvmlDeviceGetComputeRunningProcesses_v2\0")
+            .map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlDeviceGetGraphicsRunningProcesses = __library
+            .get(b"nvmlDeviceGetGraphicsRunningProcesses\0")
+            .map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlDeviceGetGraphicsRunningProcesses_v2 = __library
+            .get(b"nvmlDeviceGetGraphicsRunningProcesses_v2\0")
+            .map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlDeviceGetMPSComputeRunningProcesses = __library
+            .get(b"nvmlDeviceGetMPSComputeRunningProcesses\0")
+            .map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlDeviceGetMPSComputeRunningProcesses_v2 = __library
+            .get(b"nvmlDeviceGetMPSComputeRunningProcesses_v2\0")
+            .map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlDeviceGetGpuInstancePossiblePlacements = __library
+            .get(b"nvmlDeviceGetGpuInstancePossiblePlacements\0")
+            .map(|sym| *sym);
+        #[cfg(feature = "legacy-functions")]
+        let nvmlVgpuInstanceGetLicenseInfo = __library
+            .get(b"nvmlVgpuInstanceGetLicenseInfo\0")
+            .map(|sym| *sym);
         Ok(NvmlLib {
             __library,
             nvmlInit_v2,
@@ -4138,6 +4377,50 @@ impl NvmlLib {
             nvmlGpmSampleAlloc,
             nvmlGpmSampleGet,
             nvmlGpmQueryDeviceSupport,
+            #[cfg(feature = "legacy-functions")]
+            nvmlInit,
+            #[cfg(feature = "legacy-functions")]
+            nvmlDeviceGetCount,
+            #[cfg(feature = "legacy-functions")]
+            nvmlDeviceGetHandleByIndex,
+            #[cfg(feature = "legacy-functions")]
+            nvmlDeviceGetHandleByPciBusId,
+            #[cfg(feature = "legacy-functions")]
+            nvmlDeviceGetPciInfo,
+            #[cfg(feature = "legacy-functions")]
+            nvmlDeviceGetPciInfo_v2,
+            #[cfg(feature = "legacy-functions")]
+            nvmlDeviceGetNvLinkRemotePciInfo,
+            #[cfg(feature = "legacy-functions")]
+            nvmlDeviceGetGridLicensableFeatures,
+            #[cfg(feature = "legacy-functions")]
+            nvmlDeviceGetGridLicensableFeatures_v2,
+            #[cfg(feature = "legacy-functions")]
+            nvmlDeviceGetGridLicensableFeatures_v3,
+            #[cfg(feature = "legacy-functions")]
+            nvmlDeviceRemoveGpu,
+            #[cfg(feature = "legacy-functions")]
+            nvmlEventSetWait,
+            #[cfg(feature = "legacy-functions")]
+            nvmlDeviceGetAttributes,
+            #[cfg(feature = "legacy-functions")]
+            nvmlComputeInstanceGetInfo,
+            #[cfg(feature = "legacy-functions")]
+            nvmlDeviceGetComputeRunningProcesses,
+            #[cfg(feature = "legacy-functions")]
+            nvmlDeviceGetComputeRunningProcesses_v2,
+            #[cfg(feature = "legacy-functions")]
+            nvmlDeviceGetGraphicsRunningProcesses,
+            #[cfg(feature = "legacy-functions")]
+            nvmlDeviceGetGraphicsRunningProcesses_v2,
+            #[cfg(feature = "legacy-functions")]
+            nvmlDeviceGetMPSComputeRunningProcesses,
+            #[cfg(feature = "legacy-functions")]
+            nvmlDeviceGetMPSComputeRunningProcesses_v2,
+            #[cfg(feature = "legacy-functions")]
+            nvmlDeviceGetGpuInstancePossiblePlacements,
+            #[cfg(feature = "legacy-functions")]
+            nvmlVgpuInstanceGetLicenseInfo,
         })
     }
     pub unsafe fn nvmlInit_v2(&self) -> nvmlReturn_t {
@@ -7031,5 +7314,245 @@ impl NvmlLib {
             .nvmlGpmQueryDeviceSupport
             .as_ref()
             .expect("Expected function, got error."))(device, gpmSupport)
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlInit(&self) -> nvmlReturn_t {
+        (self
+            .nvmlInit
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlDeviceGetCount(&self, deviceCount: *mut raw::c_uint) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetCount
+            .as_ref()
+            .expect("Expected function, got error."))(deviceCount)
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlDeviceGetHandleByIndex(
+        &self,
+        index: raw::c_uint,
+        device: *mut nvmlDevice_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetHandleByIndex
+            .as_ref()
+            .expect("Expected function, got error."))(index, device)
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlDeviceGetHandleByPciBusId(
+        &self,
+        pciBusId: *const raw::c_char,
+        device: *mut nvmlDevice_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetHandleByPciBusId
+            .as_ref()
+            .expect("Expected function, got error."))(pciBusId, device)
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlDeviceGetPciInfo(
+        &self,
+        device: nvmlDevice_t,
+        pci: *mut nvmlPciInfo_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetPciInfo
+            .as_ref()
+            .expect("Expected function, got error."))(device, pci)
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlDeviceGetPciInfo_v2(
+        &self,
+        device: nvmlDevice_t,
+        pci: *mut nvmlPciInfo_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetPciInfo_v2
+            .as_ref()
+            .expect("Expected function, got error."))(device, pci)
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlDeviceGetNvLinkRemotePciInfo(
+        &self,
+        device: nvmlDevice_t,
+        link: raw::c_uint,
+        pci: *mut nvmlPciInfo_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetNvLinkRemotePciInfo
+            .as_ref()
+            .expect("Expected function, got error."))(device, link, pci)
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlDeviceGetGridLicensableFeatures(
+        &self,
+        device: nvmlDevice_t,
+        pGridLicensableFeatures: *mut nvmlGridLicensableFeatures_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetGridLicensableFeatures
+            .as_ref()
+            .expect("Expected function, got error."))(device, pGridLicensableFeatures)
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlDeviceGetGridLicensableFeatures_v2(
+        &self,
+        device: nvmlDevice_t,
+        pGridLicensableFeatures: *mut nvmlGridLicensableFeatures_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetGridLicensableFeatures_v2
+            .as_ref()
+            .expect("Expected function, got error."))(device, pGridLicensableFeatures)
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlDeviceGetGridLicensableFeatures_v3(
+        &self,
+        device: nvmlDevice_t,
+        pGridLicensableFeatures: *mut nvmlGridLicensableFeatures_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetGridLicensableFeatures_v3
+            .as_ref()
+            .expect("Expected function, got error."))(device, pGridLicensableFeatures)
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlDeviceRemoveGpu(&self, pciInfo: *mut nvmlPciInfo_t) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceRemoveGpu
+            .as_ref()
+            .expect("Expected function, got error."))(pciInfo)
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlEventSetWait(
+        &self,
+        set: nvmlEventSet_t,
+        data: *mut nvmlEventData_t,
+        timeoutms: raw::c_uint,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlEventSetWait
+            .as_ref()
+            .expect("Expected function, got error."))(set, data, timeoutms)
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlDeviceGetAttributes(
+        &self,
+        device: nvmlDevice_t,
+        attributes: *mut nvmlDeviceAttributes_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetAttributes
+            .as_ref()
+            .expect("Expected function, got error."))(device, attributes)
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlComputeInstanceGetInfo(
+        &self,
+        computeInstance: nvmlComputeInstance_t,
+        info: *mut nvmlComputeInstanceInfo_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlComputeInstanceGetInfo
+            .as_ref()
+            .expect("Expected function, got error."))(computeInstance, info)
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlDeviceGetComputeRunningProcesses(
+        &self,
+        device: nvmlDevice_t,
+        infoCount: *mut raw::c_uint,
+        infos: *mut nvmlProcessInfo_v1_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetComputeRunningProcesses
+            .as_ref()
+            .expect("Expected function, got error."))(device, infoCount, infos)
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlDeviceGetComputeRunningProcesses_v2(
+        &self,
+        device: nvmlDevice_t,
+        infoCount: *mut raw::c_uint,
+        infos: *mut nvmlProcessInfo_v2_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetComputeRunningProcesses_v2
+            .as_ref()
+            .expect("Expected function, got error."))(device, infoCount, infos)
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlDeviceGetGraphicsRunningProcesses(
+        &self,
+        device: nvmlDevice_t,
+        infoCount: *mut raw::c_uint,
+        infos: *mut nvmlProcessInfo_v1_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetGraphicsRunningProcesses
+            .as_ref()
+            .expect("Expected function, got error."))(device, infoCount, infos)
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlDeviceGetGraphicsRunningProcesses_v2(
+        &self,
+        device: nvmlDevice_t,
+        infoCount: *mut raw::c_uint,
+        infos: *mut nvmlProcessInfo_v2_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetGraphicsRunningProcesses_v2
+            .as_ref()
+            .expect("Expected function, got error."))(device, infoCount, infos)
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlDeviceGetMPSComputeRunningProcesses(
+        &self,
+        device: nvmlDevice_t,
+        infoCount: *mut raw::c_uint,
+        infos: *mut nvmlProcessInfo_v1_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetMPSComputeRunningProcesses
+            .as_ref()
+            .expect("Expected function, got error."))(device, infoCount, infos)
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlDeviceGetMPSComputeRunningProcesses_v2(
+        &self,
+        device: nvmlDevice_t,
+        infoCount: *mut raw::c_uint,
+        infos: *mut nvmlProcessInfo_v2_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetMPSComputeRunningProcesses_v2
+            .as_ref()
+            .expect("Expected function, got error."))(device, infoCount, infos)
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlDeviceGetGpuInstancePossiblePlacements(
+        &self,
+        device: nvmlDevice_t,
+        profileId: raw::c_uint,
+        placements: *mut nvmlGpuInstancePlacement_t,
+        count: *mut raw::c_uint,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlDeviceGetGpuInstancePossiblePlacements
+            .as_ref()
+            .expect("Expected function, got error."))(device, profileId, placements, count)
+    }
+    #[cfg(feature = "legacy-functions")]
+    pub unsafe fn nvmlVgpuInstanceGetLicenseInfo(
+        &self,
+        vgpuInstance: nvmlVgpuInstance_t,
+        licenseInfo: *mut nvmlVgpuLicenseInfo_t,
+    ) -> nvmlReturn_t {
+        (self
+            .nvmlVgpuInstanceGetLicenseInfo
+            .as_ref()
+            .expect("Expected function, got error."))(vgpuInstance, licenseInfo)
     }
 }

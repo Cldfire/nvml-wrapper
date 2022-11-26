@@ -13,6 +13,10 @@ rust-version = "1.51.0"
 keywords = ["nvidia", "gpu", "managment", "monitoring", "hardware"]
 categories = ["api-bindings", "hardware-support"]
 
+[features]
+default = []
+legacy-functions = ["nvml-wrapper-sys/legacy-functions"]
+
 [dependencies]
 thiserror = "1.0"
 bitflags = "1.3"

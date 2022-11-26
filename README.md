@@ -52,8 +52,7 @@ Note that it's not advised to repeatedly call `Nvml::init` as the constructor
 has to perform all the work of loading the function symbols from the library
 each time it gets called. Instead, call `Nvml::init` once and store the resulting
 `Nvml` instance somewhere to be accessed throughout the lifetime of your program
-(perhaps in a
-[`once_cell`](https://docs.rs/once_cell/latest/once_cell/sync/struct.Lazy.html)).
+(perhaps in a [`once_cell`][once_cell]).
 
 ## NVML Support
 
@@ -61,6 +60,25 @@ This wrapper is being developed against and currently supports NVML version
 11. Each new version of NVML is guaranteed to be backwards-compatible according
 to NVIDIA, so this wrapper should continue to work without issue regardless of
 NVML version bumps.
+
+### Legacy Functions
+
+Sometimes there will be function-level API version bumps in new NVML releases.
+For example:
+
+```text
+nvmlDeviceGetComputeRunningProcesses
+nvmlDeviceGetComputeRunningProcesses_v2
+nvmlDeviceGetComputeRunningProcesses_v3
+```
+
+The older versions of the functions will generally continue to work with the
+newer NVML releases; however, the newer function versions will not work with
+older NVML installs.
+
+By default this wrapper only provides access to the newest function versions.
+Enable the `legacy-functions` feature if you require the ability to call older
+functions.
 
 ## MSRV
 
@@ -89,3 +107,4 @@ be dual licensed as above, without any additional terms or conditions.
 
 [nvml]: https://developer.nvidia.com/nvidia-management-library-nvml
 [libloading]: https://github.com/nagisa/rust_libloading
+[once_cell]: https://docs.rs/once_cell/latest/once_cell/sync/struct.Lazy.html

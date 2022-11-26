@@ -7,6 +7,9 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 ### Added
 
 * Wrapper methods are now annotated with the `#[doc(alias = "...")]` attribute to make them searchable by C function name in rustdoc ([#31](https://github.com/Cldfire/nvml-wrapper/pull/31) - @arpankapoor)
+* Some older function versions are now wrapped and available for use behind the `legacy-functions` crate feature
+  * `running_compute_processes_v2`
+  * `running_graphics_processes_v2`
 
 ### Changed
 

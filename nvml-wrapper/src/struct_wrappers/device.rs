@@ -261,6 +261,23 @@ impl From<nvmlProcessInfo_t> for ProcessInfo {
     }
 }
 
+#[cfg(feature = "legacy-functions")]
+impl From<nvmlProcessInfo_v2_t> for ProcessInfo {
+    fn from(struct_: nvmlProcessInfo_v2_t) -> Self {
+        // These versions of the struct are exactly the same, so we can rely on
+        // the above `From` impl and just treat this struct as the unversioned
+        // one.
+        let unversioned_struct = nvmlProcessInfo_t {
+            pid: struct_.pid,
+            usedGpuMemory: struct_.usedGpuMemory,
+            gpuInstanceId: struct_.gpuInstanceId,
+            computeInstanceId: struct_.computeInstanceId,
+        };
+
+        Self::from(unversioned_struct)
+    }
+}
+
 /// Detailed ECC error counts for a device.
 // Checked against local
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]

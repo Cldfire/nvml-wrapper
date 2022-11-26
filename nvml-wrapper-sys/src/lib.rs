@@ -1,7 +1,6 @@
 /*!
-Rust bindings for the
-[NVIDIA Management Library][nvml] (NVML), a C-based programmatic interface for monitoring
-and managing various states within NVIDIA (primarily Tesla) GPUs.
+Rust bindings for the [NVIDIA Management Library][nvml] (NVML), a C-based programmatic
+interface for monitoring and managing various states within NVIDIA GPUs.
 
 It is intended to be a platform for building 3rd-party applications, and is also the
 underlying library for NVIDIA's nvidia-smi tool.
@@ -35,6 +34,25 @@ These bindings were generated for NVML version 11. Each new version of NVML is
 guaranteed to be backwards-compatible according to NVIDIA, so these bindings
 should be useful regardless of NVML version bumps.
 
+### Legacy Functions
+
+Sometimes there will be function-level API version bumps in new NVML releases.
+For example:
+
+```text
+nvmlDeviceGetComputeRunningProcesses
+nvmlDeviceGetComputeRunningProcesses_v2
+nvmlDeviceGetComputeRunningProcesses_v3
+```
+
+The older versions of the functions will generally continue to work with the
+newer NVML releases; however, the newer function versions will not work with
+older NVML installs.
+
+By default these bindings only include the newest versions of the functions.
+Enable the `legacy-functions` feature if you require the ability to call older
+functions.
+
 [nvml]: https://developer.nvidia.com/nvidia-management-library-nvml
 [nvml-wrapper]: https://github.com/Cldfire/nvml-wrapper
 [bindgen]: https://github.com/rust-lang/rust-bindgen
@@ -45,7 +63,7 @@ should be useful regardless of NVML version bumps.
 #![allow(clippy::missing_safety_doc)]
 #![allow(clippy::redundant_static_lifetimes)]
 
-// Generate bindings: bindgen --ctypes-prefix raw --no-doc-comments --no-layout-tests --raw-line '#![allow(non_upper_case_globals)]' --raw-line '#![allow(non_camel_case_types)]' --raw-line '#![allow(non_snake_case)]' --raw-line '#![allow(dead_code)]'  --raw-line 'use std::os::raw;' --rustfmt-bindings --dynamic-loading NvmlLib -o genned_bindings.rs nvml.h
+// Generate bindings: ./gen_bindings.sh
 //
 // We avoid generating layout tests because they cause a large number of
 // warnings and according to commentary are not useful. See
