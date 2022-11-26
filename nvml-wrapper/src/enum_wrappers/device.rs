@@ -85,6 +85,8 @@ pub enum Brand {
     #[wrap(c_variant = "NVML_BRAND_NVS")]
     NVS,
     /// Targeted at virtualization (vGPUs).
+    ///
+    /// Deprecated from API reporting, still here for backwards compatibility.
     #[wrap(c_variant = "NVML_BRAND_GRID")]
     GRID,
     /// Targeted at gaming.
@@ -108,7 +110,8 @@ pub enum Brand {
     /// Targeted at cloud gaming servers.
     #[wrap(c_variant = "NVML_BRAND_NVIDIA_CLOUD_GAMING")]
     CloudGaming,
-    /// Targeted at vgaming servers.
+    /// Deprecated from API reporting, still here for backwards compatibility.
+    /// Symlinks to [`Brand::CloudGaming`].
     #[wrap(c_variant = "NVML_BRAND_NVIDIA_VGAMING")]
     VGaming,
     /// Targeted at Quadro RTX cards.
@@ -116,7 +119,7 @@ pub enum Brand {
     QuadroRTX,
     /// Targeted at RTX cards.
     #[wrap(c_variant = "NVML_BRAND_NVIDIA_RTX")]
-    RTX,
+    NvidiaRTX,
     /// Nvidia
     #[wrap(c_variant = "NVML_BRAND_NVIDIA")]
     Nvidia,
