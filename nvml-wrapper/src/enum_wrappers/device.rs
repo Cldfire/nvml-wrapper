@@ -85,6 +85,8 @@ pub enum Brand {
     #[wrap(c_variant = "NVML_BRAND_NVS")]
     NVS,
     /// Targeted at virtualization (vGPUs).
+    ///
+    /// Deprecated from API reporting, still here for backwards compatibility.
     #[wrap(c_variant = "NVML_BRAND_GRID")]
     GRID,
     /// Targeted at gaming.
@@ -93,6 +95,40 @@ pub enum Brand {
     /// Targeted at... people who don't quite need quadros?
     #[wrap(c_variant = "NVML_BRAND_TITAN")]
     Titan,
+    /// Targeted at virtualized apps.
+    #[wrap(c_variant = "NVML_BRAND_NVIDIA_VAPPS")]
+    VApps,
+    /// Targeted at virtualized pcs.
+    #[wrap(c_variant = "NVML_BRAND_NVIDIA_VPC")]
+    VPC,
+    /// Targeted at virtualized servers.
+    #[wrap(c_variant = "NVML_BRAND_NVIDIA_VCS")]
+    VCS,
+    /// Targeted at virtualized work stations.
+    #[wrap(c_variant = "NVML_BRAND_NVIDIA_VWS")]
+    VWS,
+    /// Targeted at cloud gaming servers.
+    #[wrap(c_variant = "NVML_BRAND_NVIDIA_CLOUD_GAMING")]
+    CloudGaming,
+    /// Deprecated from API reporting, still here for backwards compatibility.
+    /// Symlinks to [`Brand::CloudGaming`].
+    #[wrap(c_variant = "NVML_BRAND_NVIDIA_VGAMING")]
+    VGaming,
+    /// Targeted at Quadro RTX cards.
+    #[wrap(c_variant = "NVML_BRAND_QUADRO_RTX")]
+    QuadroRTX,
+    /// Targeted at RTX cards.
+    #[wrap(c_variant = "NVML_BRAND_NVIDIA_RTX")]
+    NvidiaRTX,
+    /// Nvidia
+    #[wrap(c_variant = "NVML_BRAND_NVIDIA")]
+    Nvidia,
+    /// Targeted at gaming RTX cards.
+    #[wrap(c_variant = "NVML_BRAND_GEFORCE_RTX")]
+    GeForceRTX,
+    /// Targeted at Titan RTX cards.
+    #[wrap(c_variant = "NVML_BRAND_TITAN_RTX")]
+    TitanRTX,
 }
 
 /**
