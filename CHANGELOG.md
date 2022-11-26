@@ -14,6 +14,13 @@ This file describes the changes / additions / fixes between wrapper releases, tr
   * `Brand`
     * Added new variants ([#35](https://github.com/Cldfire/nvml-wrapper/pull/35) - @nemosupremo)
 
+### Fixed
+
+* `Device`
+  * `running_compute_processes()`
+    * Fixed count handling ([#36](https://github.com/Cldfire/nvml-wrapper/pull/36) - @jjyyxx)
+      * This bug would have caused five blank process information structs to be returned in addition to actual process information if there were any running compute processes.
+
 ### Internal
 
 * SPDX expressions in `Cargo.toml` files have been updated to avoid using the now-deprecated slash syntax ([#32](https://github.com/Cldfire/nvml-wrapper/pull/32) - @KisaragiEffective)
