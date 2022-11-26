@@ -302,7 +302,7 @@ impl<'device, 'nvml: 'device> NvLink<'device, 'nvml> {
         settings: UtilizationControl,
         reset_counters: bool,
     ) -> Result<(), NvmlError> {
-        let reset: c_uint = if reset_counters { 1 } else { 0 };
+        let reset: c_uint = u32::from(reset_counters);
 
         let sym = nvml_sym(
             self.device

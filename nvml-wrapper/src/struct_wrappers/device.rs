@@ -570,7 +570,7 @@ impl TryFrom<nvmlFieldValue_t> for FieldValueSample {
 }
 
 /// Holds global frame buffer capture session statistics.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct FbcStats {
     /// The total number of sessions
@@ -592,7 +592,7 @@ impl From<nvmlFBCStats_t> for FbcStats {
 }
 
 /// Information about a frame buffer capture session.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct FbcSessionInfo {
     /// Unique session ID
