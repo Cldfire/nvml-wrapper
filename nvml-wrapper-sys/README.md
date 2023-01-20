@@ -39,6 +39,25 @@ These bindings were generated for NVML version 11. Each new version of NVML is
 guaranteed to be backwards-compatible according to NVIDIA, so these bindings
 should be useful regardless of NVML version bumps.
 
+### Legacy Functions
+
+Sometimes there will be function-level API version bumps in new NVML releases.
+For example:
+
+```text
+nvmlDeviceGetComputeRunningProcesses
+nvmlDeviceGetComputeRunningProcesses_v2
+nvmlDeviceGetComputeRunningProcesses_v3
+```
+
+The older versions of the functions will generally continue to work with the
+newer NVML releases; however, the newer function versions will not work with
+older NVML installs.
+
+By default these bindings only include the newest versions of the functions.
+Enable the `legacy-functions` feature if you require the ability to call older
+functions.
+
 #### License
 
 <sup>

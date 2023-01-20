@@ -56,6 +56,25 @@ This wrapper is being developed against and currently supports NVML version
 to NVIDIA, so this wrapper should continue to work without issue regardless of
 NVML version bumps.
 
+### Legacy Functions
+
+Sometimes there will be function-level API version bumps in new NVML releases.
+For example:
+
+```text
+nvmlDeviceGetComputeRunningProcesses
+nvmlDeviceGetComputeRunningProcesses_v2
+nvmlDeviceGetComputeRunningProcesses_v3
+```
+
+The older versions of the functions will generally continue to work with the
+newer NVML releases; however, the newer function versions will not work with
+older NVML installs.
+
+By default this wrapper only provides access to the newest function versions.
+Enable the `legacy-functions` feature if you require the ability to call older
+functions.
+
 ## MSRV
 
 The Minimum Supported Rust Version is currently 1.51.0. I will not go out of my

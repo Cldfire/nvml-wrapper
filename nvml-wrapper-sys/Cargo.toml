@@ -20,3 +20,4 @@ libloading = "0.7.0"
 
 [features]
 default = []
+legacy-functions = []

@@ -6,6 +6,10 @@ This file describes the changes / additions / fixes between bindings releases.
 
 Bindings have been regenerated using the NVML 11.8 header and bindgen 0.63.0.
 
+### Added
+
+* The `legacy-functions` feature can now be enabled to access older function versions in the bindings.
+
 ## 0.6.0 (released 2022-05-26)
 
 ### Release Summary
