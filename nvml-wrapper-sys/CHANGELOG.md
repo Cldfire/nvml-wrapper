@@ -4,11 +4,17 @@ This file describes the changes / additions / fixes between bindings releases.
 
 ## Unreleased
 
+## 0.7.0 (released 2023-01-20)
+
 Bindings have been regenerated using the NVML 11.8 header and bindgen 0.63.0.
 
 ### Added
 
 * The `legacy-functions` feature can now be enabled to access older function versions in the bindings.
+
+### Rust Version Support
+
+The MSRV of this release continues to be 1.51.0.
 
 ## 0.6.0 (released 2022-05-26)
 
