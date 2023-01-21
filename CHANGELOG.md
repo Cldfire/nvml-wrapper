@@ -4,10 +4,23 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 
 ## [Unreleased]
 
+### Added
+
+* `Device`
+  * Methods
+    * `pcie_link_speed()`
+
+### Changed
+
+* `enums::device`
+  * `PcieLinkMaxSpeed`
+    * Renamed variants to reflect the fact that they appear to represent per-lane transfers/second, not multi-lane throughput
+
 ### Internal
 
 * Removed `rust-hook` from development workflow
 * Started building crate in CI on `macos-latest`
+* Added a script to find unwrapped function names
 
 ## [0.9.0] (released 2023-01-20)
 
