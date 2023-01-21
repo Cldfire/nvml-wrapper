@@ -16,6 +16,13 @@ jobs:
         rust:
           - stable
           - 1.51.0
+        # Avoid trying to build on macos-latest with Rust 1.51
+        #
+        # Rust < 1.54 doesn't work with xcode 14
+        # https://github.com/rust-lang/rust/issues/103044
+        include:
+          - os: macos-latest
+            rust: stable
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
