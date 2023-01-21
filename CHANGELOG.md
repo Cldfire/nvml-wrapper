@@ -4,6 +4,11 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 
 ## [Unreleased]
 
+### Internal
+
+* Removed `rust-hook` from development workflow
+* Started building crate in CI on `macos-latest`
+
 ## [0.9.0] (released 2023-01-20)
 
 ### Release Summary
