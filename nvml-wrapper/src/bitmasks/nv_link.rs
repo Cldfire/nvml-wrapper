@@ -13,18 +13,18 @@ bitflags! {
     // Checked against local
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct PacketTypes: u32 {
-        const NO_OP      = nvmlNvLinkUtilizationCountPktTypes_enum_NVML_NVLINK_COUNTER_PKTFILTER_NOP as u32;
-        const READ       = nvmlNvLinkUtilizationCountPktTypes_enum_NVML_NVLINK_COUNTER_PKTFILTER_READ as u32;
-        const WRITE      = nvmlNvLinkUtilizationCountPktTypes_enum_NVML_NVLINK_COUNTER_PKTFILTER_WRITE as u32;
+        const NO_OP      = nvmlNvLinkUtilizationCountPktTypes_enum_NVML_NVLINK_COUNTER_PKTFILTER_NOP;
+        const READ       = nvmlNvLinkUtilizationCountPktTypes_enum_NVML_NVLINK_COUNTER_PKTFILTER_READ;
+        const WRITE      = nvmlNvLinkUtilizationCountPktTypes_enum_NVML_NVLINK_COUNTER_PKTFILTER_WRITE;
         /// Reduction atomic requests.
-        const RATOM      = nvmlNvLinkUtilizationCountPktTypes_enum_NVML_NVLINK_COUNTER_PKTFILTER_RATOM as u32;
+        const RATOM      = nvmlNvLinkUtilizationCountPktTypes_enum_NVML_NVLINK_COUNTER_PKTFILTER_RATOM;
         /// Non-reduction atomic requests.
-        const NON_RATOM  = nvmlNvLinkUtilizationCountPktTypes_enum_NVML_NVLINK_COUNTER_PKTFILTER_NRATOM as u32;
+        const NON_RATOM  = nvmlNvLinkUtilizationCountPktTypes_enum_NVML_NVLINK_COUNTER_PKTFILTER_NRATOM;
         /// Flush requests.
-        const FLUSH      = nvmlNvLinkUtilizationCountPktTypes_enum_NVML_NVLINK_COUNTER_PKTFILTER_FLUSH as u32;
+        const FLUSH      = nvmlNvLinkUtilizationCountPktTypes_enum_NVML_NVLINK_COUNTER_PKTFILTER_FLUSH;
         /// Responses with data.
-        const WITH_DATA  = nvmlNvLinkUtilizationCountPktTypes_enum_NVML_NVLINK_COUNTER_PKTFILTER_RESPDATA as u32;
+        const WITH_DATA  = nvmlNvLinkUtilizationCountPktTypes_enum_NVML_NVLINK_COUNTER_PKTFILTER_RESPDATA;
         /// Responses without data.
-        const NO_DATA    = nvmlNvLinkUtilizationCountPktTypes_enum_NVML_NVLINK_COUNTER_PKTFILTER_RESPNODATA as u32;
+        const NO_DATA    = nvmlNvLinkUtilizationCountPktTypes_enum_NVML_NVLINK_COUNTER_PKTFILTER_RESPNODATA;
     }
 }

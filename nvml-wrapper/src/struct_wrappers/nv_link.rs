@@ -20,7 +20,7 @@ impl UtilizationControl {
     pub fn as_c(&self) -> nvmlNvLinkUtilizationControl_t {
         nvmlNvLinkUtilizationControl_t {
             units: self.units.as_c(),
-            pktfilter: self.packet_filter.bits() as u32,
+            pktfilter: self.packet_filter.bits(),
         }
     }
 }
@@ -40,7 +40,7 @@ impl TryFrom<nvmlNvLinkUtilizationControl_t> for UtilizationControl {
     * `UnexpectedVariant`, for which you can read the docs for
     */
     fn try_from(value: nvmlNvLinkUtilizationControl_t) -> Result<Self, Self::Error> {
-        let bits = value.pktfilter as u32;
+        let bits = value.pktfilter;
 
         Ok(UtilizationControl {
             units: UtilizationCountUnit::try_from(value.units)?,
