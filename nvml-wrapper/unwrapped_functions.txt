@@ -10,14 +10,11 @@ nvmlDeviceGetAttributes
 nvmlDeviceGetAttributes_v2
 nvmlDeviceGetClkMonStatus
 nvmlDeviceGetComputeInstanceId
-nvmlDeviceGetComputeRunningProcesses
-nvmlDeviceGetCount
 nvmlDeviceGetCpuAffinityWithinScope
 nvmlDeviceGetCreatableVgpus
 nvmlDeviceGetDefaultEccMode
 nvmlDeviceGetDeviceHandleFromMigDeviceHandle
 nvmlDeviceGetDynamicPstatesInfo
-nvmlDeviceGetFanSpeed
 nvmlDeviceGetGpcClkMinMaxVfOffset
 nvmlDeviceGetGpcClkVfOffset
 nvmlDeviceGetGpuInstanceById
@@ -28,21 +25,17 @@ nvmlDeviceGetGpuInstanceProfileInfo
 nvmlDeviceGetGpuInstanceProfileInfoV
 nvmlDeviceGetGpuInstanceRemainingCapacity
 nvmlDeviceGetGpuInstances
-nvmlDeviceGetGraphicsRunningProcesses
 nvmlDeviceGetGridLicensableFeatures
 nvmlDeviceGetGridLicensableFeatures_v2
 nvmlDeviceGetGridLicensableFeatures_v3
 nvmlDeviceGetGridLicensableFeatures_v4
 nvmlDeviceGetGspFirmwareMode
 nvmlDeviceGetGspFirmwareVersion
-nvmlDeviceGetHandleByIndex
-nvmlDeviceGetHandleByPciBusId
 nvmlDeviceGetHostVgpuMode
 nvmlDeviceGetMaxMigDeviceCount
 nvmlDeviceGetMemClkMinMaxVfOffset
 nvmlDeviceGetMemClkVfOffset
 nvmlDeviceGetMemoryAffinity
-nvmlDeviceGetMemoryInfo_v2
 nvmlDeviceGetMigDeviceHandleByIndex
 nvmlDeviceGetMigMode
 nvmlDeviceGetMinMaxClockOfPState
@@ -51,11 +44,8 @@ nvmlDeviceGetMPSComputeRunningProcesses
 nvmlDeviceGetMPSComputeRunningProcesses_v2
 nvmlDeviceGetMPSComputeRunningProcesses_v3
 nvmlDeviceGetNvLinkRemoteDeviceType
-nvmlDeviceGetNvLinkRemotePciInfo
 nvmlDeviceGetP2PStatus
 nvmlDeviceGetPcieSpeed
-nvmlDeviceGetPciInfo
-nvmlDeviceGetPciInfo_v2
 nvmlDeviceGetPgpuMetadataString
 nvmlDeviceGetPowerMode
 nvmlDeviceGetRemappedRows
@@ -70,7 +60,6 @@ nvmlDeviceGetVgpuProcessUtilization
 nvmlDeviceGetVgpuUtilization
 nvmlDeviceGetVirtualizationMode
 nvmlDeviceIsMigDeviceHandle
-nvmlDeviceRemoveGpu
 nvmlDeviceSetDefaultFanSpeed_v2
 nvmlDeviceSetFanSpeed_v2
 nvmlDeviceSetGpcClkVfOffset
@@ -80,7 +69,6 @@ nvmlDeviceSetPowerMode
 nvmlDeviceSetTemperatureThreshold
 nvmlDeviceSetVirtualizationMode
 nvmlErrorString
-nvmlEventSetWait
 nvmlGetVgpuCompatibility
 nvmlGetVgpuVersion
 nvmlGpmMetricsGet
@@ -96,9 +84,7 @@ nvmlGpuInstanceGetComputeInstanceProfileInfoV
 nvmlGpuInstanceGetComputeInstanceRemainingCapacity
 nvmlGpuInstanceGetComputeInstances
 nvmlGpuInstanceGetInfo
-nvmlInit
 nvmlSetVgpuVersion
-nvmlSystemGetCudaDriverVersion
 nvmlVgpuInstanceClearAccountingPids
 nvmlVgpuInstanceGetAccountingMode
 nvmlVgpuInstanceGetAccountingPids
@@ -135,4 +121,26 @@ nvmlVgpuTypeGetMaxInstancesPerVm
 nvmlVgpuTypeGetName
 nvmlVgpuTypeGetNumDisplayHeads
 nvmlVgpuTypeGetResolution
+
+the following functions are part of a series of versioned functions, at least one
+of which appears in the wrapper source code.
+
+this means some version is already wrapped and the listed names are either
+newer versions to be wrapped or older versions that could be wrapped behind the
+legacy-functions feature.
+
+nvmlDeviceGetComputeRunningProcesses
+nvmlDeviceGetCount
+nvmlDeviceGetFanSpeed
+nvmlDeviceGetGraphicsRunningProcesses
+nvmlDeviceGetHandleByIndex
+nvmlDeviceGetHandleByPciBusId
+nvmlDeviceGetMemoryInfo_v2
+nvmlDeviceGetNvLinkRemotePciInfo
+nvmlDeviceGetPciInfo
+nvmlDeviceGetPciInfo_v2
+nvmlDeviceRemoveGpu
+nvmlEventSetWait
+nvmlInit
+nvmlSystemGetCudaDriverVersion
 
