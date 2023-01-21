@@ -18,7 +18,7 @@ do
     fi
 
     # filter out function names that appear in the wrapper source
-    if ! rg ".lib.${name}." -q src/* ;
+    if ! rg -U "lib[ \n]*\.${name}[ \n]*\." -q src/* ;
     then
         output+="${name}"
         output+=$'\n'
