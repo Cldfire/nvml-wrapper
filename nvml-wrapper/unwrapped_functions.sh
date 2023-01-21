@@ -5,7 +5,7 @@
 #
 # `ripgrep` must be installed and available. `cargo install ripgrep`
 
-all_functions=$(rg 'pub unsafe fn (\w+)' -oNr '$1' ../nvml-wrapper-sys/src/bindings.rs)
+all_functions=$(rg 'pub unsafe fn (\w+)' -oNr '$1' ../nvml-wrapper-sys/src/bindings.rs | sort)
 readarray -t all_functions_arr <<< "$all_functions"
 
 output=""
