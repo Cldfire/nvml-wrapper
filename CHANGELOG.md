@@ -4,6 +4,12 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 
 ## [Unreleased]
 
+## [0.9.0] (released 2023-01-20)
+
+### Release Summary
+
+Bug fixes, improvements, and updates for NVML 11.8.
+
 ### Added
 
 * Wrapper methods are now annotated with the `#[doc(alias = "...")]` attribute to make them searchable by C function name in rustdoc ([#31](https://github.com/Cldfire/nvml-wrapper/pull/31) - @arpankapoor)
@@ -27,6 +33,10 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 ### Internal
 
 * SPDX expressions in `Cargo.toml` files have been updated to avoid using the now-deprecated slash syntax ([#32](https://github.com/Cldfire/nvml-wrapper/pull/32) - @KisaragiEffective)
+
+### Rust Version Support
+
+The MSRV of this release continues to be 1.51.0.
 
 ## [0.8.0] (released 2022-05-26)
 
