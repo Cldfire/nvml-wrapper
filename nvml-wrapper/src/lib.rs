@@ -345,7 +345,7 @@ impl Nvml {
             let mut count: c_uint = mem::zeroed();
             nvml_try(sym(&mut count))?;
 
-            Ok(count as u32)
+            Ok(count)
         }
     }
 
