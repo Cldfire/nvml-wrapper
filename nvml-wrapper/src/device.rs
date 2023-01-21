@@ -3512,7 +3512,7 @@ impl<'nvml> Device<'nvml> {
     * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
     */
     #[doc(alias = "nvmlDeviceGetPcieLinkMaxSpeed")]
-    pub fn pcie_link_max_speed(&self) -> Result<PcieLinkMaxSpeed, NvmlError> {
+    pub fn max_pcie_link_speed(&self) -> Result<PcieLinkMaxSpeed, NvmlError> {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetPcieLinkMaxSpeed.as_ref())?;
 
         let pcie_link_max_speed_c = unsafe {
@@ -3524,6 +3524,50 @@ impl<'nvml> Device<'nvml> {
         };
 
         PcieLinkMaxSpeed::try_from(pcie_link_max_speed_c)
+    }
+
+    /**
+    Gets the current PCIe link speed for this [`Device`].
+
+    NVML docs say the returned value is in "MBPS". Looking at the output of
+    this function, however, seems to imply it actually returns the transfer
+    rate per lane of the PCIe link in MT/s, not the combined multi-lane
+    throughput. See [`PcieLinkMaxSpeed`] for the same discussion.
+
+    For example, on my machine currently:
+
+    > Right now the device is connected via a PCIe gen 4 x16 interface and
+    > `pcie_link_speed()` returns 16000
+
+    This lines up with the "transfer rate per lane numbers" listed at
+    <https://en.wikipedia.org/wiki/PCI_Express>. PCIe gen 4 provides 16.0 GT/s.
+    Also, checking my machine at a different moment yields:
+
+    > Right now the device is connected via a PCIe gen 2 x16 interface and
+    > `pcie_link_speed()` returns 5000
+
+    Which again lines up with the table on the page above; PCIe gen 2 provides
+    5.0 GT/s.
+
+    # Errors
+
+    * `Uninitialized`, if the library has not been successfully initialized
+    * `NotSupported`, if this query is not supported by this `Device`
+    * `GpuLost`, if this `Device` has fallen off the bus or is otherwise inaccessible
+    */
+    #[doc(alias = "nvmlDeviceGetPcieSpeed")]
+    pub fn pcie_link_speed(&self) -> Result<u32, NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetPcieSpeed.as_ref())?;
+
+        let pcie_speed_c = unsafe {
+            let mut pcie_speed: c_uint = mem::zeroed();
+
+            nvml_try(sym(self.device, &mut pcie_speed))?;
+
+            pcie_speed
+        };
+
+        Ok(pcie_speed_c)
     }
 
     /**
@@ -5730,7 +5774,7 @@ mod test {
     #[test]
     fn pcie_link_max_speed() {
         let nvml = nvml();
-        test_with_device(3, &nvml, |device| device.pcie_link_max_speed())
+        test_with_device(3, &nvml, |device| device.max_pcie_link_speed())
     }
 
     #[test]

@@ -20,9 +20,20 @@ fn main() -> Result<(), NvmlError> {
     let graphics_clock = device.clock_info(Clock::Graphics)?;
     let mem_clock = device.clock_info(Clock::Memory)?;
     let link_gen = device.current_pcie_link_gen()?;
+    let link_speed = device
+        .pcie_link_speed()
+        .map(u64::from)
+        // Convert megabytes to bytes
+        .map(|x| x * 1000000)?;
     let link_width = device.current_pcie_link_width()?;
     let max_link_gen = device.max_pcie_link_gen()?;
     let max_link_width = device.max_pcie_link_width()?;
+    let max_link_speed = device
+        .max_pcie_link_speed()?
+        .as_integer()
+        .map(u64::from)
+        // Convert megabytes to bytes
+        .map(|x| x * 1000000);
     let cuda_cores = device.num_cores()?;
     let architecture = device.architecture()?;
 
@@ -33,9 +44,10 @@ fn main() -> Result<(), NvmlError> {
         is currently sitting at {temperature} °C with a graphics clock of \
         {graphics_clock} MHz and a memory clock of {mem_clock} MHz. Memory \
         usage is {used_mem} out of an available {total_mem}. Right now the \
-        device is connected via a PCIe gen {link_gen} x{link_width} interface; \
-        the max your hardware supports is PCIe gen {max_link_gen} \
-        x{max_link_width}.",
+        device is connected via a PCIe gen {link_gen} x{link_width} interface \
+        with a transfer rate of {link_speed} per lane; the max your hardware \
+        supports is PCIe gen {max_link_gen} x{max_link_width} at a transfer \
+        rate of {max_link_speed} per lane.",
         name = name,
         temperature = temperature,
         graphics_clock = graphics_clock,
@@ -43,11 +55,17 @@ fn main() -> Result<(), NvmlError> {
         used_mem = convert(mem_info.used as _),
         total_mem = convert(mem_info.total as _),
         link_gen = link_gen,
+        // Convert byte output to transfers/sec
+        link_speed = convert(link_speed as _).replace("B", "T") + "/s",
         link_width = link_width,
         max_link_gen = max_link_gen,
         max_link_width = max_link_width,
         cuda_cores = cuda_cores,
         architecture = architecture,
+        max_link_speed = max_link_speed
+            // Convert byte output to transfers/sec
+            .map(|x| convert(x as _).replace("B", "T") + "/s")
+            .unwrap_or_else(|| "<unknown>".into()),
     );
 
     println!();

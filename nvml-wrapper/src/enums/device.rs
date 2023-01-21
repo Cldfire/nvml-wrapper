@@ -270,36 +270,51 @@ impl Display for DeviceArchitecture {
     }
 }
 
-/// Returned by [`crate::Device::pcie_link_max_speed()`].
+/// Returned by [`crate::Device::max_pcie_link_speed()`].
 ///
 /// Note, the NVML header says these are all MBPS (Megabytes Per Second) but
 /// they don't line up with the throughput numbers on this page:
 /// <https://en.wikipedia.org/wiki/PCI_Express>
 ///
-/// They _do_ line up with the "transfer rate per lane" numbers, though.
+/// They _do_ line up with the "transfer rate per lane" numbers, though. This
+/// would mean they represent transfer speeds rather than throughput, in MT/s.
+///
+/// See also the discussion on [`crate::Device::pcie_link_speed()`].
 // TODO: technically this is an "enum wrapper" but the type on the C side isn't
 // an enum
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PcieLinkMaxSpeed {
     Invalid,
-    MegabytesPerSecond2500,
-    MegabytesPerSecond5000,
-    MegabytesPerSecond8000,
-    MegabytesPerSecond16000,
-    MegabytesPerSecond32000,
+    MegaTransfersPerSecond2500,
+    MegaTransfersPerSecond5000,
+    MegaTransfersPerSecond8000,
+    MegaTransfersPerSecond16000,
+    MegaTransfersPerSecond32000,
 }
 
 impl PcieLinkMaxSpeed {
+    /// Returns the numerical equivalent for the given enum variant, if valid.
+    pub fn as_integer(&self) -> Option<u32> {
+        Some(match self {
+            PcieLinkMaxSpeed::Invalid => return None,
+            PcieLinkMaxSpeed::MegaTransfersPerSecond2500 => 2500,
+            PcieLinkMaxSpeed::MegaTransfersPerSecond5000 => 5000,
+            PcieLinkMaxSpeed::MegaTransfersPerSecond8000 => 8000,
+            PcieLinkMaxSpeed::MegaTransfersPerSecond16000 => 16000,
+            PcieLinkMaxSpeed::MegaTransfersPerSecond32000 => 32000,
+        })
+    }
+
     /// Returns the C constant equivalent for the given Rust enum variant.
     pub fn as_c(&self) -> c_uint {
         match *self {
             Self::Invalid => NVML_PCIE_LINK_MAX_SPEED_INVALID,
-            Self::MegabytesPerSecond2500 => NVML_PCIE_LINK_MAX_SPEED_2500MBPS,
-            Self::MegabytesPerSecond5000 => NVML_PCIE_LINK_MAX_SPEED_5000MBPS,
-            Self::MegabytesPerSecond8000 => NVML_PCIE_LINK_MAX_SPEED_8000MBPS,
-            Self::MegabytesPerSecond16000 => NVML_PCIE_LINK_MAX_SPEED_16000MBPS,
-            Self::MegabytesPerSecond32000 => NVML_PCIE_LINK_MAX_SPEED_32000MBPS,
+            Self::MegaTransfersPerSecond2500 => NVML_PCIE_LINK_MAX_SPEED_2500MBPS,
+            Self::MegaTransfersPerSecond5000 => NVML_PCIE_LINK_MAX_SPEED_5000MBPS,
+            Self::MegaTransfersPerSecond8000 => NVML_PCIE_LINK_MAX_SPEED_8000MBPS,
+            Self::MegaTransfersPerSecond16000 => NVML_PCIE_LINK_MAX_SPEED_16000MBPS,
+            Self::MegaTransfersPerSecond32000 => NVML_PCIE_LINK_MAX_SPEED_32000MBPS,
         }
     }
 }
@@ -310,11 +325,11 @@ impl TryFrom<c_uint> for PcieLinkMaxSpeed {
     fn try_from(data: c_uint) -> Result<Self, Self::Error> {
         match data {
             NVML_PCIE_LINK_MAX_SPEED_INVALID => Ok(Self::Invalid),
-            NVML_PCIE_LINK_MAX_SPEED_2500MBPS => Ok(Self::MegabytesPerSecond2500),
-            NVML_PCIE_LINK_MAX_SPEED_5000MBPS => Ok(Self::MegabytesPerSecond5000),
-            NVML_PCIE_LINK_MAX_SPEED_8000MBPS => Ok(Self::MegabytesPerSecond8000),
-            NVML_PCIE_LINK_MAX_SPEED_16000MBPS => Ok(Self::MegabytesPerSecond16000),
-            NVML_PCIE_LINK_MAX_SPEED_32000MBPS => Ok(Self::MegabytesPerSecond32000),
+            NVML_PCIE_LINK_MAX_SPEED_2500MBPS => Ok(Self::MegaTransfersPerSecond2500),
+            NVML_PCIE_LINK_MAX_SPEED_5000MBPS => Ok(Self::MegaTransfersPerSecond5000),
+            NVML_PCIE_LINK_MAX_SPEED_8000MBPS => Ok(Self::MegaTransfersPerSecond8000),
+            NVML_PCIE_LINK_MAX_SPEED_16000MBPS => Ok(Self::MegaTransfersPerSecond16000),
+            NVML_PCIE_LINK_MAX_SPEED_32000MBPS => Ok(Self::MegaTransfersPerSecond32000),
             _ => Err(NvmlError::UnexpectedVariant(data)),
         }
     }
