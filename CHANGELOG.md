@@ -21,6 +21,7 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 * Removed `rust-hook` from development workflow
 * Started building crate in CI on `macos-latest`
 * Added a script to find unwrapped function names
+* Vendored header files are now excluded from repo stats
 
 ## [0.9.0] (released 2023-01-20)
 
