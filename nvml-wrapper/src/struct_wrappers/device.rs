@@ -5,7 +5,7 @@ use crate::error::{nvml_try, Bits, NvmlError};
 use crate::ffi::bindings::*;
 use crate::structs::device::FieldId;
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
 use std::{
     cmp::Ordering,
     ffi::{CStr, CString},
@@ -258,23 +258,6 @@ impl From<nvmlProcessInfo_t> for ProcessInfo {
             gpu_instance_id,
             compute_instance_id,
         }
-    }
-}
-
-#[cfg(feature = "legacy-functions")]
-impl From<nvmlProcessInfo_v2_t> for ProcessInfo {
-    fn from(struct_: nvmlProcessInfo_v2_t) -> Self {
-        // These versions of the struct are exactly the same, so we can rely on
-        // the above `From` impl and just treat this struct as the unversioned
-        // one.
-        let unversioned_struct = nvmlProcessInfo_t {
-            pid: struct_.pid,
-            usedGpuMemory: struct_.usedGpuMemory,
-            gpuInstanceId: struct_.gpuInstanceId,
-            computeInstanceId: struct_.computeInstanceId,
-        };
-
-        Self::from(unversioned_struct)
     }
 }
 

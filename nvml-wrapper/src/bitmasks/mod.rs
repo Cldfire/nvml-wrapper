@@ -5,7 +5,7 @@ pub mod nv_link;
 use crate::ffi::bindings::*;
 use bitflags::bitflags;
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
 
 bitflags! {
     /// Generic flags used to specify the default behavior of some functions.
@@ -20,7 +20,7 @@ bitflags! {
 bitflags! {
     /// Flags that can be passed to `Nvml::init_with_flags()`.
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-    #[derive(Default)]
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Default)]
     pub struct InitFlags: u32 {
         /// Don't fail to initialize when no NVIDIA GPUs are found.
         const NO_GPUS = NVML_INIT_FLAG_NO_GPUS;

@@ -1,7 +1,7 @@
 use crate::error::NvmlError;
 use crate::ffi::bindings::*;
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
 use wrapcenum_derive::EnumWrapper;
 
 /// Represents the NvLink utilization counter packet units.

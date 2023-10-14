@@ -3,7 +3,7 @@ use crate::enum_wrappers::nv_link::UtilizationCountUnit;
 use crate::error::NvmlError;
 use crate::ffi::bindings::*;
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
 use std::convert::TryFrom;
 
 /// Defines NvLink counter controls.

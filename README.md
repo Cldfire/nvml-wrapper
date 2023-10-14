@@ -82,7 +82,7 @@ functions.
 
 ## MSRV
 
-The Minimum Supported Rust Version is currently 1.51.0. I will not go out of my
+The Minimum Supported Rust Version is currently 1.60.0. I will not go out of my
 way to avoid bumping this.
 
 ## Cargo Features

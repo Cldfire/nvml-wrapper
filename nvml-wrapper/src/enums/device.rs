@@ -6,7 +6,7 @@ use crate::enum_wrappers::device::{ClockLimitId, SampleValueType};
 use crate::error::NvmlError;
 use crate::ffi::bindings::*;
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
 
 /// Respresents possible variants for a firmware version.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -70,6 +70,7 @@ impl SampleValue {
                 UnsignedInt => SampleValue::U32(union.uiVal),
                 // Methodology: NVML supports 32-bit Linux. UL is u32 on that platform.
                 // NVML wouldn't return anything larger
+                #[allow(clippy::unnecessary_cast)]
                 UnsignedLong => SampleValue::U32(union.ulVal as u32),
                 UnsignedLongLong => SampleValue::U64(union.ullVal),
                 SignedLongLong => SampleValue::I64(union.sllVal),

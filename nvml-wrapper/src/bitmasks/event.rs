@@ -1,7 +1,7 @@
 use crate::ffi::bindings::*;
 use bitflags::bitflags;
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
 
 bitflags! {
     /**
@@ -12,6 +12,7 @@ bitflags! {
     */
     // Checked against local
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
     pub struct EventTypes: u64 {
         /// A corrected texture memory error is not an ECC error, so it does not
         /// generate a single bit event.

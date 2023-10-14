@@ -4,6 +4,12 @@ This file describes the changes / additions / fixes between bindings releases.
 
 ## Unreleased
 
+Bindings have been regenerated using the NVML 12.2 header and bindgen 0.68.1.
+
+### Rust Version Support
+
+The MSRV of this release is 1.60.0 (to match the wrapper crate).
+
 ## 0.7.0 (released 2023-01-20)
 
 Bindings have been regenerated using the NVML 11.8 header and bindgen 0.63.0.

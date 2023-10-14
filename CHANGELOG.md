@@ -4,6 +4,8 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 
 ## [Unreleased]
 
+Updates for NVML 12.2.
+
 ### Added
 
 * `Device`
@@ -18,10 +20,20 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 
 ### Internal
 
+* Bumped MSRV to 1.60.0 for usage of namespaced features
 * Removed `rust-hook` from development workflow
 * Started building crate in CI on `macos-latest`
 * Added a script to find unwrapped function names
 * Vendored header files are now excluded from repo stats
+
+### Rust Version Support
+
+The MSRV of this release is 1.60.0. This is for usage of namespaced features.
+
+### Dependencies
+
+* `bitflags`: `1.3` -> `2.4.0`
+* `libloading`: `0.7.0` -> `0.8.1`
 
 ## [0.9.0] (released 2023-01-20)
 

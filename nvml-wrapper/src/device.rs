@@ -2474,7 +2474,7 @@ impl<'nvml> Device<'nvml> {
 
             Ok(addresses
                 .into_iter()
-                .zip(timestamps.into_iter())
+                .zip(timestamps)
                 .map(|(address, timestamp)| RetiredPage { address, timestamp })
                 .collect())
         }
