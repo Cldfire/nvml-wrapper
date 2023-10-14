@@ -2,7 +2,7 @@
 
 bindgen --ctypes-prefix raw --no-doc-comments --no-layout-tests --raw-line '#![allow(non_upper_case_globals)]' \
     --raw-line '#![allow(non_camel_case_types)]' --raw-line '#![allow(non_snake_case)]' \
-    --raw-line '#![allow(dead_code)]'  --raw-line 'use std::os::raw;' --rustfmt-bindings \
+    --raw-line '#![allow(dead_code)]'  --raw-line 'use std::os::raw;' --formatter rustfmt \
     --dynamic-loading NvmlLib -o genned_bindings.rs nvml.h \
     -- -DNVML_NO_UNVERSIONED_FUNC_DEFS # Define `NVML_NO_UNVERSIONED_FUNC_DEFS` so we get generated bindings for legacy functions
 

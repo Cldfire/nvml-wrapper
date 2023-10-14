@@ -1,5 +1,5 @@
 /*
- * Copyright 1993-2022 NVIDIA Corporation.  All rights reserved.
+ * Copyright 1993-2023 NVIDIA Corporation.  All rights reserved.
  *
  * NOTICE TO USER:
  *
@@ -95,8 +95,8 @@ extern "C" {
 /**
  * NVML API versioning support
  */
-#define NVML_API_VERSION            11
-#define NVML_API_VERSION_STR        "11"
+#define NVML_API_VERSION            12
+#define NVML_API_VERSION_STR        "12"
 /**
  * Defining NVML_NO_UNVERSIONED_FUNC_DEFS will disable "auto upgrading" of APIs.
  * e.g. the user will have to call nvmlInit_v2 instead of nvmlInit. Enable this
@@ -225,7 +225,7 @@ typedef struct nvmlMemory_st
 
 /**
  * Memory allocation information for a device (v2).
- * 
+ *
  * Version 2 adds versioning for the struct and the amount of system-reserved memory as an output.
  * @note The \ref nvmlMemory_v2_t.used amount also includes the \ref nvmlMemory_v2_t.reserved amount.
  */
@@ -275,23 +275,41 @@ typedef struct nvmlProcessInfo_v2_st
                                             //  0xFFFFFFFF otherwise.
     unsigned int        computeInstanceId;  //!< If MIG is enabled, stores a valid compute instance ID. computeInstanceId is set to
                                             //  0xFFFFFFFF otherwise.
-} nvmlProcessInfo_v2_t;
+} nvmlProcessInfo_v2_t, nvmlProcessInfo_t;
 
 /**
- * Information about running compute processes on the GPU
- * Version 2 adds versioning for the struct and the conf compute protected memory in output.
+ * Information about running process on the GPU with protected memory
  */
-typedef struct nvmlProcessInfo_st
+typedef struct
 {
-    unsigned int        pid;                //!< Process ID
-    unsigned long long  usedGpuMemory;      //!< Amount of used GPU memory in bytes.
-                                            //! Under WDDM, \ref NVML_VALUE_NOT_AVAILABLE is always reported
-                                            //! because Windows KMD manages all the memory and not the NVIDIA driver
-    unsigned int        gpuInstanceId;      //!< If MIG is enabled, stores a valid GPU instance ID. gpuInstanceId is set to
-                                            //  0xFFFFFFFF otherwise.
-    unsigned int        computeInstanceId;  //!< If MIG is enabled, stores a valid compute instance ID. computeInstanceId is set to
-                                            //  0xFFFFFFFF otherwise.
-} nvmlProcessInfo_t;
+    unsigned int        pid;                      //!< Process ID
+    unsigned long long  usedGpuMemory;            //!< Amount of used GPU memory in bytes.
+                                                  //! Under WDDM, \ref NVML_VALUE_NOT_AVAILABLE is always reported
+                                                  //! because Windows KMD manages all the memory and not the NVIDIA driver
+    unsigned int        gpuInstanceId;            //!< If MIG is enabled, stores a valid GPU instance ID. gpuInstanceId is
+                                                  //  set to 0xFFFFFFFF otherwise.
+    unsigned int        computeInstanceId;        //!< If MIG is enabled, stores a valid compute instance ID. computeInstanceId
+                                                  //  is set to 0xFFFFFFFF otherwise.
+    unsigned long long  usedGpuCcProtectedMemory; //!< Amount of used GPU conf compute protected memory in bytes.
+} nvmlProcessDetail_v1_t;
+
+/**
+ * Information about all running processes on the GPU for the given mode
+ */
+typedef struct
+{
+    unsigned int           version;             //!< Struct version, MUST be nvmlProcessDetailList_v1
+    unsigned int           mode;                //!< Process mode(Compute/Graphics/MPSCompute)
+    unsigned int           numProcArrayEntries; //!< Number of process entries in procArray
+    nvmlProcessDetail_v1_t *procArray;          //!< Process array
+} nvmlProcessDetailList_v1_t;
+
+typedef nvmlProcessDetailList_v1_t nvmlProcessDetailList_t;
+
+/**
+ * nvmlProcessDetailList version
+ */
+#define nvmlProcessDetailList_v1 NVML_STRUCT_VERSION(ProcessDetailList, 1)
 
 typedef struct nvmlDeviceAttributes_st
 {
@@ -442,6 +460,7 @@ typedef enum nvmlGpuP2PStatus_enum
 {
     NVML_P2P_STATUS_OK     = 0,
     NVML_P2P_STATUS_CHIPSET_NOT_SUPPORED,
+    NVML_P2P_STATUS_CHIPSET_NOT_SUPPORTED = NVML_P2P_STATUS_CHIPSET_NOT_SUPPORED,
     NVML_P2P_STATUS_GPU_NOT_SUPPORTED,
     NVML_P2P_STATUS_IOH_TOPOLOGY_NOT_SUPPORTED,
     NVML_P2P_STATUS_DISABLED_BY_REGKEY,
@@ -497,6 +516,7 @@ typedef enum nvmlSamplingType_enum
     NVML_DEC_UTILIZATION_SAMPLES    = 4, //!< To represent percent of time during which NVDEC remains busy
     NVML_PROCESSOR_CLK_SAMPLES      = 5, //!< To represent processor clock samples
     NVML_MEMORY_CLK_SAMPLES         = 6, //!< To represent memory clock samples
+    NVML_MODULE_POWER_SAMPLES       = 7, //!< To represent module power samples for total module starting Grace Hopper
 
     // Keep this last
     NVML_SAMPLINGTYPE_COUNT
@@ -524,6 +544,7 @@ typedef enum nvmlValueType_enum
     NVML_VALUE_TYPE_UNSIGNED_LONG = 2,
     NVML_VALUE_TYPE_UNSIGNED_LONG_LONG = 3,
     NVML_VALUE_TYPE_SIGNED_LONG_LONG = 4,
+    NVML_VALUE_TYPE_SIGNED_INT = 5,
 
     // Keep this last
     NVML_VALUE_TYPE_COUNT
@@ -536,6 +557,7 @@ typedef enum nvmlValueType_enum
 typedef union nvmlValue_st
 {
     double dVal;                    //!< If the value is double
+    int siVal;                      //!< If the value is signed int
     unsigned int uiVal;             //!< If the value is unsigned int
     unsigned long ulVal;            //!< If the value is unsigned long
     unsigned long long ullVal;      //!< If the value is unsigned long long
@@ -548,7 +570,7 @@ typedef union nvmlValue_st
 typedef struct nvmlSample_st
 {
     unsigned long long timeStamp;       //!< CPU Timestamp in microseconds
-    nvmlValue_t sampleValue;        //!< Sample Value
+    nvmlValue_t sampleValue;            //!< Sample Value
 }nvmlSample_t;
 
 /**
@@ -775,7 +797,7 @@ typedef struct nvmlClkMonStatus_status {
     nvmlClkMonFaultInfo_t clkMonList[MAX_CLK_DOMAINS];
 } nvmlClkMonStatus_t;
 
-/** 
+/**
  * ECC bit types.
  *
  * @deprecated See \ref nvmlMemoryErrorType_t for a more flexible type
@@ -971,6 +993,8 @@ typedef enum nvmlReturn_enum
     NVML_ERROR_INSUFFICIENT_RESOURCES = 23,    //!< Ran out of critical resources, other than memory
     NVML_ERROR_FREQ_NOT_SUPPORTED = 24,        //!< Ran out of critical resources, other than memory
     NVML_ERROR_ARGUMENT_VERSION_MISMATCH = 25, //!< The provided version is invalid/unsupported
+    NVML_ERROR_DEPRECATED  = 26,               //!< The requested functionality has been deprecated
+    NVML_ERROR_NOT_READY = 27,                 //!< The system is not ready for the request
     NVML_ERROR_UNKNOWN = 999                   //!< An internal driver error occurred
 } nvmlReturn_t;
 
@@ -1094,9 +1118,36 @@ typedef enum nvmlVgpuCapability_enum
 {
     NVML_VGPU_CAP_NVLINK_P2P                    = 0,  //!< P2P over NVLink is supported
     NVML_VGPU_CAP_GPUDIRECT                     = 1,  //!< GPUDirect capability is supported
+    NVML_VGPU_CAP_MULTI_VGPU_EXCLUSIVE          = 2,  //!< vGPU profile cannot be mixed with other vGPU profiles in same VM
+    NVML_VGPU_CAP_EXCLUSIVE_TYPE                = 3,  //!< vGPU profile cannot run on a GPU alongside other profiles of different type
+    NVML_VGPU_CAP_EXCLUSIVE_SIZE                = 4,  //!< vGPU profile cannot run on a GPU alongside other profiles of different size
     // Keep this last
     NVML_VGPU_CAP_COUNT
 } nvmlVgpuCapability_t;
+
+/**
+* vGPU driver queryable capabilities
+*/
+typedef enum nvmlVgpuDriverCapability_enum
+{
+    NVML_VGPU_DRIVER_CAP_HETEROGENEOUS_MULTI_VGPU = 0,      //!< Supports mixing of different vGPU profiles within one guest VM
+    // Keep this last
+    NVML_VGPU_DRIVER_CAP_COUNT
+} nvmlVgpuDriverCapability_t;
+
+/**
+* Device vGPU queryable capabilities
+*/
+typedef enum nvmlDeviceVgpuCapability_enum
+{
+    NVML_DEVICE_VGPU_CAP_FRACTIONAL_MULTI_VGPU            = 0,    //!< Fractional vGPU profiles on this GPU can be used in multi-vGPU configurations
+    NVML_DEVICE_VGPU_CAP_HETEROGENEOUS_TIMESLICE_PROFILES = 1,    //!< Supports concurrent execution of timesliced vGPU profiles of differing types
+    NVML_DEVICE_VGPU_CAP_HETEROGENEOUS_TIMESLICE_SIZES    = 2,    //!< Supports concurrent execution of timesliced vGPU profiles of differing framebuffer sizes
+    NVML_DEVICE_VGPU_CAP_READ_DEVICE_BUFFER_BW            = 3,    //!< GPU device's read_device_buffer expected bandwidth capacity in megabytes per second
+    NVML_DEVICE_VGPU_CAP_WRITE_DEVICE_BUFFER_BW           = 4,    //!< GPU device's write_device_buffer expected bandwidth capacity in megabytes per second
+    // Keep this last
+    NVML_DEVICE_VGPU_CAP_COUNT
+} nvmlDeviceVgpuCapability_t;
 
 /** @} */
 
@@ -1173,6 +1224,119 @@ typedef struct nvmlVgpuProcessUtilizationSample_st
     unsigned int        encUtil;                                    //!< Encoder Util Value
     unsigned int        decUtil;                                    //!< Decoder Util Value
 } nvmlVgpuProcessUtilizationSample_t;
+
+/**
+ * vGPU scheduler policies
+ */
+#define NVML_VGPU_SCHEDULER_POLICY_UNKNOWN      0
+#define NVML_VGPU_SCHEDULER_POLICY_BEST_EFFORT  1
+#define NVML_VGPU_SCHEDULER_POLICY_EQUAL_SHARE  2
+#define NVML_VGPU_SCHEDULER_POLICY_FIXED_SHARE  3
+
+#define NVML_SUPPORTED_VGPU_SCHEDULER_POLICY_COUNT 3
+
+#define NVML_SCHEDULER_SW_MAX_LOG_ENTRIES 200
+
+#define NVML_VGPU_SCHEDULER_ARR_DEFAULT   0
+#define NVML_VGPU_SCHEDULER_ARR_DISABLE   1
+#define NVML_VGPU_SCHEDULER_ARR_ENABLE    2
+
+/**
+ * Union to represent the vGPU Scheduler Parameters
+ */
+typedef union
+{
+    struct
+    {
+        unsigned int    avgFactor;          //!< Average factor in compensating the timeslice for Adaptive Round Robin mode
+        unsigned int    timeslice;          //!< The timeslice in ns for each software run list as configured, or the default value otherwise
+    } vgpuSchedDataWithARR;
+
+    struct
+    {
+        unsigned int    timeslice;          //!< The timeslice in ns for each software run list as configured, or the default value otherwise
+    } vgpuSchedData;
+
+} nvmlVgpuSchedulerParams_t;
+
+/**
+ * Structure to store the state and logs of a software runlist
+ */
+typedef struct nvmlVgpuSchedulerLogEntries_st
+{
+    unsigned long long          timestamp;                  //!< Timestamp in ns when this software runlist was preeempted
+    unsigned long long          timeRunTotal;               //!< Total time in ns this software runlist has run
+    unsigned long long          timeRun;                    //!< Time in ns this software runlist ran before preemption
+    unsigned int                swRunlistId;                //!< Software runlist Id
+    unsigned long long          targetTimeSlice;            //!< The actual timeslice after deduction
+    unsigned long long          cumulativePreemptionTime;   //!< Preemption time in ns for this SW runlist
+} nvmlVgpuSchedulerLogEntry_t;
+
+/**
+ * Structure to store a vGPU software scheduler log
+ */
+typedef struct nvmlVgpuSchedulerLog_st
+{
+    unsigned int                engineId;                                       //!< Engine whose software runlist log entries are fetched
+    unsigned int                schedulerPolicy;                                //!< Scheduler policy
+    unsigned int                arrMode;                                        //!< Adaptive Round Robin scheduler mode. One of the NVML_VGPU_SCHEDULER_ARR_*.
+    nvmlVgpuSchedulerParams_t   schedulerParams;
+    unsigned int                entriesCount;                                   //!< Count of log entries fetched
+    nvmlVgpuSchedulerLogEntry_t logEntries[NVML_SCHEDULER_SW_MAX_LOG_ENTRIES];
+} nvmlVgpuSchedulerLog_t;
+
+/**
+ * Structure to store the vGPU scheduler state
+ */
+typedef struct nvmlVgpuSchedulerGetState_st
+{
+    unsigned int                schedulerPolicy;    //!< Scheduler policy
+    unsigned int                arrMode;            //!< Adaptive Round Robin scheduler mode. One of the NVML_VGPU_SCHEDULER_ARR_*.
+    nvmlVgpuSchedulerParams_t   schedulerParams;
+} nvmlVgpuSchedulerGetState_t;
+
+/**
+ * Union to represent the vGPU Scheduler set Parameters
+ */
+typedef union
+{
+    struct
+    {
+        unsigned int    avgFactor;          //!< Average factor in compensating the timeslice for Adaptive Round Robin mode
+        unsigned int    frequency;          //!< Frequency for Adaptive Round Robin mode
+    } vgpuSchedDataWithARR;
+
+    struct
+    {
+        unsigned int    timeslice;          //!< The timeslice in ns(Nanoseconds) for each software run list as configured, or the default value otherwise
+    } vgpuSchedData;
+
+} nvmlVgpuSchedulerSetParams_t;
+
+/**
+ * Structure to set the vGPU scheduler state
+ */
+typedef struct nvmlVgpuSchedulerSetState_st
+{
+    unsigned int                    schedulerPolicy;    //!< Scheduler policy
+    unsigned int                    enableARRMode;      //!< Adaptive Round Robin scheduler
+    nvmlVgpuSchedulerSetParams_t    schedulerParams;
+} nvmlVgpuSchedulerSetState_t;
+
+/**
+ * Structure to store the vGPU scheduler capabilities
+ */
+typedef struct nvmlVgpuSchedulerCapabilities_st
+{
+    unsigned int        supportedSchedulers[NVML_SUPPORTED_VGPU_SCHEDULER_POLICY_COUNT]; //!< List the supported vGPU schedulers on the device
+    unsigned int        maxTimeslice;                                                    //!< Maximum timeslice value in ns
+    unsigned int        minTimeslice;                                                    //!< Minimum timeslice value in ns
+    unsigned int        isArrModeSupported;                                              //!< Flag to check Adaptive Round Robin mode enabled/disabled.
+    unsigned int        maxFrequencyForARR;                                              //!< Maximum frequency for Adaptive Round Robin mode
+    unsigned int        minFrequencyForARR;                                              //!< Minimum frequency for Adaptive Round Robin mode
+    unsigned int        maxAvgFactorForARR;                                              //!< Maximum averaging factor for Adaptive Round Robin mode
+    unsigned int        minAvgFactorForARR;                                              //!< Minimum averaging factor for Adaptive Round Robin mode
+} nvmlVgpuSchedulerCapabilities_t;
 
 /**
  * Structure to store the vGPU license expiry details
@@ -1293,14 +1457,21 @@ typedef unsigned int nvmlBusType_t;
 /**
  * Device Power Modes
  */
-#define NVML_POWER_MODE_ID_BALANCED  0
-#define NVML_POWER_MODE_ID_MAX       1
+
+/**
+ * Device Fan control policy
+ */
+#define NVML_FAN_POLICY_TEMPERATURE_CONTINOUS_SW 0
+#define NVML_FAN_POLICY_MANUAL                   1
+
+typedef unsigned int nvmlFanControlPolicy_t;
 
 /**
  * Device Power Source
  */
-#define NVML_POWER_SOURCE_AC      0x00000000
-#define NVML_POWER_SOURCE_BATTERY 0x00000001
+#define NVML_POWER_SOURCE_AC         0x00000000
+#define NVML_POWER_SOURCE_BATTERY    0x00000001
+#define NVML_POWER_SOURCE_UNDERSIZED 0x00000002
 
 typedef unsigned int nvmlPowerSource_t;
 
@@ -1313,6 +1484,7 @@ typedef unsigned int nvmlPowerSource_t;
 #define NVML_PCIE_LINK_MAX_SPEED_8000MBPS  0x00000003
 #define NVML_PCIE_LINK_MAX_SPEED_16000MBPS 0x00000004
 #define NVML_PCIE_LINK_MAX_SPEED_32000MBPS 0x00000005
+#define NVML_PCIE_LINK_MAX_SPEED_64000MBPS 0x00000006
 
 /*
  * Adaptive clocking status
@@ -1597,15 +1769,68 @@ typedef struct nvmlGpuDynamicPstatesInfo_st
 #define NVML_FI_DEV_NVLINK_ECC_DATA_ERROR_COUNT_L9    157 //!< NVLink data ECC Error Counter for Link 9
 #define NVML_FI_DEV_NVLINK_ECC_DATA_ERROR_COUNT_L10   158 //!< NVLink data ECC Error Counter for Link 10
 #define NVML_FI_DEV_NVLINK_ECC_DATA_ERROR_COUNT_L11   159 //!< NVLink data ECC Error Counter for Link 11
-#define NVML_FI_DEV_NVLINK_ECC_DATA_ERROR_COUNT_TOTAL 160 //!< NvLink data ECC Error Counter total for all Links
+#define NVML_FI_DEV_NVLINK_ECC_DATA_ERROR_COUNT_TOTAL 160 //!< NVLink data ECC Error Counter total for all Links
 
-#define NVML_FI_DEV_NVLINK_ERROR_DL_REPLAY            161
-#define NVML_FI_DEV_NVLINK_ERROR_DL_RECOVERY          162
-#define NVML_FI_DEV_NVLINK_ERROR_DL_CRC               163
-#define NVML_FI_DEV_NVLINK_GET_SPEED                  164
-#define NVML_FI_DEV_NVLINK_GET_STATE                  165
-#define NVML_FI_DEV_NVLINK_GET_VERSION                166
-#define NVML_FI_MAX 167 //!< One greater than the largest field ID defined above
+#define NVML_FI_DEV_NVLINK_ERROR_DL_REPLAY            161 //!< NVLink Replay Error Counter
+#define NVML_FI_DEV_NVLINK_ERROR_DL_RECOVERY          162 //!< NVLink Recovery Error Counter
+#define NVML_FI_DEV_NVLINK_ERROR_DL_CRC               163 //!< NVLink CRC Error Counter
+#define NVML_FI_DEV_NVLINK_GET_SPEED                  164 //!< NVLink Speed in MBps
+#define NVML_FI_DEV_NVLINK_GET_STATE                  165 //!< NVLink State - Active,Inactive
+#define NVML_FI_DEV_NVLINK_GET_VERSION                166 //!< NVLink Version
+
+#define NVML_FI_DEV_NVLINK_GET_POWER_STATE            167 //!< NVLink Power state. 0=HIGH_SPEED 1=LOW_SPEED
+#define NVML_FI_DEV_NVLINK_GET_POWER_THRESHOLD        168 //!< NVLink length of idle period (in units of 100us) before transitioning links to sleep state
+
+#define NVML_FI_DEV_PCIE_L0_TO_RECOVERY_COUNTER       169 //!< Device PEX error recovery counter
+
+#define NVML_FI_DEV_C2C_LINK_COUNT                    170 //!< Number of C2C Links present on the device
+#define NVML_FI_DEV_C2C_LINK_GET_STATUS               171 //!< C2C Link Status 0=INACTIVE 1=ACTIVE
+#define NVML_FI_DEV_C2C_LINK_GET_MAX_BW               172 //!< C2C Link Speed in MBps for active links
+
+#define NVML_FI_DEV_PCIE_COUNT_CORRECTABLE_ERRORS     173
+#define NVML_FI_DEV_PCIE_COUNT_NAKS_RECEIVED          174
+#define NVML_FI_DEV_PCIE_COUNT_RECEIVER_ERROR         175
+#define NVML_FI_DEV_PCIE_COUNT_BAD_TLP                176
+#define NVML_FI_DEV_PCIE_COUNT_NAKS_SENT              177
+#define NVML_FI_DEV_PCIE_COUNT_BAD_DLLP               178
+#define NVML_FI_DEV_PCIE_COUNT_NON_FATAL_ERROR        179
+#define NVML_FI_DEV_PCIE_COUNT_FATAL_ERROR            180
+#define NVML_FI_DEV_PCIE_COUNT_UNSUPPORTED_REQ        181
+#define NVML_FI_DEV_PCIE_COUNT_LCRC_ERROR             182
+#define NVML_FI_DEV_PCIE_COUNT_LANE_ERROR             183
+
+#define NVML_FI_DEV_IS_RESETLESS_MIG_SUPPORTED        184
+
+/**
+ * Retrieves power usage for this GPU in milliwatts.
+ * It is only available if power management mode is supported. See \ref nvmlDeviceGetPowerManagementMode and
+ * \ref nvmlDeviceGetPowerUsage.
+ *
+ * scopeId needs to be specified. It signifies:
+ * 0 - GPU Only Scope - Metrics for GPU are retrieved
+ * 1 - Module scope - Metrics for the module (e.g. CPU + GPU) are retrieved.
+ * Note: CPU here refers to NVIDIA CPU (e.g. Grace). x86 or non-NVIDIA ARM is not supported
+ */
+#define NVML_FI_DEV_POWER_AVERAGE                     185 //!< GPU power averaged over 1 sec interval, supported on Ampere (except GA100) or newer architectures.
+#define NVML_FI_DEV_POWER_INSTANT                     186 //!< Current GPU power, supported on all architectures.
+#define NVML_FI_DEV_POWER_MIN_LIMIT                   187 //!< Minimum power limit in milliwatts.
+#define NVML_FI_DEV_POWER_MAX_LIMIT                   188 //!< Maximum power limit in milliwatts.
+#define NVML_FI_DEV_POWER_DEFAULT_LIMIT               189 //!< Default power limit in milliwatts (limit which device boots with).
+#define NVML_FI_DEV_POWER_CURRENT_LIMIT               190 //!< Limit currently enforced in milliwatts (This includes other limits set elsewhere. E.g. Out-of-band).
+#define NVML_FI_DEV_ENERGY                            191 //!< Total energy consumption (in mJ) since the driver was last reloaded. Same as \ref NVML_FI_DEV_TOTAL_ENERGY_CONSUMPTION for the GPU.
+#define NVML_FI_DEV_POWER_REQUESTED_LIMIT             192 //!< Power limit requested by NVML or any other userspace client.
+
+/**
+ * GPU T.Limit temperature thresholds in degree Celsius
+ *
+ * These fields are supported on Ada and later architectures and supersedes \ref nvmlDeviceGetTemperatureThreshold.
+ */
+#define NVML_FI_DEV_TEMPERATURE_SHUTDOWN_TLIMIT       193 //!< T.Limit temperature after which GPU may shut down for HW protection
+#define NVML_FI_DEV_TEMPERATURE_SLOWDOWN_TLIMIT       194 //!< T.Limit temperature after which GPU may begin HW slowdown
+#define NVML_FI_DEV_TEMPERATURE_MEM_MAX_TLIMIT        195 //!< T.Limit temperature after which GPU may begin SW slowdown due to memory temperature
+#define NVML_FI_DEV_TEMPERATURE_GPU_MAX_TLIMIT        196 //!< T.Limit temperature after which GPU may be throttled below base clock
+
+#define NVML_FI_MAX                                   197 //!< One greater than the largest field ID defined above
 
 /**
  * Information for a Field Value Sample
@@ -1814,7 +2039,7 @@ typedef struct nvmlEventData_st
 /** @} */
 
 /***************************************************************************************************/
-/** @addtogroup nvmlClocksThrottleReasons
+/** @addtogroup nvmlClocksEventReasons
  *  @{
  */
 /***************************************************************************************************/
@@ -1822,28 +2047,28 @@ typedef struct nvmlEventData_st
 /** Nothing is running on the GPU and the clocks are dropping to Idle state
  * \note This limiter may be removed in a later release
  */
-#define nvmlClocksThrottleReasonGpuIdle                   0x0000000000000001LL
+#define nvmlClocksEventReasonGpuIdle                   0x0000000000000001LL
 
 /** GPU clocks are limited by current setting of applications clocks
  *
  * @see nvmlDeviceSetApplicationsClocks
  * @see nvmlDeviceGetApplicationsClock
  */
-#define nvmlClocksThrottleReasonApplicationsClocksSetting 0x0000000000000002LL
+#define nvmlClocksEventReasonApplicationsClocksSetting 0x0000000000000002LL
 
 /**
  * @deprecated Renamed to \ref nvmlClocksThrottleReasonApplicationsClocksSetting
  *             as the name describes the situation more accurately.
  */
-#define nvmlClocksThrottleReasonUserDefinedClocks         nvmlClocksThrottleReasonApplicationsClocksSetting
+#define nvmlClocksThrottleReasonUserDefinedClocks         nvmlClocksEventReasonApplicationsClocksSetting
 
-/** SW Power Scaling algorithm is reducing the clocks below requested clocks
+/** The clocks have been optimized to ensure not to exceed currently set power limits
  *
  * @see nvmlDeviceGetPowerUsage
  * @see nvmlDeviceSetPowerManagementLimit
  * @see nvmlDeviceGetPowerManagementLimit
  */
-#define nvmlClocksThrottleReasonSwPowerCap                0x0000000000000004LL
+#define nvmlClocksEventReasonSwPowerCap                0x0000000000000004LL
 
 /** HW Slowdown (reducing the core clocks by a factor of 2 or more) is engaged
  *
@@ -1869,16 +2094,16 @@ typedef struct nvmlEventData_st
  * holding this one at lower clocks.
  *
  */
-#define nvmlClocksThrottleReasonSyncBoost                 0x0000000000000010LL
+#define nvmlClocksEventReasonSyncBoost                 0x0000000000000010LL
 
 /** SW Thermal Slowdown
  *
- * This is an indicator of one or more of the following:
- *  - Current GPU temperature above the GPU Max Operating Temperature
- *  - Current memory temperature above the Memory Max Operating Temperature
+ * The current clocks have been optimized to ensure the the following is true:
+ *  - Current GPU temperature does not exceed GPU Max Operating Temperature
+ *  - Current memory temperature does not exceeed Memory Max Operating Temperature
  *
  */
-#define nvmlClocksThrottleReasonSwThermalSlowdown         0x0000000000000020LL
+#define nvmlClocksEventReasonSwThermalSlowdown         0x0000000000000020LL
 
 /** HW Thermal Slowdown (reducing the core clocks by a factor of 2 or more) is engaged
  *
@@ -1906,28 +2131,61 @@ typedef struct nvmlEventData_st
  *
  * @see bug 1997531
  */
-#define nvmlClocksThrottleReasonDisplayClockSetting       0x0000000000000100LL
+#define nvmlClocksEventReasonDisplayClockSetting       0x0000000000000100LL
 
 /** Bit mask representing no clocks throttling
  *
  * Clocks are as high as possible.
  * */
-#define nvmlClocksThrottleReasonNone                      0x0000000000000000LL
+#define nvmlClocksEventReasonNone                      0x0000000000000000LL
 
 /** Bit mask representing all supported clocks throttling reasons
  * New reasons might be added to this list in the future
  */
-#define nvmlClocksThrottleReasonAll (nvmlClocksThrottleReasonNone \
-      | nvmlClocksThrottleReasonGpuIdle                           \
-      | nvmlClocksThrottleReasonApplicationsClocksSetting         \
-      | nvmlClocksThrottleReasonSwPowerCap                        \
+#define nvmlClocksEventReasonAll (nvmlClocksThrottleReasonNone \
+      | nvmlClocksEventReasonGpuIdle                           \
+      | nvmlClocksEventReasonApplicationsClocksSetting         \
+      | nvmlClocksEventReasonSwPowerCap                        \
       | nvmlClocksThrottleReasonHwSlowdown                        \
-      | nvmlClocksThrottleReasonSyncBoost                         \
-      | nvmlClocksThrottleReasonSwThermalSlowdown                 \
+      | nvmlClocksEventReasonSyncBoost                         \
+      | nvmlClocksEventReasonSwThermalSlowdown                 \
       | nvmlClocksThrottleReasonHwThermalSlowdown                 \
       | nvmlClocksThrottleReasonHwPowerBrakeSlowdown              \
-      | nvmlClocksThrottleReasonDisplayClockSetting               \
+      | nvmlClocksEventReasonDisplayClockSetting               \
 )
+
+/**
+ * @deprecated Use \ref nvmlClocksEventReasonGpuIdle instead
+ */
+#define nvmlClocksThrottleReasonGpuIdle                      nvmlClocksEventReasonGpuIdle
+/**
+ * @deprecated Use \ref nvmlClocksEventReasonApplicationsClocksSetting instead
+ */
+#define nvmlClocksThrottleReasonApplicationsClocksSetting    nvmlClocksEventReasonApplicationsClocksSetting
+/**
+ * @deprecated Use \ref nvmlClocksEventReasonSyncBoost instead
+ */
+#define nvmlClocksThrottleReasonSyncBoost                    nvmlClocksEventReasonSyncBoost
+/**
+ * @deprecated Use \ref nvmlClocksEventReasonSwPowerCap instead
+ */
+#define nvmlClocksThrottleReasonSwPowerCap                   nvmlClocksEventReasonSwPowerCap
+/**
+ * @deprecated Use \ref nvmlClocksEventReasonSwThermalSlowdown instead
+ */
+#define nvmlClocksThrottleReasonSwThermalSlowdown            nvmlClocksEventReasonSwThermalSlowdown
+/**
+ * @deprecated Use \ref nvmlClocksEventReasonDisplayClockSetting instead
+ */
+#define nvmlClocksThrottleReasonDisplayClockSetting          nvmlClocksEventReasonDisplayClockSetting
+/**
+ * @deprecated Use \ref nvmlClocksEventReasonNone instead
+ */
+#define nvmlClocksThrottleReasonNone                         nvmlClocksEventReasonNone
+/**
+ * @deprecated Use \ref nvmlClocksEventReasonAll instead
+ */
+#define nvmlClocksThrottleReasonAll                          nvmlClocksEventReasonAll
 /** @} */
 
 /***************************************************************************************************/
@@ -2015,7 +2273,7 @@ typedef struct nvmlEncoderSessionInfo_st
  */
 typedef enum nvmlFBCSessionType_enum
 {
-    NVML_FBC_SESSION_TYPE_UNKNOWN = 0,     //!< Unknwon
+    NVML_FBC_SESSION_TYPE_UNKNOWN = 0,     //!< Unknown
     NVML_FBC_SESSION_TYPE_TOSYS,           //!< ToSys
     NVML_FBC_SESSION_TYPE_CUDA,            //!< Cuda
     NVML_FBC_SESSION_TYPE_VID,             //!< Vid
@@ -2082,6 +2340,138 @@ typedef enum nvmlPcieLinkState_enum
     NVML_PCIE_LINK_KEEP         = 0,
     NVML_PCIE_LINK_SHUT_DOWN
 } nvmlPcieLinkState_t;
+
+/** @} */
+
+/***************************************************************************************************/
+/** @defgroup nvmlSystem/nvmlDevice definitions related to Confidential Computing
+ *  @{
+ */
+/***************************************************************************************************/
+/**
+ * Confidential Compute CPU Capabilities values
+ */
+#define NVML_CC_SYSTEM_CPU_CAPS_NONE      0
+#define NVML_CC_SYSTEM_CPU_CAPS_AMD_SEV   1
+#define NVML_CC_SYSTEM_CPU_CAPS_INTEL_TDX 2
+
+/**
+ * Confidenial Compute GPU Capabilities values
+ */
+#define NVML_CC_SYSTEM_GPUS_CC_NOT_CAPABLE 0
+#define NVML_CC_SYSTEM_GPUS_CC_CAPABLE     1
+
+typedef struct nvmlConfComputeSystemCaps_st {
+    unsigned int cpuCaps;
+    unsigned int gpusCaps;
+} nvmlConfComputeSystemCaps_t;
+
+/**
+ * Confidential Compute DevTools Mode values
+ */
+#define NVML_CC_SYSTEM_DEVTOOLS_MODE_OFF 0
+#define NVML_CC_SYSTEM_DEVTOOLS_MODE_ON  1
+
+/**
+ * Confidential Compute Environment values
+ */
+#define NVML_CC_SYSTEM_ENVIRONMENT_UNAVAILABLE 0
+#define NVML_CC_SYSTEM_ENVIRONMENT_SIM         1
+#define NVML_CC_SYSTEM_ENVIRONMENT_PROD        2
+
+/**
+ * Confidential Compute Feature Status values
+ */
+#define NVML_CC_SYSTEM_FEATURE_DISABLED 0
+#define NVML_CC_SYSTEM_FEATURE_ENABLED  1
+
+typedef struct nvmlConfComputeSystemState_st {
+    unsigned int environment;
+    unsigned int ccFeature;
+    unsigned int devToolsMode;
+} nvmlConfComputeSystemState_t;
+
+/**
+ * Protected memory size
+ */
+typedef struct
+nvmlConfComputeMemSizeInfo_st
+{
+    unsigned long long protectedMemSizeKib;
+    unsigned long long unprotectedMemSizeKib;
+} nvmlConfComputeMemSizeInfo_t;
+
+/**
+ * Confidential Compute GPUs/System Ready State values
+ */
+#define NVML_CC_ACCEPTING_CLIENT_REQUESTS_FALSE 0
+#define NVML_CC_ACCEPTING_CLIENT_REQUESTS_TRUE  1
+
+/**
+ * GPU Certificate Details
+ */
+#define NVML_GPU_CERT_CHAIN_SIZE 0x1000
+#define NVML_GPU_ATTESTATION_CERT_CHAIN_SIZE 0x1400
+
+typedef struct nvmlConfComputeGpuCertificate_st {
+    unsigned int certChainSize;
+    unsigned int attestationCertChainSize;
+    unsigned char certChain[NVML_GPU_CERT_CHAIN_SIZE];
+    unsigned char attestationCertChain[NVML_GPU_ATTESTATION_CERT_CHAIN_SIZE];
+} nvmlConfComputeGpuCertificate_t;
+
+/**
+ * GPU Attestation Report
+ */
+#define NVML_CC_GPU_CEC_NONCE_SIZE 0x20
+#define NVML_CC_GPU_ATTESTATION_REPORT_SIZE 0x2000
+#define NVML_CC_GPU_CEC_ATTESTATION_REPORT_SIZE 0x1000
+#define NVML_CC_CEC_ATTESTATION_REPORT_NOT_PRESENT 0
+#define NVML_CC_CEC_ATTESTATION_REPORT_PRESENT 1
+
+typedef struct nvmlConfComputeGpuAttestationReport_st {
+    unsigned int isCecAttestationReportPresent;
+    unsigned int attestationReportSize;
+    unsigned int cecAttestationReportSize;
+    unsigned char nonce[NVML_CC_GPU_CEC_NONCE_SIZE];
+    unsigned char attestationReport[NVML_CC_GPU_ATTESTATION_REPORT_SIZE];
+    unsigned char cecAttestationReport[NVML_CC_GPU_CEC_ATTESTATION_REPORT_SIZE];
+} nvmlConfComputeGpuAttestationReport_t;
+
+/** @} */
+
+#define NVML_GPU_FABRIC_UUID_LEN 16
+
+#define NVML_GPU_FABRIC_STATE_NOT_SUPPORTED 0
+#define NVML_GPU_FABRIC_STATE_NOT_STARTED   1
+#define NVML_GPU_FABRIC_STATE_IN_PROGRESS   2
+#define NVML_GPU_FABRIC_STATE_COMPLETED     3
+
+typedef unsigned char nvmlGpuFabricState_t;
+
+typedef struct {
+    char                 clusterUuid[NVML_GPU_FABRIC_UUID_LEN]; //!< Uuid of the cluster to which this GPU belongs
+    nvmlReturn_t         status;                                //!< Error status, if any. Must be checked only if state returns "complete".
+    unsigned int         partitionId;                           //!< ID of the fabric partition to which this GPU belongs
+    nvmlGpuFabricState_t state;                                 //!< Current state of GPU registration process
+} nvmlGpuFabricInfo_t;
+
+/**
+ * Device Scope - This is useful to retrieve the telemetry at GPU and module (e.g. GPU + CPU) level
+ */
+#define NVML_POWER_SCOPE_GPU     0U    //!< Targets only GPU
+#define NVML_POWER_SCOPE_MODULE  1U    //!< Targets the whole module
+
+typedef unsigned char nvmlPowerScopeType_t;
+
+typedef struct
+{
+    unsigned int         version;       //!< Structure format version (must be 1)
+    nvmlPowerScopeType_t powerScope;    //!< [in]  Device type: GPU or Total Module
+    unsigned int         powerValueMw;  //!< [out] Power value to retrieve or set in milliwatts
+} nvmlPowerValue_v2_t;
+ 
+#define nvmlPowerValue_v2 NVML_STRUCT_VERSION(PowerValue, 2)
 
 /** @} */
 
@@ -2824,6 +3214,23 @@ nvmlReturn_t DECLDIR nvmlDeviceGetIndex(nvmlDevice_t device, unsigned int *index
  */
 nvmlReturn_t DECLDIR nvmlDeviceGetSerial(nvmlDevice_t device, char *serial, unsigned int length);
 
+/*
+* Get a unique identifier for the device module on the baseboard
+*
+* This API retrieves a unique identifier for each GPU module that exists on a given baseboard.
+* For non-baseboard products, this ID would always be 0.
+*
+* @param device                               The identifier of the target device
+* @param moduleId                             Unique identifier for the GPU module
+*
+* @return
+*         - \ref NVML_SUCCESS                 if \a moduleId has been successfully retrieved
+*         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+*         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device or \a moduleId is invalid
+*         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+*/
+nvmlReturn_t DECLDIR nvmlDeviceGetModuleId(nvmlDevice_t device, unsigned int *moduleId);
+
 
 /***************************************************************************************************/
 
@@ -3339,6 +3746,24 @@ nvmlReturn_t DECLDIR nvmlDeviceGetPciInfo_v3(nvmlDevice_t device, nvmlPciInfo_t 
 nvmlReturn_t DECLDIR nvmlDeviceGetMaxPcieLinkGeneration(nvmlDevice_t device, unsigned int *maxLinkGen);
 
 /**
+ * Retrieves the maximum PCIe link generation supported by this device
+ *
+ * For Fermi &tm; or newer fully supported devices.
+ *
+ * @param device                               The identifier of the target device
+ * @param maxLinkGenDevice                     Reference in which to return the max PCIe link generation
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a maxLinkGenDevice has been populated
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a maxLinkGenDevice is null
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if PCIe link information is not available
+ *         - \ref NVML_ERROR_GPU_IS_LOST       if the target GPU has fallen off the bus or is otherwise inaccessible
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetGpuMaxPcieLinkGeneration(nvmlDevice_t device, unsigned int *maxLinkGenDevice);
+
+/**
  * Retrieves the maximum PCIe link width possible with this device and system
  *
  * I.E. for a device with a 16x PCIe bus width attached to a 8x PCIe system bus this function will report
@@ -3480,6 +3905,20 @@ nvmlReturn_t DECLDIR nvmlDeviceGetClockInfo(nvmlDevice_t device, nvmlClockType_t
  *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
  */
 nvmlReturn_t DECLDIR nvmlDeviceGetMaxClockInfo(nvmlDevice_t device, nvmlClockType_t type, unsigned int *clock);
+
+/**
+ * Retrieve the GPCCLK VF offset value
+ * @param[in]   device                         The identifier of the target device
+ * @param[out]  offset                         The retrieved GPCCLK VF offset value
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a offset has been successfully queried
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a offset is NULL
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support this feature
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetGpcClkVfOffset(nvmlDevice_t device, int *offset);
 
 /**
  * Retrieves the current setting of a clock that applications will use unless an overspec situation occurs.
@@ -3848,6 +4287,50 @@ nvmlReturn_t DECLDIR nvmlDeviceGetMinMaxFanSpeed(nvmlDevice_t device, unsigned i
                                                  unsigned int * maxSpeed);
 
 /**
+ * Gets current fan control policy.
+ *
+ * For Maxwell &tm; or newer fully supported devices.
+ *
+ * For all cuda-capable discrete products with fans
+ *
+ * device                               The identifier of the target \a device
+ * policy                               Reference in which to return the fan control \a policy
+ *
+ * return
+ *         NVML_SUCCESS                 if \a policy has been populated
+ *         NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a policy is null or the \a fan given doesn't reference
+ *                                            a fan that exists.
+ *         NVML_ERROR_NOT_SUPPORTED     if the \a device is older than Maxwell
+ *         NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetFanControlPolicy_v2(nvmlDevice_t device, unsigned int fan,
+                                                      nvmlFanControlPolicy_t *policy);
+
+/**
+ * Sets current fan control policy.
+ *
+ * For Maxwell &tm; or newer fully supported devices.
+ *
+ * Requires privileged user.
+ *
+ * For all cuda-capable discrete products with fans
+ *
+ * device                               The identifier of the target \a device
+ * policy                               The fan control \a policy to set
+ *
+ * return
+ *         NVML_SUCCESS                 if \a policy has been set
+ *         NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a policy is null or the \a fan given doesn't reference
+ *                                            a fan that exists.
+ *         NVML_ERROR_NOT_SUPPORTED     if the \a device is older than Maxwell
+ *         NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+nvmlReturn_t DECLDIR nvmlDeviceSetFanControlPolicy(nvmlDevice_t device, unsigned int fan,
+                                                   nvmlFanControlPolicy_t policy);
+
+/**
  * Retrieves the number of fans on the device.
  *
  * For all discrete products with dedicated fans.
@@ -3892,6 +4375,14 @@ nvmlReturn_t DECLDIR nvmlDeviceGetTemperature(nvmlDevice_t device, nvmlTemperatu
  * For Kepler &tm; or newer fully supported devices.
  *
  * See \ref nvmlTemperatureThresholds_t for details on available temperature thresholds.
+ *
+ * Note: This API is no longer the preferred interface for retrieving the following temperature thresholds
+ * on Ada and later architectures: NVML_TEMPERATURE_THRESHOLD_SHUTDOWN, NVML_TEMPERATURE_THRESHOLD_SLOWDOWN,
+ * NVML_TEMPERATURE_THRESHOLD_MEM_MAX and NVML_TEMPERATURE_THRESHOLD_GPU_MAX.
+ *
+ * Support for reading these temperature thresholds for Ada and later architectures would be removed from this
+ * API in future releases. Please use \ref nvmlDeviceGetFieldValues with NVML_FI_DEV_TEMPERATURE_* fields to retrieve
+ * temperature thresholds on these architectures.
  *
  * @param device                               The identifier of the target device
  * @param thresholdType                        The type of threshold value queried
@@ -3964,50 +4455,60 @@ nvmlReturn_t DECLDIR nvmlDeviceGetThermalSettings(nvmlDevice_t device, unsigned 
 nvmlReturn_t DECLDIR nvmlDeviceGetPerformanceState(nvmlDevice_t device, nvmlPstates_t *pState);
 
 /**
- * Retrieves current clocks throttling reasons.
+ * Retrieves current clocks event reasons.
  *
  * For all fully supported products.
  *
  * \note More than one bit can be enabled at the same time. Multiple reasons can be affecting clocks at once.
  *
  * @param device                                The identifier of the target device
- * @param clocksThrottleReasons                 Reference in which to return bitmask of active clocks throttle
+ * @param clocksEventReasons                    Reference in which to return bitmask of active clocks event
  *                                                  reasons
  *
  * @return
- *         - \ref NVML_SUCCESS                 if \a clocksThrottleReasons has been set
+ *         - \ref NVML_SUCCESS                 if \a clocksEventReasons has been set
  *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
- *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a clocksThrottleReasons is NULL
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a clocksEventReasons is NULL
  *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support this feature
  *         - \ref NVML_ERROR_GPU_IS_LOST       if the target GPU has fallen off the bus or is otherwise inaccessible
  *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
  *
- * @see nvmlClocksThrottleReasons
- * @see nvmlDeviceGetSupportedClocksThrottleReasons
+ * @see nvmlClocksEventReasons
+ * @see nvmlDeviceGetSupportedClocksEventReasons
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetCurrentClocksEventReasons(nvmlDevice_t device, unsigned long long *clocksEventReasons);
+
+/**
+ * @deprecated Use \ref nvmlDeviceGetCurrentClocksEventReasons instead
  */
 nvmlReturn_t DECLDIR nvmlDeviceGetCurrentClocksThrottleReasons(nvmlDevice_t device, unsigned long long *clocksThrottleReasons);
 
 /**
- * Retrieves bitmask of supported clocks throttle reasons that can be returned by
- * \ref nvmlDeviceGetCurrentClocksThrottleReasons
+ * Retrieves bitmask of supported clocks event reasons that can be returned by
+ * \ref nvmlDeviceGetCurrentClocksEventReasons
  *
  * For all fully supported products.
  *
  * This method is not supported in virtual machines running virtual GPU (vGPU).
  *
  * @param device                               The identifier of the target device
- * @param supportedClocksThrottleReasons       Reference in which to return bitmask of supported
- *                                              clocks throttle reasons
+ * @param supportedClocksEventReasons       Reference in which to return bitmask of supported
+ *                                              clocks event reasons
  *
  * @return
- *         - \ref NVML_SUCCESS                 if \a supportedClocksThrottleReasons has been set
+ *         - \ref NVML_SUCCESS                 if \a supportedClocksEventReasons has been set
  *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
- *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a supportedClocksThrottleReasons is NULL
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a supportedClocksEventReasons is NULL
  *         - \ref NVML_ERROR_GPU_IS_LOST       if the target GPU has fallen off the bus or is otherwise inaccessible
  *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
  *
- * @see nvmlClocksThrottleReasons
- * @see nvmlDeviceGetCurrentClocksThrottleReasons
+ * @see nvmlClocksEventReasons
+ * @see nvmlDeviceGetCurrentClocksEventReasons
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetSupportedClocksEventReasons(nvmlDevice_t device, unsigned long long *supportedClocksEventReasons);
+
+/**
+ * @deprecated Use \ref nvmlDeviceGetSupportedClocksEventReasons instead
  */
 nvmlReturn_t DECLDIR nvmlDeviceGetSupportedClocksThrottleReasons(nvmlDevice_t device, unsigned long long *supportedClocksThrottleReasons);
 
@@ -4032,6 +4533,113 @@ nvmlReturn_t DECLDIR nvmlDeviceGetSupportedClocksThrottleReasons(nvmlDevice_t de
  *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
  */
 nvmlReturn_t DECLDIR nvmlDeviceGetPowerState(nvmlDevice_t device, nvmlPstates_t *pState);
+
+/**
+ * Retrieve performance monitor samples from the associated subdevice.
+ *
+ * @param device
+ * @param pDynamicPstatesInfo
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a pDynamicPstatesInfo has been set
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a pDynamicPstatesInfo is NULL
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support this feature
+ *         - \ref NVML_ERROR_GPU_IS_LOST       if the target GPU has fallen off the bus or is otherwise inaccessible
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetDynamicPstatesInfo(nvmlDevice_t device, nvmlGpuDynamicPstatesInfo_t *pDynamicPstatesInfo);
+
+/**
+ * Retrieve the MemClk (Memory Clock) VF offset value.
+ * @param[in]   device                         The identifier of the target device
+ * @param[out]  offset                         The retrieved MemClk VF offset value
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a offset has been successfully queried
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a offset is NULL
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support this feature
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetMemClkVfOffset(nvmlDevice_t device, int *offset);
+
+/**
+ * Retrieve min and max clocks of some clock domain for a given PState
+ *
+ * @param device                               The identifier of the target device
+ * @param type                                 Clock domain
+ * @param pstate                               PState to query
+ * @param minClockMHz                          Reference in which to return min clock frequency
+ * @param maxClockMHz                          Reference in which to return max clock frequency
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if everything worked
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device, \a type or \a pstate are invalid or both
+ *                                                  \a minClockMHz and \a maxClockMHz are NULL
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support this feature
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetMinMaxClockOfPState(nvmlDevice_t device, nvmlClockType_t type, nvmlPstates_t pstate,
+                                                      unsigned int * minClockMHz, unsigned int * maxClockMHz);
+
+/**
+ * Get all supported Performance States (P-States) for the device.
+ *
+ * The returned array would contain a contiguous list of valid P-States supported by
+ * the device. If the number of supported P-States is fewer than the size of the array
+ * supplied missing elements would contain \a NVML_PSTATE_UNKNOWN.
+ *
+ * The number of elements in the returned list will never exceed \a NVML_MAX_GPU_PERF_PSTATES.
+ *
+ * @param device                               The identifier of the target device
+ * @param pstates                              Container to return the list of performance states
+ *                                             supported by device
+ * @param size                                 Size of the supplied \a pstates array in bytes
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a pstates array has been retrieved
+ *         - \ref NVML_ERROR_INSUFFICIENT_SIZE if the the container supplied was not large enough to
+ *                                             hold the resulting list
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device or \a pstates is invalid
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support performance state readings
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetSupportedPerformanceStates(nvmlDevice_t device,
+                                                             nvmlPstates_t *pstates, unsigned int size);
+
+/**
+ * Retrieve the GPCCLK min max VF offset value.
+ * @param[in]   device                         The identifier of the target device
+ * @param[out]  minOffset                      The retrieved GPCCLK VF min offset value
+ * @param[out]  maxOffset                      The retrieved GPCCLK VF max offset value
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a offset has been successfully queried
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a offset is NULL
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support this feature
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetGpcClkMinMaxVfOffset(nvmlDevice_t device,
+                                                       int *minOffset, int *maxOffset);
+
+/**
+ * Retrieve the MemClk (Memory Clock) min max VF offset value.
+ * @param[in]   device                         The identifier of the target device
+ * @param[out]  minOffset                      The retrieved MemClk VF min offset value
+ * @param[out]  maxOffset                      The retrieved MemClk VF max offset value
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a offset has been successfully queried
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a offset is NULL
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support this feature
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetMemClkMinMaxVfOffset(nvmlDevice_t device,
+                                                       int *minOffset, int *maxOffset);
 
 /**
  * This API has been deprecated.
@@ -4132,7 +4740,12 @@ nvmlReturn_t DECLDIR nvmlDeviceGetPowerManagementDefaultLimit(nvmlDevice_t devic
  *
  * For Fermi &tm; or newer fully supported devices.
  *
- * On Fermi and Kepler GPUs the reading is accurate to within +/- 5% of current power draw.
+ * On Fermi and Kepler GPUs the reading is accurate to within +/- 5% of current power draw. On Ampere
+ * (except GA100) or newer GPUs, the API returns power averaged over 1 sec interval. On GA100 and
+ * older architectures, instantaneous power is returned.
+ *
+ * See \ref NVML_FI_DEV_POWER_AVERAGE and \ref NVML_FI_DEV_POWER_INSTANT to query specific power
+ * values.
  *
  * It is only available if power management mode is supported. See \ref nvmlDeviceGetPowerManagementMode.
  *
@@ -4148,60 +4761,6 @@ nvmlReturn_t DECLDIR nvmlDeviceGetPowerManagementDefaultLimit(nvmlDevice_t devic
  *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
  */
 nvmlReturn_t DECLDIR nvmlDeviceGetPowerUsage(nvmlDevice_t device, unsigned int *power);
-
-/**
- * Retrieves current power mode on this device.
- *
- * %ADA_OR_NEWER%
- *
- * @param device                               The identifier of the target device
- * @param powerModeId                          Reference in which to return the power mode
- *
- * @return
- *         - \ref NVML_SUCCESS                 if \a power has been populated
- *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
- *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a power is NULL
- *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support power readings
- *         - \ref NVML_ERROR_GPU_IS_LOST       if the target GPU has fallen off the bus or is otherwise inaccessible
- *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
- */
-nvmlReturn_t DECLDIR nvmlDeviceGetPowerMode(nvmlDevice_t device, unsigned int *powerModeId);
-
-/**
- * Retrieves bitmask of supported power modes on this device.
- *
- * %ADA_OR_NEWER%
- *
- * @param device                               The identifier of the target device
- * @param supportedPowerModes                   Reference in which to return the bitmask of supported power mode
- *
- * @return
- *         - \ref NVML_SUCCESS                 if \a bitmask of supported power mode has been populated
- *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
- *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a power is NULL
- *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support power readings
- *         - \ref NVML_ERROR_GPU_IS_LOST       if the target GPU has fallen off the bus or is otherwise inaccessible
- *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
- */
-nvmlReturn_t DECLDIR nvmlDeviceGetSupportedPowerModes(nvmlDevice_t device, unsigned int *supportedPowerModes);
-
-/**
- * Sets new power mode.
- *
- * %ADA_OR_NEWER%
- *
- * @param device                               The identifier of the target device
- * @param powerModeId                          Power mode to set.
- *
- * @return
- *         - \ref NVML_SUCCESS                 if \a power has been populated
- *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
- *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a power is NULL
- *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support power readings
- *         - \ref NVML_ERROR_GPU_IS_LOST       if the target GPU has fallen off the bus or is otherwise inaccessible
- *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
- */
-nvmlReturn_t DECLDIR nvmlDeviceSetPowerMode(nvmlDevice_t device, unsigned int powerModeId);
 
 /**
  * Retrieves total energy consumption for this GPU in millijoules (mJ) since the driver was last reloaded
@@ -4283,8 +4842,16 @@ nvmlReturn_t DECLDIR nvmlDeviceGetGpuOperationMode(nvmlDevice_t device, nvmlGpuO
  * @note In MIG mode, if device handle is provided, the API returns aggregate
  *       information, only if the caller has appropriate privileges. Per-instance
  *       information can be queried by using specific MIG device handles.
- * 
+ *
  * @note nvmlDeviceGetMemoryInfo_v2 adds additional memory information.
+ *
+ * @note On systems where GPUs are NUMA nodes, the accuracy of FB memory utilization
+ *       provided by this API depends on the memory accounting of the operating system.
+ *       This is because FB memory is managed by the operating system instead of the NVIDIA GPU driver.
+ *       Typically, pages allocated from FB memory are not released even after
+ *       the process terminates to enhance performance. In scenarios where
+ *       the operating system is under memory pressure, it may resort to utilizing FB memory.
+ *       Such actions can result in discrepancies in the accuracy of memory reporting.
  *
  * @param device                               The identifier of the target device
  * @param memory                               Reference in which to return the memory information
@@ -4642,10 +5209,10 @@ nvmlReturn_t DECLDIR nvmlDeviceGetEncoderStats (nvmlDevice_t device, unsigned in
  * Retrieves information about active encoder sessions on a target device.
  *
  * An array of active encoder sessions is returned in the caller-supplied buffer pointed at by \a sessionInfos. The
- * array elememt count is passed in \a sessionCount, and \a sessionCount is used to return the number of sessions
+ * array element count is passed in \a sessionCount, and \a sessionCount is used to return the number of sessions
  * written to the buffer.
  *
- * If the supplied buffer is not large enough to accomodate the active session array, the function returns
+ * If the supplied buffer is not large enough to accommodate the active session array, the function returns
  * NVML_ERROR_INSUFFICIENT_SIZE, with the element count of nvmlEncoderSessionInfo_t array required in \a sessionCount.
  * To query the number of active encoder sessions, call this function with *sessionCount = 0.  The code will return
  * NVML_SUCCESS with number of active encoder sessions updated in *sessionCount.
@@ -4689,12 +5256,54 @@ nvmlReturn_t DECLDIR nvmlDeviceGetEncoderSessions(nvmlDevice_t device, unsigned 
 nvmlReturn_t DECLDIR nvmlDeviceGetDecoderUtilization(nvmlDevice_t device, unsigned int *utilization, unsigned int *samplingPeriodUs);
 
 /**
+ * Retrieves the current utilization and sampling size in microseconds for the JPG
+ *
+ * %TURING_OR_NEWER%
+ *
+ * @note On MIG-enabled GPUs, querying decoder utilization is not currently supported.
+ *
+ * @param device                               The identifier of the target device
+ * @param utilization                          Reference to an unsigned int for jpg utilization info
+ * @param samplingPeriodUs                     Reference to an unsigned int for the sampling period in US
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a utilization has been populated
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid, \a utilization is NULL, or \a samplingPeriodUs is NULL
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support this feature
+ *         - \ref NVML_ERROR_GPU_IS_LOST       if the target GPU has fallen off the bus or is otherwise inaccessible
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetJpgUtilization(nvmlDevice_t device, unsigned int *utilization, unsigned int *samplingPeriodUs);
+
+/**
+ * Retrieves the current utilization and sampling size in microseconds for the OFA (Optical Flow Accelerator)
+ *
+ * %TURING_OR_NEWER%
+ *
+ * @note On MIG-enabled GPUs, querying decoder utilization is not currently supported.
+ *
+ * @param device                               The identifier of the target device
+ * @param utilization                          Reference to an unsigned int for ofa utilization info
+ * @param samplingPeriodUs                     Reference to an unsigned int for the sampling period in US
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a utilization has been populated
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid, \a utilization is NULL, or \a samplingPeriodUs is NULL
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support this feature
+ *         - \ref NVML_ERROR_GPU_IS_LOST       if the target GPU has fallen off the bus or is otherwise inaccessible
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetOfaUtilization(nvmlDevice_t device, unsigned int *utilization, unsigned int *samplingPeriodUs);
+
+/**
 * Retrieves the active frame buffer capture sessions statistics for a given device.
 *
 * For Maxwell &tm; or newer fully supported devices.
 *
 * @param device                            The identifier of the target device
-* @param fbcStats                          Reference to nvmlFBCStats_t structure contianing NvFBC stats
+* @param fbcStats                          Reference to nvmlFBCStats_t structure containing NvFBC stats
 *
 * @return
 *         - \ref NVML_SUCCESS                  if \a fbcStats is fetched
@@ -4712,7 +5321,7 @@ nvmlReturn_t DECLDIR nvmlDeviceGetFBCStats(nvmlDevice_t device, nvmlFBCStats_t *
 * array element count is passed in \a sessionCount, and \a sessionCount is used to return the number of sessions
 * written to the buffer.
 *
-* If the supplied buffer is not large enough to accomodate the active session array, the function returns
+* If the supplied buffer is not large enough to accommodate the active session array, the function returns
 * NVML_ERROR_INSUFFICIENT_SIZE, with the element count of nvmlFBCSessionInfo_t array required in \a sessionCount.
 * To query the number of active FBC sessions, call this function with *sessionCount = 0.  The code will return
 * NVML_SUCCESS with number of active FBC sessions updated in *sessionCount.
@@ -4908,7 +5517,7 @@ nvmlReturn_t DECLDIR nvmlDeviceGetGraphicsRunningProcesses_v3(nvmlDevice_t devic
  *
  * Keep in mind that information returned by this call is dynamic and the number of elements might change in
  * time. Allocate more space for \a infos table in case new compute processes are spawned.
- * 
+ *
  * @note In MIG mode, if device handle is provided, the API returns aggregate information, only if
  *       the caller has appropriate privileges. Per-instance information can be queried by using
  *       specific MIG device handles.
@@ -4933,6 +5542,57 @@ nvmlReturn_t DECLDIR nvmlDeviceGetGraphicsRunningProcesses_v3(nvmlDevice_t devic
  * @see \ref nvmlSystemGetProcessName
  */
 nvmlReturn_t DECLDIR nvmlDeviceGetMPSComputeRunningProcesses_v3(nvmlDevice_t device, unsigned int *infoCount, nvmlProcessInfo_t *infos);
+
+/**
+ * Get information about running processes on a device for input context
+ *
+ * %HOPPER_OR_NEWER%
+ *
+ * This function returns information only about running processes (e.g. CUDA application which have
+ * active context).
+ *
+ * To determine the size of the @ref plist->procArray array to allocate, call the function with
+ * @ref plist->numProcArrayEntries set to zero and @ref plist->procArray set to NULL. The return
+ * code will be either NVML_ERROR_INSUFFICIENT_SIZE (if there are valid processes of type 
+ * @ref plist->mode to report on, in which case the @ref plist->numProcArrayEntries field will
+ * indicate the required number of entries in the array) or NVML_SUCCESS (if no processes of type
+ * @ref plist->mode exist).
+ *
+ * The usedGpuMemory field returned is all of the memory used by the application.
+ * The usedGpuCcProtectedMemory field returned is all of the protected memory used by the application.
+ *
+ * Keep in mind that information returned by this call is dynamic and the number of elements might change in
+ * time. Allocate more space for \a plist->procArray table in case new processes are spawned.
+ *
+ * @note In MIG mode, if device handle is provided, the API returns aggregate information, only if
+ *       the caller has appropriate privileges. Per-instance information can be queried by using
+ *       specific MIG device handles.
+ *       Querying per-instance information using MIG device handles is not supported if the device is in
+ *       vGPU Host virtualization mode.
+ *       Protected memory usage is currently not available in MIG mode and in windows.
+ *
+ * @param device                               The device handle or MIG device handle
+ * @param plist                                Reference in which to process detail list
+ * @param plist->version                       The api version
+ * @param plist->mode                          The process mode
+ * @param plist->procArray                     Reference in which to return the process information
+ * @param plist->numProcArrayEntries           Proc array size of returned entries
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a plist->numprocArrayEntries and \a plist->procArray have been populated
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INSUFFICIENT_SIZE if \a plist->numprocArrayEntries indicates that the \a plist->procArray is too small
+ *                                             \a plist->numprocArrayEntries will contain minimal amount of space necessary for
+ *                                             the call to complete
+ *         - \ref NVML_ERROR_NO_PERMISSION     if the user doesn't have permission to perform this operation
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid, \a plist is NULL, \a plist->version is invalid,
+ *                                             \a plist->mode is invalid,
+ *         - \ref NVML_ERROR_GPU_IS_LOST       if the target GPU has fallen off the bus or is otherwise inaccessible
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if this query is not supported by \a device
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ *
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetRunningProcessDetailList(nvmlDevice_t device, nvmlProcessDetailList_t *plist);
 
 /**
  * Check if the GPU devices are on the same physical board.
@@ -5130,7 +5790,7 @@ nvmlReturn_t DECLDIR nvmlDeviceGetPowerSource(nvmlDevice_t device, nvmlPowerSour
  * Gets the device's memory bus width
  *
  * @param device                               The identifier of the target device
- * @param maxSpeed                             The devices's memory bus width
+ * @param busWidth                             The devices's memory bus width
  *
  * @return
  *         - \ref NVML_SUCCESS                 if the memory bus width is successfully retrieved
@@ -5177,7 +5837,9 @@ nvmlReturn_t DECLDIR nvmlDeviceGetPcieSpeed(nvmlDevice_t device, unsigned int *p
  * Gets the device's Adaptive Clock status
  *
  * @param device                               The identifier of the target device
- * @param adaptiveClockStatus                  The current adaptive clocking status
+ * @param adaptiveClockStatus                  The current adaptive clocking status, either
+ *                                             @ref NVML_ADAPTIVE_CLOCKING_INFO_STATUS_DISABLED 
+ *                                             or @ref NVML_ADAPTIVE_CLOCKING_INFO_STATUS_ENABLED
  *
  * @return
  *         - \ref NVML_SUCCESS                 if the current adaptive clocking status is successfully retrieved
@@ -5188,6 +5850,163 @@ nvmlReturn_t DECLDIR nvmlDeviceGetPcieSpeed(nvmlDevice_t device, unsigned int *p
  *
  */
 nvmlReturn_t DECLDIR nvmlDeviceGetAdaptiveClockInfoStatus(nvmlDevice_t device, unsigned int *adaptiveClockStatus);
+
+/**
+ * Get the type of the GPU Bus (PCIe, PCI, ...)
+ *
+ * @param device                               The identifier of the target device
+ * @param type                                 The PCI Bus type
+ *
+ * return
+ *         - \ref NVML_SUCCESS                 if the bus \a type is successfully retreived
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \device is invalid or \type is NULL
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetBusType(nvmlDevice_t device, nvmlBusType_t *type);
+
+/**
+ * Get fabric information associated with the device.
+ *
+ * %HOPPER_OR_NEWER%
+ *
+ * On Hopper + NVSwitch systems, GPU is registered with the NVIDIA Fabric Manager
+ * Upon successful registration, the GPU is added to the NVLink fabric to enable
+ * peer-to-peer communication.
+ * This API reports the current state of the GPU in the NVLink fabric
+ * along with other useful information.
+ *
+ * @param device                               The identifier of the target device
+ * @param gpuFabricInfo                        Information about GPU fabric state
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 Upon success
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     If \a device doesn't support gpu fabric
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetGpuFabricInfo(nvmlDevice_t device, nvmlGpuFabricInfo_t *gpuFabricInfo);
+
+/**
+ * Get Conf Computing System capabilities.
+ *
+ * For Ampere &tm; or newer fully supported devices.
+ * Supported on Linux, Windows TCC.
+ *
+ * @param capabilities                         System CC capabilities
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a capabilities were successfully queried
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a capabilities is invalid
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if this query is not supported by the device
+ */
+nvmlReturn_t DECLDIR nvmlSystemGetConfComputeCapabilities(nvmlConfComputeSystemCaps_t *capabilities);
+
+/**
+ * Get Conf Computing System State.
+ *
+ * For Ampere &tm; or newer fully supported devices.
+ * Supported on Linux, Windows TCC.
+ *
+ * @param state                                System CC State
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a state were successfully queried
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a state is invalid
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if this query is not supported by the device
+ */
+nvmlReturn_t DECLDIR nvmlSystemGetConfComputeState(nvmlConfComputeSystemState_t *state);
+
+/**
+ * Get Conf Computing Protected and Unprotected Memory Sizes.
+ *
+ * For Ampere &tm; or newer fully supported devices.
+ * Supported on Linux, Windows TCC.
+ *
+ * @param device                               Device handle
+ * @param memInfo                              Protected/Unprotected Memory sizes
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a memInfo were successfully queried
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a memInfo or \a device is invalid
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if this query is not supported by the device
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetConfComputeMemSizeInfo(nvmlDevice_t device, nvmlConfComputeMemSizeInfo_t *memInfo);
+
+/**
+ * Get Conf Computing GPUs ready state.
+ *
+ * For Ampere &tm; or newer fully supported devices.
+ * Supported on Linux, Windows TCC.
+ *
+ * @param isAcceptingWork                      Returns GPU current work accepting state,
+ *                                             NVML_CC_ACCEPTING_CLIENT_REQUESTS_TRUE or
+ *                                             NVML_CC_ACCEPTING_CLIENT_REQUESTS_FALSE
+ *
+ * return
+ *         - \ref NVML_SUCCESS                 if \a current GPUs ready state were successfully queried
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a isAcceptingWork is NULL
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if this query is not supported by the device
+ */
+nvmlReturn_t DECLDIR nvmlSystemGetConfComputeGpusReadyState(unsigned int *isAcceptingWork);
+
+/**
+ * Get Conf Computing protected memory usage.
+ *
+ * For Ampere &tm; or newer fully supported devices.
+ * Supported on Linux, Windows TCC.
+ *
+ * @param device                               The identifier of the target device
+ * @param memory                               Reference in which to return the memory information
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a memory has been populated
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a memory is NULL
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if this query is not supported by the device
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetConfComputeProtectedMemoryUsage(nvmlDevice_t device, nvmlMemory_t *memory);
+
+/**
+ * Get Conf Computing Gpu certificate details.
+ *
+ * For Ampere &tm; or newer fully supported devices.
+ * Supported on Linux, Windows TCC.
+ *
+ * @param device                               The identifier of the target device
+ * @param gpuCert                              Reference in which to return the gpu certificate information
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a gpu certificate info has been populated
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a memory is NULL
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if this query is not supported by the device
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetConfComputeGpuCertificate(nvmlDevice_t device,
+                                                            nvmlConfComputeGpuCertificate_t *gpuCert);
+
+/**
+ * Get Conf Computing Gpu attestation report.
+ *
+ * For Ampere &tm; or newer fully supported devices.
+ * Supported on Linux, Windows TCC.
+ *
+ * @param device                               The identifier of the target device
+ * @param gpuAtstReport                        Reference in which to return the gpu attestation report
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a gpu attestation report has been populated
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a memory is NULL
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if this query is not supported by the device
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetConfComputeGpuAttestationReport(nvmlDevice_t device,
+                                                                  nvmlConfComputeGpuAttestationReport_t *gpuAtstReport);
 
 /**
  * @}
@@ -5351,7 +6170,7 @@ nvmlReturn_t DECLDIR nvmlDeviceGetRetiredPages(nvmlDevice_t device, nvmlPageReti
  * The address information provided from this API is the hardware address of the page that was retired.  Note
  * that this does not match the virtual address used in CUDA, but will match the address information in XID 63
  *
- * \note nvmlDeviceGetRetiredPages_v2 adds an additional timestamps paramter to return the time of each page's
+ * \note nvmlDeviceGetRetiredPages_v2 adds an additional timestamps parameter to return the time of each page's
  *       retirement.
  *
  * For Kepler &tm; or newer fully supported devices.
@@ -5688,7 +6507,7 @@ typedef enum nvmlClockLimitId_enum {
  * Set clocks that device will lock to.
  *
  * Sets the clocks that the device will be running at to the value in the range of minGpuClockMHz to maxGpuClockMHz.
- * Setting this will supercede application clock values and take effect regardless if a cuda app is running.
+ * Setting this will supersede application clock values and take effect regardless if a cuda app is running.
  * See /ref nvmlDeviceSetApplicationsClocks
  *
  * Can be used as a setting to request constant performance.
@@ -5856,8 +6675,8 @@ nvmlReturn_t DECLDIR nvmlDeviceSetApplicationsClocks(nvmlDevice_t device, unsign
  *
  * @param device                               The identifier of the target device
  * @param status                               Reference in which to return the clkmon fault status
- * 
- * @return 
+ *
+ * @return
  *         - \ref NVML_SUCCESS                 if \a status has been set
  *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
  *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a status is NULL
@@ -5954,6 +6773,94 @@ nvmlReturn_t DECLDIR nvmlDeviceSetGpuOperationMode(nvmlDevice_t device, nvmlGpuO
  * @see nvmlRestrictedAPI_t
  */
 nvmlReturn_t DECLDIR nvmlDeviceSetAPIRestriction(nvmlDevice_t device, nvmlRestrictedAPI_t apiType, nvmlEnableState_t isRestricted);
+
+/**
+ * Sets the speed of a specified fan.
+ *
+ * WARNING: This function changes the fan control policy to manual. It means that YOU have to monitor
+ *          the temperature and adjust the fan speed accordingly.
+ *          If you set the fan speed too low you can burn your GPU!
+ *          Use nvmlDeviceSetDefaultFanSpeed_v2 to restore default control policy.
+ *
+ * For all cuda-capable discrete products with fans that are Maxwell or Newer.
+ *
+ * device                                The identifier of the target device
+ * fan                                   The index of the fan, starting at zero
+ * speed                                 The target speed of the fan [0-100] in % of max speed
+ *
+ * return
+ *        NVML_SUCCESS                   if the fan speed has been set
+ *        NVML_ERROR_UNINITIALIZED       if the library has not been successfully initialized
+ *        NVML_ERROR_INVALID_ARGUMENT    if the device is not valid, or the speed is outside acceptable ranges,
+ *                                              or if the fan index doesn't reference an actual fan.
+ *        NVML_ERROR_NOT_SUPPORTED       if the device is older than Maxwell.
+ *        NVML_ERROR_UNKNOWN             if there was an unexpected error.
+ */
+nvmlReturn_t DECLDIR nvmlDeviceSetFanSpeed_v2(nvmlDevice_t device, unsigned int fan, unsigned int speed);
+
+/**
+ * Set the GPCCLK VF offset value
+ * @param[in]   device                         The identifier of the target device
+ * @param[in]   offset                         The GPCCLK VF offset value to set
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a offset has been set
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a offset is NULL
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support this feature
+ *         - \ref NVML_ERROR_GPU_IS_LOST       if the target GPU has fallen off the bus or is otherwise inaccessible
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+nvmlReturn_t DECLDIR nvmlDeviceSetGpcClkVfOffset(nvmlDevice_t device, int offset);
+
+/**
+ * Set the MemClk (Memory Clock) VF offset value. It requires elevated privileges.
+ * @param[in]   device                         The identifier of the target device
+ * @param[in]   offset                         The MemClk VF offset value to set
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a offset has been set
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a offset is NULL
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support this feature
+ *         - \ref NVML_ERROR_GPU_IS_LOST       if the target GPU has fallen off the bus or is otherwise inaccessible
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+nvmlReturn_t DECLDIR nvmlDeviceSetMemClkVfOffset(nvmlDevice_t device, int offset);
+
+/**
+ * Set Conf Computing Unprotected Memory Size.
+ *
+ * For Ampere &tm; or newer fully supported devices.
+ * Supported on Linux, Windows TCC.
+ *
+ * @param device                               Device Handle
+ * @param sizeKiB                              Unprotected Memory size to be set in KiB
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a sizeKiB successfully set
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if this query is not supported by the device
+ */
+nvmlReturn_t DECLDIR nvmlDeviceSetConfComputeUnprotectedMemSize(nvmlDevice_t device, unsigned long long sizeKiB);
+
+/**
+ * Set Conf Computing GPUs ready state.
+ *
+ * For Ampere &tm; or newer fully supported devices.
+ * Supported on Linux, Windows TCC.
+ *
+ * @param isAcceptingWork                      GPU accepting new work, NVML_CC_ACCEPTING_CLIENT_REQUESTS_TRUE or
+ *                                             NVML_CC_ACCEPTING_CLIENT_REQUESTS_FALSE
+ *
+ * return
+ *         - \ref NVML_SUCCESS                 if \a current GPUs ready state is successfully set
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a isAcceptingWork is invalid
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if this query is not supported by the device
+ */
+nvmlReturn_t DECLDIR nvmlSystemSetConfComputeGpusReadyState(unsigned int isAcceptingWork);
 
 /**
  * @}
@@ -6567,6 +7474,21 @@ nvmlReturn_t DECLDIR nvmlDeviceDiscoverGpus (nvmlPciInfo_t *pciInfo);
  */
 nvmlReturn_t DECLDIR nvmlDeviceGetFieldValues(nvmlDevice_t device, int valuesCount, nvmlFieldValue_t *values);
 
+/**
+ * Clear values for a list of fields for a device. This API allows multiple fields to be cleared at once.
+ *
+ * @param device                               The device handle of the GPU to request field values for
+ * @param valuesCount                          Number of entries in values that should be cleared
+ * @param values                               Array of \a valuesCount structures to hold field values.
+ *                                             Each value's fieldId must be populated prior to this call
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if any values in \a values were cleared. Note that you must
+ *                                             check the nvmlReturn field of each value for each individual
+ *                                             status
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a values is NULL
+ */
+nvmlReturn_t DECLDIR nvmlDeviceClearFieldValues(nvmlDevice_t device, int valuesCount, nvmlFieldValue_t *values);
 
 /** @} */
 
@@ -6741,13 +7663,56 @@ nvmlReturn_t DECLDIR nvmlDeviceGetGspFirmwareMode(nvmlDevice_t device, unsigned 
 /***************************************************************************************************/
 
 /**
+ * Retrieve the requested vGPU driver capability.
+ *
+ * Refer to the \a nvmlVgpuDriverCapability_t structure for the specific capabilities that can be queried.
+ * The return value in \a capResult should be treated as a boolean, with a non-zero value indicating that the capability
+ * is supported.
+ *
+ * For Maxwell &tm; or newer fully supported devices.
+ *
+ * @param capability      Specifies the \a nvmlVgpuDriverCapability_t to be queried
+ * @param capResult       A boolean for the queried capability indicating that feature is supported
+ *
+ * @return
+ *      - \ref NVML_SUCCESS                      successful completion
+ *      - \ref NVML_ERROR_UNINITIALIZED          if the library has not been successfully initialized
+ *      - \ref NVML_ERROR_INVALID_ARGUMENT       if \a capability is invalid, or \a capResult is NULL
+ *      - \ref NVML_ERROR_NOT_SUPPORTED          the API is not supported in current state or \a devices not in vGPU mode
+ *      - \ref NVML_ERROR_UNKNOWN                on any unexpected error
+*/
+nvmlReturn_t DECLDIR nvmlGetVgpuDriverCapabilities(nvmlVgpuDriverCapability_t capability, unsigned int *capResult);
+
+/**
+ * Retrieve the requested vGPU capability for GPU.
+ *
+ * Refer to the \a nvmlDeviceVgpuCapability_t structure for the specific capabilities that can be queried.
+ * The return value in \a capResult reports a non-zero value indicating that the capability
+ * is supported, and also reports the capability's data based on the queried capability.
+ *
+ * For Maxwell &tm; or newer fully supported devices.
+ *
+ * @param device     The identifier of the target device
+ * @param capability Specifies the \a nvmlDeviceVgpuCapability_t to be queried
+ * @param capResult  Specifies that the queried capability is supported, and also returns capability's data
+ *
+ * @return
+ *      - \ref NVML_SUCCESS                      successful completion
+ *      - \ref NVML_ERROR_UNINITIALIZED          if the library has not been successfully initialized
+ *      - \ref NVML_ERROR_INVALID_ARGUMENT       if \a device is invalid, or \a capability is invalid, or \a capResult is NULL
+ *      - \ref NVML_ERROR_NOT_SUPPORTED          the API is not supported in current state or \a device not in vGPU mode
+ *      - \ref NVML_ERROR_UNKNOWN                on any unexpected error
+*/
+nvmlReturn_t DECLDIR nvmlDeviceGetVgpuCapabilities(nvmlDevice_t device, nvmlDeviceVgpuCapability_t capability, unsigned int *capResult);
+
+/**
  * Retrieve the supported vGPU types on a physical GPU (device).
  *
  * An array of supported vGPU types for the physical GPU indicated by \a device is returned in the caller-supplied buffer
  * pointed at by \a vgpuTypeIds. The element count of nvmlVgpuTypeId_t array is passed in \a vgpuCount, and \a vgpuCount
  * is used to return the number of vGPU types written to the buffer.
  *
- * If the supplied buffer is not large enough to accomodate the vGPU type array, the function returns
+ * If the supplied buffer is not large enough to accommodate the vGPU type array, the function returns
  * NVML_ERROR_INSUFFICIENT_SIZE, with the element count of nvmlVgpuTypeId_t array required in \a vgpuCount.
  * To query the number of vGPU types supported for the GPU, call this function with *vgpuCount = 0.
  * The code will return NVML_ERROR_INSUFFICIENT_SIZE, or NVML_SUCCESS if no vGPU types are supported.
@@ -6776,9 +7741,9 @@ nvmlReturn_t DECLDIR nvmlDeviceGetSupportedVgpus(nvmlDevice_t device, unsigned i
  * can concurrently run on a device.  For example, if only one vGPU type is allowed at a time on a device, then the creatable
  * list will be restricted to whatever vGPU type is already running on the device.
  *
- * If the supplied buffer is not large enough to accomodate the vGPU type array, the function returns
+ * If the supplied buffer is not large enough to accommodate the vGPU type array, the function returns
  * NVML_ERROR_INSUFFICIENT_SIZE, with the element count of nvmlVgpuTypeId_t array required in \a vgpuCount.
- * To query the number of vGPU types createable for the GPU, call this function with *vgpuCount = 0.
+ * To query the number of vGPU types that can be created for the GPU, call this function with *vgpuCount = 0.
  * The code will return NVML_ERROR_INSUFFICIENT_SIZE, or NVML_SUCCESS if no vGPU types are creatable.
  *
  * @param device                   The identifier of the target device
@@ -6858,7 +7823,7 @@ nvmlReturn_t DECLDIR nvmlVgpuTypeGetGpuInstanceProfileId(nvmlVgpuTypeId_t vgpuTy
  *
  * @param vgpuTypeId               Handle to vGPU type
  * @param deviceID                 Device ID and vendor ID of the device contained in single 32 bit value
- * @param subsystemID              Subsytem ID and subsytem vendor ID of the device contained in single 32 bit value
+ * @param subsystemID              Subsystem ID and subsystem vendor ID of the device contained in single 32 bit value
  *
  * @return
  *         - \ref NVML_SUCCESS                 successful completion
@@ -6997,10 +7962,10 @@ nvmlReturn_t DECLDIR nvmlVgpuTypeGetMaxInstancesPerVm(nvmlVgpuTypeId_t vgpuTypeI
  * Retrieve the active vGPU instances on a device.
  *
  * An array of active vGPU instances is returned in the caller-supplied buffer pointed at by \a vgpuInstances. The
- * array elememt count is passed in \a vgpuCount, and \a vgpuCount is used to return the number of vGPU instances
+ * array element count is passed in \a vgpuCount, and \a vgpuCount is used to return the number of vGPU instances
  * written to the buffer.
  *
- * If the supplied buffer is not large enough to accomodate the vGPU instance array, the function returns
+ * If the supplied buffer is not large enough to accommodate the vGPU instance array, the function returns
  * NVML_ERROR_INSUFFICIENT_SIZE, with the element count of nvmlVgpuInstance_t array required in \a vgpuCount.
  * To query the number of active vGPU instances, call this function with *vgpuCount = 0.  The code will return
  * NVML_ERROR_INSUFFICIENT_SIZE, or NVML_SUCCESS if no vGPU Types are supported.
@@ -7201,7 +8166,7 @@ nvmlReturn_t DECLDIR nvmlVgpuInstanceGetEccMode(nvmlVgpuInstance_t vgpuInstance,
  * @param encoderCapacity          Reference to an unsigned int for the encoder capacity
  *
  * @return
- *         - \ref NVML_SUCCESS                 if \a encoderCapacity has been retrived
+ *         - \ref NVML_SUCCESS                 if \a encoderCapacity has been retrieved
  *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
  *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a vgpuInstance is 0, or \a encoderQueryType is invalid
  *         - \ref NVML_ERROR_NOT_FOUND         if \a vgpuInstance does not match a valid active vGPU instance on the system
@@ -7254,7 +8219,7 @@ nvmlReturn_t DECLDIR nvmlVgpuInstanceGetEncoderStats(nvmlVgpuInstance_t vgpuInst
  * array element count is passed in \a sessionCount, and \a sessionCount is used to return the number of sessions
  * written to the buffer.
  *
- * If the supplied buffer is not large enough to accomodate the active session array, the function returns
+ * If the supplied buffer is not large enough to accommodate the active session array, the function returns
  * NVML_ERROR_INSUFFICIENT_SIZE, with the element count of nvmlEncoderSessionInfo_t array required in \a sessionCount.
  * To query the number of active encoder sessions, call this function with *sessionCount = 0. The code will return
  * NVML_SUCCESS with number of active encoder sessions updated in *sessionCount.
@@ -7284,7 +8249,7 @@ nvmlReturn_t DECLDIR nvmlVgpuInstanceGetEncoderSessions(nvmlVgpuInstance_t vgpuI
 * For Maxwell &tm; or newer fully supported devices.
 *
 * @param vgpuInstance                      Identifier of the target vGPU instance
-* @param fbcStats                          Reference to nvmlFBCStats_t structure contianing NvFBC stats
+* @param fbcStats                          Reference to nvmlFBCStats_t structure containing NvFBC stats
 *
 * @return
 *         - \ref NVML_SUCCESS                  if \a fbcStats is fetched
@@ -7302,7 +8267,7 @@ nvmlReturn_t DECLDIR nvmlVgpuInstanceGetFBCStats(nvmlVgpuInstance_t vgpuInstance
 * array element count is passed in \a sessionCount, and \a sessionCount is used to return the number of sessions
 * written to the buffer.
 *
-* If the supplied buffer is not large enough to accomodate the active session array, the function returns
+* If the supplied buffer is not large enough to accommodate the active session array, the function returns
 * NVML_ERROR_INSUFFICIENT_SIZE, with the element count of nvmlFBCSessionInfo_t array required in \a sessionCount.
 * To query the number of active FBC sessions, call this function with *sessionCount = 0.  The code will return
 * NVML_SUCCESS with number of active FBC sessions updated in *sessionCount.
@@ -7412,7 +8377,7 @@ typedef struct nvmlVgpuMetadata_st
     char                     guestDriverVersion[NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE]; //!< Version of driver installed in guest
     char                     hostDriverVersion[NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE];  //!< Version of driver installed in host
     unsigned int             reserved[6];                                                //!< Reserved for internal use
-    unsigned int             vgpuVirtualizationCaps;                                     //!< vGPU virtualizaion capabilities bitfileld
+    unsigned int             vgpuVirtualizationCaps;                                     //!< vGPU virtualization capabilities bitfield
     unsigned int             guestVgpuVersion;                                           //!< vGPU version of guest driver
     unsigned int             opaqueDataSize;                                             //!< Size of opaque data field in bytes
     char                     opaqueData[4];                                              //!< Opaque data
@@ -7426,7 +8391,7 @@ typedef struct nvmlVgpuPgpuMetadata_st
     unsigned int            version;                                                    //!< Current version of the structure
     unsigned int            revision;                                                   //!< Current revision of the structure
     char                    hostDriverVersion[NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE];  //!< Host driver version
-    unsigned int            pgpuVirtualizationCaps;                                     //!< Pgpu virtualizaion capabilities bitfileld
+    unsigned int            pgpuVirtualizationCaps;                                     //!< Pgpu virtualization capabilities bitfield
     unsigned int            reserved[5];                                                //!< Reserved for internal use
     nvmlVgpuVersion_t       hostSupportedVgpuRange;                                     //!< vGPU version range supported by host driver
     unsigned int            opaqueDataSize;                                             //!< Size of opaque data field in bytes
@@ -7524,7 +8489,7 @@ nvmlReturn_t DECLDIR nvmlDeviceGetVgpuMetadata(nvmlDevice_t device, nvmlVgpuPgpu
  *
  * The caller passes in a buffer via \a compatibilityInfo, into which a compatibility information structure is written. The
  * structure defines the states in which the vGPU / VM may be booted on the physical GPU. If the vGPU / VM compatibility
- * with the physical GPU is limited, a limit code indicates the factor limiting compability.
+ * with the physical GPU is limited, a limit code indicates the factor limiting compatability.
  * (see \ref nvmlVgpuPgpuCompatibilityLimitCode_t for details).
  *
  * Note: vGPU compatibility does not take into account dynamic capacity conditions that may limit a system's ability to
@@ -7560,6 +8525,91 @@ nvmlReturn_t DECLDIR nvmlGetVgpuCompatibility(nvmlVgpuMetadata_t *vgpuMetadata, 
  *         - \ref NVML_ERROR_UNKNOWN             on any unexpected error
  */
 nvmlReturn_t DECLDIR nvmlDeviceGetPgpuMetadataString(nvmlDevice_t device, char *pgpuMetadata, unsigned int *bufferSize);
+
+/**
+ * Returns the vGPU Software scheduler logs.
+ * \a pSchedulerLog points to a caller-allocated structure to contain the logs. The number of elements returned will
+ * never exceed \a NVML_SCHEDULER_SW_MAX_LOG_ENTRIES.
+ *
+ * To get the entire logs, call the function atleast 5 times a second.
+ *
+ * For Pascal &tm; or newer fully supported devices.
+ *
+ * @param device                The identifier of the target \a device
+ * @param pSchedulerLog         Reference in which \a pSchedulerLog is written
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                   vGPU scheduler logs were successfully obtained
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT    if \a pSchedulerLog is NULL or \a device is invalid
+ *         - \ref NVML_ERROR_NOT_SUPPORTED       The API is not supported in current state or \a device not in vGPU host mode
+ *         - \ref NVML_ERROR_UNKNOWN             on any unexpected error
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetVgpuSchedulerLog(nvmlDevice_t device, nvmlVgpuSchedulerLog_t *pSchedulerLog);
+
+/**
+ * Returns the vGPU scheduler state.
+ * The information returned in \a nvmlVgpuSchedulerGetState_t is not relevant if the BEST EFFORT policy is set.
+ *
+ * For Pascal &tm; or newer fully supported devices.
+ *
+ * @param device                The identifier of the target \a device
+ * @param pSchedulerState       Reference in which \a pSchedulerState is returned
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                   vGPU scheduler state is successfully obtained
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT    if \a pSchedulerState is NULL or \a device is invalid
+ *         - \ref NVML_ERROR_NOT_SUPPORTED       The API is not supported in current state or \a device not in vGPU host mode
+ *         - \ref NVML_ERROR_UNKNOWN             on any unexpected error
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetVgpuSchedulerState(nvmlDevice_t device, nvmlVgpuSchedulerGetState_t *pSchedulerState);
+
+/**
+ * Returns the vGPU scheduler capabilities.
+ * The list of supported vGPU schedulers returned in \a nvmlVgpuSchedulerCapabilities_t is from
+ * the NVML_VGPU_SCHEDULER_POLICY_*. This list enumerates the supported scheduler policies
+ * if the engine is Graphics type.
+ * The other values in \a nvmlVgpuSchedulerCapabilities_t are also applicable if the engine is
+ * Graphics type. For other engine types, it is BEST EFFORT policy.
+ * If ARR is supported and enabled, scheduling frequency and averaging factor are applicable
+ * else timeSlice is applicable.
+ *
+ * For Pascal &tm; or newer fully supported devices.
+ *
+ * @param device                The identifier of the target \a device
+ * @param pCapabilities         Reference in which \a pCapabilities is written
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                   vGPU scheduler capabilities were successfully obtained
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT    if \a pCapabilities is NULL or \a device is invalid
+ *         - \ref NVML_ERROR_NOT_SUPPORTED       The API is not supported in current state or \a device not in vGPU host mode
+ *         - \ref NVML_ERROR_UNKNOWN             on any unexpected error
+ */
+nvmlReturn_t DECLDIR nvmlDeviceGetVgpuSchedulerCapabilities(nvmlDevice_t device, nvmlVgpuSchedulerCapabilities_t *pCapabilities);
+
+/**
+ * Sets the vGPU scheduler state.
+ *
+ * For Pascal &tm; or newer fully supported devices.
+ *
+ * The scheduler state change won't persist across module load/unload.
+ * Scheduler state and params will be allowed to set only when no VM is running.
+ * In \a nvmlVgpuSchedulerSetState_t, IFF enableARRMode is enabled then
+ * provide avgFactorForARR and frequency as input. If enableARRMode is disabled
+ * then provide timeslice as input.
+ *
+ * @param device                The identifier of the target \a device
+ * @param pSchedulerState       vGPU \a pSchedulerState to set
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                  vGPU scheduler state has been successfully set
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT   if \a pSchedulerState is NULL or \a device is invalid
+ *         - \ref NVML_ERROR_RESET_REQUIRED     if setting \a pSchedulerState failed with fatal error,
+ *                                              reboot is required to overcome from this error.
+ *         - \ref NVML_ERROR_NOT_SUPPORTED      The API is not supported in current state or \a device not in vGPU host mode
+ *                                              or if any vGPU instance currently exists on the \a device
+ *         - \ref NVML_ERROR_UNKNOWN            on any unexpected error
+ */
+nvmlReturn_t DECLDIR nvmlDeviceSetVgpuSchedulerState(nvmlDevice_t device, nvmlVgpuSchedulerSetState_t *pSchedulerState);
 
 /*
  * Virtual GPU (vGPU) version
@@ -7931,7 +8981,9 @@ nvmlReturn_t DECLDIR nvmlGetExcludedDeviceInfoByIndex(unsigned int index, nvmlEx
 #define NVML_GPU_INSTANCE_PROFILE_8_SLICE      0x5
 #define NVML_GPU_INSTANCE_PROFILE_6_SLICE      0x6
 #define NVML_GPU_INSTANCE_PROFILE_1_SLICE_REV1 0x7
-#define NVML_GPU_INSTANCE_PROFILE_COUNT        0x8
+#define NVML_GPU_INSTANCE_PROFILE_2_SLICE_REV1 0x8
+#define NVML_GPU_INSTANCE_PROFILE_1_SLICE_REV2 0x9
+#define NVML_GPU_INSTANCE_PROFILE_COUNT        0xA
 
 typedef struct nvmlGpuInstancePlacement_st
 {
@@ -7959,7 +9011,7 @@ typedef struct nvmlGpuInstanceProfileInfo_st
 
 /**
  * GPU instance profile information (v2).
- * 
+ *
  * Version 2 adds the \ref nvmlGpuInstanceProfileInfo_v2_t.version field
  * to the start of the structure, and the \ref nvmlGpuInstanceProfileInfo_v2_t.name
  * field to the end. This structure is not backwards-compatible with
@@ -8003,14 +9055,15 @@ typedef struct nvmlGpuInstance_st* nvmlGpuInstance_t;
  * These macros should be passed to \ref nvmlGpuInstanceGetComputeInstanceProfileInfo to retrieve the
  * detailed information about a compute instance such as profile ID, engine counts
  */
-#define NVML_COMPUTE_INSTANCE_PROFILE_1_SLICE 0x0
-#define NVML_COMPUTE_INSTANCE_PROFILE_2_SLICE 0x1
-#define NVML_COMPUTE_INSTANCE_PROFILE_3_SLICE 0x2
-#define NVML_COMPUTE_INSTANCE_PROFILE_4_SLICE 0x3
-#define NVML_COMPUTE_INSTANCE_PROFILE_7_SLICE 0x4
-#define NVML_COMPUTE_INSTANCE_PROFILE_8_SLICE 0x5
-#define NVML_COMPUTE_INSTANCE_PROFILE_6_SLICE 0x6
-#define NVML_COMPUTE_INSTANCE_PROFILE_COUNT   0x7
+#define NVML_COMPUTE_INSTANCE_PROFILE_1_SLICE       0x0
+#define NVML_COMPUTE_INSTANCE_PROFILE_2_SLICE       0x1
+#define NVML_COMPUTE_INSTANCE_PROFILE_3_SLICE       0x2
+#define NVML_COMPUTE_INSTANCE_PROFILE_4_SLICE       0x3
+#define NVML_COMPUTE_INSTANCE_PROFILE_7_SLICE       0x4
+#define NVML_COMPUTE_INSTANCE_PROFILE_8_SLICE       0x5
+#define NVML_COMPUTE_INSTANCE_PROFILE_6_SLICE       0x6
+#define NVML_COMPUTE_INSTANCE_PROFILE_1_SLICE_REV1  0x7
+#define NVML_COMPUTE_INSTANCE_PROFILE_COUNT         0x8
 
 #define NVML_COMPUTE_INSTANCE_ENGINE_PROFILE_SHARED 0x0 //!< All the engines except multiprocessors would be shared
 #define NVML_COMPUTE_INSTANCE_ENGINE_PROFILE_COUNT  0x1
@@ -8039,7 +9092,7 @@ typedef struct nvmlComputeInstanceProfileInfo_st
 
 /**
  * Compute instance profile information (v2).
- * 
+ *
  * Version 2 adds the \ref nvmlComputeInstanceProfileInfo_v2_t.version field
  * to the start of the structure, and the \ref nvmlComputeInstanceProfileInfo_v2_t.name
  * field to the end. This structure is not backwards-compatible with
@@ -8158,7 +9211,7 @@ nvmlReturn_t DECLDIR nvmlDeviceGetGpuInstanceProfileInfo(nvmlDevice_t device, un
 /**
  * Versioned wrapper around \ref nvmlDeviceGetGpuInstanceProfileInfo that accepts a versioned
  * \ref nvmlGpuInstanceProfileInfo_v2_t or later output structure.
- * 
+ *
  * @note The caller must set the \ref nvmlGpuInstanceProfileInfo_v2_t.version field to the
  * appropriate version prior to calling this function. For example:
  * \code
@@ -8453,6 +9506,37 @@ nvmlReturn_t DECLDIR nvmlGpuInstanceGetComputeInstanceRemainingCapacity(nvmlGpuI
                                                                         unsigned int profileId, unsigned int *count);
 
 /**
+ * Get compute instance placements.
+ *
+ * For Ampere &tm; or newer fully supported devices.
+ * Supported on Linux only.
+ * Requires privileged user.
+ *
+ * A placement represents the location of a compute instance within a GPU instance. This API only returns all the possible
+ * placements for the given profile.
+ * A created compute instance occupies compute slices described by its placement. Creation of new compute instance will
+ * fail if there is overlap with the already occupied compute slices.
+ *
+ * @param gpuInstance                          The identifier of the target GPU instance
+ * @param profileId                            The compute instance profile ID. See \ref  nvmlGpuInstanceGetComputeInstanceProfileInfo
+ * @param placements                           Returns placements allowed for the profile. Can be NULL to discover number
+ *                                             of allowed placements for this profile. If non-NULL must be large enough
+ *                                             to accommodate the placements supported by the profile.
+ * @param count                                Returns number of allowed placemenets for the profile.
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 Upon success
+ *         - \ref NVML_ERROR_UNINITIALIZED     If library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  If \a gpuInstance, \a profileId or \a count are invalid
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     If \a device doesn't have MIG mode enabled or \a profileId isn't supported
+ *         - \ref NVML_ERROR_NO_PERMISSION     If user doesn't have permission to perform the operation
+ */
+nvmlReturn_t DECLDIR nvmlGpuInstanceGetComputeInstancePossiblePlacements(nvmlGpuInstance_t gpuInstance,
+                                                                         unsigned int profileId,
+                                                                         nvmlComputeInstancePlacement_t *placements,
+                                                                         unsigned int *count);
+
+/**
  * Create compute instance.
  *
  * For Ampere &tm; or newer fully supported devices.
@@ -8479,6 +9563,36 @@ nvmlReturn_t DECLDIR nvmlGpuInstanceGetComputeInstanceRemainingCapacity(nvmlGpuI
  */
 nvmlReturn_t DECLDIR nvmlGpuInstanceCreateComputeInstance(nvmlGpuInstance_t gpuInstance, unsigned int profileId,
                                                           nvmlComputeInstance_t *computeInstance);
+
+/**
+ * Create compute instance with the specified placement.
+ *
+ * For Ampere &tm; or newer fully supported devices.
+ * Supported on Linux only.
+ * Requires privileged user.
+ *
+ * If the parent device is unbound, reset or the parent GPU instance is destroyed or the compute instance is destroyed
+ * explicitly, the compute instance handle would become invalid. The compute instance must be recreated to acquire
+ * a valid handle.
+ *
+ * @param gpuInstance                          The identifier of the target GPU instance
+ * @param profileId                            The compute instance profile ID.
+ *                                             See \ref nvmlGpuInstanceGetComputeInstanceProfileInfo
+ * @param placement                            The requested placement. See \ref nvmlGpuInstanceGetComputeInstancePossiblePlacements
+ * @param computeInstance                      Returns the compute instance handle
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                       Upon success
+ *         - \ref NVML_ERROR_UNINITIALIZED           If library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT        If \a gpuInstance, \a profile, \a profileId or \a computeInstance
+ *                                                   are invalid
+ *         - \ref NVML_ERROR_NOT_SUPPORTED           If \a profileId isn't supported
+ *         - \ref NVML_ERROR_NO_PERMISSION           If user doesn't have permission to perform the operation
+ *         - \ref NVML_ERROR_INSUFFICIENT_RESOURCES  If the requested compute instance could not be created
+ */
+nvmlReturn_t DECLDIR nvmlGpuInstanceCreateComputeInstanceWithPlacement(nvmlGpuInstance_t gpuInstance, unsigned int profileId,
+                                                                       const nvmlComputeInstancePlacement_t *placement,
+                                                                       nvmlComputeInstance_t *computeInstance);
 
 /**
  * Destroy compute instance.
@@ -8691,196 +9805,7 @@ nvmlReturn_t DECLDIR nvmlDeviceGetMigDeviceHandleByIndex(nvmlDevice_t device, un
  */
 nvmlReturn_t DECLDIR nvmlDeviceGetDeviceHandleFromMigDeviceHandle(nvmlDevice_t migDevice, nvmlDevice_t *device);
 
-/**
- * Get the type of the GPU Bus (PCIe, PCI, ...)
- *
- * @param device                               The identifier of the target device
- * @param type                                 The PCI Bus type
- *
- * return
- *         - \ref NVML_SUCCESS                 if the bus \a type is successfully retreived
- *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
- *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \device is invalid or \type is NULL
- *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
- */
-nvmlReturn_t DECLDIR nvmlDeviceGetBusType(nvmlDevice_t device, nvmlBusType_t *type);
-
-/**
- * Retrieve performance monitor samples from the associated subdevice.
- *
- * @param device
- * @param pDynamicPstatesInfo
- *
- * @return
- *         - \ref NVML_SUCCESS                 if \a pDynamicPstatesInfo has been set
- *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
- *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a pDynamicPstatesInfo is NULL
- *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support this feature
- *         - \ref NVML_ERROR_GPU_IS_LOST       if the target GPU has fallen off the bus or is otherwise inaccessible
- *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
- */
-nvmlReturn_t DECLDIR nvmlDeviceGetDynamicPstatesInfo(nvmlDevice_t device, nvmlGpuDynamicPstatesInfo_t *pDynamicPstatesInfo);
-
-/**
- * Sets the speed of a specified fan.
- *
- * WARNING: This function changes the fan control policy to manual. It means that YOU have to monitor
- *          the temperature and adjust the fan speed accordingly.
- *          If you set the fan speed too low you can burn your GPU!
- *          Use nvmlDeviceSetDefaultFanSpeed_v2 to restore default control policy.
- *
- * For all cuda-capable discrete products with fans that are Maxwell or Newer.
- *
- * device                                The identifier of the target device
- * fan                                   The index of the fan, starting at zero
- * speed                                 The target speed of the fan [0-100] in % of max speed
- *
- * return
- *        NVML_SUCCESS                   if the fan speed has been set
- *        NVML_ERROR_UNINITIALIZED       if the library has not been successfully initialized
- *        NVML_ERROR_INVALID_ARGUMENT    if the device is not valid, or the speed is outside acceptable ranges,
- *                                              or if the fan index doesn't reference an actual fan.
- *        NVML_ERROR_NOT_SUPPORTED       if the device is older than Maxwell.
- *        NVML_ERROR_UNKNOWN             if there was an unexpected error.
- */
-nvmlReturn_t DECLDIR nvmlDeviceSetFanSpeed_v2(nvmlDevice_t device, unsigned int fan, unsigned int speed);
-
-/**
- * Retrieve the GPCCLK VF offset value
- * @param[in]   device                         The identifier of the target device
- * @param[out]  offset                         The retrieved GPCCLK VF offset value
- *
- * @return
- *         - \ref NVML_SUCCESS                 if \a offset has been successfully queried
- *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
- *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a offset is NULL
- *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support this feature
- *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
- */
-nvmlReturn_t DECLDIR nvmlDeviceGetGpcClkVfOffset(nvmlDevice_t device, int *offset);
-
-/**
- * Set the GPCCLK VF offset value
- * @param[in]   device                         The identifier of the target device
- * @param[in]   offset                         The GPCCLK VF offset value to set
- *
- * @return
- *         - \ref NVML_SUCCESS                 if \a offset has been set
- *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
- *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a offset is NULL
- *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support this feature
- *         - \ref NVML_ERROR_GPU_IS_LOST       if the target GPU has fallen off the bus or is otherwise inaccessible
- *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
- */
-nvmlReturn_t DECLDIR nvmlDeviceSetGpcClkVfOffset(nvmlDevice_t device, int offset);
-
-/**
- * Retrieve the MemClk (Memory Clock) VF offset value.
- * @param[in]   device                         The identifier of the target device
- * @param[out]  offset                         The retrieved MemClk VF offset value
- *
- * @return
- *         - \ref NVML_SUCCESS                 if \a offset has been successfully queried
- *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
- *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a offset is NULL
- *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support this feature
- *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
- */
-nvmlReturn_t DECLDIR nvmlDeviceGetMemClkVfOffset(nvmlDevice_t device, int *offset);
-
-/**
- * Set the MemClk (Memory Clock) VF offset value. It requires elevated privileges.
- * @param[in]   device                         The identifier of the target device
- * @param[in]   offset                         The MemClk VF offset value to set
- *
- * @return
- *         - \ref NVML_SUCCESS                 if \a offset has been set
- *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
- *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a offset is NULL
- *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support this feature
- *         - \ref NVML_ERROR_GPU_IS_LOST       if the target GPU has fallen off the bus or is otherwise inaccessible
- *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
- */
-nvmlReturn_t DECLDIR nvmlDeviceSetMemClkVfOffset(nvmlDevice_t device, int offset);
-
-/**
- * Retrieve min and max clocks of some clock domain for a given PState
- *
- * @param device                               The identifier of the target device
- * @param type                                 Clock domain
- * @param pstate                               PState to query
- * @param minClockMHz                          Reference in which to return min clock frequency
- * @param maxClockMHz                          Reference in which to return max clock frequency
- *
- * @return
- *         - \ref NVML_SUCCESS                 if everything worked
- *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
- *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device, \a type or \a pstate are invalid or both
- *                                                  \a minClockMHz and \a maxClockMHz are NULL
- *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support this feature
- */
-nvmlReturn_t DECLDIR nvmlDeviceGetMinMaxClockOfPState(nvmlDevice_t device, nvmlClockType_t type, nvmlPstates_t pstate,
-                                                      unsigned int * minClockMHz, unsigned int * maxClockMHz);
-
-/**
- * Get all supported Performance States (P-States) for the device.
- *
- * The returned array would contain a contiguous list of valid P-States supported by
- * the device. If the number of supported P-States is fewer than the size of the array
- * supplied missing elements would contain \a NVML_PSTATE_UNKNOWN.
- *
- * The number of elements in the returned list will never exceed \a NVML_MAX_GPU_PERF_PSTATES.
- *
- * @param device                               The identifier of the target device
- * @param pstates                              Container to return the list of performance states
- *                                             supported by device
- * @param size                                 Size of the supplied \a pstates array in bytes
- *
- * @return
- *         - \ref NVML_SUCCESS                 if \a pstates array has been retrieved
- *         - \ref NVML_ERROR_INSUFFICIENT_SIZE if the the container supplied was not large enough to
- *                                             hold the resulting list
- *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
- *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device or \a pstates is invalid
- *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support performance state readings
- *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
- */
-nvmlReturn_t DECLDIR nvmlDeviceGetSupportedPerformanceStates(nvmlDevice_t device,
-                                                             nvmlPstates_t *pstates, unsigned int size);
-
-/**
- * Retrieve the GPCCLK min max VF offset value.
- * @param[in]   device                         The identifier of the target device
- * @param[out]  minOffset                      The retrieved GPCCLK VF min offset value
- * @param[out]  maxOffset                      The retrieved GPCCLK VF max offset value
- *
- * @return
- *         - \ref NVML_SUCCESS                 if \a offset has been successfully queried
- *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
- *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a offset is NULL
- *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support this feature
- *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
- */
-nvmlReturn_t DECLDIR nvmlDeviceGetGpcClkMinMaxVfOffset(nvmlDevice_t device,
-                                                       int *minOffset, int *maxOffset);
-
-/**
- * Retrieve the MemClk (Memory Clock) min max VF offset value.
- * @param[in]   device                         The identifier of the target device
- * @param[out]  minOffset                      The retrieved MemClk VF min offset value
- * @param[out]  maxOffset                      The retrieved MemClk VF max offset value
- *
- * @return
- *         - \ref NVML_SUCCESS                 if \a offset has been successfully queried
- *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
- *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a offset is NULL
- *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support this feature
- *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
- */
-nvmlReturn_t DECLDIR nvmlDeviceGetMemClkMinMaxVfOffset(nvmlDevice_t device,
-                                                       int *minOffset, int *maxOffset);
-
-/** @} */
+/** @} */ // @defgroup nvmlMultiInstanceGPU
 
 /***************************************************************************************************/
 /** @defgroup GPM NVML GPM
@@ -8892,81 +9817,81 @@ nvmlReturn_t DECLDIR nvmlDeviceGetMemClkMinMaxVfOffset(nvmlDevice_t device,
  */
 /***************************************************************************************************/
 
-/* GPM Metric Identifiers */
+/**
+ * GPM Metric Identifiers
+ */
 typedef enum
 {
-    NVML_GPM_METRIC_GRAPHICS_UTIL           = 1, /* Percentage of time any compute/graphics app was active on the GPU. 0.0 - 100.0 */
-    NVML_GPM_METRIC_SM_UTIL                 = 2, /* Percentage of SMs that were busy. 0.0 - 100.0 */
-    NVML_GPM_METRIC_SM_OCCUPANCY            = 3, /* Percentage of warps that were active vs theoretical maximum. 0.0 - 100.0 */
-    NVML_GPM_METRIC_INTEGER_UTIL            = 4, /* Percentage of time the GPU's SMs were doing integer operations. 0.0 - 100.0 */
-    NVML_GPM_METRIC_ANY_TENSOR_UTIL         = 5, /* Percentage of time the GPU's SMs were doing ANY tensor operations. 0.0 - 100.0 */
-    NVML_GPM_METRIC_DFMA_TENSOR_UTIL        = 6, /* Percentage of time the GPU's SMs were doing DFMA tensor operations. 0.0 - 100.0 */
-    NVML_GPM_METRIC_HMMA_TENSOR_UTIL        = 7, /* Percentage of time the GPU's SMs were doing HMMA tensor operations. 0.0 - 100.0 */
-    NVML_GPM_METRIC_IMMA_TENSOR_UTIL        = 9, /* Percentage of time the GPU's SMs were doing IMMA tensor operations. 0.0 - 100.0 */
-    NVML_GPM_METRIC_DRAM_BW_UTIL            = 10, /* Percentage of DRAM bw used vs theoretical maximum. 0.0 - 100.0 */
-    NVML_GPM_METRIC_FP64_UTIL               = 11, /* Percentage of time the GPU's SMs were doing non-tensor FP64 math. 0.0 - 100.0 */
-    NVML_GPM_METRIC_FP32_UTIL               = 12, /* Percentage of time the GPU's SMs were doing non-tensor FP32 math. 0.0 - 100.0 */
-    NVML_GPM_METRIC_FP16_UTIL               = 13, /* Percentage of time the GPU's SMs were doing non-tensor FP16 math. 0.0 - 100.0 */
-    NVML_GPM_METRIC_PCIE_TX_PER_SEC         = 20, /* PCIe traffic from this GPU in MiB/sec */
-    NVML_GPM_METRIC_PCIE_RX_PER_SEC         = 21, /* PCIe traffic to this GPU in MiB/sec */
-    NVML_GPM_METRIC_NVDEC_0_UTIL            = 30, /* Percent utilization of NVDEC 0. 0.0 - 100.0 */
-    NVML_GPM_METRIC_NVDEC_1_UTIL            = 31, /* Percent utilization of NVDEC 1. 0.0 - 100.0 */
-    NVML_GPM_METRIC_NVDEC_2_UTIL            = 32, /* Percent utilization of NVDEC 2. 0.0 - 100.0 */
-    NVML_GPM_METRIC_NVDEC_3_UTIL            = 33, /* Percent utilization of NVDEC 3. 0.0 - 100.0 */
-    NVML_GPM_METRIC_NVDEC_4_UTIL            = 34, /* Percent utilization of NVDEC 4. 0.0 - 100.0 */
-    NVML_GPM_METRIC_NVDEC_5_UTIL            = 35, /* Percent utilization of NVDEC 5. 0.0 - 100.0 */
-    NVML_GPM_METRIC_NVDEC_6_UTIL            = 36, /* Percent utilization of NVDEC 6. 0.0 - 100.0 */
-    NVML_GPM_METRIC_NVDEC_7_UTIL            = 37, /* Percent utilization of NVDEC 7. 0.0 - 100.0 */
-    NVML_GPM_METRIC_NVJPG_0_UTIL            = 40, /* Percent utilization of NVJPG 0. 0.0 - 100.0 */
-    NVML_GPM_METRIC_NVJPG_1_UTIL            = 41, /* Percent utilization of NVJPG 1. 0.0 - 100.0 */
-    NVML_GPM_METRIC_NVJPG_2_UTIL            = 42, /* Percent utilization of NVJPG 2. 0.0 - 100.0 */
-    NVML_GPM_METRIC_NVJPG_3_UTIL            = 43, /* Percent utilization of NVJPG 3. 0.0 - 100.0 */
-    NVML_GPM_METRIC_NVJPG_4_UTIL            = 44, /* Percent utilization of NVJPG 4. 0.0 - 100.0 */
-    NVML_GPM_METRIC_NVJPG_5_UTIL            = 45, /* Percent utilization of NVJPG 5. 0.0 - 100.0 */
-    NVML_GPM_METRIC_NVJPG_6_UTIL            = 46, /* Percent utilization of NVJPG 6. 0.0 - 100.0 */
-    NVML_GPM_METRIC_NVJPG_7_UTIL            = 47, /* Percent utilization of NVJPG 7. 0.0 - 100.0 */
-    NVML_GPM_METRIC_NVOFA_0_UTIL            = 50, /* Percent utilization of NVOFA 0. 0.0 - 100.0 */
-    NVML_GPM_METRIC_NVLINK_TOTAL_RX_PER_SEC = 60, /* NvLink read bandwidth for all links in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_TOTAL_TX_PER_SEC = 61, /* NvLink write bandwidth for all links in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L0_RX_PER_SEC    = 62, /* NvLink read bandwidth for link 0 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L0_TX_PER_SEC    = 63, /* NvLink write bandwidth for link 0 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L1_RX_PER_SEC    = 64, /* NvLink read bandwidth for link 1 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L1_TX_PER_SEC    = 65, /* NvLink write bandwidth for link 1 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L2_RX_PER_SEC    = 66, /* NvLink read bandwidth for link 2 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L2_TX_PER_SEC    = 67, /* NvLink write bandwidth for link 2 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L3_RX_PER_SEC    = 68, /* NvLink read bandwidth for link 3 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L3_TX_PER_SEC    = 69, /* NvLink write bandwidth for link 3 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L4_RX_PER_SEC    = 70, /* NvLink read bandwidth for link 4 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L4_TX_PER_SEC    = 71, /* NvLink write bandwidth for link 4 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L5_RX_PER_SEC    = 72, /* NvLink read bandwidth for link 5 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L5_TX_PER_SEC    = 73, /* NvLink write bandwidth for link 5 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L6_RX_PER_SEC    = 74, /* NvLink read bandwidth for link 6 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L6_TX_PER_SEC    = 75, /* NvLink write bandwidth for link 6 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L7_RX_PER_SEC    = 76, /* NvLink read bandwidth for link 7 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L7_TX_PER_SEC    = 77, /* NvLink write bandwidth for link 7 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L8_RX_PER_SEC    = 78, /* NvLink read bandwidth for link 8 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L8_TX_PER_SEC    = 79, /* NvLink write bandwidth for link 8 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L9_RX_PER_SEC    = 80, /* NvLink read bandwidth for link 9 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L9_TX_PER_SEC    = 81, /* NvLink write bandwidth for link 9 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L10_RX_PER_SEC   = 82, /* NvLink read bandwidth for link 10 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L10_TX_PER_SEC   = 83, /* NvLink write bandwidth for link 10 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L11_RX_PER_SEC   = 84, /* NvLink read bandwidth for link 11 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L11_TX_PER_SEC   = 85, /* NvLink write bandwidth for link 11 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L12_RX_PER_SEC   = 86, /* NvLink read bandwidth for link 12 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L12_TX_PER_SEC   = 87, /* NvLink write bandwidth for link 12 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L13_RX_PER_SEC   = 88, /* NvLink read bandwidth for link 13 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L13_TX_PER_SEC   = 89, /* NvLink write bandwidth for link 13 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L14_RX_PER_SEC   = 90, /* NvLink read bandwidth for link 14 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L14_TX_PER_SEC   = 91, /* NvLink write bandwidth for link 14 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L15_RX_PER_SEC   = 92, /* NvLink read bandwidth for link 15 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L15_TX_PER_SEC   = 93, /* NvLink write bandwidth for link 15 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L16_RX_PER_SEC   = 94, /* NvLink read bandwidth for link 16 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L16_TX_PER_SEC   = 95, /* NvLink write bandwidth for link 16 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L17_RX_PER_SEC   = 96, /* NvLink read bandwidth for link 17 in MiB/sec */
-    NVML_GPM_METRIC_NVLINK_L17_TX_PER_SEC   = 97, /* NvLink write bandwidth for link 17 in MiB/sec */
-    NVML_GPM_METRIC_MAX                     = 98, /* Maximum value above +1. Note that changing this
-                                                     should also change NVML_GPM_METRICS_GET_VERSION
-                                                     due to struct size change */
+    NVML_GPM_METRIC_GRAPHICS_UTIL           = 1,    //!< Percentage of time any compute/graphics app was active on the GPU. 0.0 - 100.0
+    NVML_GPM_METRIC_SM_UTIL                 = 2,    //!< Percentage of SMs that were busy. 0.0 - 100.0
+    NVML_GPM_METRIC_SM_OCCUPANCY            = 3,    //!< Percentage of warps that were active vs theoretical maximum. 0.0 - 100.0
+    NVML_GPM_METRIC_INTEGER_UTIL            = 4,    //!< Percentage of time the GPU's SMs were doing integer operations. 0.0 - 100.0
+    NVML_GPM_METRIC_ANY_TENSOR_UTIL         = 5,    //!< Percentage of time the GPU's SMs were doing ANY tensor operations. 0.0 - 100.0
+    NVML_GPM_METRIC_DFMA_TENSOR_UTIL        = 6,    //!< Percentage of time the GPU's SMs were doing DFMA tensor operations. 0.0 - 100.0
+    NVML_GPM_METRIC_HMMA_TENSOR_UTIL        = 7,    //!< Percentage of time the GPU's SMs were doing HMMA tensor operations. 0.0 - 100.0
+    NVML_GPM_METRIC_IMMA_TENSOR_UTIL        = 9,    //!< Percentage of time the GPU's SMs were doing IMMA tensor operations. 0.0 - 100.0
+    NVML_GPM_METRIC_DRAM_BW_UTIL            = 10,   //!< Percentage of DRAM bw used vs theoretical maximum. 0.0 - 100.0 */
+    NVML_GPM_METRIC_FP64_UTIL               = 11,   //!< Percentage of time the GPU's SMs were doing non-tensor FP64 math. 0.0 - 100.0
+    NVML_GPM_METRIC_FP32_UTIL               = 12,   //!< Percentage of time the GPU's SMs were doing non-tensor FP32 math. 0.0 - 100.0
+    NVML_GPM_METRIC_FP16_UTIL               = 13,   //!< Percentage of time the GPU's SMs were doing non-tensor FP16 math. 0.0 - 100.0
+    NVML_GPM_METRIC_PCIE_TX_PER_SEC         = 20,   //!< PCIe traffic from this GPU in MiB/sec
+    NVML_GPM_METRIC_PCIE_RX_PER_SEC         = 21,   //!< PCIe traffic to this GPU in MiB/sec
+    NVML_GPM_METRIC_NVDEC_0_UTIL            = 30,   //!< Percent utilization of NVDEC 0. 0.0 - 100.0
+    NVML_GPM_METRIC_NVDEC_1_UTIL            = 31,   //!< Percent utilization of NVDEC 1. 0.0 - 100.0
+    NVML_GPM_METRIC_NVDEC_2_UTIL            = 32,   //!< Percent utilization of NVDEC 2. 0.0 - 100.0
+    NVML_GPM_METRIC_NVDEC_3_UTIL            = 33,   //!< Percent utilization of NVDEC 3. 0.0 - 100.0
+    NVML_GPM_METRIC_NVDEC_4_UTIL            = 34,   //!< Percent utilization of NVDEC 4. 0.0 - 100.0
+    NVML_GPM_METRIC_NVDEC_5_UTIL            = 35,   //!< Percent utilization of NVDEC 5. 0.0 - 100.0
+    NVML_GPM_METRIC_NVDEC_6_UTIL            = 36,   //!< Percent utilization of NVDEC 6. 0.0 - 100.0
+    NVML_GPM_METRIC_NVDEC_7_UTIL            = 37,   //!< Percent utilization of NVDEC 7. 0.0 - 100.0
+    NVML_GPM_METRIC_NVJPG_0_UTIL            = 40,   //!< Percent utilization of NVJPG 0. 0.0 - 100.0
+    NVML_GPM_METRIC_NVJPG_1_UTIL            = 41,   //!< Percent utilization of NVJPG 1. 0.0 - 100.0
+    NVML_GPM_METRIC_NVJPG_2_UTIL            = 42,   //!< Percent utilization of NVJPG 2. 0.0 - 100.0
+    NVML_GPM_METRIC_NVJPG_3_UTIL            = 43,   //!< Percent utilization of NVJPG 3. 0.0 - 100.0
+    NVML_GPM_METRIC_NVJPG_4_UTIL            = 44,   //!< Percent utilization of NVJPG 4. 0.0 - 100.0
+    NVML_GPM_METRIC_NVJPG_5_UTIL            = 45,   //!< Percent utilization of NVJPG 5. 0.0 - 100.0
+    NVML_GPM_METRIC_NVJPG_6_UTIL            = 46,   //!< Percent utilization of NVJPG 6. 0.0 - 100.0
+    NVML_GPM_METRIC_NVJPG_7_UTIL            = 47,   //!< Percent utilization of NVJPG 7. 0.0 - 100.0
+    NVML_GPM_METRIC_NVOFA_0_UTIL            = 50,   //!< Percent utilization of NVOFA 0. 0.0 - 100.0
+    NVML_GPM_METRIC_NVLINK_TOTAL_RX_PER_SEC = 60,   //!< NvLink read bandwidth for all links in MiB/sec
+    NVML_GPM_METRIC_NVLINK_TOTAL_TX_PER_SEC = 61,   //!< NvLink write bandwidth for all links in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L0_RX_PER_SEC    = 62,   //!< NvLink read bandwidth for link 0 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L0_TX_PER_SEC    = 63,   //!< NvLink write bandwidth for link 0 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L1_RX_PER_SEC    = 64,   //!< NvLink read bandwidth for link 1 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L1_TX_PER_SEC    = 65,   //!< NvLink write bandwidth for link 1 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L2_RX_PER_SEC    = 66,   //!< NvLink read bandwidth for link 2 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L2_TX_PER_SEC    = 67,   //!< NvLink write bandwidth for link 2 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L3_RX_PER_SEC    = 68,   //!< NvLink read bandwidth for link 3 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L3_TX_PER_SEC    = 69,   //!< NvLink write bandwidth for link 3 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L4_RX_PER_SEC    = 70,   //!< NvLink read bandwidth for link 4 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L4_TX_PER_SEC    = 71,   //!< NvLink write bandwidth for link 4 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L5_RX_PER_SEC    = 72,   //!< NvLink read bandwidth for link 5 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L5_TX_PER_SEC    = 73,   //!< NvLink write bandwidth for link 5 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L6_RX_PER_SEC    = 74,   //!< NvLink read bandwidth for link 6 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L6_TX_PER_SEC    = 75,   //!< NvLink write bandwidth for link 6 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L7_RX_PER_SEC    = 76,   //!< NvLink read bandwidth for link 7 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L7_TX_PER_SEC    = 77,   //!< NvLink write bandwidth for link 7 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L8_RX_PER_SEC    = 78,   //!< NvLink read bandwidth for link 8 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L8_TX_PER_SEC    = 79,   //!< NvLink write bandwidth for link 8 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L9_RX_PER_SEC    = 80,   //!< NvLink read bandwidth for link 9 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L9_TX_PER_SEC    = 81,   //!< NvLink write bandwidth for link 9 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L10_RX_PER_SEC   = 82,   //!< NvLink read bandwidth for link 10 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L10_TX_PER_SEC   = 83,   //!< NvLink write bandwidth for link 10 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L11_RX_PER_SEC   = 84,   //!< NvLink read bandwidth for link 11 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L11_TX_PER_SEC   = 85,   //!< NvLink write bandwidth for link 11 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L12_RX_PER_SEC   = 86,   //!< NvLink read bandwidth for link 12 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L12_TX_PER_SEC   = 87,   //!< NvLink write bandwidth for link 12 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L13_RX_PER_SEC   = 88,   //!< NvLink read bandwidth for link 13 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L13_TX_PER_SEC   = 89,   //!< NvLink write bandwidth for link 13 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L14_RX_PER_SEC   = 90,   //!< NvLink read bandwidth for link 14 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L14_TX_PER_SEC   = 91,   //!< NvLink write bandwidth for link 14 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L15_RX_PER_SEC   = 92,   //!< NvLink read bandwidth for link 15 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L15_TX_PER_SEC   = 93,   //!< NvLink write bandwidth for link 15 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L16_RX_PER_SEC   = 94,   //!< NvLink read bandwidth for link 16 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L16_TX_PER_SEC   = 95,   //!< NvLink write bandwidth for link 16 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L17_RX_PER_SEC   = 96,   //!< NvLink read bandwidth for link 17 in MiB/sec
+    NVML_GPM_METRIC_NVLINK_L17_TX_PER_SEC   = 97,   //!< NvLink write bandwidth for link 17 in MiB/sec
+    NVML_GPM_METRIC_MAX                     = 98,   //!< Maximum value above +1. Note that changing this should also change NVML_GPM_METRICS_GET_VERSION due to struct size change
 } nvmlGpmMetricId_t;
 
 /** @} */ // @defgroup nvmlGpmEnums
@@ -8978,39 +9903,48 @@ typedef enum
  */
 /***************************************************************************************************/
 
-/* Handle to an allocated GPM sample allocated with nvmlGpmSampleAlloc()
-   Free this with nvmlGpmSampleFree() */
+/**
+ * Handle to an allocated GPM sample allocated with nvmlGpmSampleAlloc(). Free this with nvmlGpmSampleFree().
+ */
 typedef struct nvmlGpmSample_st* nvmlGpmSample_t;
 
+/**
+ * GPM metric information.
+ */
 typedef struct
 {
-    unsigned int metricId;   /*  IN: NVML_GPM_METRIC_? #define of which metric to retrieve */
-    nvmlReturn_t nvmlReturn; /* OUT: Status of this metric. If this is nonzero, then value is not valid */
-    double value;            /* OUT: Value of this metric. Is only valid if nvmlReturn is 0 (NVML_SUCCESS) */
+    unsigned int metricId;   //!<  IN: NVML_GPM_METRIC_? #define of which metric to retrieve
+    nvmlReturn_t nvmlReturn; //!<  OUT: Status of this metric. If this is nonzero, then value is not valid
+    double value;            //!<  OUT: Value of this metric. Is only valid if nvmlReturn is 0 (NVML_SUCCESS)
     struct
     {
         char *shortName;
         char *longName;
         char *unit;
-    } metricInfo;            /* OUT: Metric name and unit. Those can be NULL if not defined */
+    } metricInfo;            //!< OUT: Metric name and unit. Those can be NULL if not defined
 } nvmlGpmMetric_t;
 
+/**
+ * GPM buffer information.
+ */
 typedef struct
 {
-    unsigned int version;       /* IN: Set to NVML_GPM_METRICS_GET_VERSION */
-    unsigned int numMetrics;    /* IN: How many metrics to retrieve in metrics[] */
-    nvmlGpmSample_t sample1;       /* IN: Sample buffer */
-    nvmlGpmSample_t sample2;       /* IN: Sample buffer */
-    nvmlGpmMetric_t metrics[NVML_GPM_METRIC_MAX]; /* IN/OUT: Array of metrics. Set metricId on call.
-                                                       see nvmlReturn and value on return */
+    unsigned int version;                              //!< IN: Set to NVML_GPM_METRICS_GET_VERSION
+    unsigned int numMetrics;                           //!< IN: How many metrics to retrieve in metrics[]
+    nvmlGpmSample_t sample1;                           //!< IN: Sample buffer
+    nvmlGpmSample_t sample2;                           //!< IN: Sample buffer
+    nvmlGpmMetric_t metrics[NVML_GPM_METRIC_MAX];      //!< IN/OUT: Array of metrics. Set metricId on call. See nvmlReturn and value on return
 } nvmlGpmMetricsGet_t;
 
 #define NVML_GPM_METRICS_GET_VERSION 1
 
+/**
+ * GPM device information.
+ */
 typedef struct
 {
-    unsigned int version;           /* IN: Set to NVML_GPM_SUPPORT_VERSION */
-    unsigned int isSupportedDevice; /* OUT: Indicates device support */
+    unsigned int version;           //!< IN: Set to NVML_GPM_SUPPORT_VERSION
+    unsigned int isSupportedDevice; //!< OUT: Indicates device support
 } nvmlGpmSupport_t;
 
 #define NVML_GPM_SUPPORT_VERSION 1
@@ -9026,10 +9960,9 @@ typedef struct
 /**
  * Calculate GPM metrics from two samples.
  *
+ * For Hopper &tm; or newer fully supported devices.
  *
- * @param metricsGet             IN/OUT: populated nvmlGpmMetricsGet_t struct
- *
- * %HOPPER_OR_NEWER%
+ * @param metricsGet             IN/OUT: populated \a nvmlGpmMetricsGet_t struct
  *
  * @return
  *         - \ref NVML_SUCCESS on success
@@ -9041,7 +9974,7 @@ nvmlReturn_t DECLDIR nvmlGpmMetricsGet(nvmlGpmMetricsGet_t *metricsGet);
 /**
  * Free an allocated sample buffer that was allocated with \ref nvmlGpmSampleAlloc()
  *
- * %HOPPER_OR_NEWER%
+ * For Hopper &tm; or newer fully supported devices.
  *
  * @param gpmSample              Sample to free
  *
@@ -9056,7 +9989,7 @@ nvmlReturn_t DECLDIR nvmlGpmSampleFree(nvmlGpmSample_t gpmSample);
  * Allocate a sample buffer to be used with NVML GPM . You will need to allocate
  * at least two of these buffers to use with the NVML GPM feature
  *
- * %HOPPER_OR_NEWER%
+ * For Hopper &tm; or newer fully supported devices.
  *
  * @param gpmSample             Where  the allocated sample will be stored
  *
@@ -9072,7 +10005,7 @@ nvmlReturn_t DECLDIR nvmlGpmSampleAlloc(nvmlGpmSample_t *gpmSample);
  * two samples are gathered, you can call nvmlGpmMetricGet on those samples to
  * retrive metrics
  *
- * %HOPPER_OR_NEWER%
+ * For Hopper &tm; or newer fully supported devices.
  *
  * @param device                Device to get samples for
  * @param gpmSample             Buffer to read samples into
@@ -9084,10 +10017,28 @@ nvmlReturn_t DECLDIR nvmlGpmSampleAlloc(nvmlGpmSample_t *gpmSample);
 nvmlReturn_t DECLDIR nvmlGpmSampleGet(nvmlDevice_t device, nvmlGpmSample_t gpmSample);
 
 /**
+ * Read a sample of GPM metrics into the provided \a gpmSample buffer for a MIG GPU Instance.
+ *
+ * After two samples are gathered, you can call nvmlGpmMetricGet on those
+ * samples to retrive metrics
+ *
+ * For Hopper &tm; or newer fully supported devices.
+ *
+ * @param device                Device to get samples for
+ * @param gpuInstanceId         MIG GPU Instance ID
+ * @param gpmSample             Buffer to read samples into
+ *
+ * @return
+ *         - \ref NVML_SUCCESS on success
+ *         - Nonzero NVML_ERROR_? enum on error
+ */
+nvmlReturn_t DECLDIR nvmlGpmMigSampleGet(nvmlDevice_t device, unsigned int gpuInstanceId, nvmlGpmSample_t gpmSample);
+
+/**
  * Indicate whether the supplied device supports GPM
  *
  * @param device                NVML device to query for
- * @param gpmSupport            Structure to indicate GPM support. Indicates
+ * @param gpmSupport            Structure to indicate GPM support \a nvmlGpmSupport_t. Indicates
  *                              GPM support per system for the supplied device
  *
  * @return
@@ -9096,8 +10047,135 @@ nvmlReturn_t DECLDIR nvmlGpmSampleGet(nvmlDevice_t device, nvmlGpmSample_t gpmSa
  */
 nvmlReturn_t DECLDIR nvmlGpmQueryDeviceSupport(nvmlDevice_t device, nvmlGpmSupport_t *gpmSupport);
 
+/* GPM Stream State */
+/**
+ * Get GPM stream state.
+ *
+ * %HOPPER_OR_NEWER%
+ * Supported on Linux, Windows TCC.
+ *
+ * @param device                               The identifier of the target device
+ * @param state                                Returns GPM stream state
+ *                                             NVML_FEATURE_DISABLED or NVML_FEATURE_ENABLED
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a current GPM stream state were successfully queried
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a  device is invalid or \a state is NULL
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if this query is not supported by the device
+ */
+nvmlReturn_t DECLDIR nvmlGpmQueryIfStreamingEnabled(nvmlDevice_t device, unsigned int *state);
+
+/**
+ * Set GPM stream state.
+ *
+ * %HOPPER_OR_NEWER%
+ * Supported on Linux, Windows TCC.
+ *
+ * @param device                               The identifier of the target device
+ * @param state                                GPM stream state,
+ *                                             NVML_FEATURE_DISABLED or NVML_FEATURE_ENABLED
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a current GPM stream state is successfully set
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if this query is not supported by the device
+ */
+nvmlReturn_t DECLDIR nvmlGpmSetStreamingEnabled(nvmlDevice_t device, unsigned int state);
+
 /** @} */ // @defgroup nvmlGpmFunctions
 /** @} */ // @defgroup GPM
+
+#define NVML_NVLINK_POWER_STATE_HIGH_SPEED    0x0
+#define NVML_NVLINK_POWER_STATE_LOW           0x1
+
+#define NVML_NVLINK_LOW_POWER_THRESHOLD_MIN   0x1
+#define NVML_NVLINK_LOW_POWER_THRESHOLD_MAX   0x1FFF
+#define NVML_NVLINK_LOW_POWER_THRESHOLD_RESET 0xFFFFFFFF
+
+/* Structure containing Low Power parameters */
+typedef struct nvmlNvLinkPowerThres_st
+{
+    unsigned int lowPwrThreshold;           //!< Low power threshold (in units of 100us)
+} nvmlNvLinkPowerThres_t;
+
+/**
+ * Set NvLink Low Power Threshold for device.
+ *
+ * %HOPPER_OR_NEWER%
+ *
+ * @param device                               The identifier of the target device
+ * @param info                                 Reference to \a nvmlNvLinkPowerThres_t struct
+ *                                             input parameters
+ *
+ * @return
+ *        - \ref NVML_SUCCESS                 if the \a Threshold is successfully set
+ *        - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *        - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a Threshold is not within range
+ *        - \ref NVML_ERROR_NOT_SUPPORTED     if this query is not supported by the device
+ *
+ **/
+nvmlReturn_t DECLDIR nvmlDeviceSetNvLinkDeviceLowPowerThreshold(nvmlDevice_t device, nvmlNvLinkPowerThres_t *info);
+
+/**
+ * Set the global nvlink bandwith mode
+ *
+ * @param nvlinkBwMode             nvlink bandwidth mode
+ * @return
+ *         - \ref NVML_SUCCESS                on success
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT if an invalid argument is provided
+ *         - \ref NVML_ERROR_IN_USE           if P2P object exists
+ *         - \ref NVML_ERROR_NOT_SUPPORTED    if GPU is not Hopper or newer architecture.
+ *         - \ref NVML_ERROR_NO_PERMISSION    if not root user
+ */
+nvmlReturn_t DECLDIR nvmlSystemSetNvlinkBwMode(unsigned int nvlinkBwMode);
+
+/**
+ * Get the global nvlink bandwith mode
+ *
+ * @param nvlinkBwMode             reference of nvlink bandwidth mode
+ * @return
+ *         - \ref NVML_SUCCESS                on success
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT if an invalid pointer is provided
+ *         - \ref NVML_ERROR_NOT_SUPPORTED    if GPU is not Hopper or newer architecture.
+ *         - \ref NVML_ERROR_NO_PERMISSION    if not root user
+ */
+nvmlReturn_t DECLDIR nvmlSystemGetNvlinkBwMode(unsigned int *nvlinkBwMode);
+
+/**
+ * Set new power limit of this device.
+ *
+ * For Kepler &tm; or newer fully supported devices.
+ * Requires root/admin permissions.
+ *
+ * See \ref nvmlDeviceGetPowerManagementLimitConstraints to check the allowed ranges of values.
+ *
+ * See \ref nvmlPowerValue_v2_t for more information on the struct.
+ *
+ * \note Limit is not persistent across reboots or driver unloads.
+ * Enable persistent mode to prevent driver from unloading when no application is using the device.
+ *
+ * This API replaces nvmlDeviceSetPowerManagementLimit. It can be used as a drop-in replacement for the older version.
+ *
+ * @param device                               The identifier of the target device
+ * @param powerValue                           Power management limit in milliwatts to set
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a limit has been set
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid or \a powerValue is NULL or contains invalid values
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if the device does not support this feature
+ *         - \ref NVML_ERROR_GPU_IS_LOST       if the target GPU has fallen off the bus or is otherwise inaccessible
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ *
+ * @see NVML_FI_DEV_POWER_AVERAGE 
+ * @see NVML_FI_DEV_POWER_INSTANT
+ * @see NVML_FI_DEV_POWER_MIN_LIMIT
+ * @see NVML_FI_DEV_POWER_MAX_LIMIT
+ * @see NVML_FI_DEV_POWER_CURRENT_LIMIT
+ */
+nvmlReturn_t DECLDIR nvmlDeviceSetPowerManagementLimit_v2(nvmlDevice_t device, nvmlPowerValue_v2_t *powerValue);
 
 /**
  * NVML API versioning support
@@ -9151,6 +10229,8 @@ nvmlReturn_t DECLDIR nvmlVgpuInstanceGetLicenseInfo(nvmlVgpuInstance_t vgpuInsta
 #undef nvmlGetBlacklistDeviceInfoByIndex
 #undef nvmlDeviceGetGpuInstancePossiblePlacements
 #undef nvmlVgpuInstanceGetLicenseInfo
+#undef nvmlDeviceSetPowerManagementLimit
+
 #endif
 
 #ifdef __cplusplus
