@@ -1,7 +1,7 @@
 use crate::ffi::bindings::*;
 use bitflags::bitflags;
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
 
 bitflags! {
     /**
@@ -12,6 +12,7 @@ bitflags! {
     */
     // Checked against local
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
     pub struct PacketTypes: u32 {
         const NO_OP      = nvmlNvLinkUtilizationCountPktTypes_enum_NVML_NVLINK_COUNTER_PKTFILTER_NOP;
         const READ       = nvmlNvLinkUtilizationCountPktTypes_enum_NVML_NVLINK_COUNTER_PKTFILTER_READ;

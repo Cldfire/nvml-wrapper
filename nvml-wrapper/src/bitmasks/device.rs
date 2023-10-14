@@ -3,12 +3,13 @@
 use crate::ffi::bindings::*;
 use bitflags::bitflags;
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
 
 bitflags! {
     /// Flags used to specify why a GPU is throttling.
     // Checked against local
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
     pub struct ThrottleReasons: u64 {
         /// Nothing is running on the GPU.
         ///
@@ -75,6 +76,7 @@ bitflags! {
 bitflags! {
     /// Flags that specify info about a frame capture session
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
     pub struct FbcFlags: u32 {
         const DIFFMAP_ENABLED             = NVML_NVFBC_SESSION_FLAG_DIFFMAP_ENABLED;
         const CLASSIFICATIONMAP_ENABLED   = NVML_NVFBC_SESSION_FLAG_CLASSIFICATIONMAP_ENABLED;

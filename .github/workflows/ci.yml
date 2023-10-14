@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-    - main
+      - main
   pull_request:
 
 name: CI
@@ -15,7 +15,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         rust:
           - stable
-          - 1.51.0
+          - 1.60.0
         # Avoid trying to build on macos-latest with Rust 1.51
         #
         # Rust < 1.54 doesn't work with xcode 14

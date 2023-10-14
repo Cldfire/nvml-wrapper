@@ -1,5 +1,5 @@
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
 
 /// Returned by `NvLink.utilization_counter()`
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]

@@ -70,7 +70,7 @@ use crate::Device;
 use crate::EventSet;
 use crate::Nvml;
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
 
 // TODO: Tests
 

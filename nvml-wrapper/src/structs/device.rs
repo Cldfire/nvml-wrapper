@@ -2,7 +2,7 @@
 use crate::enum_wrappers::device::DriverModel;
 use crate::enum_wrappers::device::OperationMode;
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
 
 /// Returned from `Device.auto_boosted_clocks_enabled()`
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
