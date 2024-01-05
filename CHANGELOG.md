@@ -9,6 +9,13 @@ This file describes the changes / additions / fixes between wrapper releases, tr
 * `ScopeId`
 * `FieldValueRequest`
 
+### Changed
+
+* `Device`
+  * Methods
+    * `field_values_for()`
+* `FieldValueSample`
+
 ## [0.10.0] (released 2024-02-10)
 
 Updates for NVML 12.2.
