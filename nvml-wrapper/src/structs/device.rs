@@ -101,3 +101,40 @@ pub struct RetiredPage {
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct FieldId(pub u32);
+
+/// Can be used to specify an optional scope to a given `FieldId`
+///
+/// Used in `FieldValue` and `Device.field_values_for()`.
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct ScopeId(pub u32);
+
+/// Specify a field ID and an optional scope ID for requesting data samples
+/// from a device.
+///
+/// Used in [`crate::struct_wrappers::device::FieldValueSample`] and
+/// [`crate::device::Device::field_values_for()`].
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct FieldValueRequest {
+    /// Populate this newtype with the constants `nvml_wrapper::sys_exports::field_id::*`.
+    pub id: FieldId,
+    /// Optionally populate this with a `scopeId` appropriate for the associated [`FieldId`].
+    ///
+    /// See NVIDIA's field ID constant docs (`NVML_FI_*`) to understand what scope
+    /// IDs may be valid for which field IDs.
+    pub scope_id: Option<ScopeId>,
+}
+
+impl FieldValueRequest {
+    pub fn id(id: FieldId) -> Self {
+        Self { id, scope_id: None }
+    }
+
+    pub fn id_with_scope(id: FieldId, scope_id: ScopeId) -> Self {
+        Self {
+            id,
+            scope_id: Some(scope_id),
+        }
+    }
+}
