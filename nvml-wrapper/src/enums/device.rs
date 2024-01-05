@@ -221,6 +221,10 @@ pub enum DeviceArchitecture {
     Turing,
     /// <https://en.wikipedia.org/wiki/Ampere_(microarchitecture)>
     Ampere,
+    /// <https://en.wikipedia.org/wiki/Ada_Lovelace_(microarchitecture)>
+    Ada,
+    /// <https://en.wikipedia.org/wiki/Hopper_(microarchitecture)>
+    Hopper,
     /// Unknown device architecture (most likely something newer).
     Unknown,
 }
@@ -235,6 +239,8 @@ impl DeviceArchitecture {
             Self::Volta => NVML_DEVICE_ARCH_VOLTA,
             Self::Turing => NVML_DEVICE_ARCH_TURING,
             Self::Ampere => NVML_DEVICE_ARCH_AMPERE,
+            Self::Ada => NVML_DEVICE_ARCH_ADA,
+            Self::Hopper => NVML_DEVICE_ARCH_HOPPER,
             Self::Unknown => NVML_DEVICE_ARCH_UNKNOWN,
         }
     }
@@ -251,6 +257,8 @@ impl TryFrom<nvmlDeviceArchitecture_t> for DeviceArchitecture {
             NVML_DEVICE_ARCH_VOLTA => Ok(Self::Volta),
             NVML_DEVICE_ARCH_TURING => Ok(Self::Turing),
             NVML_DEVICE_ARCH_AMPERE => Ok(Self::Ampere),
+            NVML_DEVICE_ARCH_ADA => Ok(Self::Ada),
+            NVML_DEVICE_ARCH_HOPPER => Ok(Self::Hopper),
             NVML_DEVICE_ARCH_UNKNOWN => Ok(Self::Unknown),
             _ => Err(NvmlError::UnexpectedVariant(data)),
         }
@@ -266,6 +274,8 @@ impl Display for DeviceArchitecture {
             Self::Volta => f.write_str("Volta"),
             Self::Turing => f.write_str("Turing"),
             Self::Ampere => f.write_str("Ampere"),
+            Self::Ada => f.write_str("Ada"),
+            Self::Hopper => f.write_str("Hopper"),
             Self::Unknown => f.write_str("Unknown"),
         }
     }
