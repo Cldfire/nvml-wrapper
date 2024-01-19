@@ -2416,7 +2416,7 @@ impl<'nvml> Device<'nvml> {
 
     # Device Support
 
-    Supports Pascal and newer fully supported devices.
+    Supports Volta and newer fully supported devices.
     */
     #[doc(alias = "nvmlDeviceGetTotalEnergyConsumption")]
     pub fn total_energy_consumption(&self) -> Result<u64, NvmlError> {
