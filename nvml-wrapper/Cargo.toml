@@ -7,7 +7,7 @@ readme = "../README.md"
 documentation = "https://docs.rs/nvml-wrapper"
 repository = "https://github.com/Cldfire/nvml-wrapper"
 license = "MIT OR Apache-2.0"
-edition = "2018"
+edition = "2021"
 rust-version = "1.60.0"
 
 keywords = ["nvidia", "gpu", "managment", "monitoring", "hardware"]

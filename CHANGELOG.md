@@ -25,6 +25,7 @@ Updates for NVML 12.2.
 ### Internal
 
 * Bumped MSRV to 1.60.0 for usage of namespaced features
+* Bumped crate edition to `2021`
 * Removed `rust-hook` from development workflow
 * Started building crate in CI on `macos-latest`
 * Added a script to find unwrapped function names

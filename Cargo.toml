@@ -1,5 +1,3 @@
 [workspace]
-members = [
-    "nvml-wrapper",
-    "nvml-wrapper-sys"
-]
+members = ["nvml-wrapper", "nvml-wrapper-sys"]
+resolver = "2"
