@@ -4,6 +4,8 @@ This file describes the changes / additions / fixes between bindings releases.
 
 ## Unreleased
 
+## 0.8.0 (released 2024-02-10)
+
 Bindings have been regenerated using the NVML 12.2 header and bindgen 0.68.1.
 
 ### Internal
