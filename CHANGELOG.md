@@ -38,6 +38,7 @@ The MSRV of this release is 1.60.0. This is for usage of namespaced features.
 
 * `bitflags`: `1.3` -> `2.4.0`
 * `libloading`: `0.7.0` -> `0.8.1`
+* `wrapcenum-derive`: `0.4.0` -> `0.4.1`
 
 ## [0.9.0] (released 2023-01-20)
 
