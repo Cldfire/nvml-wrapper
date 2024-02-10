@@ -11,6 +11,10 @@ Updates for NVML 12.2.
 * `Device`
   * Methods
     * `pcie_link_speed()`
+* `DeviceArchitecture`
+  * Variants
+    * `Ada`
+    * `Hopper`
 
 ### Changed
 
