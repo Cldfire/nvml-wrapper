@@ -33,9 +33,9 @@ use std::{
     convert::TryFrom,
     ffi::CStr,
     mem,
+    ops::Deref,
     os::raw::{c_int, c_uint, c_ulonglong},
     ptr,
-    ops::Deref,
 };
 
 use static_assertions::assert_impl_all;
@@ -2687,17 +2687,19 @@ impl<'nvml> Device<'nvml> {
     ) -> Result<Vec<Result<FieldValueSample, NvmlError>>, NvmlError>
     where
         I: IntoIterator,
-        I::Item: Deref<Target=FieldValueRequest>,
+        I::Item: Deref<Target = FieldValueRequest>,
     {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetFieldValues.as_ref())?;
 
         unsafe {
-            let mut field_values: Vec<nvmlFieldValue_t> = ids.into_iter().map(
-                |id| nvmlFieldValue_t {
+            let mut field_values: Vec<nvmlFieldValue_t> = ids
+                .into_iter()
+                .map(|id| nvmlFieldValue_t {
                     fieldId: id.id.0,
                     scopeId: id.scope_id.clone().unwrap_or(ScopeId(0)).0,
                     ..mem::zeroed()
-                }).collect();
+                })
+                .collect();
 
             nvml_try(sym(
                 self.device,

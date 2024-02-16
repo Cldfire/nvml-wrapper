@@ -3,7 +3,7 @@ use crate::enum_wrappers::device::{BridgeChip, EncoderType, FbcSessionType, Samp
 use crate::enums::device::{FirmwareVersion, SampleValue, UsedGpuMemory};
 use crate::error::{nvml_try, Bits, NvmlError};
 use crate::ffi::bindings::*;
-use crate::structs::device::{FieldId, ScopeId, FieldValueRequest};
+use crate::structs::device::{FieldId, FieldValueRequest, ScopeId};
 #[cfg(feature = "serde")]
 use serde_derive::{Deserialize, Serialize};
 use std::{
@@ -555,10 +555,7 @@ impl TryFrom<nvmlFieldValue_t> for FieldValueSample {
     */
     fn try_from(value: nvmlFieldValue_t) -> Result<Self, Self::Error> {
         Ok(Self {
-            field: FieldValueRequest::id_with_scope(
-                FieldId(value.fieldId),
-                ScopeId(value.scopeId),
-            ),
+            field: FieldValueRequest::id_with_scope(FieldId(value.fieldId), ScopeId(value.scopeId)),
             timestamp: value.timestamp,
             latency: value.latencyUsec,
             value: match nvml_try(value.nvmlReturn) {
