@@ -33,6 +33,7 @@ use std::{
     convert::TryFrom,
     ffi::CStr,
     mem,
+    ops::Deref,
     os::raw::{c_int, c_uint, c_ulonglong},
     ptr,
 };
@@ -2652,9 +2653,9 @@ impl<'nvml> Device<'nvml> {
     }
 
     /**
-    Get values for the given slice of `FieldId`s.
+    Get values for the given `FieldValueRequest`s.
 
-    NVIDIA's docs say that if any of the `FieldId`s are populated by the same driver
+    NVIDIA's docs say that if any of the `FieldValueRequest`s are populated by the same driver
     call, the samples for those IDs will be populated by a single call instead of
     a call per ID. It would appear, then, that this is essentially a "batch-request"
     API path for better performance.
@@ -2662,7 +2663,7 @@ impl<'nvml> Device<'nvml> {
     There are too many field ID constants defined in the header to reasonably
     wrap them with an enum in this crate. Instead, I've re-exported the defined
     ID constants at `nvml_wrapper::sys_exports::field_id::*`; stick those
-    constants in `FieldId`s for use with this function.
+    constants in `FieldValueRequest`s for use with this function.
 
     # Errors
 
@@ -2676,30 +2677,33 @@ impl<'nvml> Device<'nvml> {
 
     # Device Support
 
-    Device support varies per `FieldId` that you pass in.
+    Device support varies per `FieldValueRequest` that you pass in.
     */
     // TODO: Example
     #[doc(alias = "nvmlDeviceGetFieldValues")]
-    pub fn field_values_for(
+    pub fn field_values_for<I>(
         &self,
-        id_slice: &[FieldId],
-    ) -> Result<Vec<Result<FieldValueSample, NvmlError>>, NvmlError> {
+        ids: I,
+    ) -> Result<Vec<Result<FieldValueSample, NvmlError>>, NvmlError>
+    where
+        I: IntoIterator,
+        I::Item: Deref<Target = FieldValueRequest>,
+    {
         let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetFieldValues.as_ref())?;
 
         unsafe {
-            let values_count = id_slice.len();
-            let mut field_values: Vec<nvmlFieldValue_t> = Vec::with_capacity(values_count);
-
-            for id in id_slice.iter() {
-                let mut raw: nvmlFieldValue_t = mem::zeroed();
-                raw.fieldId = id.0;
-
-                field_values.push(raw);
-            }
+            let mut field_values: Vec<nvmlFieldValue_t> = ids
+                .into_iter()
+                .map(|id| nvmlFieldValue_t {
+                    fieldId: id.id.0,
+                    scopeId: id.scope_id.clone().unwrap_or(ScopeId(0)).0,
+                    ..mem::zeroed()
+                })
+                .collect();
 
             nvml_try(sym(
                 self.device,
-                values_count as i32,
+                field_values.len() as i32,
                 field_values.as_mut_ptr(),
             ))?;
 
@@ -5070,7 +5074,7 @@ mod test {
     use crate::enum_wrappers::device::*;
     use crate::enums::device::GpuLockedClocksSetting;
     use crate::error::*;
-    use crate::structs::device::FieldId;
+    use crate::structs::device::{FieldId, FieldValueRequest};
     use crate::sys_exports::field_id::*;
     use crate::test_utils::*;
 
@@ -5558,44 +5562,44 @@ mod test {
         let nvml = nvml();
         test_with_device(3, &nvml, |device| {
             device.field_values_for(&[
-                FieldId(NVML_FI_DEV_ECC_CURRENT),
-                FieldId(NVML_FI_DEV_ECC_PENDING),
-                FieldId(NVML_FI_DEV_ECC_SBE_VOL_TOTAL),
-                FieldId(NVML_FI_DEV_ECC_DBE_VOL_TOTAL),
-                FieldId(NVML_FI_DEV_ECC_SBE_AGG_TOTAL),
-                FieldId(NVML_FI_DEV_ECC_DBE_AGG_TOTAL),
-                FieldId(NVML_FI_DEV_ECC_SBE_VOL_L1),
-                FieldId(NVML_FI_DEV_ECC_DBE_VOL_L1),
-                FieldId(NVML_FI_DEV_ECC_SBE_VOL_L2),
-                FieldId(NVML_FI_DEV_ECC_DBE_VOL_L2),
-                FieldId(NVML_FI_DEV_ECC_SBE_VOL_DEV),
-                FieldId(NVML_FI_DEV_ECC_DBE_VOL_DEV),
-                FieldId(NVML_FI_DEV_ECC_SBE_VOL_REG),
-                FieldId(NVML_FI_DEV_ECC_DBE_VOL_REG),
-                FieldId(NVML_FI_DEV_ECC_SBE_VOL_TEX),
-                FieldId(NVML_FI_DEV_ECC_DBE_VOL_TEX),
-                FieldId(NVML_FI_DEV_ECC_DBE_VOL_CBU),
-                FieldId(NVML_FI_DEV_ECC_SBE_AGG_L1),
-                FieldId(NVML_FI_DEV_ECC_DBE_AGG_L1),
-                FieldId(NVML_FI_DEV_ECC_SBE_AGG_L2),
-                FieldId(NVML_FI_DEV_ECC_DBE_AGG_L2),
-                FieldId(NVML_FI_DEV_ECC_SBE_AGG_DEV),
-                FieldId(NVML_FI_DEV_ECC_DBE_AGG_DEV),
-                FieldId(NVML_FI_DEV_ECC_SBE_AGG_REG),
-                FieldId(NVML_FI_DEV_ECC_DBE_AGG_REG),
-                FieldId(NVML_FI_DEV_ECC_SBE_AGG_TEX),
-                FieldId(NVML_FI_DEV_ECC_DBE_AGG_TEX),
-                FieldId(NVML_FI_DEV_ECC_DBE_AGG_CBU),
-                FieldId(NVML_FI_DEV_PERF_POLICY_POWER),
-                FieldId(NVML_FI_DEV_PERF_POLICY_THERMAL),
-                FieldId(NVML_FI_DEV_PERF_POLICY_SYNC_BOOST),
-                FieldId(NVML_FI_DEV_PERF_POLICY_BOARD_LIMIT),
-                FieldId(NVML_FI_DEV_PERF_POLICY_LOW_UTILIZATION),
-                FieldId(NVML_FI_DEV_PERF_POLICY_RELIABILITY),
-                FieldId(NVML_FI_DEV_PERF_POLICY_TOTAL_APP_CLOCKS),
-                FieldId(NVML_FI_DEV_PERF_POLICY_TOTAL_BASE_CLOCKS),
-                FieldId(NVML_FI_DEV_MEMORY_TEMP),
-                FieldId(NVML_FI_DEV_TOTAL_ENERGY_CONSUMPTION),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_CURRENT)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_PENDING)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_SBE_VOL_TOTAL)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_DBE_VOL_TOTAL)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_SBE_AGG_TOTAL)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_DBE_AGG_TOTAL)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_SBE_VOL_L1)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_DBE_VOL_L1)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_SBE_VOL_L2)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_DBE_VOL_L2)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_SBE_VOL_DEV)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_DBE_VOL_DEV)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_SBE_VOL_REG)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_DBE_VOL_REG)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_SBE_VOL_TEX)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_DBE_VOL_TEX)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_DBE_VOL_CBU)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_SBE_AGG_L1)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_DBE_AGG_L1)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_SBE_AGG_L2)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_DBE_AGG_L2)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_SBE_AGG_DEV)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_DBE_AGG_DEV)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_SBE_AGG_REG)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_DBE_AGG_REG)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_SBE_AGG_TEX)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_DBE_AGG_TEX)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_ECC_DBE_AGG_CBU)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_PERF_POLICY_POWER)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_PERF_POLICY_THERMAL)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_PERF_POLICY_SYNC_BOOST)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_PERF_POLICY_BOARD_LIMIT)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_PERF_POLICY_LOW_UTILIZATION)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_PERF_POLICY_RELIABILITY)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_PERF_POLICY_TOTAL_APP_CLOCKS)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_PERF_POLICY_TOTAL_BASE_CLOCKS)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_MEMORY_TEMP)),
+                FieldValueRequest::id(FieldId(NVML_FI_DEV_TOTAL_ENERGY_CONSUMPTION)),
             ])
         })
     }
