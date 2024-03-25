@@ -5431,7 +5431,7 @@ mod test {
     #[test]
     fn memory_info() {
         let nvml = nvml();
-        test_with_device(3, &nvml, |device| device.memory_info());
+        test_with_device(3, &nvml, |device| device.memory_info())
     }
 
     #[cfg(target_os = "linux")]

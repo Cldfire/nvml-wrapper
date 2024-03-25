@@ -303,7 +303,7 @@ pub struct MemoryInfo {
     pub used: u64,
 
     /// Struct version, must be set according to API specification before calling the API.
-    pub version: u32
+    pub version: u32,
 }
 
 impl From<nvmlMemory_v2_t> for MemoryInfo {
@@ -313,7 +313,7 @@ impl From<nvmlMemory_v2_t> for MemoryInfo {
             reserved: struct_.reserved,
             total: struct_.total,
             used: struct_.used,
-            version: struct_.version
+            version: struct_.version,
         }
     }
 }
