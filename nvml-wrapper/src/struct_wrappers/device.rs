@@ -291,6 +291,7 @@ pub struct MemoryInfo {
     /// Unallocated FB memory.
     pub free: u64,
 
+    /// Reserved FB memory.
     pub reserved: u64,
 
     /// Total installed FB memory.
@@ -301,6 +302,7 @@ pub struct MemoryInfo {
     /// bookkeeping.
     pub used: u64,
 
+    /// Struct version, must be set according to API specification before calling the API.
     pub version: u32
 }
 
