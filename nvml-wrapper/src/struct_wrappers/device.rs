@@ -290,6 +290,10 @@ impl From<nvmlEccErrorCounts_t> for EccErrorCounts {
 pub struct MemoryInfo {
     /// Unallocated FB memory.
     pub free: u64,
+
+    /// Reserved FB memory.
+    pub reserved: u64,
+
     /// Total installed FB memory.
     pub total: u64,
     /// Allocated FB memory.
@@ -297,14 +301,19 @@ pub struct MemoryInfo {
     /// Note that the driver/GPU always sets aside a small amount of memory for
     /// bookkeeping.
     pub used: u64,
+
+    /// Struct version, must be set according to API specification before calling the API.
+    pub version: u32,
 }
 
-impl From<nvmlMemory_t> for MemoryInfo {
-    fn from(struct_: nvmlMemory_t) -> Self {
+impl From<nvmlMemory_v2_t> for MemoryInfo {
+    fn from(struct_: nvmlMemory_v2_t) -> Self {
         Self {
             free: struct_.free,
+            reserved: struct_.reserved,
             total: struct_.total,
             used: struct_.used,
+            version: struct_.version,
         }
     }
 }
